@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementation Phases - TankerMade Workbench Documentation</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --bg-color: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --code-bg: #f1f5f9;
+            --hover-color: #f8fafc;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        nav {
+            background: var(--hover-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            overflow-x: auto;
+        }
+        
+        .nav-menu li {
+            white-space: nowrap;
+        }
+        
+        .nav-menu a {
+            display: block;
+            padding: 1rem 1.5rem;
+            text-decoration: none;
+            color: var(--text-color);
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .nav-menu a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .nav-menu a.active {
+            background: var(--primary-color);
+            color: white;
+            border-bottom-color: #1d4ed8;
+        }
+        
+        main {
+            padding: 2rem 0;
+            min-height: calc(100vh - 200px);
+        }
+        
+        .content {
+            max-width: 900px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            margin: 2rem 0 1rem 0;
+            font-size: 1.8rem;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 1rem;
+        }
+        
+        h3 {
+            color: var(--secondary-color);
+            margin: 1.5rem 0 1rem 0;
+            font-size: 1.3rem;
+        }
+        
+        h4 {
+            color: var(--secondary-color);
+            margin: 1rem 0 0.5rem 0;
+            font-size: 1.1rem;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+        }
+        
+        ul, ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            border: 1px solid var(--border-color);
+        }
+        
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            text-align: left;
+        }
+        
+        th {
+            background: var(--code-bg);
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        .card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .highlight {
+            background: #fef3c7;
+            border-left: 4px solid var(--warning-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .success {
+            background: #dcfce7;
+            border-left: 4px solid var(--success-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid var(--warning-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .error {
+            background: #fee2e2;
+            border-left: 4px solid var(--error-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        footer {
+            background: var(--code-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 0;
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--secondary-color);
+        }
+        
+        /* Phase Cards */
+        .phase-card {
+            background: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        
+        .phase-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .phase-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .phase-number {
+            background: var(--primary-color);
+            color: white;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .phase-title {
+            flex: 1;
+        }
+        
+        .phase-title h3 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+        
+        .phase-duration {
+            background: var(--success-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .phase-goal {
+            background: var(--hover-color);
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .deliverables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .deliverable-item {
+            background: var(--code-bg);
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .deliverable-item h5 {
+            color: var(--primary-color);
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
+        }
+        
+        .deliverable-item ul {
+            margin-left: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .acceptance-criteria {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .acceptance-criteria h4 {
+            color: #0ea5e9;
+            margin-top: 0;
+        }
+        
+        .acceptance-criteria ul {
+            margin-left: 1.5rem;
+        }
+        
+        .acceptance-criteria li {
+            margin-bottom: 0.25rem;
+        }
+        
+        .xp-award-table {
+            background: var(--hover-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .achievement-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .achievement-example {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .achievement-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .achievement-name {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.25rem;
+        }
+        
+        .achievement-condition {
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            font-family: monospace;
+            background: var(--code-bg);
+            padding: 0.25rem;
+            border-radius: 3px;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-menu {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 0 15px;
+            }
+            
+            .phase-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .deliverables-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .achievement-examples {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">🧶 TankerMade Workbench</div>
+                <div>Comprehensive Documentation</div>
+            </div>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <ul class="nav-menu">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="architecture.html">Architecture</a></li>
+                <li><a href="domain-model.html">Domain Model</a></li>
+                <li><a href="implementation-phases.html" class="active">Implementation</a></li>
+                <li><a href="technical-specs.html">Technical Specs</a></li>
+                <li><a href="ui-ux-specs.html">UI/UX Specs</a></li>
+                <li><a href="deployment.html">Deployment</a></li>
+                <li><a href="development-guidelines.html">Development</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <div class="content">
+                <h1>Implementation Phases</h1>
+
+                <div class="highlight">
+                    <h3>21-Week Development Timeline</h3>
+                    <p>Complete roadmap from foundation to production-ready MVP with 10 distinct phases and clear milestones based on the comprehensive project specification.</p>
+                </div>
+
+                <div class="phase-card">
+                    <div class="phase-header">
+                        <div class="phase-number">1</div>
+                        <div class="phase-title">
+                            <h3>Foundation</h3>
+                        </div>
+                        <div class="phase-duration">Weeks 1-3</div>
+                    </div>
+                    
+                    <div class="phase-goal">
+                        <strong>Goal:</strong> Get basic infrastructure running in both offline and server modes
+                    </div>
+                    
+                    <h4>Deliverables</h4>
+                    <div class="deliverables-grid">
+                        <div class="deliverable-item">
+                            <h5>Solution Structure</h5>
+                            <ul>
+                                <li>All projects created</li>
+                                <li>Core domain models in TankerMade.Core</li>
+                                <li>Service contracts in TankerMade.Contracts</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Client Application</h5>
+                            <ul>
+                                <li>Blazor WASM client with routing</li>
+                                <li>IndexedDB wrapper for offline mode</li>
+                                <li>Service injection (offline vs. API based on config)</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Server Foundation</h5>
+                            <ul>
+                                <li>ASP.NET Core API with minimal endpoints</li>
+                                <li>EF Core DbContext and initial migration</li>
+                                <li>JWT authentication setup</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="acceptance-criteria">
+                        <h4>✅ Acceptance Criteria</h4>
+                        <ul>
+                            <li>App runs in offline mode (IndexedDB storage)</li>
+                            <li>App can connect to API server with auth</li>
+                            <li>User can switch between modes in settings</li>
+                            <li>Basic CRUD works for one entity (Projects) in both modes</li>
+                            <li>User registration and login functional</li>
+                            <li>Role-based authorization working (viewer/editor/admin)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="phase-card">
+                    <div class="phase-header">
+                        <div class="phase-number">2</div>
+                        <div class="phase-title">
+                            <h3>Core Features</h3>
+                        </div>
+                        <div class="phase-duration">Weeks 4-6</div>
+                    </div>
+                    
+                    <div class="phase-goal">
+                        <strong>Goal:</strong> Implement all CRUD operations and UI for main entities
+                    </div>
+                    
+                    <h4>Deliverables</h4>
+                    <div class="deliverables-grid">
+                        <div class="deliverable-item">
+                            <h5>Projects & Patterns</h5>
+                            <ul>
+                                <li>Full CRUD with wizard, detail view, list with filters</li>
+                                <li>Multi-step creation wizards</li>
+                                <li>Pattern pieces and steps management</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Inventory System</h5>
+                            <ul>
+                                <li>Yarn: Full CRUD with lot tracking, purchase history</li>
+                                <li>Tools: Full CRUD with size variants</li>
+                                <li>Notions: Full CRUD with color/size variants</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Supporting Features</h5>
+                            <ul>
+                                <li>Kits: Full CRUD with pieces and supplies</li>
+                                <li>Reference Data: CRUD UI for all reference tables</li>
+                                <li>Project-Inventory Links: UI for linking supplies</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="acceptance-criteria">
+                        <h4>✅ Acceptance Criteria</h4>
+                        <ul>
+                            <li>All entities have working list, detail, create, and edit pages</li>
+                            <li>Multi-step wizards work for Project, Pattern, and Kit creation</li>
+                            <li>"Inline Add New" in dropdowns creates reference data without navigation</li>
+                            <li>Filters and sorting work on all list pages</li>
+                            <li>Search works across entities</li>
+                            <li>Slugs generate automatically from names</li>
+                            <li>All operations work in both offline and server modes</li>
+                            <li>Data validates correctly (required fields, format checks)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="phase-card">
+                    <div class="phase-header">
+                        <div class="phase-number">3</div>
+                        <div class="phase-title">
+                            <h3>Pattern Details & Project Workspace</h3>
+                        </div>
+                        <div class="phase-duration">Weeks 7-8</div>
+                    </div>
+                    
+                    <div class="phase-goal">
+                        <strong>Goal:</strong> Rich pattern editing and project progress tracking
+                    </div>
+                    
+                    <h4>Deliverables</h4>
+                    <div class="deliverables-grid">
+                        <div class="deliverable-item">
+                            <h5>Pattern Management</h5>
+                            <ul>
+                                <li>Pattern Pieces: Reorder with drag-drop, inline add/edit/delete</li>
+                                <li>Pattern Steps: Inline editing with stitch counts</li>
+                                <li>Repeat notation support (e.g., "5-7")</li>
+                                <li>Pattern Detail Page: View full pattern with all pieces/steps</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Project Workspace</h5>
+                            <ul>
+                                <li>Step checklist with checkboxes</li>
+                                <li>Piece selector (if pattern has multiple pieces)</li>
+                                <li>Progress bar (completion percentage)</li>
+                                <li>Stitch counter (completed/total)</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Validation System</h5>
+                            <ul>
+                                <li>Ensure pieces have steps</li>
+                                <li>Warn if total stitches don't match step totals</li>
+                                <li>Prevent saving incomplete patterns</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="acceptance-criteria">
+                        <h4>✅ Acceptance Criteria</h4>
+                        <ul>
+                            <li>User can create complex multi-piece patterns</li>
+                            <li>Steps can be reordered within pieces</li>
+                            <li>Pieces can be reordered within patterns</li>
+                            <li>Project workspace shows current pattern with checkboxes</li>
+                            <li>Checking steps updates completion percentage in real-time</li>
+                            <li>Stitch counts aggregate correctly</li>
+                            <li>Validation prevents saving incomplete patterns</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="phase-card">
+                    <div class="phase-header">
+                        <div class="phase-number">4</div>
+                        <div class="phase-title">
+                            <h3>Timers & Sessions</h3>
+                        </div>
+                        <div class="phase-duration">Weeks 9-10</div>
+                    </div>
+                    
+                    <div class="phase-goal">
+                        <strong>Goal:</strong> Track time spent on projects with persistent timers
+                    </div>
+                    
+                    <h4>Deliverables</h4>
+                    <div class="deliverables-grid">
+                        <div class="deliverable-item">
+                            <h5>Timer Components</h5>
+                            <ul>
+                                <li>Timer Component: Play/pause/stop controls</li>
+                                <li>Project Timer: Tracks total time on project</li>
+                                <li>Piece Timer: Tracks time per pattern piece</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Session Management</h5>
+                            <ul>
+                                <li>Session History: View past work sessions</li>
+                                <li>Timer Persistence: Resume timer after page refresh</li>
+                                <li>Global timer display in header/nav when active</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Statistics</h5>
+                            <ul>
+                                <li>Total time today/this week/all time</li>
+                                <li>Average session length</li>
+                                <li>Most productive time of day</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="acceptance-criteria">
+                        <h4>✅ Acceptance Criteria</h4>
+                        <ul>
+                            <li>User can start/stop timer on project detail page</li>
+                            <li>Timer counts up in real-time (HH:MM:SS)</li>
+                            <li>Timer state persists across page refreshes</li>
+                            <li>Stopping timer creates a WorkSession record</li>
+                            <li>Sessions display in history with start/end times</li>
+                            <li>Per-piece timers work independently</li>
+                            <li>Timer shows in header/nav when active (global visibility)</li>
+                            <li>Statistics calculate correctly</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="phase-card">
+                    <div class="phase-header">
+                        <div class="phase-number">5</div>
+                        <div class="phase-title">
+                            <h3>Gamification</h3>
+                        </div>
+                        <div class="phase-duration">Weeks 11-13</div>
+                    </div>
+                    
+                    <div class="phase-goal">
+                        <strong>Goal:</strong> XP, achievements, and streaks to make crafting more engaging
+                    </div>
+                    
+                    <h4>Deliverables</h4>
+                    <div class="deliverables-grid">
+                        <div class="deliverable-item">
+                            <h5>XP System</h5>
+                            <ul>
+                                <li>Award XP for actions</li>
+                                <li>Calculate level from XP</li>
+                                <li>Display XP bar in header</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Achievement System</h5>
+                            <ul>
+                                <li>Seed 20-30 achievements (varied difficulty)</li>
+                                <li>Check conditions after each action</li>
+                                <li>Display achievement toast on unlock</li>
+                                <li>Achievement grid (locked/unlocked)</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Streak Tracking</h5>
+                            <ul>
+                                <li>Track daily activity</li>
+                                <li>Calculate current and longest streak</li>
+                                <li>Display streak in dashboard</li>
+                                <li>Warn when streak at risk</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Gamification Dashboard</h5>
+                            <ul>
+                                <li>XP and level</li>
+                                <li>Current/longest streak</li>
+                                <li>Recent achievements</li>
+                                <li>Progress toward next level</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="xp-award-table">
+                        <h4>XP Award Schedule</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Action</th>
+                                    <th>XP</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Register account</td><td>10</td><td>Welcome bonus</td></tr>
+                                <tr><td>Complete first project</td><td>100</td><td>Achievement bonus</td></tr>
+                                <tr><td>Complete project</td><td>50</td><td>Per completion</td></tr>
+                                <tr><td>Create pattern</td><td>25</td><td>Per original pattern</td></tr>
+                                <tr><td>Add inventory item</td><td>5</td><td>Building collection</td></tr>
+                                <tr><td>Work 1 hour</td><td>10</td><td>Time-based reward</td></tr>
+                                <tr><td>Daily login</td><td>5</td><td>Engagement reward</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4>Achievement Examples</h4>
+                    <div class="achievement-examples">
+                        <div class="achievement-example">
+                            <div class="achievement-icon">🎯</div>
+                            <div class="achievement-name">First Steps</div>
+                            <div class="achievement-condition">ProjectsCompleted ≥ 1</div>
+                        </div>
+                        <div class="achievement-example">
+                            <div class="achievement-icon">💯</div>
+                            <div class="achievement-name">Century Club</div>
+                            <div class="achievement-condition">ProjectsCompleted ≥ 100</div>
+                        </div>
+                        <div class="achievement-example">
+                            <div class="achievement-icon">🌅</div>
+                            <div class="achievement-name">Early Bird</div>
+                            <div class="achievement-condition">WorkSession.StartTime.Hour < 6</div>
+                        </div>
+                        <div class="achievement-example">
+                            <div class="achievement-icon">🏃</div>
+                            <div class="achievement-name">Marathon Maker</div>
+                            <div class="achievement-condition">DailyTimeTracked ≥ 8 hours</div>
+                        </div>
+                        <div class="achievement-example">
+                            <div class="achievement-icon">📅</div>
+                            <div class="achievement-name">Week Warrior</div>
+                            <div class="achievement-condition">CurrentStreak ≥ 7</div>
+                        </div>
+                        <div class="achievement-example">
+                            <div class="achievement-icon">🎨</div>
+                            <div class="achievement-name">Rainbow Maker</div>
+                            <div class="achievement-condition">UniqueColorsUsed ≥ 7</div>
+                        </div>
+                    </div>
+                    
+                    <div class="acceptance-criteria">
+                        <h4>✅ Acceptance Criteria</h4>
+                        <ul>
+                            <li>XP awards correctly for all defined actions</li>
+                            <li>Level calculates and updates when XP increases</li>
+                            <li>Achievements unlock when conditions met</li>
+                            <li>Toast notification appears on achievement unlock</li>
+                            <li>Streaks calculate correctly across days</li>
+                            <li>Streak warning appears before break</li>
+                            <li>Dashboard shows accurate stats</li>
+                            <li>All gamification works in offline mode</li>
+                            <li>Stats sync to server when connected</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="phase-card">
+                    <div class="phase-header">
+                        <div class="phase-number">6</div>
+                        <div class="phase-title">
+                            <h3>Theme & Settings</h3>
+                        </div>
+                        <div class="phase-duration">Week 14</div>
+                    </div>
+                    
+                    <div class="phase-goal">
+                        <strong>Goal:</strong> User preferences and app customization
+                    </div>
+                    
+                    <h4>Deliverables</h4>
+                    <div class="deliverables-grid">
+                        <div class="deliverable-item">
+                            <h5>Theme System</h5>
+                            <ul>
+                                <li>Dark/light mode toggle</li>
+                                <li>Persist preference</li>
+                                <li>Apply theme without flicker</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Settings Management</h5>
+                            <ul>
+                                <li>Mode selection (offline/server)</li>
+                                <li>Server URL configuration</li>
+                                <li>Account settings</li>
+                                <li>Notification preferences</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Reference Data Management</h5>
+                            <ul>
+                                <li>CRUD for all reference tables</li>
+                                <li>Inline editing</li>
+                                <li>Bulk import/export</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="acceptance-criteria">
+                        <h4>✅ Acceptance Criteria</h4>
+                        <ul>
+                            <li>Theme toggle works instantly</li>
+                            <li>Theme persists across sessions and devices (if server mode)</li>
+                            <li>Settings save correctly in both modes</li>
+                            <li>Server URL can be configured and tested (ping endpoint)</li>
+                            <li>Reference data can be managed without leaving settings</li>
+                            <li>Changes to reference data reflect immediately in dropdowns</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="phase-card">
+                    <div class="phase-header">
+                        <div class="phase-number">7</div>
+                        <div class="phase-title">
+                            <h3>Admin & Operations</h3>
+                        </div>
+                        <div class="phase-duration">Week 15</div>
+                    </div>
+                    
+                    <div class="phase-goal">
+                        <strong>Goal:</strong> Data safety and admin tools
+                    </div>
+                    
+                    <h4>Deliverables</h4>
+                    <div class="deliverables-grid">
+                        <div class="deliverable-item">
+                            <h5>Export/Import</h5>
+                            <ul>
+                                <li>Export all data to JSON</li>
+                                <li>Import JSON with replace or merge options</li>
+                                <li>Preview import before applying</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>User Management (Admin)</h5>
+                            <ul>
+                                <li>List all users</li>
+                                <li>Change user roles</li>
+                                <li>Deactivate users</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Data Integrity</h5>
+                            <ul>
+                                <li>Check for orphaned records</li>
+                                <li>Validate relationships</li>
+                                <li>Fix common issues</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="acceptance-criteria">
+                        <h4>✅ Acceptance Criteria</h4>
+                        <ul>
+                            <li>Export downloads complete JSON file</li>
+                            <li>Import can restore from exported JSON</li>
+                            <li>Import preview shows what will change</li>
+                            <li>Replace option clears existing data first</li>
+                            <li>Merge option preserves existing data</li>
+                            <li>Database backup downloads successfully (server mode)</li>
+                            <li>Admin can manage user roles</li>
+                            <li>Data integrity checker finds and reports issues</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="phase-card">
+                    <div class="phase-header">
+                        <div class="phase-number">8</div>
+                        <div class="phase-title">
+                            <h3>Module System</h3>
+                        </div>
+                        <div class="phase-duration">Weeks 16-17</div>
+                    </div>
+                    
+                    <div class="phase-goal">
+                        <strong>Goal:</strong> Extensible architecture with first module (Crochet)
+                    </div>
+                    
+                    <h4>Deliverables</h4>
+                    <div class="deliverables-grid">
+                        <div class="deliverable-item">
+                            <h5>Module Infrastructure</h5>
+                            <ul>
+                                <li>IModule interface and contracts</li>
+                                <li>Module discovery at startup</li>
+                                <li>Service registration from modules</li>
+                                <li>Component extension points</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Crochet Module</h5>
+                            <ul>
+                                <li>Hook size selector component</li>
+                                <li>Stitch type reference data</li>
+                                <li>Gauge calculator</li>
+                                <li>Custom fields on Project (hook size, gauge)</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Module Management UI</h5>
+                            <ul>
+                                <li>List installed modules</li>
+                                <li>Enable/disable modules</li>
+                                <li>Module settings page</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="acceptance-criteria">
+                        <h4>✅ Acceptance Criteria</h4>
+                        <ul>
+                            <li>Modules are discovered automatically at startup</li>
+                            <li>Module services register correctly</li>
+                            <li>Module API routes work</li>
+                            <li>Module components inject at extension points</li>
+                            <li>Crochet module adds hook size selector to project creation</li>
+                            <li>Gauge calculator works and saves to project</li>
+                            <li>Module can be disabled without breaking app</li>
+                            <li>Module settings persist</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="phase-card">
+                    <div class="phase-header">
+                        <div class="phase-number">9</div>
+                        <div class="phase-title">
+                            <h3>Search & Performance</h3>
+                        </div>
+                        <div class="phase-duration">Weeks 18-19</div>
+                    </div>
+                    
+                    <div class="phase-goal">
+                        <strong>Goal:</strong> Optimize for large datasets and add search functionality
+                    </div>
+                    
+                    <h4>Deliverables</h4>
+                    <div class="deliverables-grid">
+                        <div class="deliverable-item">
+                            <h5>Search System</h5>
+                            <ul>
+                                <li>Full-text search across projects, patterns, inventory</li>
+                                <li>Search bar in header (global)</li>
+                                <li>Search results page with filtering</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Performance Optimization</h5>
+                            <ul>
+                                <li>Server-side pagination for all lists</li>
+                                <li>Database indexes on queried fields</li>
+                                <li>Reference data caching</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Advanced Filtering</h5>
+                            <ul>
+                                <li>OData-style query parameters</li>
+                                <li>Filter by theme, color, status</li>
+                                <li>Filter inventory by brand, fiber type</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="acceptance-criteria">
+                        <h4>✅ Acceptance Criteria</h4>
+                        <ul>
+                            <li>Search returns results in <500ms for 1000+ records</li>
+                            <li>Filters work correctly with search</li>
+                            <li>Pagination loads quickly (no full table scans)</li>
+                            <li>Reference data loads instantly after first fetch</li>
+                            <li>App remains responsive with 5000+ inventory items</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="phase-card">
+                    <div class="phase-header">
+                        <div class="phase-number">10</div>
+                        <div class="phase-title">
+                            <h3>Polish & Testing</h3>
+                        </div>
+                        <div class="phase-duration">Weeks 20-21</div>
+                    </div>
+                    
+                    <div class="phase-goal">
+                        <strong>Goal:</strong> Production-ready quality and comprehensive testing
+                    </div>
+                    
+                    <h4>Deliverables</h4>
+                    <div class="deliverables-grid">
+                        <div class="deliverable-item">
+                            <h5>Comprehensive Testing</h5>
+                            <ul>
+                                <li>Unit tests for services (80%+ coverage)</li>
+                                <li>Integration tests for API endpoints</li>
+                                <li>E2E tests for critical flows</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>User Experience</h5>
+                            <ul>
+                                <li>Loading states for all operations</li>
+                                <li>Error handling with friendly messages</li>
+                                <li>Accessibility (keyboard nav, ARIA labels)</li>
+                            </ul>
+                        </div>
+                        <div class="deliverable-item">
+                            <h5>Production Readiness</h5>
+                            <ul>
+                                <li>Mobile-responsive design</li>
+                                <li>Performance optimization</li>
+                                <li>Complete documentation</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="acceptance-criteria">
+                        <h4>✅ Acceptance Criteria</h4>
+                        <ul>
+                            <li>All critical user flows have E2E tests</li>
+                            <li>No console errors in production build</li>
+                            <li>All interactive elements are keyboard accessible</li>
+                            <li>App is usable on mobile devices</li>
+                            <li>Page load time <3 seconds on 3G</li>
+                            <li>All major features documented</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h2>Timeline Summary</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Phase</th>
+                            <th>Duration</th>
+                            <th>Key Deliverables</th>
+                            <th>Success Milestone</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>1. Foundation</strong></td>
+                            <td>3 weeks</td>
+                            <td>Infrastructure, auth, basic CRUD</td>
+                            <td>App runs in both modes</td>
+                        </tr>
+                        <tr>
+                            <td><strong>2. Core Features</strong></td>
+                            <td>3 weeks</td>
+                            <td>All entity CRUD, reference data</td>
+                            <td>Full data model working</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3. Pattern & Workspace</strong></td>
+                            <td>2 weeks</td>
+                            <td>Pattern editing, step checklist</td>
+                            <td>Complex patterns supported</td>
+                        </tr>
+                        <tr>
+                            <td><strong>4. Timers</strong></td>
+                            <td>2 weeks</td>
+                            <td>Timer component, sessions</td>
+                            <td>Time tracking works</td>
+                        </tr>
+                        <tr>
+                            <td><strong>5. Gamification</strong></td>
+                            <td>3 weeks</td>
+                            <td>XP, achievements, streaks</td>
+                            <td>Gamification complete</td>
+                        </tr>
+                        <tr>
+                            <td><strong>6. Theme & Settings</strong></td>
+                            <td>1 week</td>
+                            <td>Preferences, mode switching</td>
+                            <td>User customization</td>
+                        </tr>
+                        <tr>
+                            <td><strong>7. Admin</strong></td>
+                            <td>1 week</td>
+                            <td>Export/import, user mgmt</td>
+                            <td>Data safety ensured</td>
+                        </tr>
+                        <tr>
+                            <td><strong>8. Modules</strong></td>
+                            <td>2 weeks</td>
+                            <td>Module system, Crochet module</td>
+                            <td>Extensibility proven</td>
+                        </tr>
+                        <tr>
+                            <td><strong>9. Search & Performance</strong></td>
+                            <td>2 weeks</td>
+                            <td>Search, pagination, indexes</td>
+                            <td>Scales to large datasets</td>
+                        </tr>
+                        <tr>
+                            <td><strong>10. Polish & Testing</strong></td>
+                            <td>2 weeks</td>
+                            <td>Tests, docs, accessibility</td>
+                            <td>Production-ready MVP</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="success">
+                    <h3>🎯 Total Timeline: 21 weeks (~5 months)</h3>
+                    <p>Complete MVP with offline-first architecture, comprehensive gamification, extensible module system, and production-ready quality. Each phase builds upon the previous one with clear acceptance criteria and measurable milestones.</p>
+                </div>
+
+                <div class="warning">
+                    <h3>⚠️ Risk Mitigation Strategies</h3>
+                    <ul>
+                        <li><strong>Scope Creep:</strong> Strict phase boundaries, clear "Won't do" list, time-boxed features</li>
+                        <li><strong>Technical Risk:</strong> IndexedDB fallback to localStorage, server-wins conflict resolution</li>
+                        <li><strong>Performance:</strong> Client-side pagination, lazy loading, archival features</li>
+                        <li><strong>Motivation:</strong> Small achievable milestones, dogfood the app, build desired features first</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 TankerMade Workbench Documentation. Generated from project specification.</p>
+        </div>
+    </footer>
+</body>
+</html>

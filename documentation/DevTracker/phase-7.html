@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 7: Admin & Operations - TankerMade Dev Tracker</title>
+    <style>
+        :root {
+            --primary-color: #be123c;
+            --secondary-color: #64748b;
+            --bg-color: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --code-bg: #f1f5f9;
+            --hover-color: #f8fafc;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        
+        .phase-progress {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .progress-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: conic-gradient(var(--success-color) 0deg, var(--success-color) 0deg, rgba(255,255,255,0.3) 0deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        
+        nav {
+            background: var(--hover-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.5rem 0;
+        }
+        
+        .nav-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .nav-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        
+        main {
+            padding: 2rem 0;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 2.2rem;
+        }
+        
+        .phase-intro {
+            background: linear-gradient(135deg, #fdf2f8 0%, #ffffff 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .phase-meta {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .meta-label {
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        .meta-value {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .phase-goal {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--primary-color);
+            border-radius: 6px;
+            background: white;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn.success {
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+        
+        .btn.success:hover {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .btn.danger {
+            border-color: var(--error-color);
+            color: var(--error-color);
+        }
+        
+        .btn.danger:hover {
+            background: var(--error-color);
+            color: white;
+        }
+        
+        .deliverable-section {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        
+        .deliverable-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .deliverable-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .deliverable-progress {
+            font-size: 0.9rem;
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+        }
+        
+        .deliverable-content {
+            padding: 1.5rem;
+        }
+        
+        .task-group {
+            margin-bottom: 2rem;
+        }
+        
+        .task-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .task-group-title {
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--primary-color);
+            padding-left: 0.75rem;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .task-item:hover {
+            background: var(--hover-color);
+        }
+        
+        .task-item.completed {
+            background: #f0fdf4;
+            border-color: var(--success-color);
+        }
+        
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin-top: 0.1rem;
+        }
+        
+        .task-content {
+            flex: 1;
+        }
+        
+        .task-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+            color: var(--secondary-color);
+        }
+        
+        .task-description {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            line-height: 1.4;
+        }
+        
+        .task-complexity {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+        
+        .complexity-easy {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        
+        .complexity-medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .complexity-hard {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .acceptance-criteria {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .acceptance-criteria h3 {
+            color: #0ea5e9;
+            margin: 0 0 1rem 0;
+        }
+        
+        .criteria-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .criteria-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .criteria-item:hover {
+            background: rgba(14, 165, 233, 0.1);
+        }
+        
+        .criteria-item.completed {
+            background: #ecfdf5;
+        }
+        
+        .criteria-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            margin-top: 0.1rem;
+        }
+        
+        .criteria-text {
+            flex: 1;
+            font-size: 0.95rem;
+        }
+        
+        .criteria-item.completed .criteria-text {
+            text-decoration: line-through;
+            color: var(--secondary-color);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .phase-meta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+            
+            .deliverable-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">🛡️ Phase 7: Admin & Operations</div>
+                <div class="phase-progress">
+                    <div>
+                        <div style="font-size: 0.85rem;" id="progress-text">0% Complete</div>
+                        <div style="font-size: 0.75rem; opacity: 0.8;" id="task-count">0 / 27 tasks</div>
+                    </div>
+                    <div class="progress-circle" id="progress-circle">0%</div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <div class="nav-content">
+                <a href="tracker-index.html" class="nav-link">← Back to Dashboard</a>
+                <span style="color: var(--secondary-color);">|</span>
+                <a href="phase-6.html" class="nav-link">← Phase 6: Theme & Settings</a>
+                <span style="color: var(--secondary-color);">|</span>
+                <a href="phase-8.html" class="nav-link">Phase 8: Module System →</a>
+            </div>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <h1>Admin & Operations Phase</h1>
+            
+            <div class="phase-intro">
+                <div class="phase-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Duration:</span>
+                        <span class="meta-value">Week 15</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Total Tasks:</span>
+                        <span class="meta-value" id="total-tasks">27</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Estimated Time:</span>
+                        <span class="meta-value">30-40 hours</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Complexity:</span>
+                        <span class="meta-value">High (Data Safety)</span>
+                    </div>
+                </div>
+                
+                <div class="phase-goal">
+                    <strong>Goal:</strong> Data safety and admin tools for production
+                </div>
+                
+                <p><strong>What you'll build:</strong> Complete export/import system, database backup tools, user management for admins, and data integrity checking. This ensures data safety and provides essential operational tools for running the app in production.</p>
+            </div>
+
+            <div class="controls">
+                <button class="btn success" onclick="markAllComplete()">✓ Mark All Complete</button>
+                <button class="btn" onclick="markAllIncomplete()">○ Mark All Incomplete</button>
+                <button class="btn" onclick="exportPhaseProgress()">📁 Export Progress</button>
+                <button class="btn danger" onclick="resetPhaseProgress()">🔄 Reset Phase</button>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">Export/Import System</h2>
+                    <div class="deliverable-progress" id="export-progress">0 / 12 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">Data Export</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="design-export-format">
+                            <div class="task-content">
+                                <div class="task-title">Design export JSON format</div>
+                                <div class="task-description">Define schema with version, timestamp, entities array, metadata</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-export-service">
+                            <div class="task-content">
+                                <div class="task-title">Create data export service</div>
+                                <div class="task-description">IExportService with SerializeAllData(userId) method</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-entity-serialization">
+                            <div class="task-content">
+                                <div class="task-title">Implement entity serialization</div>
+                                <div class="task-description">Serialize Projects, Patterns, Inventory, WorkSessions, UserStats, Achievements</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="handle-relationships">
+                            <div class="task-content">
+                                <div class="task-title">Handle entity relationships</div>
+                                <div class="task-description">Include related data, maintain foreign key references in export</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-export-ui">
+                            <div class="task-content">
+                                <div class="task-title">Add export UI to settings</div>
+                                <div class="task-description">Export button with progress indicator, download trigger</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-file-download">
+                            <div class="task-content">
+                                <div class="task-title">Implement file download</div>
+                                <div class="task-description">Generate filename with timestamp, trigger browser download</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Data Import</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-import-service">
+                            <div class="task-content">
+                                <div class="task-title">Create data import service</div>
+                                <div class="task-description">IImportService with DeserializeData and conflict resolution</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-merge-strategy">
+                            <div class="task-content">
+                                <div class="task-title">Implement merge vs replace strategies</div>
+                                <div class="task-description">Replace: clear all data first. Merge: preserve existing, add new</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-import-preview">
+                            <div class="task-content">
+                                <div class="task-title">Create import preview UI</div>
+                                <div class="task-description">Show what will be created/updated/deleted before applying</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="validate-import-data">
+                            <div class="task-content">
+                                <div class="task-title">Add import validation</div>
+                                <div class="task-description">Validate JSON format, required fields, foreign key integrity</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="handle-import-errors">
+                            <div class="task-content">
+                                <div class="task-title">Handle import errors gracefully</div>
+                                <div class="task-description">Transaction rollback, detailed error messages, partial success handling</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="test-export-import-roundtrip">
+                            <div class="task-content">
+                                <div class="task-title">Test export/import roundtrip</div>
+                                <div class="task-description">Export data, clear database, import, verify everything matches</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">Database Operations</h2>
+                    <div class="deliverable-progress" id="database-progress">0 / 7 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">Database Backup</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-sqlite-backup">
+                            <div class="task-content">
+                                <div class="task-title">Implement SQLite database backup</div>
+                                <div class="task-description">Copy .db file with timestamp, handle file locking</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-postgres-backup">
+                            <div class="task-content">
+                                <div class="task-title">Implement PostgreSQL backup (server mode)</div>
+                                <div class="task-description">pg_dump command execution, SQL file generation</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-backup-api-endpoint">
+                            <div class="task-content">
+                                <div class="task-title">Add backup API endpoint</div>
+                                <div class="task-description">Admin-only GET /api/admin/backup endpoint with file download</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-backup-ui">
+                            <div class="task-content">
+                                <div class="task-title">Add backup UI to settings</div>
+                                <div class="task-description">Admin-only section with backup button, backup history</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="schedule-automatic-backups">
+                            <div class="task-content">
+                                <div class="task-title">Add scheduled backup option</div>
+                                <div class="task-description">Daily/weekly backup scheduling using background service</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Database Maintenance</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-database-stats">
+                            <div class="task-content">
+                                <div class="task-title">Add database statistics</div>
+                                <div class="task-description">Table row counts, database size, growth trends</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-database-cleanup">
+                            <div class="task-content">
+                                <div class="task-title">Add database cleanup tools</div>
+                                <div class="task-description">Remove old sessions, compact database, orphaned record cleanup</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">User Management</h2>
+                    <div class="deliverable-progress" id="users-progress">0 / 8 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">Admin User Interface</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-admin-user-list">
+                            <div class="task-content">
+                                <div class="task-title">Create admin user list page</div>
+                                <div class="task-description">Admin-only page showing all users with stats and actions</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-role-changes">
+                            <div class="task-content">
+                                <div class="task-title">Implement role changes</div>
+                                <div class="task-description">Admin can change user roles: Viewer → Editor → Admin</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-user-deactivation">
+                            <div class="task-content">
+                                <div class="task-title">Add user deactivation</div>
+                                <div class="task-description">Disable user login without deleting data</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-user-search-filter">
+                            <div class="task-content">
+                                <div class="task-title">Add user search and filtering</div>
+                                <div class="task-description">Search by username/email, filter by role/status</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="show-user-statistics">
+                            <div class="task-content">
+                                <div class="task-title">Show user statistics</div>
+                                <div class="task-description">Projects, time tracked, last login, account age per user</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">User Data Management</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-user-impersonation">
+                            <div class="task-content">
+                                <div class="task-title">Add user impersonation (admin)</div>
+                                <div class="task-description">Admin can view app as any user for support purposes</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="export-user-data">
+                            <div class="task-content">
+                                <div class="task-title">Add per-user data export</div>
+                                <div class="task-description">Admin can export specific user's data for support/GDPR</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="user-data-deletion">
+                            <div class="task-content">
+                                <div class="task-title">Add user data deletion</div>
+                                <div class="task-description">Admin can permanently delete user and all their data</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="acceptance-criteria">
+                <h3>✅ Acceptance Criteria</h3>
+                <ul class="criteria-list">
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="export-downloads-complete">
+                        <div class="criteria-text">Export downloads complete JSON file with all user data</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="import-restores-data">
+                        <div class="criteria-text">Import can restore from exported JSON successfully</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="import-preview-accurate">
+                        <div class="criteria-text">Import preview shows accurate changes before applying</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="replace-clears-existing">
+                        <div class="criteria-text">Replace option clears existing data completely</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="merge-preserves-data">
+                        <div class="criteria-text">Merge option preserves existing data and adds new</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="backup-downloads-successfully">
+                        <div class="criteria-text">Database backup downloads successfully in server mode</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="admin-manages-users">
+                        <div class="criteria-text">Admin can manage user roles and deactivate users</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="data-integrity-reports">
+                        <div class="criteria-text">Data integrity checker finds and reports issues</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="admin-only-features">
+                        <div class="criteria-text">All admin features are properly restricted to admin role</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const PHASE_ID = 7;
+        const STORAGE_KEY = `phase-${PHASE_ID}-tasks`;
+        const CRITERIA_KEY = `phase-${PHASE_ID}-criteria`;
+        
+        const taskIds = [
+            // Export/Import System (12 tasks)
+            'design-export-format', 'create-export-service', 'implement-entity-serialization', 'handle-relationships', 'add-export-ui', 'add-file-download',
+            'create-import-service', 'implement-merge-strategy', 'create-import-preview', 'validate-import-data', 'handle-import-errors', 'test-export-import-roundtrip',
+            
+            // Database Operations (7 tasks)
+            'implement-sqlite-backup', 'implement-postgres-backup', 'add-backup-api-endpoint', 'add-backup-ui', 'schedule-automatic-backups',
+            'add-database-stats', 'add-database-cleanup',
+            
+            // User Management (8 tasks)
+            'create-admin-user-list', 'implement-role-changes', 'add-user-deactivation', 'add-user-search-filter', 'show-user-statistics',
+            'implement-user-impersonation', 'export-user-data', 'user-data-deletion'
+        ];
+
+        const criteriaIds = [
+            'export-downloads-complete', 'import-restores-data', 'import-preview-accurate', 'replace-clears-existing',
+            'merge-preserves-data', 'backup-downloads-successfully', 'admin-manages-users', 'data-integrity-reports', 'admin-only-features'
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProgress();
+            updateAllProgress();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            taskIds.forEach(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                if (checkbox) {
+                    checkbox.addEventListener('change', function() {
+                        saveProgress();
+                        updateAllProgress();
+                    });
+                }
+            });
+
+            criteriaIds.forEach(criteriaId => {
+                const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                if (checkbox) {
+                    checkbox.addEventListener('change', function() {
+                        saveCriteria();
+                        updateAllProgress();
+                    });
+                }
+            });
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const completedTasks = JSON.parse(saved);
+                taskIds.forEach(taskId => {
+                    const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                    if (checkbox && completedTasks.includes(taskId)) {
+                        checkbox.checked = true;
+                        checkbox.closest('.task-item').classList.add('completed');
+                    }
+                });
+            }
+
+            const savedCriteria = localStorage.getItem(CRITERIA_KEY);
+            if (savedCriteria) {
+                const completedCriteria = JSON.parse(savedCriteria);
+                criteriaIds.forEach(criteriaId => {
+                    const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                    if (checkbox && completedCriteria.includes(criteriaId)) {
+                        checkbox.checked = true;
+                        checkbox.closest('.criteria-item').classList.add('completed');
+                    }
+                });
+            }
+        }
+
+        function saveProgress() {
+            const completedTasks = taskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(completedTasks));
+
+            taskIds.forEach(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                if (checkbox) {
+                    const taskItem = checkbox.closest('.task-item');
+                    if (checkbox.checked) {
+                        taskItem.classList.add('completed');
+                    } else {
+                        taskItem.classList.remove('completed');
+                    }
+                }
+            });
+
+            updateParentProgress();
+        }
+
+        function saveCriteria() {
+            const completedCriteria = criteriaIds.filter(criteriaId => {
+                const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                return checkbox && checkbox.checked;
+            });
+            localStorage.setItem(CRITERIA_KEY, JSON.stringify(completedCriteria));
+
+            criteriaIds.forEach(criteriaId => {
+                const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                if (checkbox) {
+                    const criteriaItem = checkbox.closest('.criteria-item');
+                    if (checkbox.checked) {
+                        criteriaItem.classList.add('completed');
+                    } else {
+                        criteriaItem.classList.remove('completed');
+                    }
+                }
+            });
+        }
+
+        function updateAllProgress() {
+            const totalTasks = taskIds.length;
+            const completedTasks = taskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            }).length;
+
+            const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+            document.getElementById('progress-text').textContent = percentage + '% Complete';
+            document.getElementById('task-count').textContent = `${completedTasks} / ${totalTasks} tasks`;
+            document.getElementById('progress-circle').textContent = percentage + '%';
+            
+            const degrees = (percentage / 100) * 360;
+            document.getElementById('progress-circle').style.background = 
+                `conic-gradient(var(--success-color) 0deg, var(--success-color) ${degrees}deg, rgba(255,255,255,0.3) ${degrees}deg)`;
+
+            updateSectionProgress('export', taskIds.slice(0, 12));
+            updateSectionProgress('database', taskIds.slice(12, 19));
+            updateSectionProgress('users', taskIds.slice(19, 27));
+        }
+
+        function updateSectionProgress(section, sectionTaskIds) {
+            const completed = sectionTaskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            }).length;
+            
+            const progressElement = document.getElementById(`${section}-progress`);
+            if (progressElement) {
+                progressElement.textContent = `${completed} / ${sectionTaskIds.length} tasks`;
+            }
+        }
+
+        function updateParentProgress() {
+            const totalTasks = taskIds.length;
+            const completedTasks = taskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            }).length;
+
+            const progressData = {
+                completed: completedTasks,
+                total: totalTasks
+            };
+            
+            localStorage.setItem(`phase-${PHASE_ID}-progress`, JSON.stringify(progressData));
+        }
+
+        function markAllComplete() {
+            if (confirm('Mark all tasks as complete? This will check every checkbox in this phase.')) {
+                taskIds.forEach(taskId => {
+                    const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                criteriaIds.forEach(criteriaId => {
+                    const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                saveProgress();
+                saveCriteria();
+                updateAllProgress();
+            }
+        }
+
+        function markAllIncomplete() {
+            if (confirm('Mark all tasks as incomplete? This will uncheck every checkbox in this phase.')) {
+                taskIds.forEach(taskId => {
+                    const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                    if (checkbox) checkbox.checked = false;
+                });
+                
+                criteriaIds.forEach(criteriaId => {
+                    const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                    if (checkbox) checkbox.checked = false;
+                });
+                
+                saveProgress();
+                saveCriteria();
+                updateAllProgress();
+            }
+        }
+
+        function exportPhaseProgress() {
+            const data = {
+                phase: PHASE_ID,
+                title: 'Admin & Operations',
+                tasks: localStorage.getItem(STORAGE_KEY),
+                criteria: localStorage.getItem(CRITERIA_KEY),
+                exportDate: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `phase-7-admin-operations-progress-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function resetPhaseProgress() {
+            if (confirm('Reset all progress for this phase? This cannot be undone.')) {
+                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem(CRITERIA_KEY);
+                localStorage.removeItem(`phase-${PHASE_ID}-progress`);
+                location.reload();
+            }
+        }
+
+        updateParentProgress();
+    </script>
+</body>
+</html>

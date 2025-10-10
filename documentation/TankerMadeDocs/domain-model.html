@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain Model - TankerMade Workbench Documentation</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --bg-color: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --code-bg: #f1f5f9;
+            --hover-color: #f8fafc;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        nav {
+            background: var(--hover-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            overflow-x: auto;
+        }
+        
+        .nav-menu li {
+            white-space: nowrap;
+        }
+        
+        .nav-menu a {
+            display: block;
+            padding: 1rem 1.5rem;
+            text-decoration: none;
+            color: var(--text-color);
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .nav-menu a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .nav-menu a.active {
+            background: var(--primary-color);
+            color: white;
+            border-bottom-color: #1d4ed8;
+        }
+        
+        main {
+            padding: 2rem 0;
+            min-height: calc(100vh - 200px);
+        }
+        
+        .content {
+            max-width: 900px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            margin: 2rem 0 1rem 0;
+            font-size: 1.8rem;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 1rem;
+        }
+        
+        h3 {
+            color: var(--secondary-color);
+            margin: 1.5rem 0 1rem 0;
+            font-size: 1.3rem;
+        }
+        
+        h4 {
+            color: var(--secondary-color);
+            margin: 1rem 0 0.5rem 0;
+            font-size: 1.1rem;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+        }
+        
+        ul, ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        code {
+            background: var(--code-bg);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            width: 100%;
+            max-width: 100%;
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            border: 1px solid var(--border-color);
+        }
+        
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            text-align: left;
+        }
+        
+        th {
+            background: var(--code-bg);
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        .card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            width: 100%;
+        }
+        
+        .highlight {
+            background: #fef3c7;
+            border-left: 4px solid var(--warning-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .success {
+            background: #dcfce7;
+            border-left: 4px solid var(--success-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid var(--warning-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .error {
+            background: #fee2e2;
+            border-left: 4px solid var(--error-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        /* Full width code sections - no grid for inventory and reference data */
+        .full-width-section {
+            width: 100%;
+        }
+        
+        .full-width-section .card {
+            width: 100%;
+            margin-bottom: 2rem;
+        }
+        
+        footer {
+            background: var(--code-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 0;
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--secondary-color);
+        }
+        
+        /* Achievement Grid */
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .achievement-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        
+        .achievement-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .achievement-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .achievement-name {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.25rem;
+        }
+        
+        .achievement-desc {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .achievement-xp {
+            background: var(--success-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-menu {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 0 15px;
+            }
+            
+            .achievement-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            pre {
+                padding: 0.75rem;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">🧶 TankerMade Workbench</div>
+                <div>Comprehensive Documentation</div>
+            </div>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <ul class="nav-menu">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="architecture.html">Architecture</a></li>
+                <li><a href="domain-model.html" class="active">Domain Model</a></li>
+                <li><a href="implementation-phases.html">Implementation</a></li>
+                <li><a href="technical-specs.html">Technical Specs</a></li>
+                <li><a href="ui-ux-specs.html">UI/UX Specs</a></li>
+                <li><a href="deployment.html">Deployment</a></li>
+                <li><a href="development-guidelines.html">Development</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <div class="content">
+                <h1>Domain Model & Database Schema</h1>
+
+                <div class="highlight">
+                    <h3>Entity-Relationship Overview</h3>
+                    <p>The TankerMade Workbench uses a comprehensive domain model supporting craft project management, inventory tracking, and gamification with multi-user capabilities.</p>
+                </div>
+
+                <h2>Core Entity Relationships</h2>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
+                    <!-- Core User Entity -->
+                    <div style="background: white; border: 2px solid var(--primary-color); border-radius: 8px; padding: 1.5rem;">
+                        <div style="font-weight: bold; color: var(--primary-color); font-size: 1.2rem; text-align: center; padding-bottom: 0.5rem; border-bottom: 2px solid var(--primary-color); margin-bottom: 1rem;">
+                            👤 User
+                        </div>
+                        <div style="font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9rem; line-height: 1.4;">
+                            <div style="color: var(--warning-color); font-weight: bold;">• Id (PK)</div>
+                            <div>• Username</div>
+                            <div>• Email</div>
+                            <div>• Role (Viewer/Editor/Admin)</div>
+                            <div>• CreatedAt</div>
+                            <div>• LastLoginAt</div>
+                        </div>
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); font-size: 0.85rem; color: var(--secondary-color);">
+                            <strong>Relationships:</strong><br>
+                            • One-to-one UserStats<br>
+                            • One-to-many Projects<br>
+                            • One-to-many Patterns<br>
+                            • One-to-many InventoryItems
+                        </div>
+                    </div>
+
+                    <!-- Project Management -->
+                    <div style="background: white; border: 2px solid #059669; border-radius: 8px; padding: 1.5rem;">
+                        <div style="font-weight: bold; color: #059669; font-size: 1.2rem; text-align: center; padding-bottom: 0.5rem; border-bottom: 2px solid #059669; margin-bottom: 1rem;">
+                            📋 Project
+                        </div>
+                        <div style="font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9rem; line-height: 1.4;">
+                            <div style="color: var(--warning-color); font-weight: bold;">• Id (PK)</div>
+                            <div style="color: var(--primary-color); font-weight: bold;">• UserId (FK)</div>
+                            <div style="color: var(--primary-color); font-weight: bold;">• PatternId (FK)</div>
+                            <div>• Name, Slug</div>
+                            <div>• CompletedStitches</div>
+                            <div>• TotalStitches</div>
+                            <div>• Difficulty</div>
+                            <div>• DateStarted</div>
+                        </div>
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); font-size: 0.85rem; color: var(--secondary-color);">
+                            <strong>Links to:</strong><br>
+                            • Pattern (optional)<br>
+                            • InventoryItems (supplies)<br>
+                            • WorkSessions<br>
+                            • Theme, Color
+                        </div>
+                    </div>
+
+                    <!-- Pattern System -->
+                    <div style="background: white; border: 2px solid #7c3aed; border-radius: 8px; padding: 1.5rem;">
+                        <div style="font-weight: bold; color: #7c3aed; font-size: 1.2rem; text-align: center; padding-bottom: 0.5rem; border-bottom: 2px solid #7c3aed; margin-bottom: 1rem;">
+                            📝 Pattern
+                        </div>
+                        <div style="font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9rem; line-height: 1.4;">
+                            <div style="color: var(--warning-color); font-weight: bold;">• Id (PK)</div>
+                            <div style="color: var(--primary-color); font-weight: bold;">• UserId (FK)</div>
+                            <div>• Name, Slug</div>
+                            <div>• Type (Crochet/Knit)</div>
+                            <div>• Form (2D/3D)</div>
+                            <div>• Difficulty</div>
+                            <div>• SuggestedYarnWeight</div>
+                        </div>
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); font-size: 0.85rem; color: var(--secondary-color);">
+                            <strong>Contains:</strong><br>
+                            • PatternPieces<br>
+                            • PatternSteps<br>
+                            • Required supplies
+                        </div>
+                    </div>
+
+                    <!-- Inventory System -->
+                    <div style="background: white; border: 2px solid #dc2626; border-radius: 8px; padding: 1.5rem;">
+                        <div style="font-weight: bold; color: #dc2626; font-size: 1.2rem; text-align: center; padding-bottom: 0.5rem; border-bottom: 2px solid #dc2626; margin-bottom: 1rem;">
+                            🧶 Inventory
+                        </div>
+                        <div style="font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9rem; line-height: 1.4;">
+                            <div style="color: var(--warning-color); font-weight: bold;">• Id (PK)</div>
+                            <div style="color: var(--primary-color); font-weight: bold;">• UserId (FK)</div>
+                            <div>• Name, Slug</div>
+                            <div>• Type (Abstract base)</div>
+                            <div>• Brand</div>
+                            <div>• PurchaseHistory</div>
+                        </div>
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); font-size: 0.85rem; color: var(--secondary-color);">
+                            <strong>Specialized Types:</strong><br>
+                            • Yarn (lots, fiber, weight)<br>
+                            • Tools (sizes)<br>
+                            • Notions (variants)
+                        </div>
+                    </div>
+
+                    <!-- Gamification -->
+                    <div style="background: white; border: 2px solid #ea580c; border-radius: 8px; padding: 1.5rem;">
+                        <div style="font-weight: bold; color: #ea580c; font-size: 1.2rem; text-align: center; padding-bottom: 0.5rem; border-bottom: 2px solid #ea580c; margin-bottom: 1rem;">
+                            🏆 Gamification
+                        </div>
+                        <div style="font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9rem; line-height: 1.4;">
+                            <div><strong>UserStats:</strong></div>
+                            <div>• TotalXP, Level</div>
+                            <div>• CurrentStreak</div>
+                            <div>• ProjectsCompleted</div>
+                            <div><strong>UserAchievements:</strong></div>
+                            <div>• Achievement links</div>
+                            <div>• UnlockedAt dates</div>
+                        </div>
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); font-size: 0.85rem; color: var(--secondary-color);">
+                            <strong>Features:</strong><br>
+                            • 30+ achievements<br>
+                            • XP for all actions<br>
+                            • Daily streak tracking
+                        </div>
+                    </div>
+
+                    <!-- Time Tracking -->
+                    <div style="background: white; border: 2px solid #0891b2; border-radius: 8px; padding: 1.5rem;">
+                        <div style="font-weight: bold; color: #0891b2; font-size: 1.2rem; text-align: center; padding-bottom: 0.5rem; border-bottom: 2px solid #0891b2; margin-bottom: 1rem;">
+                            ⏱️ WorkSession
+                        </div>
+                        <div style="font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9rem; line-height: 1.4;">
+                            <div style="color: var(--warning-color); font-weight: bold;">• Id (PK)</div>
+                            <div style="color: var(--primary-color); font-weight: bold;">• ProjectId (FK)</div>
+                            <div style="color: var(--primary-color); font-weight: bold;">• UserId (FK)</div>
+                            <div>• PatternPieceId (optional)</div>
+                            <div>• StartTime</div>
+                            <div>• EndTime</div>
+                            <div>• Duration (calculated)</div>
+                        </div>
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); font-size: 0.85rem; color: var(--secondary-color);">
+                            <strong>Features:</strong><br>
+                            • Persistent timers<br>
+                            • Per-project tracking<br>
+                            • Session history
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: var(--hover-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; margin: 2rem 0;">
+                    <h4 style="margin-top: 0; color: var(--primary-color);">Key Relationship Patterns</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                        <div>
+                            <strong style="color: var(--primary-color);">User Ownership:</strong><br>
+                            All major entities are owned by a User via foreign key relationship
+                        </div>
+                        <div>
+                            <strong style="color: var(--success-color);">Project-Centric:</strong><br>
+                            Projects link to Patterns, Inventory, and WorkSessions
+                        </div>
+                        <div>
+                            <strong style="color: #7c3aed;">Hierarchical Patterns:</strong><br>
+                            Pattern → PatternPiece → PatternStep
+                        </div>
+                        <div>
+                            <strong style="color: #dc2626;">Inventory Inheritance:</strong><br>
+                            Yarn, Tool, Notion inherit from InventoryItem
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Core Domain Models</h2>
+
+                <h3>Projects</h3>
+                <div class="card">
+                    <pre><code>public class Project
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Slug { get; set; }
+    public string? Description { get; set; }
+    public int? PatternId { get; set; }
+    public Pattern? Pattern { get; set; }
+
+    // Metadata
+    public int? ThemeId { get; set; }
+    public Theme? Theme { get; set; }
+    public int? MainColorId { get; set; }
+    public Color? MainColor { get; set; }
+    public Difficulty Difficulty { get; set; }
+
+    // Progress
+    public int CompletedStitches { get; set; }
+    public int TotalStitches { get; set; }
+    public decimal CompletionPercentage => TotalStitches > 0 
+        ? (decimal)CompletedStitches / TotalStitches * 100 
+        : 0;
+    public bool IsArchived { get; set; }
+
+    // Timestamps
+    public DateTime DateStarted { get; set; }
+    public DateTime? DateCompleted { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+
+    // Relationships
+    public ICollection<ProjectInventoryLink> InventoryLinks { get; set; }
+    public ICollection<WorkSession> WorkSessions { get; set; }
+    public ICollection<ProjectStepProgress> StepProgress { get; set; }
+
+    // Multi-user
+    public string UserId { get; set; }
+    public User User { get; set; }
+}</code></pre>
+                </div>
+
+                <h3>Patterns</h3>
+                <div class="card">
+                    <pre><code>public class Pattern
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Slug { get; set; }
+    public string? Description { get; set; }
+
+    // Classification
+    public PatternType Type { get; set; } // Crochet, Knit
+    public PatternForm Form { get; set; } // 2D, 3D
+    public Difficulty Difficulty { get; set; }
+
+    // Metadata
+    public int? ThemeId { get; set; }
+    public Theme? Theme { get; set; }
+    public int? SourceId { get; set; }
+    public Source? Source { get; set; }
+
+    // Suggested supplies
+    public int? SuggestedYarnWeightId { get; set; }
+    public YarnWeight? SuggestedYarnWeight { get; set; }
+    public string? SuggestedHookNeedleSizes { get; set; }
+
+    // Structure
+    public ICollection<PatternPiece> Pieces { get; set; }
+    public ICollection<PatternSupply> RequiredSupplies { get; set; }
+
+    // Multi-user
+    public string UserId { get; set; }
+    public User User { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class PatternPiece
+{
+    public int Id { get; set; }
+    public int PatternId { get; set; }
+    public Pattern Pattern { get; set; }
+
+    public string Name { get; set; }
+    public int SortOrder { get; set; }
+    public int TotalStitches { get; set; }
+
+    public ICollection<PatternStep> Steps { get; set; }
+}
+
+public class PatternStep
+{
+    public int Id { get; set; }
+    public int PatternPieceId { get; set; }
+    public PatternPiece PatternPiece { get; set; }
+
+    public int StepNumber { get; set; }
+    public string Instructions { get; set; }
+    public int StitchCount { get; set; }
+    public string? RepeatNotation { get; set; } // e.g., "5-7" (repeat rows 5-7)
+}</code></pre>
+                </div>
+
+                <h2>Inventory System</h2>
+
+                <div class="full-width-section">
+                    <h4>Base Inventory</h4>
+                    <div class="card">
+                        <pre><code>public abstract class InventoryItem
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Slug { get; set; }
+    public string? Description { get; set; }
+
+    public int? BrandId { get; set; }
+    public Brand? Brand { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+
+    // Multi-user
+    public string UserId { get; set; }
+    public User User { get; set; }
+
+    // Relationships
+    public ICollection<ProjectInventoryLink> ProjectLinks { get; set; }
+    public ICollection<PurchaseHistory> PurchaseHistory { get; set; }
+}</code></pre>
+                    </div>
+
+                    <h4>Yarn Specialization</h4>
+                    <div class="card">
+                        <pre><code>public class Yarn : InventoryItem
+{
+    public string ColorName { get; set; }
+    public int? MainColorId { get; set; }
+    public Color? MainColor { get; set; }
+
+    public int? YarnWeightId { get; set; }
+    public YarnWeight? YarnWeight { get; set; }
+
+    public int? FiberTypeId { get; set; }
+    public FiberType? FiberType { get; set; }
+    public FiberClassification FiberClassification { get; set; } // Synthetic, Natural, Blended
+
+    public ICollection<YarnLot> Lots { get; set; }
+}</code></pre>
+                    </div>
+                </div>
+
+                <h3>Yarn Lot Tracking</h3>
+                <div class="card">
+                    <pre><code>public class YarnLot
+{
+    public int Id { get; set; }
+    public int YarnId { get; set; }
+    public Yarn Yarn { get; set; }
+
+    public string LotNumber { get; set; }
+    public int SkeinCount { get; set; }
+
+    // Weight/length tracking
+    public decimal? WeightPerSkeinGrams { get; set; }
+    public decimal? LengthPerSkeinMeters { get; set; }
+    public decimal? CurrentWeightGrams { get; set; }
+
+    public decimal EstimatedRemainingLength =>
+        WeightPerSkeinGrams.HasValue && LengthPerSkeinMeters.HasValue && CurrentWeightGrams.HasValue
+            ? CurrentWeightGrams.Value / WeightPerSkeinGrams.Value * LengthPerSkeinMeters.Value
+            : 0;
+}</code></pre>
+                </div>
+
+                <div class="full-width-section">
+                    <h4>Tools</h4>
+                    <div class="card">
+                        <pre><code>public class Tool : InventoryItem
+{
+    public string Type { get; set; } // Hook, Needle, Scissors, etc.
+                    public string? Size { get; set; }
+
+    public ICollection<ToolSize> AvailableSizes { get; set; } // If user has multiple sizes
+}</code></pre>
+                    </div>
+                    
+                    <h4>Notions</h4>
+                    <div class="card">
+                        <pre><code>public class Notion : InventoryItem
+{
+    public string Type { get; set; } // Stitch markers, buttons, stuffing, etc.
+    public string? Size { get; set; }
+    public string? Color { get; set; }
+
+    public ICollection<NotionVariant> Variants { get; set; } // Multiple colors/sizes
+}</code></pre>
+                    </div>
+                </div>
+
+                <h2>Kit System</h2>
+
+                <div class="card">
+                    <pre><code>public class Kit
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Slug { get; set; }
+    public string? Description { get; set; }
+
+    // Metadata (same as Project)
+    public int? ThemeId { get; set; }
+    public Theme? Theme { get; set; }
+    public int? MainColorId { get; set; }
+    public Color? MainColor { get; set; }
+    public Difficulty Difficulty { get; set; }
+
+    // Kit can have multiple pieces (projects within kit)
+    public ICollection<KitPiece> Pieces { get; set; }
+    public ICollection<KitSupply> Supplies { get; set; }
+
+    // Progress
+    public bool IsArchived { get; set; }
+    public DateTime DateStarted { get; set; }
+    public DateTime? DateCompleted { get; set; }
+
+    // Multi-user
+    public string UserId { get; set; }
+    public User User { get; set; }
+}</code></pre>
+                </div>
+
+                <h2>Gamification System</h2>
+
+                <div class="full-width-section">
+                    <h4>User Statistics</h4>
+                    <div class="card">
+                        <pre><code>public class UserStats
+{
+    public int Id { get; set; }
+    public string UserId { get; set; }
+    public User User { get; set; }
+
+    // XP & Level
+    public int TotalXP { get; set; }
+    public int Level => CalculateLevel(TotalXP);
+
+    // Counts
+    public int ProjectsCreated { get; set; }
+    public int ProjectsCompleted { get; set; }
+    public int PatternsCreated { get; set; }
+    public int InventoryItemsAdded { get; set; }
+
+    // Time
+    public TimeSpan TotalTimeTracked { get; set; }
+
+    // Streaks
+    public int CurrentStreak { get; set; }
+    public int LongestStreak { get; set; }
+    public DateTime LastActivityDate { get; set; }
+
+    private static int CalculateLevel(int xp)
+    {
+        // Level 1: 0-99, Level 2: 100-249, etc.
+        return (int)Math.Floor(Math.Sqrt(xp / 50)) + 1;
+    }
+}</code></pre>
+                    </div>
+
+                    <h4>Achievement System</h4>
+                    <div class="card">
+                        <pre><code>public class Achievement
+{
+    public int Id { get; set; }
+    public string Key { get; set; } // "first-project"
+    public string Name { get; set; } // "First Steps"
+    public string Description { get; set; }
+    public string Icon { get; set; } // Emoji or icon class
+    public int XPReward { get; set; }
+
+    // Condition
+    public string ConditionType { get; set; } // "ProjectsCompleted"
+    public string ConditionValue { get; set; } // "1"
+}
+
+public class UserAchievement
+{
+    public int Id { get; set; }
+    public string UserId { get; set; }
+    public User User { get; set; }
+
+    public int AchievementId { get; set; }
+    public Achievement Achievement { get; set; }
+
+    public DateTime UnlockedAt { get; set; }
+}</code></pre>
+                    </div>
+                </div>
+
+                <h2>Work Session Tracking</h2>
+
+                <div class="card">
+                    <pre><code>public class WorkSession
+{
+    public int Id { get; set; }
+    public int ProjectId { get; set; }
+    public Project Project { get; set; }
+
+    public int? PatternPieceId { get; set; } // null = whole project
+    public PatternPiece? PatternPiece { get; set; }
+
+    public DateTime StartTime { get; set; }
+    public DateTime? EndTime { get; set; }
+
+    public TimeSpan Duration => EndTime.HasValue 
+        ? EndTime.Value - StartTime 
+        : DateTime.UtcNow - StartTime;
+
+    public string UserId { get; set; }
+    public User User { get; set; }
+}</code></pre>
+                </div>
+
+                <h2>Achievement Examples</h2>
+
+                <div class="achievement-grid">
+                    <div class="achievement-card">
+                        <div class="achievement-icon">🎯</div>
+                        <div class="achievement-name">First Steps</div>
+                        <div class="achievement-desc">Complete your first project</div>
+                        <div class="achievement-xp">100 XP</div>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">💯</div>
+                        <div class="achievement-name">Century Club</div>
+                        <div class="achievement-desc">Complete 100 projects</div>
+                        <div class="achievement-xp">1000 XP</div>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">🌅</div>
+                        <div class="achievement-name">Early Bird</div>
+                        <div class="achievement-desc">Work before 6 AM</div>
+                        <div class="achievement-xp">25 XP</div>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">🦉</div>
+                        <div class="achievement-name">Night Owl</div>
+                        <div class="achievement-desc">Work after midnight</div>
+                        <div class="achievement-xp">25 XP</div>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">🏃</div>
+                        <div class="achievement-name">Marathon Maker</div>
+                        <div class="achievement-desc">Work 8 hours in one day</div>
+                        <div class="achievement-xp">200 XP</div>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">📅</div>
+                        <div class="achievement-name">Week Warrior</div>
+                        <div class="achievement-desc">Maintain 7-day streak</div>
+                        <div class="achievement-xp">100 XP</div>
+                    </div>
+                </div>
+
+                <h2>XP Award Schedule</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>XP Reward</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Register account</td>
+                            <td>10</td>
+                            <td>One-time welcome bonus</td>
+                        </tr>
+                        <tr>
+                            <td>Complete first project</td>
+                            <td>100</td>
+                            <td>Achievement bonus</td>
+                        </tr>
+                        <tr>
+                            <td>Complete project</td>
+                            <td>50</td>
+                            <td>Per project completion</td>
+                        </tr>
+                        <tr>
+                            <td>Create pattern</td>
+                            <td>25</td>
+                            <td>Per original pattern</td>
+                        </tr>
+                        <tr>
+                            <td>Add inventory item</td>
+                            <td>5</td>
+                            <td>Building collection</td>
+                        </tr>
+                        <tr>
+                            <td>Work 1 hour</td>
+                            <td>10</td>
+                            <td>Time-based reward</td>
+                        </tr>
+                        <tr>
+                            <td>Work 5 hours (cumulative)</td>
+                            <td>50</td>
+                            <td>Milestone bonus</td>
+                        </tr>
+                        <tr>
+                            <td>Daily login</td>
+                            <td>5</td>
+                            <td>Engagement reward</td>
+                        </tr>
+                        <tr>
+                            <td>Complete pattern piece</td>
+                            <td>30</td>
+                            <td>Progress milestone</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Reference Data Models</h2>
+
+                <div class="full-width-section">
+                    <h4>Theme & Color</h4>
+                    <div class="card">
+                        <pre><code>public class Theme
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Slug { get; set; }
+}
+
+public class Color
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Slug { get; set; }
+    public string? HexCode { get; set; }
+}</code></pre>
+                    </div>
+
+                    <h4>Brand & Source</h4>
+                    <div class="card">
+                        <pre><code>public class Brand
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Slug { get; set; }
+}
+
+public class Source
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Slug { get; set; }
+    public string? Url { get; set; }
+}</code></pre>
+                    </div>
+                    
+                    <h4>Fiber & Yarn Weight</h4>
+                    <div class="card">
+                        <pre><code>public class FiberType
+{
+    public int Id { get; set; }
+    public string Name { get; set; } // Acrylic, Wool, Cotton, etc.
+    public string Slug { get; set; }
+    public FiberClassification Classification { get; set; }
+}
+
+public class YarnWeight
+{
+    public int Id { get; set; }
+    public string Name { get; set; } // Lace, Fingering, Sport, DK, Worsted, Bulky, etc.
+    public string Slug { get; set; }
+    public int WeightNumber { get; set; } // 0-7 (Craft Yarn Council standard)
+}</code></pre>
+                    </div>
+                </div>
+
+                <h2>Multi-User Support</h2>
+
+                <div class="card">
+                    <pre><code>public class User
+{
+    public string Id { get; set; } // Identity userId
+    public string Username { get; set; }
+    public string Email { get; set; }
+    public UserRole Role { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+    public DateTime LastLoginAt { get; set; }
+
+    // Relationships
+    public UserStats Stats { get; set; }
+    public ICollection<Project> Projects { get; set; }
+    public ICollection<Pattern> Patterns { get; set; }
+    public ICollection<InventoryItem> InventoryItems { get; set; }
+    public ICollection<UserAchievement> Achievements { get; set; }
+    public ICollection<WorkSession> WorkSessions { get; set; }
+}
+
+public enum UserRole
+{
+    Viewer = 1,
+    Editor = 2,
+    Admin = 3
+}</code></pre>
+                </div>
+
+                <div class="warning">
+                    <h3>⚠️ Database Considerations</h3>
+                    <ul>
+                        <li><strong>Indexes:</strong> Add indexes on UserId, Slug, and frequently queried fields</li>
+                        <li><strong>Constraints:</strong> Unique constraints on User.Username, slug fields</li>
+                        <li><strong>Cascading:</strong> Cascade delete for user-owned entities</li>
+                        <li><strong>JSON Columns:</strong> Module data stored as JSON for flexibility</li>
+                        <li><strong>Performance:</strong> Consider composite indexes for common filter combinations</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 TankerMade Workbench Documentation. Generated from project specification.</p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 5: Gamification - TankerMade Dev Tracker</title>
+    <style>
+        :root {
+            --primary-color: #ea580c;
+            --secondary-color: #64748b;
+            --bg-color: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --code-bg: #f1f5f9;
+            --hover-color: #f8fafc;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        
+        .phase-progress {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .progress-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: conic-gradient(var(--success-color) 0deg, var(--success-color) 0deg, rgba(255,255,255,0.3) 0deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        
+        nav {
+            background: var(--hover-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.5rem 0;
+        }
+        
+        .nav-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .nav-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        
+        main {
+            padding: 2rem 0;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 2.2rem;
+        }
+        
+        .phase-intro {
+            background: linear-gradient(135deg, #fed7aa 0%, #ffffff 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .phase-meta {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .meta-label {
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        .meta-value {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .phase-goal {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--primary-color);
+            border-radius: 6px;
+            background: white;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn.success {
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+        
+        .btn.success:hover {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .btn.danger {
+            border-color: var(--error-color);
+            color: var(--error-color);
+        }
+        
+        .btn.danger:hover {
+            background: var(--error-color);
+            color: white;
+        }
+        
+        .deliverable-section {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        
+        .deliverable-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .deliverable-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .deliverable-progress {
+            font-size: 0.9rem;
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+        }
+        
+        .deliverable-content {
+            padding: 1.5rem;
+        }
+        
+        .task-group {
+            margin-bottom: 2rem;
+        }
+        
+        .task-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .task-group-title {
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--primary-color);
+            padding-left: 0.75rem;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .task-item:hover {
+            background: var(--hover-color);
+        }
+        
+        .task-item.completed {
+            background: #f0fdf4;
+            border-color: var(--success-color);
+        }
+        
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin-top: 0.1rem;
+        }
+        
+        .task-content {
+            flex: 1;
+        }
+        
+        .task-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+            color: var(--secondary-color);
+        }
+        
+        .task-description {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            line-height: 1.4;
+        }
+        
+        .task-complexity {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+        
+        .complexity-easy {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        
+        .complexity-medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .complexity-hard {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .acceptance-criteria {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .acceptance-criteria h3 {
+            color: #0ea5e9;
+            margin: 0 0 1rem 0;
+        }
+        
+        .criteria-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .criteria-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .criteria-item:hover {
+            background: rgba(14, 165, 233, 0.1);
+        }
+        
+        .criteria-item.completed {
+            background: #ecfdf5;
+        }
+        
+        .criteria-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            margin-top: 0.1rem;
+        }
+        
+        .criteria-text {
+            flex: 1;
+            font-size: 0.95rem;
+        }
+        
+        .criteria-item.completed .criteria-text {
+            text-decoration: line-through;
+            color: var(--secondary-color);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .phase-meta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+            
+            .deliverable-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">🎮 Phase 5: Gamification</div>
+                <div class="phase-progress">
+                    <div>
+                        <div style="font-size: 0.85rem;" id="progress-text">0% Complete</div>
+                        <div style="font-size: 0.75rem; opacity: 0.8;" id="task-count">0 / 62 tasks</div>
+                    </div>
+                    <div class="progress-circle" id="progress-circle">0%</div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <div class="nav-content">
+                <a href="tracker-index.html" class="nav-link">← Back to Dashboard</a>
+                <span style="color: var(--secondary-color);">|</span>
+                <a href="phase-4.html" class="nav-link">← Phase 4: Timers & Sessions</a>
+                <span style="color: var(--secondary-color);">|</span>
+                <a href="phase-6.html" class="nav-link">Phase 6: Theme & Settings →</a>
+            </div>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <h1>Gamification Phase</h1>
+            
+            <div class="phase-intro">
+                <div class="phase-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Duration:</span>
+                        <span class="meta-value">Weeks 11-13</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Total Tasks:</span>
+                        <span class="meta-value" id="total-tasks">62</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Estimated Time:</span>
+                        <span class="meta-value">80-100 hours</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Complexity:</span>
+                        <span class="meta-value">High (Event System)</span>
+                    </div>
+                </div>
+                
+                <div class="phase-goal">
+                    <strong>Goal:</strong> Make crafting addictive with XP, achievements, and streaks
+                </div>
+                
+                <p><strong>What you'll build:</strong> A complete gamification system with XP awards for all actions, 30+ achievements, streak tracking, level progression, and a beautiful dashboard. This transforms routine craft management into an engaging game-like experience.</p>
+            </div>
+
+            <div class="controls">
+                <button class="btn success" onclick="markAllComplete()">✓ Mark All Complete</button>
+                <button class="btn" onclick="markAllIncomplete()">○ Mark All Incomplete</button>
+                <button class="btn" onclick="exportPhaseProgress()">📁 Export Progress</button>
+                <button class="btn danger" onclick="resetPhaseProgress()">🔄 Reset Phase</button>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">XP System</h2>
+                    <div class="deliverable-progress" id="xp-progress">0 / 18 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">XP Award Engine</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="design-xp-award-system">
+                            <div class="task-content">
+                                <div class="task-title">Design XP award system architecture</div>
+                                <div class="task-description">Event-driven system: Action triggers → XP calculation → Award → UI notification</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-xp-event-service">
+                            <div class="task-content">
+                                <div class="task-title">Create XP event service</div>
+                                <div class="task-description">IXPEventService with TriggerEvent(action, userId, data) method</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-xp-calculation">
+                            <div class="task-content">
+                                <div class="task-title">Implement XP calculation logic</div>
+                                <div class="task-description">Calculate XP based on action type, time spent, project difficulty, etc.</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="wire-xp-triggers">
+                            <div class="task-content">
+                                <div class="task-title">Wire XP triggers to all actions</div>
+                                <div class="task-description">Add XP triggers to: project create/complete, pattern create, inventory add, work sessions</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-xp-storage">
+                            <div class="task-content">
+                                <div class="task-title">Implement XP storage and retrieval</div>
+                                <div class="task-description">Update UserStats.TotalXP, create XP transaction log for audit</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Level System</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-level-calculation">
+                            <div class="task-content">
+                                <div class="task-title">Implement level calculation formula</div>
+                                <div class="task-description">Level = floor(sqrt(XP / 50)) + 1. Level 1: 0-99 XP, Level 2: 100-249 XP, etc.</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-level-progression-service">
+                            <div class="task-content">
+                                <div class="task-title">Create level progression service</div>
+                                <div class="task-description">Calculate current level, XP to next level, progress percentage</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="level-up-detection">
+                            <div class="task-content">
+                                <div class="task-title">Add level-up detection</div>
+                                <div class="task-description">Detect when user levels up, trigger level-up celebration</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="level-rewards">
+                            <div class="task-content">
+                                <div class="task-title">Design level-based rewards</div>
+                                <div class="task-description">Every 5 levels unlocks something: themes, features, titles</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="level-milestones">
+                            <div class="task-content">
+                                <div class="task-title">Add level milestone achievements</div>
+                                <div class="task-description">Special achievements for reaching levels 10, 25, 50, 100</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">XP Display & Animation</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-xp-bar-component">
+                            <div class="task-content">
+                                <div class="task-title">Create XP bar component</div>
+                                <div class="task-description">Visual progress bar showing XP to next level with smooth animations</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="xp-toast-notifications">
+                            <div class="task-content">
+                                <div class="task-title">Add XP toast notifications</div>
+                                <div class="task-description">"+25 XP" popup when XP is awarded, with fade-out animation</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="level-up-animation">
+                            <div class="task-content">
+                                <div class="task-title">Create level-up animation</div>
+                                <div class="task-description">Full-screen celebration with particle effects and sound</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="header-xp-display">
+                            <div class="task-content">
+                                <div class="task-title">Add XP display to header</div>
+                                <div class="task-description">Compact XP bar in navigation, shows level and progress</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="xp-history-log">
+                            <div class="task-content">
+                                <div class="task-title">Create XP history log</div>
+                                <div class="task-description">Show recent XP awards with timestamps and reasons</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="xp-multipliers">
+                            <div class="task-content">
+                                <div class="task-title">Add XP multipliers for special events</div>
+                                <div class="task-description">2x XP weekends, bonus XP for long sessions, difficulty multipliers</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="xp-leaderboard">
+                            <div class="task-content">
+                                <div class="task-title">Create XP leaderboard (multi-user)</div>
+                                <div class="task-description">Top users by XP, weekly/monthly/all-time rankings</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="test-xp-accuracy">
+                            <div class="task-content">
+                                <div class="task-title">Test XP accuracy across all actions</div>
+                                <div class="task-description">Verify all XP awards work correctly, no double-awards or missed events</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">Achievements System</h2>
+                    <div class="deliverable-progress" id="achievements-progress">0 / 25 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">Achievement Infrastructure</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="complete-achievement-models">
+                            <div class="task-content">
+                                <div class="task-title">Complete Achievement and UserAchievement models</div>
+                                <div class="task-description">Key, Name, Description, Icon, XPReward, ConditionType, ConditionValue</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-achievement-engine">
+                            <div class="task-content">
+                                <div class="task-title">Create achievement engine</div>
+                                <div class="task-description">Service to check conditions and unlock achievements</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-condition-evaluators">
+                            <div class="task-content">
+                                <div class="task-title">Implement condition evaluators</div>
+                                <div class="task-description">Evaluate ProjectsCompleted, TimeTracked, StreamDays, Level, etc.</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="wire-achievement-triggers">
+                            <div class="task-content">
+                                <div class="task-title">Wire achievement checks to all actions</div>
+                                <div class="task-description">Check achievements after every XP-awarding action</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="prevent-duplicate-unlocks">
+                            <div class="task-content">
+                                <div class="task-title">Prevent duplicate achievement unlocks</div>
+                                <div class="task-description">Check UserAchievement table before awarding</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">30+ Achievement Definitions</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-beginner-achievements">
+                            <div class="task-content">
+                                <div class="task-title">Create beginner achievements (8 items)</div>
+                                <div class="task-description">first-project, first-pattern, first-inventory, account-created, first-timer, first-hour, first-login, first-week</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-project-achievements">
+                            <div class="task-content">
+                                <div class="task-title">Create project-based achievements (6 items)</div>
+                                <div class="task-description">century-club (100 projects), speedster (fast completion), perfectionist (100%), dedicated (30 days same project), variety-pack (10 themes), generous (10 gifts)</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-pattern-achievements">
+                            <div class="task-content">
+                                <div class="task-title">Create pattern-based achievements (4 items)</div>
+                                <div class="task-description">pattern-master (50 patterns), teacher (10 original), complex-master (advanced patterns), explorer (5 different themes)</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-time-achievements">
+                            <div class="task-content">
+                                <div class="task-title">Create time-based achievements (5 items)</div>
+                                <div class="task-description">marathon (8 hours/day), early-bird (before 6am), night-owl (after midnight), century-hours (100 hours), marathon-month (200 hours/month)</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-inventory-achievements">
+                            <div class="task-content">
+                                <div class="task-title">Create inventory achievements (4 items)</div>
+                                <div class="task-description">hoarder (500 items), rainbow (all 7 colors), variety-pack (10 fiber types), thrifty (save $100 on sales)</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-level-achievements">
+                            <div class="task-content">
+                                <div class="task-title">Create level-based achievements (5 items)</div>
+                                <div class="task-description">level-10 (decade), level-25 (quarter-century), level-50 (master), level-75 (legend), level-100 (grandmaster)</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-streak-achievements">
+                            <div class="task-content">
+                                <div class="task-title">Create streak achievements (3 items)</div>
+                                <div class="task-description">week-warrior (7 days), month-champion (30 days), year-legend (365 days)</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-seasonal-achievements">
+                            <div class="task-content">
+                                <div class="task-title">Create seasonal/special achievements (3 items)</div>
+                                <div class="task-description">halloween-crafter (October), holiday-maker (December), spring-fever (March)</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="seed-all-achievements">
+                            <div class="task-content">
+                                <div class="task-title">Seed all achievements in database</div>
+                                <div class="task-description">Create migration with all 38+ achievement definitions</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Achievement UI</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-achievement-toast">
+                            <div class="task-content">
+                                <div class="task-title">Create achievement unlock toast</div>
+                                <div class="task-description">Full-screen celebration with achievement icon, name, XP reward</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-achievement-grid">
+                            <div class="task-content">
+                                <div class="task-title">Create achievement grid page</div>
+                                <div class="task-description">Show all achievements: unlocked (color) vs locked (grayscale)</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="achievement-progress-hints">
+                            <div class="task-content">
+                                <div class="task-title">Add achievement progress hints</div>
+                                <div class="task-description">"15/100 projects completed" for locked achievements</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="achievement-categories">
+                            <div class="task-content">
+                                <div class="task-title">Add achievement categories/filtering</div>
+                                <div class="task-description">Filter by: Beginner, Projects, Patterns, Time, Inventory, Levels, Streaks</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="achievement-sound-effects">
+                            <div class="task-content">
+                                <div class="task-title">Add achievement sound effects</div>
+                                <div class="task-description">Celebratory sound when achievement unlocks (optional, user setting)</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="recent-achievements-display">
+                            <div class="task-content">
+                                <div class="task-title">Show recent achievements on dashboard</div>
+                                <div class="task-description">Last 5 unlocked achievements in sidebar or dashboard card</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="achievement-sharing">
+                            <div class="task-content">
+                                <div class="task-title">Add achievement sharing</div>
+                                <div class="task-description">Generate shareable images for social media</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="test-achievement-unlocking">
+                            <div class="task-content">
+                                <div class="task-title">Test achievement unlocking flow</div>
+                                <div class="task-description">Test each achievement type unlocks correctly with proper conditions</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">Streaks System</h2>
+                    <div class="deliverable-progress" id="streaks-progress">0 / 12 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">Streak Tracking Logic</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="design-streak-definition">
+                            <div class="task-content">
+                                <div class="task-title">Define streak rules</div>
+                                <div class="task-description">Daily activity = any XP-earning action. Must be consecutive calendar days.</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-streak-calculation">
+                            <div class="task-content">
+                                <div class="task-title">Implement streak calculation</div>
+                                <div class="task-description">Calculate current streak from UserStats.LastActivityDate</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="streak-update-logic">
+                            <div class="task-content">
+                                <div class="task-title">Add streak update logic</div>
+                                <div class="task-description">Update streaks on first daily activity, handle timezone issues</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="streak-break-detection">
+                            <div class="task-content">
+                                <div class="task-title">Detect streak breaks</div>
+                                <div class="task-description">If > 24 hours since last activity, reset current streak</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="longest-streak-tracking">
+                            <div class="task-content">
+                                <div class="task-title">Track longest streak</div>
+                                <div class="task-description">Update UserStats.LongestStreak when current exceeds record</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="streak-timezone-handling">
+                            <div class="task-content">
+                                <div class="task-title">Handle timezone issues</div>
+                                <div class="task-description">Use user's local timezone for "day" calculations</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Streak UI & Warnings</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="streak-display-component">
+                            <div class="task-content">
+                                <div class="task-title">Create streak display component</div>
+                                <div class="task-description">Fire icon with current streak number, flame animation</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="streak-warning-system">
+                            <div class="task-content">
+                                <div class="task-title">Add streak at-risk warning</div>
+                                <div class="task-description">Show warning if 22+ hours since last activity</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="streak-celebration">
+                            <div class="task-content">
+                                <div class="task-title">Add streak milestone celebrations</div>
+                                <div class="task-description">Special animation for 7, 14, 30, 100, 365 day streaks</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="streak-recovery-suggestions">
+                            <div class="task-content">
+                                <div class="task-title">Add streak recovery suggestions</div>
+                                <div class="task-description">When streak breaks, suggest easy tasks to start new streak</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="dashboard-streak-display">
+                            <div class="task-content">
+                                <div class="task-title">Add streak to dashboard</div>
+                                <div class="task-description">Prominent streak display with current and longest streaks</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="test-streak-edge-cases">
+                            <div class="task-content">
+                                <div class="task-title">Test streak edge cases</div>
+                                <div class="task-description">Midnight boundary, DST changes, leap days, long inactive periods</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">Gamification Dashboard</h2>
+                    <div class="deliverable-progress" id="dashboard-progress">0 / 7 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">Dashboard Components</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-gamification-dashboard">
+                            <div class="task-content">
+                                <div class="task-title">Create main gamification dashboard page</div>
+                                <div class="task-description">Central hub for all gamification features</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="xp-level-card">
+                            <div class="task-content">
+                                <div class="task-title">Create XP and level display card</div>
+                                <div class="task-description">Current level, XP bar, XP to next level, total XP</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="streak-history-card">
+                            <div class="task-content">
+                                <div class="task-title">Create streak statistics card</div>
+                                <div class="task-description">Current streak, longest streak, streak calendar view</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="recent-achievements-card">
+                            <div class="task-content">
+                                <div class="task-title">Create recent achievements card</div>
+                                <div class="task-description">Last 10 unlocked achievements with dates</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="progress-toward-goals">
+                            <div class="task-content">
+                                <div class="task-title">Show progress toward next achievements</div>
+                                <div class="task-description">Closest achievements to unlocking with progress bars</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="leaderboard-card">
+                            <div class="task-content">
+                                <div class="task-title">Create leaderboard card (multi-user)</div>
+                                <div class="task-description">Top 10 users by XP, your rank, week/month/all-time tabs</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="gamification-quick-actions">
+                            <div class="task-content">
+                                <div class="task-title">Add gamification quick actions</div>
+                                <div class="task-description">Buttons to view achievements, check XP history, see leaderboard</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="acceptance-criteria">
+                <h3>✅ Acceptance Criteria</h3>
+                <ul class="criteria-list">
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="xp-awards-correctly">
+                        <div class="criteria-text">XP awards correctly for all defined actions</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="level-calculates-updates">
+                        <div class="criteria-text">Level calculates and updates when XP increases</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="achievements-unlock">
+                        <div class="criteria-text">Achievements unlock when conditions are met</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="toast-appears">
+                        <div class="criteria-text">Toast notification appears on achievement unlock</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="streaks-calculate">
+                        <div class="criteria-text">Streaks calculate correctly across days</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="streak-warning">
+                        <div class="criteria-text">Streak warning appears before break</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="dashboard-accurate">
+                        <div class="criteria-text">Dashboard shows accurate gamification stats</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="offline-mode-works">
+                        <div class="criteria-text">All gamification works in offline mode</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="server-sync">
+                        <div class="criteria-text">Gamification stats sync to server when connected</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const PHASE_ID = 5;
+        const STORAGE_KEY = `phase-${PHASE_ID}-tasks`;
+        const CRITERIA_KEY = `phase-${PHASE_ID}-criteria`;
+        
+        const taskIds = [
+            // XP System (18 tasks)
+            'design-xp-award-system', 'create-xp-event-service', 'implement-xp-calculation', 'wire-xp-triggers', 'implement-xp-storage',
+            'implement-level-calculation', 'create-level-progression-service', 'level-up-detection', 'level-rewards', 'level-milestones',
+            'create-xp-bar-component', 'xp-toast-notifications', 'level-up-animation', 'header-xp-display', 'xp-history-log', 'xp-multipliers', 'xp-leaderboard', 'test-xp-accuracy',
+            
+            // Achievements System (25 tasks)
+            'complete-achievement-models', 'create-achievement-engine', 'implement-condition-evaluators', 'wire-achievement-triggers', 'prevent-duplicate-unlocks',
+            'create-beginner-achievements', 'create-project-achievements', 'create-pattern-achievements', 'create-time-achievements', 'create-inventory-achievements', 'create-level-achievements', 'create-streak-achievements', 'create-seasonal-achievements', 'seed-all-achievements',
+            'create-achievement-toast', 'create-achievement-grid', 'achievement-progress-hints', 'achievement-categories', 'achievement-sound-effects', 'recent-achievements-display', 'achievement-sharing', 'test-achievement-unlocking',
+            
+            // Streaks System (12 tasks)
+            'design-streak-definition', 'implement-streak-calculation', 'streak-update-logic', 'streak-break-detection', 'longest-streak-tracking', 'streak-timezone-handling',
+            'streak-display-component', 'streak-warning-system', 'streak-celebration', 'streak-recovery-suggestions', 'dashboard-streak-display', 'test-streak-edge-cases',
+            
+            // Gamification Dashboard (7 tasks)
+            'create-gamification-dashboard', 'xp-level-card', 'streak-history-card', 'recent-achievements-card', 'progress-toward-goals', 'leaderboard-card', 'gamification-quick-actions'
+        ];
+
+        const criteriaIds = [
+            'xp-awards-correctly', 'level-calculates-updates', 'achievements-unlock', 'toast-appears',
+            'streaks-calculate', 'streak-warning', 'dashboard-accurate', 'offline-mode-works', 'server-sync'
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProgress();
+            updateAllProgress();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            taskIds.forEach(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                if (checkbox) {
+                    checkbox.addEventListener('change', function() {
+                        saveProgress();
+                        updateAllProgress();
+                    });
+                }
+            });
+
+            criteriaIds.forEach(criteriaId => {
+                const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                if (checkbox) {
+                    checkbox.addEventListener('change', function() {
+                        saveCriteria();
+                        updateAllProgress();
+                    });
+                }
+            });
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const completedTasks = JSON.parse(saved);
+                taskIds.forEach(taskId => {
+                    const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                    if (checkbox && completedTasks.includes(taskId)) {
+                        checkbox.checked = true;
+                        checkbox.closest('.task-item').classList.add('completed');
+                    }
+                });
+            }
+
+            const savedCriteria = localStorage.getItem(CRITERIA_KEY);
+            if (savedCriteria) {
+                const completedCriteria = JSON.parse(savedCriteria);
+                criteriaIds.forEach(criteriaId => {
+                    const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                    if (checkbox && completedCriteria.includes(criteriaId)) {
+                        checkbox.checked = true;
+                        checkbox.closest('.criteria-item').classList.add('completed');
+                    }
+                });
+            }
+        }
+
+        function saveProgress() {
+            const completedTasks = taskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(completedTasks));
+
+            taskIds.forEach(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                if (checkbox) {
+                    const taskItem = checkbox.closest('.task-item');
+                    if (checkbox.checked) {
+                        taskItem.classList.add('completed');
+                    } else {
+                        taskItem.classList.remove('completed');
+                    }
+                }
+            });
+
+            updateParentProgress();
+        }
+
+        function saveCriteria() {
+            const completedCriteria = criteriaIds.filter(criteriaId => {
+                const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                return checkbox && checkbox.checked;
+            });
+            localStorage.setItem(CRITERIA_KEY, JSON.stringify(completedCriteria));
+
+            criteriaIds.forEach(criteriaId => {
+                const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                if (checkbox) {
+                    const criteriaItem = checkbox.closest('.criteria-item');
+                    if (checkbox.checked) {
+                        criteriaItem.classList.add('completed');
+                    } else {
+                        criteriaItem.classList.remove('completed');
+                    }
+                }
+            });
+        }
+
+        function updateAllProgress() {
+            const totalTasks = taskIds.length;
+            const completedTasks = taskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            }).length;
+
+            const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+            document.getElementById('progress-text').textContent = percentage + '% Complete';
+            document.getElementById('task-count').textContent = `${completedTasks} / ${totalTasks} tasks`;
+            document.getElementById('progress-circle').textContent = percentage + '%';
+            
+            const degrees = (percentage / 100) * 360;
+            document.getElementById('progress-circle').style.background = 
+                `conic-gradient(var(--success-color) 0deg, var(--success-color) ${degrees}deg, rgba(255,255,255,0.3) ${degrees}deg)`;
+
+            updateSectionProgress('xp', taskIds.slice(0, 18));
+            updateSectionProgress('achievements', taskIds.slice(18, 43));
+            updateSectionProgress('streaks', taskIds.slice(43, 55));
+            updateSectionProgress('dashboard', taskIds.slice(55, 62));
+        }
+
+        function updateSectionProgress(section, sectionTaskIds) {
+            const completed = sectionTaskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            }).length;
+            
+            const progressElement = document.getElementById(`${section}-progress`);
+            if (progressElement) {
+                progressElement.textContent = `${completed} / ${sectionTaskIds.length} tasks`;
+            }
+        }
+
+        function updateParentProgress() {
+            const totalTasks = taskIds.length;
+            const completedTasks = taskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            }).length;
+
+            const progressData = {
+                completed: completedTasks,
+                total: totalTasks
+            };
+            
+            localStorage.setItem(`phase-${PHASE_ID}-progress`, JSON.stringify(progressData));
+        }
+
+        function markAllComplete() {
+            if (confirm('Mark all tasks as complete? This will check every checkbox in this phase.')) {
+                taskIds.forEach(taskId => {
+                    const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                criteriaIds.forEach(criteriaId => {
+                    const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                saveProgress();
+                saveCriteria();
+                updateAllProgress();
+            }
+        }
+
+        function markAllIncomplete() {
+            if (confirm('Mark all tasks as incomplete? This will uncheck every checkbox in this phase.')) {
+                taskIds.forEach(taskId => {
+                    const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                    if (checkbox) checkbox.checked = false;
+                });
+                
+                criteriaIds.forEach(criteriaId => {
+                    const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                    if (checkbox) checkbox.checked = false;
+                });
+                
+                saveProgress();
+                saveCriteria();
+                updateAllProgress();
+            }
+        }
+
+        function exportPhaseProgress() {
+            const data = {
+                phase: PHASE_ID,
+                title: 'Gamification',
+                tasks: localStorage.getItem(STORAGE_KEY),
+                criteria: localStorage.getItem(CRITERIA_KEY),
+                exportDate: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `phase-5-gamification-progress-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function resetPhaseProgress() {
+            if (confirm('Reset all progress for this phase? This cannot be undone.')) {
+                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem(CRITERIA_KEY);
+                localStorage.removeItem(`phase-${PHASE_ID}-progress`);
+                location.reload();
+            }
+        }
+
+        updateParentProgress();
+    </script>
+</body>
+</html>

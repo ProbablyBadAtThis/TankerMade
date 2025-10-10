@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 1: Foundation - TankerMade Dev Tracker</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --bg-color: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --code-bg: #f1f5f9;
+            --hover-color: #f8fafc;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        
+        .phase-progress {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .progress-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: conic-gradient(var(--success-color) 0deg, var(--success-color) 0deg, rgba(255,255,255,0.3) 0deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        
+        nav {
+            background: var(--hover-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.5rem 0;
+        }
+        
+        .nav-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .nav-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        
+        main {
+            padding: 2rem 0;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 2.2rem;
+        }
+        
+        .phase-intro {
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .phase-meta {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .meta-label {
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        .meta-value {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .phase-goal {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--primary-color);
+            border-radius: 6px;
+            background: white;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn.success {
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+        
+        .btn.success:hover {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .btn.danger {
+            border-color: var(--error-color);
+            color: var(--error-color);
+        }
+        
+        .btn.danger:hover {
+            background: var(--error-color);
+            color: white;
+        }
+        
+        .deliverable-section {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        
+        .deliverable-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .deliverable-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .deliverable-progress {
+            font-size: 0.9rem;
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+        }
+        
+        .deliverable-content {
+            padding: 1.5rem;
+        }
+        
+        .task-group {
+            margin-bottom: 2rem;
+        }
+        
+        .task-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .task-group-title {
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--primary-color);
+            padding-left: 0.75rem;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .task-item:hover {
+            background: var(--hover-color);
+        }
+        
+        .task-item.completed {
+            background: #f0fdf4;
+            border-color: var(--success-color);
+        }
+        
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin-top: 0.1rem;
+        }
+        
+        .task-content {
+            flex: 1;
+        }
+        
+        .task-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+            color: var(--secondary-color);
+        }
+        
+        .task-description {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            line-height: 1.4;
+        }
+        
+        .task-complexity {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+        
+        .complexity-easy {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        
+        .complexity-medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .complexity-hard {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .acceptance-criteria {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .acceptance-criteria h3 {
+            color: #0ea5e9;
+            margin: 0 0 1rem 0;
+        }
+        
+        .criteria-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .criteria-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .criteria-item:hover {
+            background: rgba(14, 165, 233, 0.1);
+        }
+        
+        .criteria-item.completed {
+            background: #ecfdf5;
+        }
+        
+        .criteria-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            margin-top: 0.1rem;
+        }
+        
+        .criteria-text {
+            flex: 1;
+            font-size: 0.95rem;
+        }
+        
+        .criteria-item.completed .criteria-text {
+            text-decoration: line-through;
+            color: var(--secondary-color);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .phase-meta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+            
+            .deliverable-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">🧶 Phase 1: Foundation</div>
+                <div class="phase-progress">
+                    <div>
+                        <div style="font-size: 0.85rem;" id="progress-text">0% Complete</div>
+                        <div style="font-size: 0.75rem; opacity: 0.8;" id="task-count">0 / 65 tasks</div>
+                    </div>
+                    <div class="progress-circle" id="progress-circle">0%</div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <div class="nav-content">
+                <a href="tracker-index.html" class="nav-link">← Back to Dashboard</a>
+                <span style="color: var(--secondary-color);">|</span>
+                <a href="phase-2.html" class="nav-link">Phase 2: Core Features →</a>
+            </div>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <h1>Foundation Phase</h1>
+            
+            <div class="phase-intro">
+                <div class="phase-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Duration:</span>
+                        <span class="meta-value">Weeks 1-3</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Total Tasks:</span>
+                        <span class="meta-value" id="total-tasks">65</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Estimated Time:</span>
+                        <span class="meta-value">60-80 hours</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Complexity:</span>
+                        <span class="meta-value">High (Setup)</span>
+                    </div>
+                </div>
+                
+                <div class="phase-goal">
+                    <strong>Goal:</strong> Get basic infrastructure running in both offline and server modes
+                </div>
+                
+                <p><strong>What you'll build:</strong> A working Blazor WASM app that can create, edit, and list projects both offline (IndexedDB) and with a server (JWT auth + API). This is the foundation everything else builds on.</p>
+            </div>
+
+            <div class="controls">
+                <button class="btn success" onclick="markAllComplete()">✓ Mark All Complete</button>
+                <button class="btn" onclick="markAllIncomplete()">○ Mark All Incomplete</button>
+                <button class="btn" onclick="exportPhaseProgress()">📁 Export Progress</button>
+                <button class="btn danger" onclick="resetPhaseProgress()">🔄 Reset Phase</button>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">Solution Structure</h2>
+                    <div class="deliverable-progress" id="solution-progress">0 / 15 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">Initial Setup</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-solution">
+                            <div class="task-content">
+                                <div class="task-title">Create new solution</div>
+                                <div class="task-description">Run <code>dotnet new sln -n TankerMade</code> in empty folder</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-core-project">
+                            <div class="task-content">
+                                <div class="task-title">Create TankerMade.Core project</div>
+                                <div class="task-description">Class library: <code>dotnet new classlib -n TankerMade.Core</code></div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-contracts-project">
+                            <div class="task-content">
+                                <div class="task-title">Create TankerMade.Contracts project</div>
+                                <div class="task-description">Class library: <code>dotnet new classlib -n TankerMade.Contracts</code></div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-client-project">
+                            <div class="task-content">
+                                <div class="task-title">Create TankerMade.Client project</div>
+                                <div class="task-description">Blazor WASM: <code>dotnet new blazorwasm -n TankerMade.Client</code></div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-server-project">
+                            <div class="task-content">
+                                <div class="task-title">Create TankerMade.Server project</div>
+                                <div class="task-description">Web API: <code>dotnet new webapi -n TankerMade.Server</code></div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-projects-to-solution">
+                            <div class="task-content">
+                                <div class="task-title">Add all projects to solution</div>
+                                <div class="task-description">Run <code>dotnet sln add</code> commands for each project</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Domain Models (TankerMade.Core)</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-project-entity">
+                            <div class="task-content">
+                                <div class="task-title">Create Project entity</div>
+                                <div class="task-description">Include Id, Name, Slug, Description, PatternId, ThemeId, Difficulty, Progress, Timestamps, UserId</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-pattern-entity">
+                            <div class="task-content">
+                                <div class="task-title">Create Pattern entity</div>
+                                <div class="task-description">Include Id, Name, Slug, Type, Form, Difficulty, ThemeId, SourceId, UserId</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-user-entity">
+                            <div class="task-content">
+                                <div class="task-title">Create User entity</div>
+                                <div class="task-description">Include Id, Username, Email, Role, CreatedAt, LastLoginAt</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-enums">
+                            <div class="task-content">
+                                <div class="task-title">Create enums</div>
+                                <div class="task-description">Difficulty, PatternType, PatternForm, UserRole</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-reference-entities">
+                            <div class="task-content">
+                                <div class="task-title">Create reference entities</div>
+                                <div class="task-description">Theme, Color, Source, Brand (all with Id, Name, Slug)</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Service Contracts (TankerMade.Contracts)</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-dtos">
+                            <div class="task-content">
+                                <div class="task-title">Create DTOs</div>
+                                <div class="task-description">ProjectDto, CreateProjectDto, UpdateProjectDto, PatternDto, UserDto</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-service-interfaces">
+                            <div class="task-content">
+                                <div class="task-title">Create service interfaces</div>
+                                <div class="task-description">IProjectService, IPatternService, IUserService with CRUD methods</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-project-references">
+                            <div class="task-content">
+                                <div class="task-title">Add project references</div>
+                                <div class="task-description">Contracts → Core; Client → Contracts; Server → Core + Contracts</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">Client Application</h2>
+                    <div class="deliverable-progress" id="client-progress">0 / 25 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">Basic Structure</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="setup-client-dependencies">
+                            <div class="task-content">
+                                <div class="task-title">Install NuGet packages</div>
+                                <div class="task-description">Microsoft.AspNetCore.Components.WebAssembly, Blazored.LocalStorage, Microsoft.Extensions.Http</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-layout">
+                            <div class="task-content">
+                                <div class="task-title">Create main layout</div>
+                                <div class="task-description">Header with logo and navigation, main content area, footer</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-navigation">
+                            <div class="task-content">
+                                <div class="task-title">Create navigation menu</div>
+                                <div class="task-description">Dashboard, Projects, Patterns, Inventory, Settings</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="setup-routing">
+                            <div class="task-content">
+                                <div class="task-title">Setup routing</div>
+                                <div class="task-description">Configure routes for all main pages, add NotFound page</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-home-page">
+                            <div class="task-content">
+                                <div class="task-title">Create dashboard page</div>
+                                <div class="task-description">Simple welcome page with basic stats placeholders</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">IndexedDB & Offline Storage</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-indexeddb-service">
+                            <div class="task-content">
+                                <div class="task-title">Create IndexedDB service</div>
+                                <div class="task-description">Wrapper around Blazored.LocalStorage for structured data</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-offline-project-service">
+                            <div class="task-content">
+                                <div class="task-title">Create offline ProjectService</div>
+                                <div class="task-description">Implement IProjectService using IndexedDB for storage</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-offline-user-service">
+                            <div class="task-content">
+                                <div class="task-title">Create offline UserService</div>
+                                <div class="task-description">Simple user storage and "authentication" for offline mode</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-data-seeding">
+                            <div class="task-content">
+                                <div class="task-title">Implement data seeding</div>
+                                <div class="task-description">Seed basic themes, colors, difficulties on first run</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Project Management UI</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-project-list-page">
+                            <div class="task-content">
+                                <div class="task-title">Create projects list page</div>
+                                <div class="task-description">Display projects in grid/list, search and filter functionality</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-project-detail-page">
+                            <div class="task-content">
+                                <div class="task-title">Create project detail page</div>
+                                <div class="task-description">View/edit project, show progress, basic info</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-project-create-page">
+                            <div class="task-content">
+                                <div class="task-title">Create project creation page</div>
+                                <div class="task-description">Simple form to create new project with validation</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-project-crud">
+                            <div class="task-content">
+                                <div class="task-title">Implement all project CRUD operations</div>
+                                <div class="task-description">Create, read, update, delete with proper error handling</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-client-validation">
+                            <div class="task-content">
+                                <div class="task-title">Add form validation</div>
+                                <div class="task-description">Required fields, max lengths, proper error display</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Service Injection & Mode Switching</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="setup-service-registration">
+                            <div class="task-content">
+                                <div class="task-title">Setup dependency injection</div>
+                                <div class="task-description">Register services in Program.cs based on configuration</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-mode-configuration">
+                            <div class="task-content">
+                                <div class="task-title">Create mode configuration</div>
+                                <div class="task-description">Settings to switch between offline and server modes</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-settings-page">
+                            <div class="task-content">
+                                <div class="task-title">Create settings page</div>
+                                <div class="task-description">Toggle offline/server mode, server URL config</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-mode-persistence">
+                            <div class="task-content">
+                                <div class="task-title">Implement mode persistence</div>
+                                <div class="task-description">Save mode choice in localStorage, load on startup</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Authentication UI</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-login-page">
+                            <div class="task-content">
+                                <div class="task-title">Create login page</div>
+                                <div class="task-description">Username/password form with validation and error display</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-register-page">
+                            <div class="task-content">
+                                <div class="task-title">Create registration page</div>
+                                <div class="task-description">Create new account form with password confirmation</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-auth-state">
+                            <div class="task-content">
+                                <div class="task-title">Implement authentication state</div>
+                                <div class="task-description">Track logged in user, handle logout, redirect logic</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-auth-guards">
+                            <div class="task-content">
+                                <div class="task-title">Add route protection</div>
+                                <div class="task-description">Redirect to login if not authenticated, role-based access</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">Server Foundation</h2>
+                    <div class="deliverable-progress" id="server-progress">0 / 25 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">Database Setup</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="install-ef-packages">
+                            <div class="task-content">
+                                <div class="task-title">Install Entity Framework packages</div>
+                                <div class="task-description">Microsoft.EntityFrameworkCore.Sqlite, Microsoft.EntityFrameworkCore.Design</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-dbcontext">
+                            <div class="task-content">
+                                <div class="task-title">Create TankerMadeContext</div>
+                                <div class="task-description">DbContext with DbSets for Project, Pattern, User, reference entities</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="configure-entity-relationships">
+                            <div class="task-content">
+                                <div class="task-title">Configure entity relationships</div>
+                                <div class="task-description">Foreign keys, navigation properties, required fields</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-initial-migration">
+                            <div class="task-content">
+                                <div class="task-title">Create initial migration</div>
+                                <div class="task-description">Run <code>dotnet ef migrations add Initial</code></div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="seed-reference-data">
+                            <div class="task-content">
+                                <div class="task-title">Seed reference data</div>
+                                <div class="task-description">Add basic themes, colors, difficulties in migration</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">JWT Authentication</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="install-jwt-packages">
+                            <div class="task-content">
+                                <div class="task-title">Install JWT packages</div>
+                                <div class="task-description">Microsoft.AspNetCore.Authentication.JwtBearer, System.IdentityModel.Tokens.Jwt</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="configure-jwt">
+                            <div class="task-content">
+                                <div class="task-title">Configure JWT authentication</div>
+                                <div class="task-description">Setup JWT settings in appsettings.json and Program.cs</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-jwt-service">
+                            <div class="task-content">
+                                <div class="task-title">Create JWT token service</div>
+                                <div class="task-description">Generate and validate JWT tokens, extract claims</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-auth-endpoints">
+                            <div class="task-content">
+                                <div class="task-title">Create auth endpoints</div>
+                                <div class="task-description">/api/auth/login and /api/auth/register with proper validation</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-password-hashing">
+                            <div class="task-content">
+                                <div class="task-title">Implement password hashing</div>
+                                <div class="task-description">Use BCrypt or Identity for secure password storage</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">API Endpoints</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="setup-minimal-apis">
+                            <div class="task-content">
+                                <div class="task-title">Setup Minimal APIs structure</div>
+                                <div class="task-description">Configure routing, add Swagger, setup CORS for client</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-project-endpoints">
+                            <div class="task-content">
+                                <div class="task-title">Create project endpoints</div>
+                                <div class="task-description">GET /api/projects, GET /api/projects/{id}, POST, PUT, DELETE</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-authorization-filters">
+                            <div class="task-content">
+                                <div class="task-title">Add authorization filters</div>
+                                <div class="task-description">Ensure users can only access their own data</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-server-validation">
+                            <div class="task-content">
+                                <div class="task-title">Implement server-side validation</div>
+                                <div class="task-description">Validate DTOs, return proper error responses</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-error-handling">
+                            <div class="task-content">
+                                <div class="task-title">Add global error handling</div>
+                                <div class="task-description">Middleware to catch exceptions, return consistent error format</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Server Services</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-server-project-service">
+                            <div class="task-content">
+                                <div class="task-title">Create server ProjectService</div>
+                                <div class="task-description">Implement IProjectService using Entity Framework</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-server-user-service">
+                            <div class="task-content">
+                                <div class="task-title">Create server UserService</div>
+                                <div class="task-description">User management, role checking, profile updates</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="register-server-services">
+                            <div class="task-content">
+                                <div class="task-title">Register services in DI</div>
+                                <div class="task-description">Add all services to Program.cs with proper lifetimes</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="setup-automapper">
+                            <div class="task-content">
+                                <div class="task-title">Setup AutoMapper (optional)</div>
+                                <div class="task-description">Map between entities and DTOs automatically</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Client-Server Integration</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-api-service">
+                            <div class="task-content">
+                                <div class="task-title">Create API service for client</div>
+                                <div class="task-description">HttpClient wrapper that implements IProjectService</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-jwt-handling">
+                            <div class="task-content">
+                                <div class="task-title">Implement JWT handling in client</div>
+                                <div class="task-description">Add Authorization header, handle token expiration</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="test-auth-flow">
+                            <div class="task-content">
+                                <div class="task-title">Test complete auth flow</div>
+                                <div class="task-description">Register → Login → Access protected endpoint → Logout</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="test-crud-operations">
+                            <div class="task-content">
+                                <div class="task-title">Test all CRUD operations</div>
+                                <div class="task-description">Create, read, update, delete projects via API</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="acceptance-criteria">
+                <h3>✅ Acceptance Criteria</h3>
+                <ul class="criteria-list">
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="offline-mode-works">
+                        <div class="criteria-text">App runs in offline mode with IndexedDB storage</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="server-mode-works">
+                        <div class="criteria-text">App connects to API server with authentication</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="mode-switching-works">
+                        <div class="criteria-text">User can switch between offline/server modes in settings</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="project-crud-both-modes">
+                        <div class="criteria-text">Basic CRUD works for Projects in both modes</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="auth-functional">
+                        <div class="criteria-text">User registration and login functional</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="role-based-auth">
+                        <div class="criteria-text">Role-based authorization working (viewer/editor/admin)</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const PHASE_ID = 1;
+        const STORAGE_KEY = `phase-${PHASE_ID}-tasks`;
+        const CRITERIA_KEY = `phase-${PHASE_ID}-criteria`;
+        
+        // All task IDs for this phase
+        const taskIds = [
+            // Solution Structure
+            'create-solution', 'create-core-project', 'create-contracts-project', 'create-client-project',
+            'create-server-project', 'add-projects-to-solution', 'create-project-entity', 'create-pattern-entity',
+            'create-user-entity', 'create-enums', 'create-reference-entities', 'create-dtos', 
+            'create-service-interfaces', 'add-project-references',
+            
+            // Client Application
+            'setup-client-dependencies', 'create-layout', 'create-navigation', 'setup-routing',
+            'create-home-page', 'create-indexeddb-service', 'create-offline-project-service',
+            'create-offline-user-service', 'implement-data-seeding', 'create-project-list-page',
+            'create-project-detail-page', 'create-project-create-page', 'implement-project-crud',
+            'add-client-validation', 'setup-service-registration', 'create-mode-configuration',
+            'create-settings-page', 'implement-mode-persistence', 'create-login-page',
+            'create-register-page', 'implement-auth-state', 'add-auth-guards',
+            
+            // Server Foundation  
+            'install-ef-packages', 'create-dbcontext', 'configure-entity-relationships',
+            'create-initial-migration', 'seed-reference-data', 'install-jwt-packages',
+            'configure-jwt', 'create-jwt-service', 'create-auth-endpoints',
+            'implement-password-hashing', 'setup-minimal-apis', 'create-project-endpoints',
+            'add-authorization-filters', 'implement-server-validation', 'add-error-handling',
+            'create-server-project-service', 'create-server-user-service', 'register-server-services',
+            'setup-automapper', 'create-api-service', 'implement-jwt-handling',
+            'test-auth-flow', 'test-crud-operations'
+        ];
+
+        const criteriaIds = [
+            'offline-mode-works', 'server-mode-works', 'mode-switching-works',
+            'project-crud-both-modes', 'auth-functional', 'role-based-auth'
+        ];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProgress();
+            updateAllProgress();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Task checkboxes
+            taskIds.forEach(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                if (checkbox) {
+                    checkbox.addEventListener('change', function() {
+                        saveProgress();
+                        updateAllProgress();
+                    });
+                }
+            });
+
+            // Criteria checkboxes
+            criteriaIds.forEach(criteriaId => {
+                const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                if (checkbox) {
+                    checkbox.addEventListener('change', function() {
+                        saveCriteria();
+                        updateAllProgress();
+                    });
+                }
+            });
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const completedTasks = JSON.parse(saved);
+                taskIds.forEach(taskId => {
+                    const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                    if (checkbox && completedTasks.includes(taskId)) {
+                        checkbox.checked = true;
+                        checkbox.closest('.task-item').classList.add('completed');
+                    }
+                });
+            }
+
+            const savedCriteria = localStorage.getItem(CRITERIA_KEY);
+            if (savedCriteria) {
+                const completedCriteria = JSON.parse(savedCriteria);
+                criteriaIds.forEach(criteriaId => {
+                    const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                    if (checkbox && completedCriteria.includes(criteriaId)) {
+                        checkbox.checked = true;
+                        checkbox.closest('.criteria-item').classList.add('completed');
+                    }
+                });
+            }
+        }
+
+        function saveProgress() {
+            const completedTasks = taskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(completedTasks));
+
+            // Update visual state
+            taskIds.forEach(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                if (checkbox) {
+                    const taskItem = checkbox.closest('.task-item');
+                    if (checkbox.checked) {
+                        taskItem.classList.add('completed');
+                    } else {
+                        taskItem.classList.remove('completed');
+                    }
+                }
+            });
+
+            // Update parent dashboard
+            updateParentProgress();
+        }
+
+        function saveCriteria() {
+            const completedCriteria = criteriaIds.filter(criteriaId => {
+                const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                return checkbox && checkbox.checked;
+            });
+            localStorage.setItem(CRITERIA_KEY, JSON.stringify(completedCriteria));
+
+            // Update visual state
+            criteriaIds.forEach(criteriaId => {
+                const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                if (checkbox) {
+                    const criteriaItem = checkbox.closest('.criteria-item');
+                    if (checkbox.checked) {
+                        criteriaItem.classList.add('completed');
+                    } else {
+                        criteriaItem.classList.remove('completed');
+                    }
+                }
+            });
+        }
+
+        function updateAllProgress() {
+            const totalTasks = taskIds.length;
+            const completedTasks = taskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            }).length;
+
+            const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+            // Update header progress
+            document.getElementById('progress-text').textContent = percentage + '% Complete';
+            document.getElementById('task-count').textContent = `${completedTasks} / ${totalTasks} tasks`;
+            document.getElementById('progress-circle').textContent = percentage + '%';
+            
+            // Update progress circle
+            const degrees = (percentage / 100) * 360;
+            document.getElementById('progress-circle').style.background = 
+                `conic-gradient(var(--success-color) 0deg, var(--success-color) ${degrees}deg, rgba(255,255,255,0.3) ${degrees}deg)`;
+
+            // Update section progress
+            updateSectionProgress('solution', taskIds.slice(0, 14));
+            updateSectionProgress('client', taskIds.slice(14, 37));
+            updateSectionProgress('server', taskIds.slice(37, 60));
+        }
+
+        function updateSectionProgress(section, sectionTaskIds) {
+            const completed = sectionTaskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            }).length;
+            
+            const progressElement = document.getElementById(`${section}-progress`);
+            if (progressElement) {
+                progressElement.textContent = `${completed} / ${sectionTaskIds.length} tasks`;
+            }
+        }
+
+        function updateParentProgress() {
+            // Notify parent dashboard about progress change
+            const totalTasks = taskIds.length;
+            const completedTasks = taskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            }).length;
+
+            const progressData = {
+                completed: completedTasks,
+                total: totalTasks
+            };
+            
+            localStorage.setItem(`phase-${PHASE_ID}-progress`, JSON.stringify(progressData));
+        }
+
+        function markAllComplete() {
+            if (confirm('Mark all tasks as complete? This will check every checkbox in this phase.')) {
+                taskIds.forEach(taskId => {
+                    const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+                });
+                
+                criteriaIds.forEach(criteriaId => {
+                    const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+                });
+                
+                saveProgress();
+                saveCriteria();
+                updateAllProgress();
+            }
+        }
+
+        function markAllIncomplete() {
+            if (confirm('Mark all tasks as incomplete? This will uncheck every checkbox in this phase.')) {
+                taskIds.forEach(taskId => {
+                    const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                    if (checkbox) {
+                        checkbox.checked = false;
+                    }
+                });
+                
+                criteriaIds.forEach(criteriaId => {
+                    const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                    if (checkbox) {
+                        checkbox.checked = false;
+                    }
+                });
+                
+                saveProgress();
+                saveCriteria();
+                updateAllProgress();
+            }
+        }
+
+        function exportPhaseProgress() {
+            const data = {
+                phase: PHASE_ID,
+                title: 'Foundation',
+                tasks: localStorage.getItem(STORAGE_KEY),
+                criteria: localStorage.getItem(CRITERIA_KEY),
+                exportDate: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `phase-1-foundation-progress-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function resetPhaseProgress() {
+            if (confirm('Reset all progress for this phase? This cannot be undone.')) {
+                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem(CRITERIA_KEY);
+                localStorage.removeItem(`phase-${PHASE_ID}-progress`);
+                location.reload();
+            }
+        }
+
+        // Initialize progress on load
+        updateParentProgress();
+    </script>
+</body>
+</html>

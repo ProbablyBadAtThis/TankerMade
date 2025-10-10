@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 8: Module System - TankerMade Dev Tracker</title>
+    <style>
+        :root {
+            --primary-color: #7c2d12;
+            --secondary-color: #64748b;
+            --bg-color: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --code-bg: #f1f5f9;
+            --hover-color: #f8fafc;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        
+        .phase-progress {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .progress-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: conic-gradient(var(--success-color) 0deg, var(--success-color) 0deg, rgba(255,255,255,0.3) 0deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        
+        nav {
+            background: var(--hover-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.5rem 0;
+        }
+        
+        .nav-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .nav-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        
+        main {
+            padding: 2rem 0;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 2.2rem;
+        }
+        
+        .phase-intro {
+            background: linear-gradient(135deg, #fef7ed 0%, #ffffff 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .phase-meta {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .meta-label {
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        .meta-value {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .phase-goal {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--primary-color);
+            border-radius: 6px;
+            background: white;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn.success {
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+        
+        .btn.success:hover {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .btn.danger {
+            border-color: var(--error-color);
+            color: var(--error-color);
+        }
+        
+        .btn.danger:hover {
+            background: var(--error-color);
+            color: white;
+        }
+        
+        .deliverable-section {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        
+        .deliverable-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .deliverable-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .deliverable-progress {
+            font-size: 0.9rem;
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+        }
+        
+        .deliverable-content {
+            padding: 1.5rem;
+        }
+        
+        .task-group {
+            margin-bottom: 2rem;
+        }
+        
+        .task-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .task-group-title {
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--primary-color);
+            padding-left: 0.75rem;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .task-item:hover {
+            background: var(--hover-color);
+        }
+        
+        .task-item.completed {
+            background: #f0fdf4;
+            border-color: var(--success-color);
+        }
+        
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin-top: 0.1rem;
+        }
+        
+        .task-content {
+            flex: 1;
+        }
+        
+        .task-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+            color: var(--secondary-color);
+        }
+        
+        .task-description {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            line-height: 1.4;
+        }
+        
+        .task-complexity {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+        
+        .complexity-easy {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        
+        .complexity-medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .complexity-hard {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .acceptance-criteria {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .acceptance-criteria h3 {
+            color: #0ea5e9;
+            margin: 0 0 1rem 0;
+        }
+        
+        .criteria-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .criteria-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .criteria-item:hover {
+            background: rgba(14, 165, 233, 0.1);
+        }
+        
+        .criteria-item.completed {
+            background: #ecfdf5;
+        }
+        
+        .criteria-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            margin-top: 0.1rem;
+        }
+        
+        .criteria-text {
+            flex: 1;
+            font-size: 0.95rem;
+        }
+        
+        .criteria-item.completed .criteria-text {
+            text-decoration: line-through;
+            color: var(--secondary-color);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .phase-meta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+            
+            .deliverable-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">🧩 Phase 8: Module System</div>
+                <div class="phase-progress">
+                    <div>
+                        <div style="font-size: 0.85rem;" id="progress-text">0% Complete</div>
+                        <div style="font-size: 0.75rem; opacity: 0.8;" id="task-count">0 / 35 tasks</div>
+                    </div>
+                    <div class="progress-circle" id="progress-circle">0%</div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <div class="nav-content">
+                <a href="tracker-index.html" class="nav-link">← Back to Dashboard</a>
+                <span style="color: var(--secondary-color);">|</span>
+                <a href="phase-7.html" class="nav-link">← Phase 7: Admin & Operations</a>
+                <span style="color: var(--secondary-color);">|</span>
+                <a href="phase-9.html" class="nav-link">Phase 9: Search & Performance →</a>
+            </div>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <h1>Module System Phase</h1>
+            
+            <div class="phase-intro">
+                <div class="phase-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Duration:</span>
+                        <span class="meta-value">Weeks 16-17</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Total Tasks:</span>
+                        <span class="meta-value" id="total-tasks">35</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Estimated Time:</span>
+                        <span class="meta-value">60-80 hours</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Complexity:</span>
+                        <span class="meta-value">Very High (Architecture)</span>
+                    </div>
+                </div>
+                
+                <div class="phase-goal">
+                    <strong>Goal:</strong> Extensible architecture with working Crochet module
+                </div>
+                
+                <p><strong>What you'll build:</strong> A complete module system that allows craft-specific extensions. Modules can add custom UI components, API endpoints, services, and data fields. The first module (Crochet) proves the system works by adding hook size selectors, gauge calculators, and crochet-specific features.</p>
+            </div>
+
+            <div class="controls">
+                <button class="btn success" onclick="markAllComplete()">✓ Mark All Complete</button>
+                <button class="btn" onclick="markAllIncomplete()">○ Mark All Incomplete</button>
+                <button class="btn" onclick="exportPhaseProgress()">📁 Export Progress</button>
+                <button class="btn danger" onclick="resetPhaseProgress()">🔄 Reset Phase</button>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">Module Infrastructure</h2>
+                    <div class="deliverable-progress" id="infrastructure-progress">0 / 15 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">Core Interfaces</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="define-imodule-interface">
+                            <div class="task-content">
+                                <div class="task-title">Define IModule interface</div>
+                                <div class="task-description">Name, Version, Description, RegisterServices, RegisterApiRoutes, GetComponentExtensions</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-extension-point-interface">
+                            <div class="task-content">
+                                <div class="task-title">Create IExtensionPoint interface</div>
+                                <div class="task-description">Contract for where modules can inject components</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="design-module-data-strategy">
+                            <div class="task-content">
+                                <div class="task-title">Design module data storage strategy</div>
+                                <div class="task-description">JSON columns in Project/Pattern for flexible module data</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-module-base-class">
+                            <div class="task-content">
+                                <div class="task-title">Create ModuleBase abstract class</div>
+                                <div class="task-description">Base implementation with common functionality for modules</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Module Discovery & Registration</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-module-registry">
+                            <div class="task-content">
+                                <div class="task-title">Create ModuleRegistry service</div>
+                                <div class="task-description">Discovers modules at startup, manages lifecycle</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-assembly-scanning">
+                            <div class="task-content">
+                                <div class="task-title">Implement assembly scanning</div>
+                                <div class="task-description">Scan loaded assemblies for IModule implementations</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-module-registration-hooks">
+                            <div class="task-content">
+                                <div class="task-title">Add module registration to startup</div>
+                                <div class="task-description">Call RegisterServices and RegisterApiRoutes during app startup</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="handle-module-load-errors">
+                            <div class="task-content">
+                                <div class="task-title">Handle module loading errors gracefully</div>
+                                <div class="task-description">App continues to work if module fails to load, log errors</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Dynamic Component System</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-extension-point-component">
+                            <div class="task-content">
+                                <div class="task-title">Create ExtensionPoint component</div>
+                                <div class="task-description">Blazor component that renders module components at extension points</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-dynamic-component-renderer">
+                            <div class="task-content">
+                                <div class="task-title">Implement DynamicComponent renderer</div>
+                                <div class="task-description">Render components by Type with parameter passing</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="define-extension-points">
+                            <div class="task-content">
+                                <div class="task-title">Define core extension points</div>
+                                <div class="task-description">ProjectDetail.AfterInfo, ProjectCreate.CustomFields, PatternCreate.CustomFields, etc.</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-extension-points-to-ui">
+                            <div class="task-content">
+                                <div class="task-title">Add extension points to existing UI</div>
+                                <div class="task-description">Place <ExtensionPoint> components in project/pattern pages</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-parameter-passing">
+                            <div class="task-content">
+                                <div class="task-title">Implement parameter passing to module components</div>
+                                <div class="task-description">Pass context data (Project, Pattern, etc.) to extension components</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="test-dynamic-rendering">
+                            <div class="task-content">
+                                <div class="task-title">Test dynamic component rendering</div>
+                                <div class="task-description">Verify components render correctly with proper parameters</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">Module Data System</h2>
+                    <div class="deliverable-progress" id="data-progress">0 / 8 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">JSON Column Implementation</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-moduledata-columns">
+                            <div class="task-content">
+                                <div class="task-title">Add ModuleData columns to entities</div>
+                                <div class="task-description">JSON columns on Project, Pattern, InventoryItem for module-specific data</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="configure-json-serialization">
+                            <div class="task-content">
+                                <div class="task-title">Configure JSON serialization</div>
+                                <div class="task-description">EF Core JSON column configuration, serializer settings</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-module-data-helpers">
+                            <div class="task-content">
+                                <div class="task-title">Create module data helper methods</div>
+                                <div class="task-description">Extension methods: GetModuleData<T>, SetModuleData<T></div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-moduledata-to-dtos">
+                            <div class="task-content">
+                                <div class="task-title">Add ModuleData to DTOs</div>
+                                <div class="task-description">Include in ProjectDto, PatternDto for API serialization</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Module Data Migration</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-moduledata-migration">
+                            <div class="task-content">
+                                <div class="task-title">Create ModuleData migration</div>
+                                <div class="task-description">EF Core migration to add JSON columns to existing tables</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="test-json-storage">
+                            <div class="task-content">
+                                <div class="task-title">Test JSON data storage</div>
+                                <div class="task-description">Verify JSON serialization/deserialization works correctly</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="handle-null-module-data">
+                            <div class="task-content">
+                                <div class="task-title">Handle null/empty module data</div>
+                                <div class="task-description">Graceful handling when no module data exists</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="validate-module-data-size">
+                            <div class="task-content">
+                                <div class="task-title">Add module data size validation</div>
+                                <div class="task-description">Prevent extremely large JSON objects, set reasonable limits</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">Crochet Module Implementation</h2>
+                    <div class="deliverable-progress" id="crochet-progress">0 / 12 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">Module Structure</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-crochet-module-project">
+                            <div class="task-content">
+                                <div class="task-title">Create TankerMade.Modules.Crochet project</div>
+                                <div class="task-description">New class library project with module structure</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-crochet-module">
+                            <div class="task-content">
+                                <div class="task-title">Implement CrochetModule class</div>
+                                <div class="task-description">Implement IModule interface with crochet-specific functionality</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="define-crochet-data-models">
+                            <div class="task-content">
+                                <div class="task-title">Define crochet data models</div>
+                                <div class="task-description">CrochetProjectData, CrochetPatternData with hook sizes, gauge, etc.</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="register-crochet-services">
+                            <div class="task-content">
+                                <div class="task-title">Register crochet-specific services</div>
+                                <div class="task-description">IHookSizeService, IGaugeCalculatorService in RegisterServices</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Hook Size Components</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-hook-size-selector">
+                            <div class="task-content">
+                                <div class="task-title">Create hook size selector component</div>
+                                <div class="task-description">Dropdown with US/UK/metric hook sizes, conversion display</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-hook-size-service">
+                            <div class="task-content">
+                                <div class="task-title">Implement hook size service</div>
+                                <div class="task-description">Convert between size systems, validate sizes, suggest range</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-hook-size-to-project">
+                            <div class="task-content">
+                                <div class="task-title">Add hook size to project creation</div>
+                                <div class="task-description">Hook size selector in project wizard extension point</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="show-hook-size-on-project">
+                            <div class="task-content">
+                                <div class="task-title">Display hook size on project detail</div>
+                                <div class="task-description">Show selected hook size with conversion information</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Gauge Calculator</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-gauge-calculator-component">
+                            <div class="task-content">
+                                <div class="task-title">Create gauge calculator component</div>
+                                <div class="task-description">Input stitches/rows per measurement unit, calculate total stitches</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-gauge-math">
+                            <div class="task-content">
+                                <div class="task-title">Implement gauge calculation logic</div>
+                                <div class="task-description">Convert gauge to project dimensions, estimate stitch counts</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-gauge-to-patterns">
+                            <div class="task-content">
+                                <div class="task-title">Add gauge fields to pattern creation</div>
+                                <div class="task-description">Pattern wizard extension point for recommended gauge</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="test-crochet-module-integration">
+                            <div class="task-content">
+                                <div class="task-title">Test complete crochet module integration</div>
+                                <div class="task-description">Verify all components load, data saves, extension points work</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="acceptance-criteria">
+                <h3>✅ Acceptance Criteria</h3>
+                <ul class="criteria-list">
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="modules-discovered-automatically">
+                        <div class="criteria-text">Modules are discovered automatically at startup</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="module-services-register">
+                        <div class="criteria-text">Module services register correctly in DI container</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="module-api-routes-work">
+                        <div class="criteria-text">Module API routes work and are accessible</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="extension-points-inject">
+                        <div class="criteria-text">Module components inject at extension points correctly</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="crochet-hook-selector">
+                        <div class="criteria-text">Crochet module adds hook size selector to project creation</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="gauge-calculator-works">
+                        <div class="criteria-text">Gauge calculator works and saves to project</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="module-data-persists">
+                        <div class="criteria-text">Module data persists correctly in JSON columns</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="module-disable-safe">
+                        <div class="criteria-text">Module can be disabled without breaking app</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="module-documentation">
+                        <div class="criteria-text">Module development guide is documented</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const PHASE_ID = 8;
+        const STORAGE_KEY = `phase-${PHASE_ID}-tasks`;
+        const CRITERIA_KEY = `phase-${PHASE_ID}-criteria`;
+        
+        const taskIds = [
+            // Module Infrastructure (15 tasks)
+            'define-imodule-interface', 'create-extension-point-interface', 'design-module-data-strategy', 'create-module-base-class',
+            'create-module-registry', 'implement-assembly-scanning', 'add-module-registration-hooks', 'handle-module-load-errors',
+            'create-extension-point-component', 'implement-dynamic-component-renderer', 'define-extension-points', 'add-extension-points-to-ui', 'implement-parameter-passing', 'test-dynamic-rendering',
+            
+            // Module Data System (8 tasks)
+            'add-moduledata-columns', 'configure-json-serialization', 'create-module-data-helpers', 'add-moduledata-to-dtos',
+            'create-moduledata-migration', 'test-json-storage', 'handle-null-module-data', 'validate-module-data-size',
+            
+            // Crochet Module Implementation (12 tasks)
+            'create-crochet-module-project', 'implement-crochet-module', 'define-crochet-data-models', 'register-crochet-services',
+            'create-hook-size-selector', 'implement-hook-size-service', 'add-hook-size-to-project', 'show-hook-size-on-project',
+            'create-gauge-calculator-component', 'implement-gauge-math', 'add-gauge-to-patterns', 'test-crochet-module-integration'
+        ];
+
+        const criteriaIds = [
+            'modules-discovered-automatically', 'module-services-register', 'module-api-routes-work', 'extension-points-inject',
+            'crochet-hook-selector', 'gauge-calculator-works', 'module-data-persists', 'module-disable-safe', 'module-documentation'
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProgress();
+            updateAllProgress();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            taskIds.forEach(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                if (checkbox) {
+                    checkbox.addEventListener('change', function() {
+                        saveProgress();
+                        updateAllProgress();
+                    });
+                }
+            });
+
+            criteriaIds.forEach(criteriaId => {
+                const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                if (checkbox) {
+                    checkbox.addEventListener('change', function() {
+                        saveCriteria();
+                        updateAllProgress();
+                    });
+                }
+            });
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const completedTasks = JSON.parse(saved);
+                taskIds.forEach(taskId => {
+                    const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                    if (checkbox && completedTasks.includes(taskId)) {
+                        checkbox.checked = true;
+                        checkbox.closest('.task-item').classList.add('completed');
+                    }
+                });
+            }
+
+            const savedCriteria = localStorage.getItem(CRITERIA_KEY);
+            if (savedCriteria) {
+                const completedCriteria = JSON.parse(savedCriteria);
+                criteriaIds.forEach(criteriaId => {
+                    const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                    if (checkbox && completedCriteria.includes(criteriaId)) {
+                        checkbox.checked = true;
+                        checkbox.closest('.criteria-item').classList.add('completed');
+                    }
+                });
+            }
+        }
+
+        function saveProgress() {
+            const completedTasks = taskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(completedTasks));
+
+            taskIds.forEach(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                if (checkbox) {
+                    const taskItem = checkbox.closest('.task-item');
+                    if (checkbox.checked) {
+                        taskItem.classList.add('completed');
+                    } else {
+                        taskItem.classList.remove('completed');
+                    }
+                }
+            });
+
+            updateParentProgress();
+        }
+
+        function saveCriteria() {
+            const completedCriteria = criteriaIds.filter(criteriaId => {
+                const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                return checkbox && checkbox.checked;
+            });
+            localStorage.setItem(CRITERIA_KEY, JSON.stringify(completedCriteria));
+
+            criteriaIds.forEach(criteriaId => {
+                const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                if (checkbox) {
+                    const criteriaItem = checkbox.closest('.criteria-item');
+                    if (checkbox.checked) {
+                        criteriaItem.classList.add('completed');
+                    } else {
+                        criteriaItem.classList.remove('completed');
+                    }
+                }
+            });
+        }
+
+        function updateAllProgress() {
+            const totalTasks = taskIds.length;
+            const completedTasks = taskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            }).length;
+
+            const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+            document.getElementById('progress-text').textContent = percentage + '% Complete';
+            document.getElementById('task-count').textContent = `${completedTasks} / ${totalTasks} tasks`;
+            document.getElementById('progress-circle').textContent = percentage + '%';
+            
+            const degrees = (percentage / 100) * 360;
+            document.getElementById('progress-circle').style.background = 
+                `conic-gradient(var(--success-color) 0deg, var(--success-color) ${degrees}deg, rgba(255,255,255,0.3) ${degrees}deg)`;
+
+            updateSectionProgress('infrastructure', taskIds.slice(0, 15));
+            updateSectionProgress('data', taskIds.slice(15, 23));
+            updateSectionProgress('crochet', taskIds.slice(23, 35));
+        }
+
+        function updateSectionProgress(section, sectionTaskIds) {
+            const completed = sectionTaskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            }).length;
+            
+            const progressElement = document.getElementById(`${section}-progress`);
+            if (progressElement) {
+                progressElement.textContent = `${completed} / ${sectionTaskIds.length} tasks`;
+            }
+        }
+
+        function updateParentProgress() {
+            const totalTasks = taskIds.length;
+            const completedTasks = taskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            }).length;
+
+            const progressData = {
+                completed: completedTasks,
+                total: totalTasks
+            };
+            
+            localStorage.setItem(`phase-${PHASE_ID}-progress`, JSON.stringify(progressData));
+        }
+
+        function markAllComplete() {
+            if (confirm('Mark all tasks as complete? This will check every checkbox in this phase.')) {
+                taskIds.forEach(taskId => {
+                    const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                criteriaIds.forEach(criteriaId => {
+                    const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                saveProgress();
+                saveCriteria();
+                updateAllProgress();
+            }
+        }
+
+        function markAllIncomplete() {
+            if (confirm('Mark all tasks as incomplete? This will uncheck every checkbox in this phase.')) {
+                taskIds.forEach(taskId => {
+                    const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                    if (checkbox) checkbox.checked = false;
+                });
+                
+                criteriaIds.forEach(criteriaId => {
+                    const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                    if (checkbox) checkbox.checked = false;
+                });
+                
+                saveProgress();
+                saveCriteria();
+                updateAllProgress();
+            }
+        }
+
+        function exportPhaseProgress() {
+            const data = {
+                phase: PHASE_ID,
+                title: 'Module System',
+                tasks: localStorage.getItem(STORAGE_KEY),
+                criteria: localStorage.getItem(CRITERIA_KEY),
+                exportDate: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `phase-8-module-system-progress-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function resetPhaseProgress() {
+            if (confirm('Reset all progress for this phase? This cannot be undone.')) {
+                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem(CRITERIA_KEY);
+                localStorage.removeItem(`phase-${PHASE_ID}-progress`);
+                location.reload();
+            }
+        }
+
+        updateParentProgress();
+    </script>
+</body>
+</html>

@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture - TankerMade Workbench Documentation</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --bg-color: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --code-bg: #f1f5f9;
+            --hover-color: #f8fafc;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        nav {
+            background: var(--hover-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            overflow-x: auto;
+        }
+        
+        .nav-menu li {
+            white-space: nowrap;
+        }
+        
+        .nav-menu a {
+            display: block;
+            padding: 1rem 1.5rem;
+            text-decoration: none;
+            color: var(--text-color);
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .nav-menu a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .nav-menu a.active {
+            background: var(--primary-color);
+            color: white;
+            border-bottom-color: #1d4ed8;
+        }
+        
+        main {
+            padding: 2rem 0;
+            min-height: calc(100vh - 200px);
+        }
+        
+        .content {
+            max-width: 900px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            margin: 2rem 0 1rem 0;
+            font-size: 1.8rem;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 1rem;
+        }
+        
+        h3 {
+            color: var(--secondary-color);
+            margin: 1.5rem 0 1rem 0;
+            font-size: 1.3rem;
+        }
+        
+        h4 {
+            color: var(--secondary-color);
+            margin: 1rem 0 0.5rem 0;
+            font-size: 1.1rem;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+        }
+        
+        ul, ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        code {
+            background: var(--code-bg);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            border: 1px solid var(--border-color);
+        }
+        
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            text-align: left;
+        }
+        
+        th {
+            background: var(--code-bg);
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        .card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .highlight {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .success {
+            background: #dcfce7;
+            border-left: 4px solid #22c55e;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .error {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        footer {
+            background: var(--code-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 0;
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--secondary-color);
+        }
+        
+        .toc {
+            background: var(--hover-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .toc h3 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+        
+        .toc ul {
+            margin-left: 1rem;
+        }
+        
+        .toc a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Architecture Diagram Styles */
+        .arch-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            margin: 2rem 0;
+            padding: 1rem;
+            background: var(--hover-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        
+        .arch-layer {
+            background: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            position: relative;
+        }
+        
+        .arch-layer h4 {
+            margin: 0 0 1rem 0;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        .arch-components {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .arch-component {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+        }
+        
+        .arch-component h5 {
+            margin: 0 0 0.5rem 0;
+            color: var(--secondary-color);
+            font-size: 1rem;
+        }
+        
+        .arch-component ul {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+        
+        .connection-arrow {
+            text-align: center;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin: -0.5rem 0;
+        }
+        
+        /* Project Structure Styles */
+        .folder-tree {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1.5rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .folder-tree .folder {
+            color: #0066cc;
+            font-weight: bold;
+        }
+        
+        .folder-tree .file {
+            color: var(--text-color);
+        }
+        
+        .folder-tree .comment {
+            color: #22c55e;
+            font-style: italic;
+        }
+        
+        .folder-tree .indent-1 { margin-left: 1rem; }
+        .folder-tree .indent-2 { margin-left: 2rem; }
+        .folder-tree .indent-3 { margin-left: 3rem; }
+        .folder-tree .indent-4 { margin-left: 4rem; }
+        
+        /* Flow Diagram Styles */
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: var(--hover-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            flex-wrap: wrap;
+        }
+        
+        .flow-step {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        .flow-arrow {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-menu {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 0 15px;
+            }
+            
+            .arch-components {
+                grid-template-columns: 1fr;
+            }
+            
+            .flow-diagram {
+                flex-direction: column;
+            }
+            
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">🧶 TankerMade Workbench</div>
+                <div>Comprehensive Documentation</div>
+            </div>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <ul class="nav-menu">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="architecture.html" class="active">Architecture</a></li>
+                <li><a href="domain-model.html">Domain Model</a></li>
+                <li><a href="implementation-phases.html">Implementation</a></li>
+                <li><a href="technical-specs.html">Technical Specs</a></li>
+                <li><a href="ui-ux-specs.html">UI/UX Specs</a></li>
+                <li><a href="deployment.html">Deployment</a></li>
+                <li><a href="development-guidelines.html">Development</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <div class="content">
+                <h1>Architecture Overview</h1>
+
+                <div class="highlight">
+                    <h3>Technology Stack</h3>
+                    <p><strong>Stack:</strong> Blazor WebAssembly + ASP.NET Core API + SQLite/PostgreSQL</p>
+                </div>
+
+                <h2>System Architecture Diagram</h2>
+
+                <div class="arch-diagram">
+                    <div class="arch-layer">
+                        <h4>🖥️ TankerMade.Client (Blazor WASM)</h4>
+                        <div class="arch-components">
+                            <div class="arch-component">
+                                <h5>UI Components</h5>
+                                <ul>
+                                    <li>Pages (Projects, Patterns, Inventory)</li>
+                                    <li>Shared (MainLayout, NavMenu)</li>
+                                    <li>Components (Timers, XP Display)</li>
+                                </ul>
+                            </div>
+                            <div class="arch-component">
+                                <h5>Data Services</h5>
+                                <ul>
+                                    <li>IProjectService, IPatternService</li>
+                                    <li>Offline Mode: IndexedDB</li>
+                                    <li>Server Mode: HttpClient → API</li>
+                                </ul>
+                            </div>
+                            <div class="arch-component">
+                                <h5>Module System</h5>
+                                <ul>
+                                    <li>IModule Registry</li>
+                                    <li>Component Extension Points</li>
+                                    <li>Service Registration</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="connection-arrow">⬇️ HTTPS (Optional)</div>
+
+                    <div class="arch-layer">
+                        <h4>🚀 TankerMade.Server (ASP.NET Core API)</h4>
+                        <div class="arch-components">
+                            <div class="arch-component">
+                                <h5>API Layer</h5>
+                                <ul>
+                                    <li>Minimal APIs</li>
+                                    <li>/api/projects, /api/patterns</li>
+                                    <li>JWT Authentication</li>
+                                </ul>
+                            </div>
+                            <div class="arch-component">
+                                <h5>Business Services</h5>
+                                <ul>
+                                    <li>ProjectService</li>
+                                    <li>PatternService</li>
+                                    <li>InventoryService</li>
+                                </ul>
+                            </div>
+                            <div class="arch-component">
+                                <h5>Data Layer</h5>
+                                <ul>
+                                    <li>EF Core DbContext</li>
+                                    <li>Entity Configuration</li>
+                                    <li>Migration Management</li>
+                                </ul>
+                            </div>
+                            <div class="arch-component">
+                                <h5>Database</h5>
+                                <ul>
+                                    <li>SQLite (Default)</li>
+                                    <li>PostgreSQL (Optional)</li>
+                                    <li>SQL Server (Optional)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Solution Structure</h2>
+
+                <div class="card">
+                    <h3>Project Organization</h3>
+                    <div class="folder-tree">
+                        <div class="folder">📁 TankerMade/</div>
+                        <div class="indent-1 folder">├── 📁 TankerMade.Core/ <span class="comment"># Domain models, enums, interfaces</span></div>
+                        <div class="indent-2">│   ├── 📁 Entities/ <span class="comment"># Project, Pattern, Yarn, etc.</span></div>
+                        <div class="indent-2">│   ├── 📁 Enums/ <span class="comment"># Difficulty, PatternType, etc.</span></div>
+                        <div class="indent-2">│   └── 📁 Interfaces/ <span class="comment"># Repository contracts</span></div>
+                        <div class="indent-1 folder">├── 📁 TankerMade.Contracts/ <span class="comment"># DTOs and service interfaces</span></div>
+                        <div class="indent-2">│   ├── 📁 DTOs/ <span class="comment"># Data transfer objects</span></div>
+                        <div class="indent-2">│   └── 📁 Services/ <span class="comment"># Service interfaces</span></div>
+                        <div class="indent-1 folder">├── 📁 TankerMade.Client/ <span class="comment"># Blazor WASM application</span></div>
+                        <div class="indent-2">│   ├── 📁 Pages/ <span class="comment"># Blazor pages/components</span></div>
+                        <div class="indent-2">│   ├── 📁 Services/ <span class="comment"># Client-side services</span></div>
+                        <div class="indent-2">│   ├── 📁 wwwroot/ <span class="comment"># Static assets</span></div>
+                        <div class="indent-2">│   └── 📄 Program.cs <span class="comment"># Client configuration</span></div>
+                        <div class="indent-1 folder">├── 📁 TankerMade.Server/ <span class="comment"># ASP.NET Core API</span></div>
+                        <div class="indent-2">│   ├── 📁 Services/ <span class="comment"># Business logic services</span></div>
+                        <div class="indent-2">│   ├── 📁 Data/ <span class="comment"># EF Core context & migrations</span></div>
+                        <div class="indent-2">│   ├── 📁 Controllers/ <span class="comment"># API endpoints</span></div>
+                        <div class="indent-2">│   └── 📄 Program.cs <span class="comment"># Server configuration</span></div>
+                        <div class="indent-1 folder">└── 📁 TankerMade.Modules.*/ <span class="comment"># Optional extension modules</span></div>
+                        <div class="indent-2">    ├── 📁 TankerMade.Modules.Crochet/</div>
+                        <div class="indent-2">    └── 📁 TankerMade.Modules.Knitting/</div>
+                    </div>
+                </div>
+
+                <h2>Key Architectural Decisions</h2>
+
+                <div class="grid">
+                    <div class="card">
+                        <h4>🌐 Blazor WASM over Server</h4>
+                        <ul>
+                            <li><strong>Offline-first requirement:</strong> Server mode requires constant connection</li>
+                            <li><strong>Scalability:</strong> WASM scales better (computation on client)</li>
+                            <li><strong>Flexibility:</strong> Can add server later without rewriting UI</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>💾 SQLite over PostgreSQL Default</h4>
+                        <ul>
+                            <li><strong>Simplicity:</strong> Single file, no server setup</li>
+                            <li><strong>Portability:</strong> Easy to backup (just copy file)</li>
+                            <li><strong>Sufficient:</strong> For single-user scenarios</li>
+                            <li><strong>Upgradeable:</strong> Can switch to PostgreSQL in production</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>🚀 Minimal APIs over Controllers</h4>
+                        <ul>
+                            <li><strong>Simplicity:</strong> Less ceremony, faster to write</li>
+                            <li><strong>Modern:</strong> Recommended pattern in .NET 6+</li>
+                            <li><strong>Sufficient:</strong> Full REST API without boilerplate</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>🔐 JWT over Cookie Auth</h4>
+                        <ul>
+                            <li><strong>WASM Compatibility:</strong> Cookies difficult with WASM + API separation</li>
+                            <li><strong>Stateless:</strong> No server-side session storage needed</li>
+                            <li><strong>Multi-domain:</strong> Works if frontend/backend on different domains</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h2>Data Flow Architecture</h2>
+
+                <h3>Offline Mode (IndexedDB)</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">Component</div>
+                    <div class="flow-arrow">➡️</div>
+                    <div class="flow-step">OfflineService</div>
+                    <div class="flow-arrow">➡️</div>
+                    <div class="flow-step">IndexedDB</div>
+                </div>
+                <div class="flow-diagram">
+                    <div class="flow-step">Local Storage</div>
+                    <div class="flow-arrow">⬅️</div>
+                    <div class="flow-step">Auth & Settings</div>
+                </div>
+
+                <h3>Server Mode (API)</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">Component</div>
+                    <div class="flow-arrow">➡️</div>
+                    <div class="flow-step">ApiService</div>
+                    <div class="flow-arrow">➡️</div>
+                    <div class="flow-step">HTTP Client</div>
+                    <div class="flow-arrow">➡️</div>
+                    <div class="flow-step">ASP.NET API</div>
+                    <div class="flow-arrow">➡️</div>
+                    <div class="flow-step">EF Core</div>
+                    <div class="flow-arrow">➡️</div>
+                    <div class="flow-step">Database</div>
+                </div>
+                <div class="flow-diagram">
+                    <div class="flow-step">JWT Token</div>
+                    <div class="flow-arrow">⬆️</div>
+                    <div class="flow-step">Authentication</div>
+                </div>
+
+                <h2>Module System Architecture</h2>
+
+                <div class="card">
+                    <h3>Extension Points</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Extension Point ID</th>
+                                <th>Location</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>"Dashboard.Stats"</td>
+                                <td>Dashboard, after main stats</td>
+                                <td>Add custom stats</td>
+                            </tr>
+                            <tr>
+                                <td>"ProjectDetail.AfterInfo"</td>
+                                <td>Project detail, after metadata</td>
+                                <td>Add custom fields</td>
+                            </tr>
+                            <tr>
+                                <td>"ProjectCreate.CustomFields"</td>
+                                <td>Project wizard, step 4</td>
+                                <td>Add custom inputs</td>
+                            </tr>
+                            <tr>
+                                <td>"PatternCreate.CustomFields"</td>
+                                <td>Pattern wizard, step 3</td>
+                                <td>Add custom inputs</td>
+                            </tr>
+                            <tr>
+                                <td>"InventoryList.Filters"</td>
+                                <td>Inventory list, filter panel</td>
+                                <td>Add custom filters</td>
+                            </tr>
+                            <tr>
+                                <td>"Settings.Tabs"</td>
+                                <td>Settings page, tab list</td>
+                                <td>Add custom tab</td>
+                            </tr>
+                            <tr>
+                                <td>"NavMenu.Items"</td>
+                                <td>Navigation menu, after core</td>
+                                <td>Add custom links</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h3>Module Interface</h3>
+                    <pre><code>public interface IModule
+{
+    string Name { get; }
+    string Version { get; }
+    string Description { get; }
+
+    // Lifecycle
+    void RegisterServices(IServiceCollection services);
+    void RegisterApiRoutes(IEndpointRouteBuilder routes);
+
+    // UI Extensions
+    Dictionary&lt;string, Type&gt; GetComponentExtensions();
+
+    // Data Extensions (optional)
+    void ConfigureDatabase(ModelBuilder modelBuilder);
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Example: Crochet Module</h3>
+                    <pre><code>public class CrochetModule : IModule
+{
+    public string Name => "Crochet";
+    public string Version => "1.0.0";
+    public string Description => "Crochet-specific features: hook sizes, stitch types, gauge tracking";
+
+    public void RegisterServices(IServiceCollection services)
+    {
+        services.AddScoped&lt;IStitchCalculatorService, StitchCalculatorService&gt;();
+    }
+
+    public void RegisterApiRoutes(IEndpointRouteBuilder routes)
+    {
+        routes.MapGet("/api/crochet/hooks", GetHookSizes);
+    }
+
+    public Dictionary&lt;string, Type&gt; GetComponentExtensions()
+    {
+        return new Dictionary&lt;string, Type&gt;
+        {
+            ["ProjectDetail.AfterInfo"] = typeof(CrochetProjectInfo),
+            ["PatternCreate.CustomFields"] = typeof(CrochetPatternFields)
+        };
+    }
+
+    public void ConfigureDatabase(ModelBuilder modelBuilder)
+    {
+        // Optional: Add module-specific tables
+        modelBuilder.Entity&lt;CrochetProjectExtension&gt;().ToTable("CrochetProjectExtensions");
+    }
+}</code></pre>
+                </div>
+
+                <h2>Security Architecture</h2>
+
+                <div class="grid">
+                    <div class="card">
+                        <h4>Authentication Flow</h4>
+                        <ol>
+                            <li>User enters credentials</li>
+                            <li>Client validates (offline) or calls API (server)</li>
+                            <li>JWT token stored in localStorage</li>
+                            <li>Token included in API requests</li>
+                            <li>Server validates JWT on each request</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>Authorization</h4>
+                        <ul>
+                            <li><strong>Role-based:</strong> Viewer, Editor, Admin</li>
+                            <li><strong>Resource-based:</strong> Users can only access their own data</li>
+                            <li><strong>API-level:</strong> All endpoints require authentication</li>
+                            <li><strong>Client-side:</strong> UI elements hidden based on roles</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h2>Performance Considerations</h2>
+
+                <div class="card">
+                    <h3>Optimization Strategies</h3>
+                    <ul>
+                        <li><strong>Lazy Loading:</strong> Routes and components loaded on demand</li>
+                        <li><strong>Code Splitting:</strong> Modules bundled separately</li>
+                        <li><strong>Caching:</strong> Reference data cached client-side</li>
+                        <li><strong>Pagination:</strong> Server-side for large datasets</li>
+                        <li><strong>Indexes:</strong> Database indexes on frequently queried fields</li>
+                        <li><strong>Asset Optimization:</strong> Compressed images and styles</li>
+                    </ul>
+                </div>
+
+                <div class="warning">
+                    <h3>⚠️ Known Limitations</h3>
+                    <ul>
+                        <li><strong>IndexedDB Storage:</strong> ~50-100MB browser limit</li>
+                        <li><strong>WASM Bundle Size:</strong> Initial load time impact</li>
+                        <li><strong>Client-side Processing:</strong> Large datasets may be slow</li>
+                        <li><strong>Browser Support:</strong> Modern browsers required</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 TankerMade Workbench Documentation. Generated from project specification.</p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Development Guidelines - TankerMade Workbench Documentation</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --bg-color: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --code-bg: #f1f5f9;
+            --hover-color: #f8fafc;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        nav {
+            background: var(--hover-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            overflow-x: auto;
+        }
+        
+        .nav-menu li {
+            white-space: nowrap;
+        }
+        
+        .nav-menu a {
+            display: block;
+            padding: 1rem 1.5rem;
+            text-decoration: none;
+            color: var(--text-color);
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .nav-menu a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .nav-menu a.active {
+            background: var(--primary-color);
+            color: white;
+            border-bottom-color: #1d4ed8;
+        }
+        
+        main {
+            padding: 2rem 0;
+            min-height: calc(100vh - 200px);
+        }
+        
+        .content {
+            max-width: 900px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            margin: 2rem 0 1rem 0;
+            font-size: 1.8rem;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 1rem;
+        }
+        
+        h3 {
+            color: var(--secondary-color);
+            margin: 1.5rem 0 1rem 0;
+            font-size: 1.3rem;
+        }
+        
+        h4 {
+            color: var(--secondary-color);
+            margin: 1rem 0 0.5rem 0;
+            font-size: 1.1rem;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+        }
+        
+        ul, ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        code {
+            background: var(--code-bg);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            width: 100%;
+            max-width: 100%;
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            border: 1px solid var(--border-color);
+        }
+        
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            text-align: left;
+        }
+        
+        th {
+            background: var(--code-bg);
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        .card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .highlight {
+            background: #fef3c7;
+            border-left: 4px solid var(--warning-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .success {
+            background: #dcfce7;
+            border-left: 4px solid var(--success-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid var(--warning-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .error {
+            background: #fee2e2;
+            border-left: 4px solid var(--error-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        footer {
+            background: var(--code-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 0;
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--secondary-color);
+        }
+        
+        .good-example {
+            background: #dcfce7;
+            border-left: 4px solid var(--success-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .bad-example {
+            background: #fee2e2;
+            border-left: 4px solid var(--error-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .git-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: var(--hover-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        
+        .branch {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .branch-name {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .branch-description {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        
+        .testing-pyramid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 2rem 0;
+            padding: 2rem;
+            background: var(--hover-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        
+        .pyramid-level {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            border-radius: 4px;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .e2e-level {
+            background: #ef4444;
+            width: 200px;
+        }
+        
+        .integration-level {
+            background: var(--warning-color);
+            width: 350px;
+        }
+        
+        .unit-level {
+            background: var(--success-color);
+            width: 500px;
+        }
+        
+        .commit-example {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+        }
+        
+        .commit-type {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-menu {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 0 15px;
+            }
+            
+            .git-flow {
+                padding: 1rem;
+            }
+            
+            .branch {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .pyramid-level {
+                width: 100% !important;
+                max-width: 300px;
+            }
+            
+            pre {
+                padding: 0.75rem;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">🧶 TankerMade Workbench</div>
+                <div>Comprehensive Documentation</div>
+            </div>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <ul class="nav-menu">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="architecture.html">Architecture</a></li>
+                <li><a href="domain-model.html">Domain Model</a></li>
+                <li><a href="implementation-phases.html">Implementation</a></li>
+                <li><a href="technical-specs.html">Technical Specs</a></li>
+                <li><a href="ui-ux-specs.html">UI/UX Specs</a></li>
+                <li><a href="deployment.html">Deployment</a></li>
+                <li><a href="development-guidelines.html" class="active">Development</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <div class="content">
+                <h1>Development Guidelines</h1>
+
+                <div class="highlight">
+                    <h3>Development Standards</h3>
+                    <p>Comprehensive coding standards, testing practices, and development workflows for the TankerMade Workbench project, ensuring maintainable and high-quality code.</p>
+                </div>
+
+                <h2>Code Standards</h2>
+
+                <h3>C# Naming Conventions</h3>
+                <div class="card">
+                    <h4>Classes and Methods</h4>
+                    <div class="good-example">
+                        <strong>✅ Good Examples</strong>
+                        <pre><code>public class ProjectService  // PascalCase for classes
+public async Task&lt;Project&gt; GetByIdAsync(int id)  // PascalCase + Async suffix
+public int TotalStitches { get; set; }  // PascalCase for properties</code></pre>
+                    </div>
+
+                    <h4>Fields and Variables</h4>
+                    <div class="good-example">
+                        <strong>✅ Good Examples</strong>
+                        <pre><code>private readonly ILogger _logger;  // camelCase with underscore for private fields
+private readonly IProjectService _projectService;
+public string? Description { get; set; }  // Nullable reference types</code></pre>
+                    </div>
+
+                    <h4>LINQ Formatting</h4>
+                    <div class="good-example">
+                        <strong>✅ Good Example</strong>
+                        <pre><code>var projects = await context.Projects
+    .Where(p => p.UserId == userId)
+    .OrderByDescending(p => p.CreatedAt)
+    .Take(10)
+    .ToListAsync();</code></pre>
+                    </div>
+                    
+                    <div class="bad-example">
+                        <strong>❌ Bad Example</strong>
+                        <pre><code>var projects = await context.Projects.Where(p => p.UserId == userId).OrderByDescending(p => p.CreatedAt).Take(10).ToListAsync();</code></pre>
+                    </div>
+                </div>
+
+                <h3>Razor Component Conventions</h3>
+                <div class="card">
+                    <h4>Component Structure</h4>
+                    <pre><code>@page "/projects"
+@inject IProjectService ProjectService
+
+&lt;PageTitle&gt;Projects&lt;/PageTitle&gt;
+
+&lt;h1&gt;My Projects&lt;/h1&gt;
+
+@if (projects == null)
+{
+    &lt;LoadingSkeleton /&gt;
+}
+else if (!projects.Any())
+{
+    &lt;EmptyState Message="No projects yet" 
+                ActionText="Create Project" 
+                ActionUrl="/projects/new" /&gt;
+}
+else
+{
+    &lt;div class="project-grid"&gt;
+        @foreach (var project in projects)
+        {
+            &lt;ProjectCard Project="project" /&gt;
+        }
+    &lt;/div&gt;
+}
+
+@code {
+    private List&lt;ProjectDto&gt;? projects;
+
+    protected override async Task OnInitializedAsync()
+    {
+        projects = await ProjectService.GetAllAsync();
+    }
+}</code></pre>
+
+                    <h4>Component Guidelines</h4>
+                    <ul>
+                        <li><strong>Loading States:</strong> Always show loading skeleton while async operations run</li>
+                        <li><strong>Empty States:</strong> Provide helpful guidance when no data exists</li>
+                        <li><strong>Error Handling:</strong> Wrap async operations in try-catch blocks</li>
+                        <li><strong>Null Checks:</strong> Use nullable types and check for null before rendering</li>
+                        <li><strong>Reusable Components:</strong> Extract common UI patterns into shared components</li>
+                    </ul>
+                </div>
+
+                <h2>Git Workflow</h2>
+
+                <h3>Branch Strategy</h3>
+                <div class="git-flow">
+                    <div class="branch">
+                        <div class="branch-name">main</div>
+                        <div class="branch-description">Production-ready code only</div>
+                    </div>
+                    <div class="branch">
+                        <div class="branch-name">develop</div>
+                        <div class="branch-description">Integration branch for feature development</div>
+                    </div>
+                    <div class="branch">
+                        <div class="branch-name">feature/project-wizard</div>
+                        <div class="branch-description">Feature branches for new functionality</div>
+                    </div>
+                    <div class="branch">
+                        <div class="branch-name">feature/timer-component</div>
+                        <div class="branch-description">Each feature gets its own branch</div>
+                    </div>
+                    <div class="branch">
+                        <div class="branch-name">hotfix/timer-persistence-bug</div>
+                        <div class="branch-description">Critical fixes branch directly from main</div>
+                    </div>
+                </div>
+
+                <h3>Commit Message Format</h3>
+                <div class="card">
+                    <h4>Conventional Commits</h4>
+                    <p>Use the format: <code>type(scope): description</code></p>
+                    
+                    <div class="commit-example">
+                        <span class="commit-type">feat</span>: Add project creation wizard
+                    </div>
+                    <div class="commit-example">
+                        <span class="commit-type">fix</span>: Timer state persists across page refresh
+                    </div>
+                    <div class="commit-example">
+                        <span class="commit-type">docs</span>: Update module development guide
+                    </div>
+                    <div class="commit-example">
+                        <span class="commit-type">refactor</span>: Extract timer logic to service
+                    </div>
+                    <div class="commit-example">
+                        <span class="commit-type">test</span>: Add integration tests for project API
+                    </div>
+                    <div class="commit-example">
+                        <span class="commit-type">chore</span>: Update dependencies to latest versions
+                    </div>
+
+                    <h4>Commit Types</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>feat</code></td>
+                                <td>New feature</td>
+                                <td>Add user authentication</td>
+                            </tr>
+                            <tr>
+                                <td><code>fix</code></td>
+                                <td>Bug fix</td>
+                                <td>Fix timer reset bug</td>
+                            </tr>
+                            <tr>
+                                <td><code>docs</code></td>
+                                <td>Documentation</td>
+                                <td>Update API documentation</td>
+                            </tr>
+                            <tr>
+                                <td><code>refactor</code></td>
+                                <td>Code refactoring</td>
+                                <td>Extract common service logic</td>
+                            </tr>
+                            <tr>
+                                <td><code>test</code></td>
+                                <td>Tests</td>
+                                <td>Add unit tests for project service</td>
+                            </tr>
+                            <tr>
+                                <td><code>chore</code></td>
+                                <td>Build/maintenance</td>
+                                <td>Update NuGet packages</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Pull Request Requirements</h3>
+                <div class="card">
+                    <h4>Before Creating PR</h4>
+                    <ul>
+                        <li>✅ All tests pass locally</li>
+                        <li>✅ No console errors in browser</li>
+                        <li>✅ Code follows style guidelines</li>
+                        <li>✅ New features have tests</li>
+                        <li>✅ Documentation updated if needed</li>
+                        <li>✅ Mobile responsive (for UI changes)</li>
+                    </ul>
+
+                    <h4>PR Template</h4>
+                    <pre><code>## What
+Brief description of what this PR does.
+
+## Why
+Explain the reasoning behind this change.
+
+## Changes
+- List specific changes made
+- Include any breaking changes
+- Note any new dependencies
+
+## Testing
+- [ ] Unit tests added/updated
+- [ ] Integration tests pass
+- [ ] Manual testing completed
+- [ ] Mobile tested (UI changes)
+
+## Screenshots
+Include screenshots for UI changes.</code></pre>
+                </div>
+
+                <h2>Testing Strategy</h2>
+
+                <h3>Testing Pyramid</h3>
+                <div class="testing-pyramid">
+                    <div class="pyramid-level e2e-level">E2E Tests (Few)</div>
+                    <div class="pyramid-level integration-level">Integration Tests (Some)</div>
+                    <div class="pyramid-level unit-level">Unit Tests (Many)</div>
+                </div>
+
+                <h3>Unit Tests</h3>
+                <div class="card">
+                    <h4>Service Testing Example</h4>
+                    <pre><code>[Fact]
+public async Task GetByIdReturnsProjectWhenExists()
+{
+    // Arrange
+    var context = CreateInMemoryContext();
+    var service = new ProjectService(context);
+    var project = new Project { Name = "Test Project", UserId = "user1" };
+    context.Projects.Add(project);
+    await context.SaveChangesAsync();
+
+    // Act
+    var result = await service.GetByIdAsync(project.Id);
+
+    // Assert
+    Assert.NotNull(result);
+    Assert.Equal("Test Project", result.Name);
+}
+
+[Fact]
+public async Task GetByIdReturnsNullWhenNotFound()
+{
+    // Arrange
+    var context = CreateInMemoryContext();
+    var service = new ProjectService(context);
+
+    // Act
+    var result = await service.GetByIdAsync(999);
+
+    // Assert
+    Assert.Null(result);
+}</code></pre>
+
+                    <h4>Testing Guidelines</h4>
+                    <ul>
+                        <li><strong>Arrange-Act-Assert:</strong> Structure all tests clearly</li>
+                        <li><strong>Descriptive Names:</strong> Test names should explain what they test</li>
+                        <li><strong>Single Responsibility:</strong> Each test should test one thing</li>
+                        <li><strong>Independent Tests:</strong> Tests should not depend on each other</li>
+                        <li><strong>Mock External Dependencies:</strong> Use mocks for database, HTTP calls</li>
+                    </ul>
+                </div>
+
+                <h3>Integration Tests</h3>
+                <div class="card">
+                    <h4>API Testing Example</h4>
+                    <pre><code>[Fact]
+public async Task POST_Projects_ReturnsCreatedWhenValid()
+{
+    // Arrange
+    var client = _factory.CreateClient();
+    var dto = new CreateProjectDto 
+    { 
+        Name = "New Project", 
+        PatternId = 1 
+    };
+
+    // Act
+    var response = await client.PostAsJsonAsync("/api/projects", dto);
+
+    // Assert
+    Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    var project = await response.Content.ReadFromJsonAsync&lt;ProjectDto&gt;();
+    Assert.Equal("New Project", project.Name);
+}
+
+[Fact]
+public async Task GET_Projects_RequiresAuthentication()
+{
+    // Arrange
+    var client = _factory.CreateClient();
+
+    // Act
+    var response = await client.GetAsync("/api/projects");
+
+    // Assert
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+}</code></pre>
+                </div>
+
+                <h3>End-to-End Tests</h3>
+                <div class="card">
+                    <h4>Playwright Test Example</h4>
+                    <pre><code>[Test]
+public async Task CreateProjectFlow()
+{
+    await Page.GotoAsync("/projects/new");
+
+    // Step 1: Pattern selection
+    await Page.SelectOptionAsync("name=patternType", "Crochet");
+    await Page.SelectOptionAsync("name=theme", "Amigurumi");
+    await Page.ClickAsync("text=Continue");
+
+    // Step 4: Details (skipping step 2-3 for brevity)
+    await Page.FillAsync("name=name", "Test Project");
+    await Page.ClickAsync("text=Create Project");
+
+    // Verify redirect to project detail
+    await Expect(Page).ToHaveURLAsync(new Regex(@"/projects/\d+"));
+    await Expect(Page.Locator("h1")).ToContainTextAsync("Test Project");
+}
+
+[Test]
+public async Task TimerPersistenceAcrossPageReload()
+{
+    await Page.GotoAsync("/projects/1");
+    
+    // Start timer
+    await Page.ClickAsync("button:has-text('Start Timer')");
+    await Page.WaitForTimeoutAsync(2000); // Let timer run for 2 seconds
+    
+    // Reload page
+    await Page.ReloadAsync();
+    
+    // Verify timer is still running
+    await Expect(Page.Locator(".timer")).ToContainTextAsync("00:00:0");
+    await Expect(Page.Locator("button:has-text('Stop Timer')")).ToBeVisibleAsync();
+}</code></pre>
+                </div>
+
+                <h2>Error Handling</h2>
+
+                <h3>Server-Side Error Handling</h3>
+                <div class="card">
+                    <h4>Global Exception Handler</h4>
+                    <pre><code>public class GlobalExceptionMiddleware
+{
+    private readonly RequestDelegate _next;
+    private readonly ILogger&lt;GlobalExceptionMiddleware&gt; _logger;
+
+    public GlobalExceptionMiddleware(RequestDelegate next, ILogger&lt;GlobalExceptionMiddleware&gt; logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        try
+        {
+            await _next(context);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An unhandled exception occurred");
+            await HandleExceptionAsync(context, ex);
+        }
+    }
+
+    private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
+    {
+        context.Response.ContentType = "application/json";
+
+        var response = exception switch
+        {
+            ValidationException valEx => new { 
+                success = false, 
+                error = new { 
+                    code = "VALIDATION_ERROR", 
+                    message = valEx.Message,
+                    details = valEx.Errors 
+                } 
+            },
+            UnauthorizedAccessException => new { 
+                success = false, 
+                error = new { 
+                    code = "UNAUTHORIZED", 
+                    message = "Access denied" 
+                } 
+            },
+            _ => new { 
+                success = false, 
+                error = new { 
+                    code = "INTERNAL_ERROR", 
+                    message = "An error occurred while processing your request" 
+                } 
+            }
+        };
+
+        context.Response.StatusCode = exception switch
+        {
+            ValidationException => 400,
+            UnauthorizedAccessException => 401,
+            _ => 500
+        };
+
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+    }
+}</code></pre>
+                </div>
+
+                <h3>Client-Side Error Handling</h3>
+                <div class="card">
+                    <h4>Error Boundary Component</h4>
+                    <pre><code>&lt;ErrorBoundary&gt;
+    &lt;ChildContent&gt;
+        @* Your regular component content *@
+        &lt;ProjectList /&gt;
+    &lt;/ChildContent&gt;
+    &lt;ErrorContent Context="errorInfo"&gt;
+        &lt;div class="error-container"&gt;
+            &lt;h3&gt;😵 Something went wrong&lt;/h3&gt;
+            &lt;p&gt;We're sorry, but something unexpected happened.&lt;/p&gt;
+            &lt;details&gt;
+                &lt;summary&gt;Technical Details&lt;/summary&gt;
+                &lt;pre&gt;@errorInfo.ToString()&lt;/pre&gt;
+            &lt;/details&gt;
+            &lt;button @onclick="ReloadPage" class="btn btn-primary"&gt;
+                Reload Page
+            &lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/ErrorContent&gt;
+&lt;/ErrorBoundary&gt;
+
+@code {
+    private void ReloadPage()
+    {
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    }
+}</code></pre>
+                </div>
+
+                <h2>Performance Guidelines</h2>
+
+                <h3>Client-Side Performance</h3>
+                <div class="card">
+                    <h4>Component Optimization</h4>
+                    <ul>
+                        <li><strong>Use @key for Lists:</strong> Help Blazor track list items efficiently</li>
+                        <li><strong>Implement ShouldRender:</strong> Prevent unnecessary re-renders</li>
+                        <li><strong>Lazy Loading:</strong> Load routes and large components on demand</li>
+                        <li><strong>Debounce Input:</strong> Use timers for search and filter inputs</li>
+                        <li><strong>Virtual Scrolling:</strong> For very large lists (1000+ items)</li>
+                    </ul>
+
+                    <pre><code>// Example: Debounced search
+private System.Timers.Timer? _searchTimer;
+private string _searchTerm = "";
+
+private string SearchTerm
+{
+    get => _searchTerm;
+    set
+    {
+        _searchTerm = value;
+        _searchTimer?.Stop();
+        _searchTimer = new System.Timers.Timer(300);
+        _searchTimer.Elapsed += async (sender, e) => 
+        {
+            await InvokeAsync(async () =>
+            {
+                await PerformSearch(_searchTerm);
+                StateHasChanged();
+            });
+        };
+        _searchTimer.Start();
+    }
+}</code></pre>
+                </div>
+
+                <h3>Database Performance</h3>
+                <div class="card">
+                    <h4>Query Optimization</h4>
+                    <ul>
+                        <li><strong>Use Async Methods:</strong> All database calls should be async</li>
+                        <li><strong>Select Only Needed Fields:</strong> Don't load entire entities unnecessarily</li>
+                        <li><strong>Include Related Data:</strong> Use .Include() to avoid N+1 queries</li>
+                        <li><strong>Filter Early:</strong> Apply Where() clauses as early as possible</li>
+                        <li><strong>Use Pagination:</strong> Don't load huge datasets</li>
+                    </ul>
+
+                    <div class="good-example">
+                        <strong>✅ Good Example</strong>
+                        <pre><code>// Efficient query with pagination and filtering
+var projects = await context.Projects
+    .Where(p => p.UserId == userId && !p.IsArchived)
+    .Include(p => p.Pattern)
+    .Include(p => p.Theme)
+    .OrderByDescending(p => p.UpdatedAt)
+    .Skip((page - 1) * pageSize)
+    .Take(pageSize)
+    .Select(p => new ProjectDto
+    {
+        Id = p.Id,
+        Name = p.Name,
+        CompletionPercentage = p.CompletionPercentage,
+        PatternName = p.Pattern != null ? p.Pattern.Name : null,
+        ThemeName = p.Theme != null ? p.Theme.Name : null
+    })
+    .ToListAsync();</code></pre>
+                    </div>
+                    
+                    <div class="bad-example">
+                        <strong>❌ Bad Example</strong>
+                        <pre><code>// Inefficient: loads all projects then filters in memory
+var allProjects = await context.Projects.ToListAsync();
+var userProjects = allProjects
+    .Where(p => p.UserId == userId && !p.IsArchived)
+    .Take(pageSize);</code></pre>
+                    </div>
+                </div>
+
+                <h2>Security Guidelines</h2>
+
+                <h3>Input Validation</h3>
+                <div class="card">
+                    <h4>Server-Side Validation</h4>
+                    <pre><code>public class CreateProjectValidator : AbstractValidator&lt;CreateProjectDto&gt;
+{
+    public CreateProjectValidator()
+    {
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Project name is required")
+            .MaximumLength(100).WithMessage("Project name must be 100 characters or less")
+            .Matches("^[a-zA-Z0-9 .-]+$").WithMessage("Project name contains invalid characters");
+
+        RuleFor(x => x.Description)
+            .MaximumLength(1000).WithMessage("Description must be 1000 characters or less");
+
+        RuleFor(x => x.PatternId)
+            .GreaterThan(0).WithMessage("Please select a valid pattern")
+            .When(x => x.PatternId.HasValue);
+    }
+}</code></pre>
+
+                    <h4>Authorization Checks</h4>
+                    <pre><code>// Ensure users can only access their own data
+[HttpGet("{id}")]
+[Authorize]
+public async Task&lt;ActionResult&lt;ProjectDto&gt;&gt; GetProject(int id)
+{
+    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var project = await _context.Projects
+        .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
+    
+    if (project == null)
+        return NotFound();
+    
+    return Ok(_mapper.Map&lt;ProjectDto&gt;(project));
+}</code></pre>
+                </div>
+
+                <h3>Data Protection</h3>
+                <div class="card">
+                    <ul>
+                        <li><strong>Sanitize Input:</strong> Always validate and sanitize user input</li>
+                        <li><strong>Use Parameterized Queries:</strong> EF Core handles this automatically</li>
+                        <li><strong>Validate File Uploads:</strong> Check file types, sizes, and scan content</li>
+                        <li><strong>Rate Limiting:</strong> Prevent abuse of API endpoints</li>
+                        <li><strong>HTTPS Only:</strong> Force HTTPS in production</li>
+                        <li><strong>Secure Headers:</strong> Add security headers (CSP, HSTS, etc.)</li>
+                    </ul>
+                </div>
+
+                <h2>Documentation Standards</h2>
+
+                <h3>Code Documentation</h3>
+                <div class="card">
+                    <h4>XML Documentation</h4>
+                    <pre><code>/// &lt;summary&gt;
+/// Retrieves a project by its unique identifier.
+/// &lt;/summary&gt;
+/// &lt;param name="id"&gt;The unique identifier of the project.&lt;/param&gt;
+/// &lt;param name="userId"&gt;The user ID to ensure access control.&lt;/param&gt;
+/// &lt;returns&gt;The project if found and owned by user, null otherwise.&lt;/returns&gt;
+/// &lt;exception cref="ArgumentException"&gt;Thrown when id is less than or equal to 0.&lt;/exception&gt;
+public async Task&lt;Project?&gt; GetByIdAsync(int id, string userId)
+{
+    if (id &lt;= 0)
+        throw new ArgumentException("Project ID must be greater than 0", nameof(id));
+
+    return await _context.Projects
+        .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
+}</code></pre>
+
+                    <h4>README Standards</h4>
+                    <p>Every project and major component should have a README with:</p>
+                    <ul>
+                        <li><strong>Purpose:</strong> What does this component do?</li>
+                        <li><strong>Usage:</strong> How do you use it?</li>
+                        <li><strong>Examples:</strong> Code examples for common scenarios</li>
+                        <li><strong>Configuration:</strong> Any required setup or configuration</li>
+                        <li><strong>Dependencies:</strong> What does it depend on?</li>
+                    </ul>
+                </div>
+
+                <h2>Development Environment Setup</h2>
+
+                <h3>Required Tools</h3>
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tool</th>
+                                <th>Version</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>.NET SDK</td>
+                                <td>8.0+</td>
+                                <td>Core development framework</td>
+                            </tr>
+                            <tr>
+                                <td>Visual Studio 2022</td>
+                                <td>Latest</td>
+                                <td>Primary IDE (recommended)</td>
+                            </tr>
+                            <tr>
+                                <td>VS Code</td>
+                                <td>Latest</td>
+                                <td>Alternative editor with C# extension</td>
+                            </tr>
+                            <tr>
+                                <td>SQL Server / PostgreSQL</td>
+                                <td>Latest</td>
+                                <td>Database (optional - SQLite included)</td>
+                            </tr>
+                            <tr>
+                                <td>Docker</td>
+                                <td>Latest</td>
+                                <td>Containerization and deployment</td>
+                            </tr>
+                            <tr>
+                                <td>Git</td>
+                                <td>2.0+</td>
+                                <td>Version control</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>First-Time Setup</h3>
+                <div class="card">
+                    <h4>Clone and Setup</h4>
+                    <pre><code># Clone repository
+git clone https://github.com/yourusername/tankermade-workbench.git
+cd tankermade-workbench
+
+# Restore dependencies
+dotnet restore
+
+# Create development database
+dotnet ef database update --project TankerMade.Server
+
+# Run application
+dotnet run --project TankerMade.Server
+
+# In another terminal, run client (if separate)
+dotnet run --project TankerMade.Client</code></pre>
+
+                    <h4>Development Configuration</h4>
+                    <pre><code>// appsettings.Development.json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=tankermade-dev.db"
+  },
+  "JwtSettings": {
+    "Key": "development-key-not-for-production-use-change-this",
+    "ExpiryMinutes": 1440
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Information",
+      "Microsoft.EntityFrameworkCore": "Information"
+    }
+  }
+}</code></pre>
+                </div>
+
+                <h2>Success Metrics</h2>
+
+                <h3>Code Quality Metrics</h3>
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Target</th>
+                                <th>How to Measure</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Unit Test Coverage</td>
+                                <td>80%+</td>
+                                <td>dotnet test --collect:"XPlat Code Coverage"</td>
+                            </tr>
+                            <tr>
+                                <td>Build Warnings</td>
+                                <td>0</td>
+                                <td>dotnet build --verbosity normal</td>
+                            </tr>
+                            <tr>
+                                <td>Code Analysis Issues</td>
+                                <td>&lt; 5</td>
+                                <td>Enable code analysis in project</td>
+                            </tr>
+                            <tr>
+                                <td>Dependency Vulnerabilities</td>
+                                <td>0 High</td>
+                                <td>dotnet list package --vulnerable</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="success">
+                    <h3>🎯 Development Philosophy</h3>
+                    <p>The TankerMade Workbench follows these core development principles:</p>
+                    <ol>
+                        <li><strong>Ship Early, Ship Often:</strong> Complete phases before moving to the next</li>
+                        <li><strong>Dogfood Relentlessly:</strong> Use the app yourself to find pain points</li>
+                        <li><strong>Document as You Go:</strong> Don't leave documentation for the end</li>
+                        <li><strong>Test the Critical Path:</strong> Focus testing on core user workflows</li>
+                        <li><strong>Keep It Fun:</strong> This is a personal project - enjoy the process!</li>
+                    </ol>
+                </div>
+
+                <div class="warning">
+                    <h3>⚠️ Common Pitfalls to Avoid</h3>
+                    <ul>
+                        <li><strong>Scope Creep:</strong> Stick to phase boundaries and MVP definition</li>
+                        <li><strong>Over-Engineering:</strong> Build what you need, not what you might need</li>
+                        <li><strong>Skipping Tests:</strong> Write tests as you go, not at the end</li>
+                        <li><strong>Ignoring Performance:</strong> Profile and optimize from the start</li>
+                        <li><strong>Security Afterthought:</strong> Build security in, don't bolt it on</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 TankerMade Workbench Documentation. Generated from project specification.</p>
+        </div>
+    </footer>
+</body>
+</html>

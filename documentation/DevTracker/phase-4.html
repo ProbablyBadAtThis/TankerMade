@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 4: Timers & Sessions - TankerMade Dev Tracker</title>
+    <style>
+        :root {
+            --primary-color: #dc2626;
+            --secondary-color: #64748b;
+            --bg-color: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --code-bg: #f1f5f9;
+            --hover-color: #f8fafc;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        
+        .phase-progress {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .progress-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: conic-gradient(var(--success-color) 0deg, var(--success-color) 0deg, rgba(255,255,255,0.3) 0deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        
+        nav {
+            background: var(--hover-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.5rem 0;
+        }
+        
+        .nav-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .nav-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        
+        main {
+            padding: 2rem 0;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 2.2rem;
+        }
+        
+        .phase-intro {
+            background: linear-gradient(135deg, #fee2e2 0%, #ffffff 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .phase-meta {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .meta-label {
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        .meta-value {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .phase-goal {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--primary-color);
+            border-radius: 6px;
+            background: white;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn.success {
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+        
+        .btn.success:hover {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .btn.danger {
+            border-color: var(--error-color);
+            color: var(--error-color);
+        }
+        
+        .btn.danger:hover {
+            background: var(--error-color);
+            color: white;
+        }
+        
+        .deliverable-section {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        
+        .deliverable-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .deliverable-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .deliverable-progress {
+            font-size: 0.9rem;
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+        }
+        
+        .deliverable-content {
+            padding: 1.5rem;
+        }
+        
+        .task-group {
+            margin-bottom: 2rem;
+        }
+        
+        .task-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .task-group-title {
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--primary-color);
+            padding-left: 0.75rem;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .task-item:hover {
+            background: var(--hover-color);
+        }
+        
+        .task-item.completed {
+            background: #f0fdf4;
+            border-color: var(--success-color);
+        }
+        
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin-top: 0.1rem;
+        }
+        
+        .task-content {
+            flex: 1;
+        }
+        
+        .task-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+            color: var(--secondary-color);
+        }
+        
+        .task-description {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            line-height: 1.4;
+        }
+        
+        .task-complexity {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+        
+        .complexity-easy {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        
+        .complexity-medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .complexity-hard {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .acceptance-criteria {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .acceptance-criteria h3 {
+            color: #0ea5e9;
+            margin: 0 0 1rem 0;
+        }
+        
+        .criteria-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .criteria-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .criteria-item:hover {
+            background: rgba(14, 165, 233, 0.1);
+        }
+        
+        .criteria-item.completed {
+            background: #ecfdf5;
+        }
+        
+        .criteria-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            margin-top: 0.1rem;
+        }
+        
+        .criteria-text {
+            flex: 1;
+            font-size: 0.95rem;
+        }
+        
+        .criteria-item.completed .criteria-text {
+            text-decoration: line-through;
+            color: var(--secondary-color);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .phase-meta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+            
+            .deliverable-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">⏱️ Phase 4: Timers & Sessions</div>
+                <div class="phase-progress">
+                    <div>
+                        <div style="font-size: 0.85rem;" id="progress-text">0% Complete</div>
+                        <div style="font-size: 0.75rem; opacity: 0.8;" id="task-count">0 / 45 tasks</div>
+                    </div>
+                    <div class="progress-circle" id="progress-circle">0%</div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <div class="nav-content">
+                <a href="tracker-index.html" class="nav-link">← Back to Dashboard</a>
+                <span style="color: var(--secondary-color);">|</span>
+                <a href="phase-3.html" class="nav-link">← Phase 3: Pattern & Workspace</a>
+                <span style="color: var(--secondary-color);">|</span>
+                <a href="phase-5.html" class="nav-link">Phase 5: Gamification →</a>
+            </div>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <h1>Timers & Sessions Phase</h1>
+            
+            <div class="phase-intro">
+                <div class="phase-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Duration:</span>
+                        <span class="meta-value">Weeks 9-10</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Total Tasks:</span>
+                        <span class="meta-value" id="total-tasks">45</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Estimated Time:</span>
+                        <span class="meta-value">40-60 hours</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Complexity:</span>
+                        <span class="meta-value">Medium (State Management)</span>
+                    </div>
+                </div>
+                
+                <div class="phase-goal">
+                    <strong>Goal:</strong> Track time spent on projects with persistent timers
+                </div>
+                
+                <p><strong>What you'll build:</strong> A comprehensive time tracking system with play/pause/stop controls, persistent timers that survive page refreshes, work session history, and statistics. The timer will be visible globally and support both project-level and piece-level tracking.</p>
+            </div>
+
+            <div class="controls">
+                <button class="btn success" onclick="markAllComplete()">✓ Mark All Complete</button>
+                <button class="btn" onclick="markAllIncomplete()">○ Mark All Incomplete</button>
+                <button class="btn" onclick="exportPhaseProgress()">📁 Export Progress</button>
+                <button class="btn danger" onclick="resetPhaseProgress()">🔄 Reset Phase</button>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">Timer Component</h2>
+                    <div class="deliverable-progress" id="timer-progress">0 / 15 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">Basic Timer UI</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-timer-component">
+                            <div class="task-content">
+                                <div class="task-title">Create Timer component</div>
+                                <div class="task-description">Display elapsed time in HH:MM:SS format with clean typography</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="add-timer-controls">
+                            <div class="task-content">
+                                <div class="task-title">Add play/pause/stop controls</div>
+                                <div class="task-description">Green play, orange pause, red stop buttons with icons and tooltips</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-visual-states">
+                            <div class="task-content">
+                                <div class="task-title">Add timer visual states</div>
+                                <div class="task-description">Different colors for stopped, running, paused states with animation</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-keyboard-shortcuts">
+                            <div class="task-content">
+                                <div class="task-title">Add keyboard shortcuts</div>
+                                <div class="task-description">Space to play/pause, S to stop, accessible via global key handler</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-accessibility">
+                            <div class="task-content">
+                                <div class="task-title">Add timer accessibility</div>
+                                <div class="task-description">Screen reader announcements, ARIA labels, focus management</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Timer Logic & State</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-timer-state">
+                            <div class="task-content">
+                                <div class="task-title">Implement timer state management</div>
+                                <div class="task-description">TimerState class with StartTime, ElapsedTime, IsRunning properties</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-background-tick">
+                            <div class="task-content">
+                                <div class="task-title">Add background timer tick</div>
+                                <div class="task-description">setInterval every second to update display, handle tab visibility</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-accuracy">
+                            <div class="task-content">
+                                <div class="task-title">Ensure timer accuracy</div>
+                                <div class="task-description">Use DateTime.Now for calculations, not just interval counting</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-pause-resume">
+                            <div class="task-content">
+                                <div class="task-title">Implement pause/resume logic</div>
+                                <div class="task-description">Track elapsed time separately from start time, handle multiple pauses</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-stop-save">
+                            <div class="task-content">
+                                <div class="task-title">Handle timer stop and session save</div>
+                                <div class="task-description">Create WorkSession record when stopped, reset timer state</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Timer Integration</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="embed-timer-project-detail">
+                            <div class="task-content">
+                                <div class="task-title">Embed timer in project detail page</div>
+                                <div class="task-description">Timer component in project header with context awareness</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-project-context">
+                            <div class="task-content">
+                                <div class="task-title">Associate timer with project</div>
+                                <div class="task-description">Pass ProjectId to timer, save sessions with correct project reference</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-piece-context">
+                            <div class="task-content">
+                                <div class="task-title">Add optional pattern piece context</div>
+                                <div class="task-description">When working on specific piece, track time per piece</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-multiple-instances">
+                            <div class="task-content">
+                                <div class="task-title">Handle multiple timer instances</div>
+                                <div class="task-description">Only one timer can run at a time, auto-pause others</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-confirmation-dialogs">
+                            <div class="task-content">
+                                <div class="task-title">Add confirmation dialogs</div>
+                                <div class="task-description">Confirm before stopping long sessions, warn about lost time</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">Timer Persistence</h2>
+                    <div class="deliverable-progress" id="persistence-progress">0 / 12 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">State Persistence</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="design-timer-storage">
+                            <div class="task-content">
+                                <div class="task-title">Design timer state storage format</div>
+                                <div class="task-description">JSON structure for active timer: ProjectId, PieceId?, StartTime, ElapsedTime, IsRunning</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-timer-storage">
+                            <div class="task-content">
+                                <div class="task-title">Implement timer state storage</div>
+                                <div class="task-description">Save to localStorage immediately on start/pause/stop actions</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-state-restoration">
+                            <div class="task-content">
+                                <div class="task-title">Restore timer state on page load</div>
+                                <div class="task-description">Check localStorage, calculate current elapsed time, resume if running</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-cleanup">
+                            <div class="task-content">
+                                <div class="task-title">Clean up timer state</div>
+                                <div class="task-description">Remove localStorage entry when timer stopped, handle orphaned states</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-browser-close">
+                            <div class="task-content">
+                                <div class="task-title">Handle browser close/refresh</div>
+                                <div class="task-description">beforeunload event to save current state, warn about running timer</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Cross-Tab Synchronization</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-storage-events">
+                            <div class="task-content">
+                                <div class="task-title">Listen for localStorage storage events</div>
+                                <div class="task-description">Sync timer state across browser tabs automatically</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="tab-timer-coordination">
+                            <div class="task-content">
+                                <div class="task-title">Coordinate timer across tabs</div>
+                                <div class="task-description">Only one tab should tick the timer, others should just display</div>
+                            </div>
+                            <div class="task-complexity complexity-hard">Hard</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="tab-visibility-handling">
+                            <div class="task-content">
+                                <div class="task-title">Handle tab visibility changes</div>
+                                <div class="task-description">Pause updates when tab is hidden, resume when visible</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-conflict-resolution">
+                            <div class="task-content">
+                                <div class="task-title">Resolve timer conflicts</div>
+                                <div class="task-description">When multiple tabs try to control timer, last action wins</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Error Handling & Recovery</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-error-recovery">
+                            <div class="task-content">
+                                <div class="task-title">Handle timer corruption</div>
+                                <div class="task-description">Detect invalid timer states, reset gracefully, notify user</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-long-sessions">
+                            <div class="task-content">
+                                <div class="task-title">Handle very long sessions</div>
+                                <div class="task-description">Sessions > 8 hours, warn user, suggest breaking into multiple sessions</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-date-boundary">
+                            <div class="task-content">
+                                <div class="task-title">Handle date boundary crossing</div>
+                                <div class="task-description">Session started yesterday but stopped today, correct date handling</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">Work Sessions</h2>
+                    <div class="deliverable-progress" id="sessions-progress">0 / 10 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">Session Data Management</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="implement-worksession-model">
+                            <div class="task-content">
+                                <div class="task-title">Complete WorkSession model implementation</div>
+                                <div class="task-description">Id, ProjectId, PatternPieceId?, StartTime, EndTime, UserId with relationships</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-session-service">
+                            <div class="task-content">
+                                <div class="task-title">Create WorkSessionService</div>
+                                <div class="task-description">CRUD operations, both offline (IndexedDB) and server modes</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="session-creation-logic">
+                            <div class="task-content">
+                                <div class="task-title">Implement session creation</div>
+                                <div class="task-description">Create session when timer stops, calculate duration, validate data</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="session-validation">
+                            <div class="task-content">
+                                <div class="task-title">Add session validation</div>
+                                <div class="task-description">Minimum session time (1 minute), maximum (12 hours), valid dates</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Session History UI</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-session-history-page">
+                            <div class="task-content">
+                                <div class="task-title">Create session history page</div>
+                                <div class="task-description">List all sessions with project names, durations, dates</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="session-list-filtering">
+                            <div class="task-content">
+                                <div class="task-title">Add session filtering</div>
+                                <div class="task-description">Filter by project, date range, duration range</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="session-editing">
+                            <div class="task-content">
+                                <div class="task-title">Allow session editing</div>
+                                <div class="task-description">Correct start/end times, delete invalid sessions, split long sessions</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="session-export">
+                            <div class="task-content">
+                                <div class="task-title">Add session export</div>
+                                <div class="task-description">Export sessions to CSV for external analysis</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="project-session-view">
+                            <div class="task-content">
+                                <div class="task-title">Show sessions on project detail</div>
+                                <div class="task-description">Recent sessions list on project page with total time</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="session-notes">
+                            <div class="task-content">
+                                <div class="task-title">Add optional session notes</div>
+                                <div class="task-description">Notes field on WorkSession, editable after session ends</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="deliverable-section">
+                <div class="deliverable-header">
+                    <h2 class="deliverable-title">Statistics & Global Timer</h2>
+                    <div class="deliverable-progress" id="stats-progress">0 / 8 tasks</div>
+                </div>
+                <div class="deliverable-content">
+                    <div class="task-group">
+                        <div class="task-group-title">Time Statistics</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="create-time-statistics-service">
+                            <div class="task-content">
+                                <div class="task-title">Create time statistics service</div>
+                                <div class="task-description">Calculate total time today/week/month/all-time from WorkSessions</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="average-session-calculations">
+                            <div class="task-content">
+                                <div class="task-title">Calculate session averages</div>
+                                <div class="task-description">Average session length, longest session, most productive day of week</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="time-distribution-analysis">
+                            <div class="task-content">
+                                <div class="task-title">Analyze time distribution</div>
+                                <div class="task-description">Time spent per project, per pattern piece, productivity heat maps</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="statistics-dashboard">
+                            <div class="task-content">
+                                <div class="task-title">Create time statistics dashboard</div>
+                                <div class="task-description">Visual charts and stats, accessible from main navigation</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                    </div>
+
+                    <div class="task-group">
+                        <div class="task-group-title">Global Timer Display</div>
+                        
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="header-timer-display">
+                            <div class="task-content">
+                                <div class="task-title">Add timer to header/navigation</div>
+                                <div class="task-description">Compact timer display visible on all pages when running</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="global-timer-controls">
+                            <div class="task-content">
+                                <div class="task-title">Global timer controls</div>
+                                <div class="task-description">Pause/stop from header, click to navigate to project</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="timer-notifications">
+                            <div class="task-content">
+                                <div class="task-title">Add timer milestone notifications</div>
+                                <div class="task-description">Toast at 30min, 1hr, 2hr marks to encourage breaks</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-task="browser-tab-title">
+                            <div class="task-content">
+                                <div class="task-title">Update browser tab title with timer</div>
+                                <div class="task-description">Show running time in tab title when timer active</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="acceptance-criteria">
+                <h3>✅ Acceptance Criteria</h3>
+                <ul class="criteria-list">
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="timer-start-stop">
+                        <div class="criteria-text">User can start/stop timer on project detail page</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="timer-real-time">
+                        <div class="criteria-text">Timer counts up in real-time (HH:MM:SS)</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="timer-persistence">
+                        <div class="criteria-text">Timer state persists across page refreshes</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="session-creation">
+                        <div class="criteria-text">Stopping timer creates a WorkSession record</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="session-history">
+                        <div class="criteria-text">Sessions display in history with start/end times</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="piece-timers">
+                        <div class="criteria-text">Per-piece timers work independently</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="global-visibility">
+                        <div class="criteria-text">Timer shows in header/nav when active (global visibility)</div>
+                    </li>
+                    <li class="criteria-item">
+                        <input type="checkbox" class="criteria-checkbox" data-criteria="statistics-accuracy">
+                        <div class="criteria-text">Statistics calculate correctly</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const PHASE_ID = 4;
+        const STORAGE_KEY = `phase-${PHASE_ID}-tasks`;
+        const CRITERIA_KEY = `phase-${PHASE_ID}-criteria`;
+        
+        const taskIds = [
+            // Timer Component (15 tasks)
+            'create-timer-component', 'add-timer-controls', 'timer-visual-states', 'timer-keyboard-shortcuts', 'timer-accessibility',
+            'implement-timer-state', 'timer-background-tick', 'timer-accuracy', 'timer-pause-resume', 'timer-stop-save',
+            'embed-timer-project-detail', 'timer-project-context', 'timer-piece-context', 'timer-multiple-instances', 'timer-confirmation-dialogs',
+            
+            // Timer Persistence (12 tasks)
+            'design-timer-storage', 'implement-timer-storage', 'timer-state-restoration', 'timer-cleanup', 'timer-browser-close',
+            'implement-storage-events', 'tab-timer-coordination', 'tab-visibility-handling', 'timer-conflict-resolution',
+            'timer-error-recovery', 'timer-long-sessions', 'timer-date-boundary',
+            
+            // Work Sessions (10 tasks)
+            'implement-worksession-model', 'create-session-service', 'session-creation-logic', 'session-validation',
+            'create-session-history-page', 'session-list-filtering', 'session-editing', 'session-export', 'project-session-view', 'session-notes',
+            
+            // Statistics & Global Timer (8 tasks)
+            'create-time-statistics-service', 'average-session-calculations', 'time-distribution-analysis', 'statistics-dashboard',
+            'header-timer-display', 'global-timer-controls', 'timer-notifications', 'browser-tab-title'
+        ];
+
+        const criteriaIds = [
+            'timer-start-stop', 'timer-real-time', 'timer-persistence', 'session-creation',
+            'session-history', 'piece-timers', 'global-visibility', 'statistics-accuracy'
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProgress();
+            updateAllProgress();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            taskIds.forEach(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                if (checkbox) {
+                    checkbox.addEventListener('change', function() {
+                        saveProgress();
+                        updateAllProgress();
+                    });
+                }
+            });
+
+            criteriaIds.forEach(criteriaId => {
+                const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                if (checkbox) {
+                    checkbox.addEventListener('change', function() {
+                        saveCriteria();
+                        updateAllProgress();
+                    });
+                }
+            });
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const completedTasks = JSON.parse(saved);
+                taskIds.forEach(taskId => {
+                    const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                    if (checkbox && completedTasks.includes(taskId)) {
+                        checkbox.checked = true;
+                        checkbox.closest('.task-item').classList.add('completed');
+                    }
+                });
+            }
+
+            const savedCriteria = localStorage.getItem(CRITERIA_KEY);
+            if (savedCriteria) {
+                const completedCriteria = JSON.parse(savedCriteria);
+                criteriaIds.forEach(criteriaId => {
+                    const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                    if (checkbox && completedCriteria.includes(criteriaId)) {
+                        checkbox.checked = true;
+                        checkbox.closest('.criteria-item').classList.add('completed');
+                    }
+                });
+            }
+        }
+
+        function saveProgress() {
+            const completedTasks = taskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(completedTasks));
+
+            taskIds.forEach(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                if (checkbox) {
+                    const taskItem = checkbox.closest('.task-item');
+                    if (checkbox.checked) {
+                        taskItem.classList.add('completed');
+                    } else {
+                        taskItem.classList.remove('completed');
+                    }
+                }
+            });
+
+            updateParentProgress();
+        }
+
+        function saveCriteria() {
+            const completedCriteria = criteriaIds.filter(criteriaId => {
+                const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                return checkbox && checkbox.checked;
+            });
+            localStorage.setItem(CRITERIA_KEY, JSON.stringify(completedCriteria));
+
+            criteriaIds.forEach(criteriaId => {
+                const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                if (checkbox) {
+                    const criteriaItem = checkbox.closest('.criteria-item');
+                    if (checkbox.checked) {
+                        criteriaItem.classList.add('completed');
+                    } else {
+                        criteriaItem.classList.remove('completed');
+                    }
+                }
+            });
+        }
+
+        function updateAllProgress() {
+            const totalTasks = taskIds.length;
+            const completedTasks = taskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            }).length;
+
+            const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+            document.getElementById('progress-text').textContent = percentage + '% Complete';
+            document.getElementById('task-count').textContent = `${completedTasks} / ${totalTasks} tasks`;
+            document.getElementById('progress-circle').textContent = percentage + '%';
+            
+            const degrees = (percentage / 100) * 360;
+            document.getElementById('progress-circle').style.background = 
+                `conic-gradient(var(--success-color) 0deg, var(--success-color) ${degrees}deg, rgba(255,255,255,0.3) ${degrees}deg)`;
+
+            updateSectionProgress('timer', taskIds.slice(0, 15));
+            updateSectionProgress('persistence', taskIds.slice(15, 27));
+            updateSectionProgress('sessions', taskIds.slice(27, 37));
+            updateSectionProgress('stats', taskIds.slice(37, 45));
+        }
+
+        function updateSectionProgress(section, sectionTaskIds) {
+            const completed = sectionTaskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            }).length;
+            
+            const progressElement = document.getElementById(`${section}-progress`);
+            if (progressElement) {
+                progressElement.textContent = `${completed} / ${sectionTaskIds.length} tasks`;
+            }
+        }
+
+        function updateParentProgress() {
+            const totalTasks = taskIds.length;
+            const completedTasks = taskIds.filter(taskId => {
+                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                return checkbox && checkbox.checked;
+            }).length;
+
+            const progressData = {
+                completed: completedTasks,
+                total: totalTasks
+            };
+            
+            localStorage.setItem(`phase-${PHASE_ID}-progress`, JSON.stringify(progressData));
+        }
+
+        function markAllComplete() {
+            if (confirm('Mark all tasks as complete? This will check every checkbox in this phase.')) {
+                taskIds.forEach(taskId => {
+                    const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                criteriaIds.forEach(criteriaId => {
+                    const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                saveProgress();
+                saveCriteria();
+                updateAllProgress();
+            }
+        }
+
+        function markAllIncomplete() {
+            if (confirm('Mark all tasks as incomplete? This will uncheck every checkbox in this phase.')) {
+                taskIds.forEach(taskId => {
+                    const checkbox = document.querySelector(`[data-task="${taskId}"]`);
+                    if (checkbox) checkbox.checked = false;
+                });
+                
+                criteriaIds.forEach(criteriaId => {
+                    const checkbox = document.querySelector(`[data-criteria="${criteriaId}"]`);
+                    if (checkbox) checkbox.checked = false;
+                });
+                
+                saveProgress();
+                saveCriteria();
+                updateAllProgress();
+            }
+        }
+
+        function exportPhaseProgress() {
+            const data = {
+                phase: PHASE_ID,
+                title: 'Timers & Sessions',
+                tasks: localStorage.getItem(STORAGE_KEY),
+                criteria: localStorage.getItem(CRITERIA_KEY),
+                exportDate: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `phase-4-timers-sessions-progress-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function resetPhaseProgress() {
+            if (confirm('Reset all progress for this phase? This cannot be undone.')) {
+                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem(CRITERIA_KEY);
+                localStorage.removeItem(`phase-${PHASE_ID}-progress`);
+                location.reload();
+            }
+        }
+
+        updateParentProgress();
+    </script>
+</body>
+</html>

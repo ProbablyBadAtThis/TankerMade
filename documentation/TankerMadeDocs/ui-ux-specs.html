@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI/UX Specs - TankerMade Workbench Documentation</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --bg-color: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --code-bg: #f1f5f9;
+            --hover-color: #f8fafc;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        nav {
+            background: var(--hover-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            overflow-x: auto;
+        }
+        
+        .nav-menu li {
+            white-space: nowrap;
+        }
+        
+        .nav-menu a {
+            display: block;
+            padding: 1rem 1.5rem;
+            text-decoration: none;
+            color: var(--text-color);
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .nav-menu a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .nav-menu a.active {
+            background: var(--primary-color);
+            color: white;
+            border-bottom-color: #1d4ed8;
+        }
+        
+        main {
+            padding: 2rem 0;
+            min-height: calc(100vh - 200px);
+        }
+        
+        .content {
+            max-width: 900px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            margin: 2rem 0 1rem 0;
+            font-size: 1.8rem;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 1rem;
+        }
+        
+        h3 {
+            color: var(--secondary-color);
+            margin: 1.5rem 0 1rem 0;
+            font-size: 1.3rem;
+        }
+        
+        h4 {
+            color: var(--secondary-color);
+            margin: 1rem 0 0.5rem 0;
+            font-size: 1.1rem;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+        }
+        
+        ul, ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            border: 1px solid var(--border-color);
+        }
+        
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            text-align: left;
+        }
+        
+        th {
+            background: var(--code-bg);
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        .card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .highlight {
+            background: #fef3c7;
+            border-left: 4px solid var(--warning-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .success {
+            background: #dcfce7;
+            border-left: 4px solid var(--success-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid var(--warning-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .error {
+            background: #fee2e2;
+            border-left: 4px solid var(--error-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        footer {
+            background: var(--code-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 0;
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--secondary-color);
+        }
+        
+        /* Wireframe styles */
+        .wireframe {
+            background: var(--code-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            margin: 2rem 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            position: relative;
+        }
+        
+        .wireframe-title {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            position: absolute;
+            top: -0.75rem;
+            left: 1rem;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .ui-section {
+            background: white;
+            border: 1px dashed var(--secondary-color);
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 4px;
+        }
+        
+        .ui-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            margin: -1rem -1rem 1rem -1rem;
+            border-radius: 4px 4px 0 0;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .ui-element {
+            display: inline-block;
+            background: var(--hover-color);
+            border: 1px solid var(--border-color);
+            padding: 0.25rem 0.5rem;
+            margin: 0.25rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+        }
+        
+        .ui-button {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .ui-input {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 0.4rem;
+            width: 200px;
+            font-size: 0.8rem;
+        }
+        
+        .ui-select {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 0.4rem;
+            width: 150px;
+            font-size: 0.8rem;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .step {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .step.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .step.inactive {
+            background: var(--border-color);
+            color: var(--secondary-color);
+        }
+        
+        .progress-bar {
+            background: var(--border-color);
+            height: 1rem;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+        
+        .progress-fill {
+            background: var(--success-color);
+            height: 100%;
+            transition: width 0.3s;
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .metric-box {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .metric-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+        }
+        
+        @media (max-width: 768px) {
+            .nav-menu {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 0 15px;
+            }
+            
+            .wireframe {
+                padding: 1rem;
+                font-size: 0.8rem;
+            }
+            
+            .step-indicator {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">🧶 TankerMade Workbench</div>
+                <div>Comprehensive Documentation</div>
+            </div>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <ul class="nav-menu">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="architecture.html">Architecture</a></li>
+                <li><a href="domain-model.html">Domain Model</a></li>
+                <li><a href="implementation-phases.html">Implementation</a></li>
+                <li><a href="technical-specs.html">Technical Specs</a></li>
+                <li><a href="ui-ux-specs.html" class="active">UI/UX Specs</a></li>
+                <li><a href="deployment.html">Deployment</a></li>
+                <li><a href="development-guidelines.html">Development</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <div class="content">
+                <h1>UI/UX Specifications</h1>
+
+                <div class="highlight">
+                    <h3>User Interface Design</h3>
+                    <p>Complete wireframes, user flows, and interface specifications for the TankerMade Workbench application, designed for craft project management with gamification elements.</p>
+                </div>
+
+                <h2>Project Creation Wizard</h2>
+
+                <h3>Step 1: Pattern Selection</h3>
+                <div class="wireframe">
+                    <div class="wireframe-title">New Project - Step 1 of 4</div>
+                    
+                    <div class="step-indicator">
+                        <div class="step active">1</div>
+                        <div class="step inactive">2</div>
+                        <div class="step inactive">3</div>
+                        <div class="step inactive">4</div>
+                    </div>
+                    
+                    <div class="ui-section">
+                        <div class="ui-header">Pattern Selection</div>
+                        
+                        <div style="margin: 1rem 0;">
+                            <label style="display: block; margin-bottom: 0.5rem;">Pattern Type:</label>
+                            <select class="ui-select">
+                                <option>Select type...</option>
+                                <option selected>Crochet</option>
+                                <option>Knitting</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin: 1rem 0;">
+                            <label style="display: block; margin-bottom: 0.5rem;">Pattern Form:</label>
+                            <select class="ui-select">
+                                <option>Select form...</option>
+                                <option selected>2D</option>
+                                <option>3D</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin: 1rem 0;">
+                            <label style="display: block; margin-bottom: 0.5rem;">Theme:</label>
+                            <select class="ui-select">
+                                <option>Select theme...</option>
+                                <option selected>Amigurumi</option>
+                                <option>Blankets</option>
+                                <option>Clothing</option>
+                            </select>
+                            <button class="ui-element" style="margin-left: 0.5rem;">Add New</button>
+                        </div>
+                        
+                        <div style="margin: 1rem 0;">
+                            <label style="display: block; margin-bottom: 0.5rem;">Pattern:</label>
+                            <input type="text" class="ui-input" placeholder="Search patterns..." style="width: 250px;">
+                            <div style="margin-top: 0.5rem;">
+                                <div class="ui-element">🐼 Panda Pattern</div>
+                                <div class="ui-element">🐻 Bear Pattern</div>
+                                <div class="ui-element">+ Create New Pattern</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: right; margin-top: 1rem;">
+                        <button class="ui-element">Cancel</button>
+                        <button class="ui-button">Continue</button>
+                    </div>
+                </div>
+
+                <h3>Step 2: Pattern Steps (if "Add New" pattern selected)</h3>
+                <div class="wireframe">
+                    <div class="wireframe-title">New Project - Step 2 of 4</div>
+                    
+                    <div class="step-indicator">
+                        <div class="step inactive">1</div>
+                        <div class="step active">2</div>
+                        <div class="step inactive">3</div>
+                        <div class="step inactive">4</div>
+                    </div>
+                    
+                    <div class="ui-section">
+                        <div class="ui-header">Pattern Piece: Body</div>
+                        
+                        <div style="margin: 1rem 0;">
+                            <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.5rem;">
+                                <span style="width: 80px;">Row/Rnd 1:</span>
+                                <input type="text" class="ui-input" value="Magic ring, 6 sc" style="flex: 1;">
+                                <span style="width: 60px;">Stitches:</span>
+                                <input type="number" class="ui-input" value="6" style="width: 60px;">
+                            </div>
+                            <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.5rem;">
+                                <span style="width: 80px;">Row/Rnd 2:</span>
+                                <input type="text" class="ui-input" value="Inc around" style="flex: 1;">
+                                <span style="width: 60px;">Stitches:</span>
+                                <input type="number" class="ui-input" value="12" style="width: 60px;">
+                            </div>
+                            <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.5rem;">
+                                <span style="width: 80px;">Row/Rnd 3:</span>
+                                <input type="text" class="ui-input" value="[Sc, inc] around" style="flex: 1;">
+                                <span style="width: 60px;">Stitches:</span>
+                                <input type="number" class="ui-input" value="18" style="width: 60px;">
+                            </div>
+                        </div>
+                        
+                        <div style="margin: 1rem 0;">
+                            <button class="ui-element">+ Add Row/Rnd</button>
+                            <button class="ui-element">+ New Piece</button>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: right; margin-top: 1rem;">
+                        <button class="ui-element">Back</button>
+                        <button class="ui-button">Continue</button>
+                    </div>
+                </div>
+
+                <h3>Step 3: Supplies</h3>
+                <div class="wireframe">
+                    <div class="wireframe-title">New Project - Step 3 of 4</div>
+                    
+                    <div class="step-indicator">
+                        <div class="step inactive">1</div>
+                        <div class="step inactive">2</div>
+                        <div class="step active">3</div>
+                        <div class="step inactive">4</div>
+                    </div>
+                    
+                    <div class="ui-section">
+                        <div class="ui-header">Yarns</div>
+                        <select class="ui-select" style="width: 250px;">
+                            <option>Select yarn...</option>
+                            <option>Red Heart Super Saver - Black</option>
+                            <option>Red Heart Super Saver - White</option>
+                        </select>
+                        <div style="margin-top: 0.5rem;">
+                            <div class="ui-element">🧶 Red Heart Super Saver - Black</div>
+                            <div class="ui-element">🧶 Red Heart Super Saver - White</div>
+                        </div>
+                    </div>
+                    
+                    <div class="ui-section">
+                        <div class="ui-header">Tools</div>
+                        <select class="ui-select" style="width: 250px;">
+                            <option>Select tool...</option>
+                            <option>Crochet Hook - 5.0mm</option>
+                            <option>Yarn Needle</option>
+                        </select>
+                        <div style="margin-top: 0.5rem;">
+                            <div class="ui-element">🪝 Crochet Hook - 5.0mm</div>
+                            <div class="ui-element">📍 Yarn Needle</div>
+                        </div>
+                    </div>
+                    
+                    <div class="ui-section">
+                        <div class="ui-header">Notions</div>
+                        <select class="ui-select" style="width: 250px;">
+                            <option>Select notion...</option>
+                            <option>Safety Eyes - 12mm - Black</option>
+                            <option>Stuffing</option>
+                        </select>
+                        <div style="margin-top: 0.5rem;">
+                            <div class="ui-element">👁️ Safety Eyes - 12mm - Black</div>
+                            <div class="ui-element">🧸 Stuffing</div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: right; margin-top: 1rem;">
+                        <button class="ui-element">Back</button>
+                        <button class="ui-button">Continue</button>
+                    </div>
+                </div>
+
+                <h3>Step 4: Project Details</h3>
+                <div class="wireframe">
+                    <div class="wireframe-title">Finalize New Project - Step 4 of 4</div>
+                    
+                    <div class="step-indicator">
+                        <div class="step inactive">1</div>
+                        <div class="step inactive">2</div>
+                        <div class="step inactive">3</div>
+                        <div class="step active">4</div>
+                    </div>
+                    
+                    <div class="ui-section">
+                        <div class="ui-header">Project Details</div>
+                        
+                        <div style="margin: 1rem 0;">
+                            <div style="border: 2px dashed var(--border-color); padding: 2rem; text-align: center; margin-bottom: 1rem;">
+                                📷 Image Upload Area
+                                <div style="font-size: 0.8rem; color: var(--secondary-color); margin-top: 0.5rem;">Click to upload or drag & drop</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin: 1rem 0;">
+                            <label style="display: block; margin-bottom: 0.5rem;">Project Name:</label>
+                            <input type="text" class="ui-input" value="Panda Amigurumi" style="width: 250px;">
+                        </div>
+                        
+                        <div style="margin: 1rem 0;">
+                            <label style="display: block; margin-bottom: 0.5rem;">Difficulty:</label>
+                            <div>
+                                <label><input type="radio" name="difficulty" checked> Beginner</label>
+                                <label><input type="radio" name="difficulty"> Intermediate</label>
+                                <label><input type="radio" name="difficulty"> Advanced</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="ui-section">
+                        <div class="ui-header">Summary</div>
+                        <div style="font-size: 0.9rem; line-height: 1.8;">
+                            <div><strong>Pattern:</strong> Panda Pattern</div>
+                            <div><strong>Theme:</strong> Amigurumi</div>
+                            <div><strong>Supplies:</strong> 2 yarns, 2 tools, 2 notions</div>
+                            <div><strong>Estimated Stitches:</strong> 432</div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: right; margin-top: 1rem;">
+                        <button class="ui-element">Back</button>
+                        <button class="ui-button">Create Project</button>
+                    </div>
+                </div>
+
+                <h2>Project Detail & Workspace</h2>
+
+                <div class="wireframe">
+                    <div class="wireframe-title">Project Workspace</div>
+                    
+                    <div class="ui-section">
+                        <div class="ui-header">🐼 Panda Amigurumi</div>
+                        
+                        <div style="display: flex; gap: 2rem; align-items: center; margin: 1rem 0;">
+                            <div>
+                                <img style="width: 80px; height: 80px; background: var(--code-bg); border-radius: 4px; display: flex; align-items: center; justify-content: center;" alt="Project Image">📷</img>
+                            </div>
+                            
+                            <div style="flex: 1;">
+                                <div style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
+                                    <div class="ui-element">🏷️ Amigurumi</div>
+                                    <div class="ui-element">⚫ Black</div>
+                                    <div class="ui-element">📈 Intermediate</div>
+                                </div>
+                                <div style="font-size: 0.9rem; color: var(--secondary-color);">
+                                    Started: 2025-10-01
+                                </div>
+                            </div>
+                            
+                            <div style="text-align: right;">
+                                <button class="ui-element">Edit</button>
+                                <button class="ui-element">Archive</button>
+                                <button class="ui-element" style="color: var(--error-color);">Delete</button>
+                            </div>
+                        </div>
+                        
+                        <div style="margin: 1rem 0;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span><strong>Progress:</strong> 42%</span>
+                                <span><strong>Stitches:</strong> 180 / 432</span>
+                                <span><strong>Time:</strong> 02:35:18</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 42%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; margin: 1rem 0;">
+                            <button class="ui-button">▶️ Resume Timer</button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem;">
+                        <div style="flex: 1;">
+                            <div class="ui-section">
+                                <div class="ui-header">Pattern: Panda Pattern</div>
+                                
+                                <div style="margin: 1rem 0;">
+                                    <label style="font-weight: bold; margin-bottom: 0.5rem; display: block;">Piece: Body</label>
+                                    <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color); padding: 0.5rem;">
+                                        <div style="display: flex; align-items: center; margin: 0.25rem 0;">
+                                            <input type="checkbox" checked style="margin-right: 0.5rem;">
+                                            <span style="font-size: 0.85rem;">Row 1: Magic ring, 6 sc (6)</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center; margin: 0.25rem 0;">
+                                            <input type="checkbox" checked style="margin-right: 0.5rem;">
+                                            <span style="font-size: 0.85rem;">Row 2: Inc around (12)</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center; margin: 0.25rem 0;">
+                                            <input type="checkbox" style="margin-right: 0.5rem;">
+                                            <span style="font-size: 0.85rem;">Row 3: [Sc, inc] around (18)</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center; margin: 0.25rem 0;">
+                                            <input type="checkbox" style="margin-right: 0.5rem;">
+                                            <span style="font-size: 0.85rem;">Row 4: [2 sc, inc] around (24)</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center; margin: 0.25rem 0;">
+                                            <input type="checkbox" style="margin-right: 0.5rem;">
+                                            <span style="font-size: 0.85rem;">Row 5: [3 sc, inc] around (30)</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center; margin: 0.25rem 0;">
+                                            <input type="checkbox" style="margin-right: 0.5rem;">
+                                            <span style="font-size: 0.85rem;">Row 6-10: Sc around (30)</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center; margin: 0.25rem 0;">
+                                            <input type="checkbox" style="margin-right: 0.5rem;">
+                                            <span style="font-size: 0.85rem;">Row 11: [3 sc, dec] around (24)</span>
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: var(--secondary-color); text-align: center; margin-top: 0.5rem;">
+                                            ... (scrollable)
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="width: 200px;">
+                            <div class="ui-section">
+                                <div class="ui-header">Supplies</div>
+                                <div style="font-size: 0.85rem; line-height: 1.6;">
+                                    <div>🧶 Red Heart Super Saver - Black</div>
+                                    <div>🧶 Red Heart Super Saver - White</div>
+                                    <div>🪝 Crochet Hook - 5.0mm</div>
+                                    <div>👁️ Safety Eyes - 12mm - Black</div>
+                                    <div>🧸 Stuffing</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <button class="ui-button">Mark Complete</button>
+                    </div>
+                </div>
+
+                <h2>Dashboard</h2>
+
+                <div class="wireframe">
+                    <div class="wireframe-title">TankerMade Workbench Dashboard</div>
+                    
+                    <div class="ui-section">
+                        <div class="ui-header">👤 User: YarnLover!</div>
+                        
+                        <div style="text-align: center; margin: 1rem 0;">
+                            <div style="font-size: 1.2rem; margin-bottom: 0.5rem;">Welcome back, YarnLover! 🔥 7-day streak</div>
+                            <div style="display: flex; justify-content: center; align-items: center; gap: 2rem;">
+                                <div>
+                                    <div style="font-size: 1.1rem; font-weight: bold;">Level 12</div>
+                                    <div style="font-size: 0.9rem;">2,450 XP</div>
+                                </div>
+                                <div style="width: 200px;">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 73%;"></div>
+                                    </div>
+                                    <div style="font-size: 0.8rem; text-align: center;">84 XP to Level 13</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="ui-section">
+                        <div class="ui-header">🎯 Active Project</div>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <img style="width: 60px; height: 60px; background: var(--code-bg); border-radius: 4px; display: flex; align-items: center; justify-content: center;" alt="Project">🐼</img>
+                            <div style="flex: 1;">
+                                <div style="font-weight: bold;">Panda Amigurumi</div>
+                                <div style="font-size: 0.9rem;">42% complete • 2h 35m tracked</div>
+                                <div class="progress-bar" style="margin-top: 0.25rem;">
+                                    <div class="progress-fill" style="width: 42%;"></div>
+                                </div>
+                            </div>
+                            <button class="ui-button">Continue Working</button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem;">
+                        <div style="flex: 1;">
+                            <div class="ui-section">
+                                <div class="ui-header">📊 Stats</div>
+                                <div class="metric-grid">
+                                    <div class="metric-box">
+                                        <div class="metric-number">23</div>
+                                        <div class="metric-label">projects completed</div>
+                                    </div>
+                                    <div class="metric-box">
+                                        <div class="metric-number">45</div>
+                                        <div class="metric-label">patterns created</div>
+                                    </div>
+                                    <div class="metric-box">
+                                        <div class="metric-number">127</div>
+                                        <div class="metric-label">inventory items</div>
+                                    </div>
+                                    <div class="metric-box">
+                                        <div class="metric-number">156h 32m</div>
+                                        <div class="metric-label">total time</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="width: 250px;">
+                            <div class="ui-section">
+                                <div class="ui-header">🏆 Recent Achievements</div>
+                                <div style="font-size: 0.85rem; line-height: 1.8;">
+                                    <div>📅 <strong>Week Warrior</strong> - Maintained 7-day streak</div>
+                                    <div>🦉 <strong>Night Owl</strong> - Worked after midnight</div>
+                                </div>
+                            </div>
+                            
+                            <div class="ui-section">
+                                <div class="ui-header">⚡ Quick Actions</div>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <button class="ui-element">+ New Project</button>
+                                    <button class="ui-element">+ Add Pattern</button>
+                                    <button class="ui-element">+ Add Yarn</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>User Experience Guidelines</h2>
+
+                <h3>Accessibility Requirements</h3>
+                <div class="card">
+                    <ul>
+                        <li><strong>Keyboard Navigation:</strong> All interactive elements accessible via Tab/Shift+Tab</li>
+                        <li><strong>Screen Reader Support:</strong> ARIA labels on all form controls and interactive elements</li>
+                        <li><strong>Focus Indicators:</strong> Clear visual focus states on all interactive elements</li>
+                        <li><strong>Color Contrast:</strong> Minimum 4.5:1 contrast ratio for text</li>
+                        <li><strong>Alternative Text:</strong> Images have descriptive alt text</li>
+                        <li><strong>Form Labels:</strong> All form inputs have associated labels</li>
+                        <li><strong>Skip Links:</strong> Skip to main content for screen readers</li>
+                    </ul>
+                </div>
+
+                <h3>Responsive Design Breakpoints</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Device</th>
+                            <th>Screen Width</th>
+                            <th>Layout Changes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Mobile</strong></td>
+                            <td>≤ 768px</td>
+                            <td>Single column, hamburger menu, stack cards vertically</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tablet</strong></td>
+                            <td>769px - 1024px</td>
+                            <td>Two columns, condensed navigation, side-by-side cards</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Desktop</strong></td>
+                            <td>≥ 1025px</td>
+                            <td>Full layout, horizontal navigation, multi-column grids</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Color Scheme</h3>
+                <div class="card">
+                    <h4>Light Theme (Default)</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin: 1rem 0;">
+                        <div style="background: #2563eb; color: white; padding: 1rem; border-radius: 4px; text-align: center;">
+                            <div>Primary</div>
+                            <div style="font-size: 0.8rem;">#2563eb</div>
+                        </div>
+                        <div style="background: #64748b; color: white; padding: 1rem; border-radius: 4px; text-align: center;">
+                            <div>Secondary</div>
+                            <div style="font-size: 0.8rem;">#64748b</div>
+                        </div>
+                        <div style="background: #22c55e; color: white; padding: 1rem; border-radius: 4px; text-align: center;">
+                            <div>Success</div>
+                            <div style="font-size: 0.8rem;">#22c55e</div>
+                        </div>
+                        <div style="background: #f59e0b; color: white; padding: 1rem; border-radius: 4px; text-align: center;">
+                            <div>Warning</div>
+                            <div style="font-size: 0.8rem;">#f59e0b</div>
+                        </div>
+                        <div style="background: #ef4444; color: white; padding: 1rem; border-radius: 4px; text-align: center;">
+                            <div>Error</div>
+                            <div style="font-size: 0.8rem;">#ef4444</div>
+                        </div>
+                    </div>
+                    
+                    <h4>Dark Theme (Optional)</h4>
+                    <p>Dark theme variants with reduced brightness and inverted backgrounds while maintaining accessibility contrast ratios.</p>
+                </div>
+
+                <h2>Success Metrics</h2>
+
+                <h3>MVP Success Criteria</h3>
+                <div class="metric-grid">
+                    <div class="metric-box">
+                        <div class="metric-number">✓</div>
+                        <div class="metric-label">App runs in offline mode without server</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">✓</div>
+                        <div class="metric-label">App connects to server and syncs data</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">✓</div>
+                        <div class="metric-label">User can create and complete a project end-to-end</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">✓</div>
+                        <div class="metric-label">All CRUD operations work for all entities</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">✓</div>
+                        <div class="metric-label">Timers track accurately and persist</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">✓</div>
+                        <div class="metric-label">XP awards correctly and level calculates</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">5+</div>
+                        <div class="metric-label">achievements unlock during normal use</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">✓</div>
+                        <div class="metric-label">Export/import completes without data loss</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">✓</div>
+                        <div class="metric-label">Module system loads and runs Crochet module</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">✓</div>
+                        <div class="metric-label">App is usable on mobile browser</div>
+                    </div>
+                </div>
+
+                <h3>Performance Targets</h3>
+                <div class="metric-grid">
+                    <div class="metric-box">
+                        <div class="metric-number">&lt; 3s</div>
+                        <div class="metric-label">Initial page load on 3G</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">&lt; 500ms</div>
+                        <div class="metric-label">List page load (1000 records)</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">&lt; 500ms</div>
+                        <div class="metric-label">Search results</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">±1 sec</div>
+                        <div class="metric-label">Timer accuracy per hour</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">&lt; 10s</div>
+                        <div class="metric-label">Sync time (1000 records)</div>
+                    </div>
+                </div>
+
+                <h3>User Experience Targets</h3>
+                <div class="metric-grid">
+                    <div class="metric-box">
+                        <div class="metric-number">90%+</div>
+                        <div class="metric-label">Task success rate for main flows</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">&lt; 5%</div>
+                        <div class="metric-label">Error rate of user actions</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">4-5 ⭐</div>
+                        <div class="metric-label">User satisfaction rating</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-number">Personal</div>
+                        <div class="metric-label">Daily active users (personal project)</div>
+                    </div>
+                </div>
+
+                <h2>Component Library</h2>
+
+                <h3>Common UI Components</h3>
+                <div class="card">
+                    <h4>Buttons</h4>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; margin: 1rem 0;">
+                        <button class="ui-button">Primary Button</button>
+                        <button class="ui-element">Secondary Button</button>
+                        <button class="ui-element" style="color: var(--error-color); border-color: var(--error-color);">Danger Button</button>
+                        <button class="ui-element" disabled>Disabled Button</button>
+                    </div>
+                    
+                    <h4>Form Controls</h4>
+                    <div style="margin: 1rem 0;">
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.25rem;">Text Input:</label>
+                            <input type="text" class="ui-input" placeholder="Enter text..." style="width: 250px;">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.25rem;">Select Dropdown:</label>
+                            <select class="ui-select" style="width: 200px;">
+                                <option>Choose option...</option>
+                                <option>Option 1</option>
+                                <option>Option 2</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.25rem;">Textarea:</label>
+                            <textarea style="width: 250px; height: 80px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;" placeholder="Enter description..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <h4>Progress Indicators</h4>
+                    <div style="margin: 1rem 0;">
+                        <div style="margin-bottom: 1rem;">
+                            <div style="font-size: 0.9rem; margin-bottom: 0.25rem;">Progress Bar (75%):</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 75%;"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <div style="font-size: 0.9rem; margin-bottom: 0.25rem;">Step Indicator:</div>
+                            <div class="step-indicator">
+                                <div class="step active">1</div>
+                                <div class="step active">2</div>
+                                <div class="step active">3</div>
+                                <div class="step inactive">4</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="success">
+                    <h3>🎨 Design System Complete</h3>
+                    <p>All UI/UX specifications include wireframes, component designs, accessibility guidelines, responsive breakpoints, and success metrics for the TankerMade Workbench application. The design prioritizes usability, accessibility, and gamification elements to create an engaging craft project management experience.</p>
+                </div>
+
+                <div class="warning">
+                    <h3>⚠️ Implementation Notes</h3>
+                    <ul>
+                        <li><strong>Progressive Enhancement:</strong> Core functionality works without JavaScript</li>
+                        <li><strong>Touch-Friendly:</strong> All interactive elements minimum 44px touch target</li>
+                        <li><strong>Loading States:</strong> Every async operation shows appropriate loading indicator</li>
+                        <li><strong>Error States:</strong> Clear error messages with suggested actions</li>
+                        <li><strong>Empty States:</strong> Helpful guidance when no data is available</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 TankerMade Workbench Documentation. Generated from project specification.</p>
+        </div>
+    </footer>
+</body>
+</html>
