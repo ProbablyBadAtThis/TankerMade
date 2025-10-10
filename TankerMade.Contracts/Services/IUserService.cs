@@ -4,6 +4,7 @@ namespace TankerMade.Contracts.Services
 {
     public interface IUserService
     {
+
         // Create
         Task<UserDto> CreateAsync(CreateUserDto createDto);
 
@@ -14,8 +15,7 @@ namespace TankerMade.Contracts.Services
         Task<IEnumerable<UserDto>> GetAllAsync();
 
         // Update
-
-        Task<UserDto?> UpdateAsync(UpdateUserDto updateDto);
+        Task<UserDto?> UpdateAsync(UpdateUserDto updateDto, Guid currentUserId, string currentUserRole);
 
         // Delete
         Task<bool> DeleteAsync(Guid id);
