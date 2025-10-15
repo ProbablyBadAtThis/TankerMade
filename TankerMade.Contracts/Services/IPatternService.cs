@@ -1,29 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TankerMade.Contracts.DTOs.Projects;
+using TankerMade.Contracts.DTOs.Patterns;
 
 namespace TankerMade.Contracts.Services
 {
     public interface IPatternService
     {
         // Create
-        Task<ProjectDto> CreateAsync(CreateProjectDto createDto);
+        Task<PatternDto> CreateAsync(CreatePatternDto createDto);
 
         // Read
-        Task<ProjectDto?> GetByIdAsync(Guid id);
-        Task<ProjectDto?> GetBySlugAsync(string slug);
-        Task<IEnumerable<ProjectDto>> GetAllAsync();
-        Task<IEnumerable<ProjectDto>> GetByUserIdAsync(Guid userId);
+        Task<PatternDto?> GetByIdAsync(Guid id);
+        Task<PatternDto?> GetBySlugAsync(string slug);
+        Task<IEnumerable<PatternDto>> GetAllAsync();
+        Task<IEnumerable<PatternDto>> GetByUserIdAsync(Guid userId);
+        Task<IEnumerable<PatternDto>> GetByThemeIdAsync(Guid themeId);
+        Task<IEnumerable<PatternDto>> GetByDifficultyAsync(int difficulty);
 
         // Update  
-        Task<ProjectDto?> UpdateAsync(UpdateProjectDto updateDto);
+        Task<PatternDto?> UpdateAsync(UpdatePatternDto updateDto);
 
         // Delete
         Task<bool> DeleteAsync(Guid id);
 
         // Additional business operations
         Task<bool> ExistsAsync(Guid id);
-        Task<IEnumerable<ProjectDto>> SearchAsync(string searchTerm);
+        Task<IEnumerable<PatternDto>> SearchAsync(string searchTerm);
     }
 }

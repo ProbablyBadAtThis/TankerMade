@@ -1,0 +1,36 @@
+.diagram-canvas {
+  height: 540px;
+  background: #0d0f14;
+  border: 1px solid #21242f;
+  border-radius: 12px;
+  margin: 12px 0 20px;
+}
+.diagram-canvas.small { height: 360px; }
+
+/* Data Dictionary */
+.dict-controls {
+  display: flex; gap: 10px; margin: 10px 0 14px;
+}
+.dict-controls input, .dict-controls select {
+  background: #12151b; color: #e7e9ee; border: 1px solid #222531;
+  padding: 8px 10px; border-radius: 8px;
+}
+.table-wrap { overflow: auto; border: 1px solid #222531; border-radius: 10px; }
+.dict-table {
+  width: 100%; border-collapse: collapse; font-size: 14px;
+}
+.dict-table thead th {
+  background: #12151b; color: #aeb3be; text-align: left; padding: 10px;
+  position: sticky; top: 0;
+}
+.dict-table tbody td {
+  border-top: 1px solid #1d2029; padding: 10px; vertical-align: top;
+}
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px;
+  border: 1px solid #334;
+}
+.badge.user { color: #9ecbff; border-color: #2a3b55; background: #0f1a29; }
+.badge.system { color: #ffb3b3; border-color: #51343b; background: #2a0f13; }
+.badge.admin { color: #ffe199; border-color: #5b4a2a; background: #291f0f; }
+.badge.computed { color: #a8ffce; border-color: #2a5b48; background: #0f291f; }

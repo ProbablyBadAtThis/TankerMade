@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>TankerMade Architecture Visualizer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="styles/main.css" rel="stylesheet" />
+  <link href="styles/diagram.css" rel="stylesheet" />
+  <script src="https://unpkg.com/gojs/release/go.js"></script>
+</head>
+<body>
+  <header class="tm-header">
+    <h1>TankerMade Architecture Visualizer</h1>
+    <p class="subtitle">DTOs, Services, Data Flow, and Field Definitions</p>
+  </header>
+
+  <main class="tm-container">
+    <nav class="tabs" role="tablist" aria-label="Architecture Views">
+      <button class="tab active" role="tab" aria-selected="true" aria-controls="overview" id="tab-overview" data-tab="overview">Overview</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="dto-flow" id="tab-dto" data-tab="dto-flow">DTO Flow</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="services" id="tab-services" data-tab="services">Services</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="data-dictionary" id="tab-dict" data-tab="data-dictionary">Data Dictionary</button>
+    </nav>
+
+    <section class="tab-content">
+      <div id="overview" class="tab-pane active" role="tabpanel" aria-labelledby="tab-overview">
+        <div class="panel">
+          <h2>Overview</h2>
+          <p>This dashboard shows how DTOs connect to Services and how data flows to Entities and the database. Use the tabs above to view relationship diagrams and the data dictionary.</p>
+          <ul class="legend">
+            <li><span class="dot dto"></span> DTOs</li>
+            <li><span class="dot svc"></span> Services</li>
+            <li><span class="dot ent"></span> Entities</li>
+            <li><span class="dot sys"></span> System-generated fields</li>
+            <li><span class="dot usr"></span> User-editable fields</li>
+          </ul>
+        </div>
+
+        <div class="panel grid-two">
+          <div>
+            <h3>Status</h3>
+            <ul>
+              <li>DTOs: Project, Pattern, User (display + create + update)</li>
+              <li>Service Interfaces: IProjectService, IPatternService, IUserService</li>
+              <li>Implementation: UserService skeleton with role protection</li>
+              <li>Next: Pattern service implementation, EF wiring</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Shortcuts</h3>
+            <div class="quick-links">
+              <button class="go-tab" data-tab="dto-flow">Open DTO Flow</button>
+              <button class="go-tab" data-tab="services">Open Services</button>
+              <button class="go-tab" data-tab="data-dictionary">Open Data Dictionary</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="dto-flow" class="tab-pane" role="tabpanel" aria-labelledby="tab-dto">
+        <h2>DTO Relationships</h2>
+        <div id="dtoDiagram" class="diagram-canvas" aria-label="DTO Diagram Canvas"></div>
+      </div>
+
+      <div id="services" class="tab-pane" role="tabpanel" aria-labelledby="tab-services">
+        <h2>Service Interactions</h2>
+        <div id="serviceDiagram" class="diagram-canvas" aria-label="Service Diagram Canvas"></div>
+        <div id="dataFlowDiagram" class="diagram-canvas small" aria-label="End-to-End Data Flow"></div>
+      </div>
+
+      <div id="data-dictionary" class="tab-pane" role="tabpanel" aria-labelledby="tab-dict">
+        <h2>Data Dictionary</h2>
+        <div class="dict-controls">
+          <input type="search" id="dictSearch" placeholder="Search fields (e.g., slug, createdAt, role)" />
+          <select id="dictControlFilter">
+            <option value="">All Controls</option>
+            <option value="user">User Editable</option>
+            <option value="system">System Generated</option>
+            <option value="admin">Admin Only</option>
+            <option value="computed">Computed</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table class="dict-table" aria-label="Field definitions">
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Control</th>
+                <th>Purpose</th>
+                <th>Used In</th>
+                <th>Validation</th>
+                <th>Security</th>
+              </tr>
+            </thead>
+            <tbody id="dictBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="tm-footer">
+    <small>© TankerMade Architecture Visualizer</small>
+  </footer>
+
+  <script src="js/architecture-data.js"></script>
+  <script src="js/dto-flow-diagram.js"></script>
+  <script src="js/service-flow-diagram.js"></script>
+  <script src="js/data-flow-diagram.js"></script>
+  <script src="js/data-dictionary.js"></script>
+  <script>
+    // tabs behavior
+    const tabs = document.querySelectorAll('.tab');
+    const panes = document.querySelectorAll('.tab-pane');
+    const goTabButtons = document.querySelectorAll('.go-tab');
+
+    function showTab(id) {
+      tabs.forEach(t => {
+        const active = t.dataset.tab === id;
+        t.classList.toggle('active', active);
+        t.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      panes.forEach(p => p.classList.toggle('active', p.id === id));
+
+      // initialize diagrams on demand
+      if (id === 'dto-flow' && window.renderDtoDiagram) renderDtoDiagram();
+      if (id === 'services' && window.renderServiceDiagram) {
+        renderServiceDiagram();
+        if (window.renderDataFlowDiagram) renderDataFlowDiagram();
+      }
+      if (id === 'data-dictionary' && window.renderDataDictionary) renderDataDictionary();
+    }
+
+    tabs.forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab)));
+    goTabButtons.forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+    // initial render for overview; defer others till tab open
+  </script>
+</body>
+</html>
