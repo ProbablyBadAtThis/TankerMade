@@ -3,56 +3,69 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.Core", "TankerMade.Core\TankerMade.Core.csproj", "{6B2E3561-F09A-4781-B7A1-78DC3655E24D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.Core", "src\TankerMade.Core\TankerMade.Core.csproj", "{6B2E3561-F09A-4781-B7A1-78DC3655E24D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.Contracts", "TankerMade.Contracts\TankerMade.Contracts.csproj", "{135C860B-6243-45C1-8358-0F1099E1E297}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.Contracts", "src\TankerMade.Contracts\TankerMade.Contracts.csproj", "{135C860B-6243-45C1-8358-0F1099E1E297}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.Client", "TankerMade.Client\TankerMade.Client.csproj", "{7EB90E6D-BD21-4B59-A114-05B8E7A270A8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.Client", "src\TankerMade.Client\TankerMade.Client.csproj", "{7EB90E6D-BD21-4B59-A114-05B8E7A270A8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.Server", "TankerMade.Server\TankerMade.Server.csproj", "{3FF9AA53-6028-479E-A1B7-BE88E574B421}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.Server", "src\TankerMade.Server\TankerMade.Server.csproj", "{3FF9AA53-6028-479E-A1B7-BE88E574B421}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.Application", "TankerMade.Application\TankerMade.Application.csproj", "{183857B6-A795-482A-8B97-DB22D42F204A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.Application", "src\TankerMade.Application\TankerMade.Application.csproj", "{183857B6-A795-482A-8B97-DB22D42F204A}"
 EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "architecture", "architecture\", "{A463A5BF-48F0-03AE-9607-15779BED5502}"
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_56349"
-		Debug.AspNetCompiler.PhysicalPath = "architecture\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_56349\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_56349"
-		Release.AspNetCompiler.PhysicalPath = "architecture\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_56349\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "56349"
-		SlnRelativePath = "architecture\"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{1BD85C08-364B-4EC1-9986-48A19385FABA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "architecture", "architecture", "{7F980C82-C88F-4A15-8827-038AED328BE2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dev-tracker", "dev-tracker", "{58498133-468D-46E5-A1FC-95A6E8CB3E48}"
+	ProjectSection(SolutionItems) = preProject
+		docs\dev-tracker\phase-1.html = docs\dev-tracker\phase-1.html
+		docs\dev-tracker\phase-10.html = docs\dev-tracker\phase-10.html
+		docs\dev-tracker\phase-2.html = docs\dev-tracker\phase-2.html
+		docs\dev-tracker\phase-3.html = docs\dev-tracker\phase-3.html
+		docs\dev-tracker\phase-4.html = docs\dev-tracker\phase-4.html
+		docs\dev-tracker\phase-5.html = docs\dev-tracker\phase-5.html
+		docs\dev-tracker\phase-6.html = docs\dev-tracker\phase-6.html
+		docs\dev-tracker\phase-7.html = docs\dev-tracker\phase-7.html
+		docs\dev-tracker\phase-8.html = docs\dev-tracker\phase-8.html
+		docs\dev-tracker\phase-9.html = docs\dev-tracker\phase-9.html
+		docs\dev-tracker\tracker-index.html = docs\dev-tracker\tracker-index.html
 	EndProjectSection
 EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "documentation", "documentation\", "{1E232160-E4DB-EE13-1961-B70A2EEFA401}"
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_56365"
-		Debug.AspNetCompiler.PhysicalPath = "documentation\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_56365\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_56365"
-		Release.AspNetCompiler.PhysicalPath = "documentation\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_56365\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "56365"
-		SlnRelativePath = "documentation\"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workbench", "workbench", "{AAAB81D3-E50E-46BD-9C8C-6F081C87DE64}"
+	ProjectSection(SolutionItems) = preProject
+		docs\workbench\architecture.html = docs\workbench\architecture.html
+		docs\workbench\deployment.html = docs\workbench\deployment.html
+		docs\workbench\development-guidelines.html = docs\workbench\development-guidelines.html
+		docs\workbench\domain-model.html = docs\workbench\domain-model.html
+		docs\workbench\implementation-phases.html = docs\workbench\implementation-phases.html
+		docs\workbench\index.html = docs\workbench\index.html
+		docs\workbench\technical-specs.html = docs\workbench\technical-specs.html
+		docs\workbench\ui-ux-specs.html = docs\workbench\ui-ux-specs.html
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "architecture", "architecture", "{D72C3720-AFBF-4F58-9111-E15B81AA7B89}"
+	ProjectSection(SolutionItems) = preProject
+		docs\architecture-visualizer\index.html = docs\architecture-visualizer\index.html
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assets", "assets", "{6577820F-88D5-49B8-BA0D-80987B1FB0E9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "js", "js", "{DCEE797B-F497-4417-B657-AA15FA383F79}"
+	ProjectSection(SolutionItems) = preProject
+		docs\architecture-visualizer\js\architecture-data.js = docs\architecture-visualizer\js\architecture-data.js
+		docs\architecture-visualizer\js\data-dictionary.js = docs\architecture-visualizer\js\data-dictionary.js
+		docs\architecture-visualizer\js\data-flow-diagram.js = docs\architecture-visualizer\js\data-flow-diagram.js
+		docs\architecture-visualizer\js\dto-flow-diagram.js = docs\architecture-visualizer\js\dto-flow-diagram.js
+		docs\architecture-visualizer\js\service-flow-diagram.js = docs\architecture-visualizer\js\service-flow-diagram.js
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "styles", "styles", "{540FD58D-F533-4A65-8A20-9A5A8C528683}"
+	ProjectSection(SolutionItems) = preProject
+		docs\architecture-visualizer\styles\diagram.css = docs\architecture-visualizer\styles\diagram.css
+		docs\architecture-visualizer\styles\main.css = docs\architecture-visualizer\styles\main.css
 	EndProjectSection
 EndProject
 Global
@@ -125,33 +138,22 @@ Global
 		{183857B6-A795-482A-8B97-DB22D42F204A}.Release|x64.Build.0 = Release|Any CPU
 		{183857B6-A795-482A-8B97-DB22D42F204A}.Release|x86.ActiveCfg = Release|Any CPU
 		{183857B6-A795-482A-8B97-DB22D42F204A}.Release|x86.Build.0 = Release|Any CPU
-		{A463A5BF-48F0-03AE-9607-15779BED5502}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A463A5BF-48F0-03AE-9607-15779BED5502}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A463A5BF-48F0-03AE-9607-15779BED5502}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{A463A5BF-48F0-03AE-9607-15779BED5502}.Debug|x64.Build.0 = Debug|Any CPU
-		{A463A5BF-48F0-03AE-9607-15779BED5502}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{A463A5BF-48F0-03AE-9607-15779BED5502}.Debug|x86.Build.0 = Debug|Any CPU
-		{A463A5BF-48F0-03AE-9607-15779BED5502}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{A463A5BF-48F0-03AE-9607-15779BED5502}.Release|Any CPU.Build.0 = Debug|Any CPU
-		{A463A5BF-48F0-03AE-9607-15779BED5502}.Release|x64.ActiveCfg = Debug|Any CPU
-		{A463A5BF-48F0-03AE-9607-15779BED5502}.Release|x64.Build.0 = Debug|Any CPU
-		{A463A5BF-48F0-03AE-9607-15779BED5502}.Release|x86.ActiveCfg = Debug|Any CPU
-		{A463A5BF-48F0-03AE-9607-15779BED5502}.Release|x86.Build.0 = Debug|Any CPU
-		{1E232160-E4DB-EE13-1961-B70A2EEFA401}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1E232160-E4DB-EE13-1961-B70A2EEFA401}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1E232160-E4DB-EE13-1961-B70A2EEFA401}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{1E232160-E4DB-EE13-1961-B70A2EEFA401}.Debug|x64.Build.0 = Debug|Any CPU
-		{1E232160-E4DB-EE13-1961-B70A2EEFA401}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{1E232160-E4DB-EE13-1961-B70A2EEFA401}.Debug|x86.Build.0 = Debug|Any CPU
-		{1E232160-E4DB-EE13-1961-B70A2EEFA401}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{1E232160-E4DB-EE13-1961-B70A2EEFA401}.Release|Any CPU.Build.0 = Debug|Any CPU
-		{1E232160-E4DB-EE13-1961-B70A2EEFA401}.Release|x64.ActiveCfg = Debug|Any CPU
-		{1E232160-E4DB-EE13-1961-B70A2EEFA401}.Release|x64.Build.0 = Debug|Any CPU
-		{1E232160-E4DB-EE13-1961-B70A2EEFA401}.Release|x86.ActiveCfg = Debug|Any CPU
-		{1E232160-E4DB-EE13-1961-B70A2EEFA401}.Release|x86.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6B2E3561-F09A-4781-B7A1-78DC3655E24D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{135C860B-6243-45C1-8358-0F1099E1E297} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{7EB90E6D-BD21-4B59-A114-05B8E7A270A8} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{3FF9AA53-6028-479E-A1B7-BE88E574B421} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{183857B6-A795-482A-8B97-DB22D42F204A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{58498133-468D-46E5-A1FC-95A6E8CB3E48} = {1BD85C08-364B-4EC1-9986-48A19385FABA}
+		{AAAB81D3-E50E-46BD-9C8C-6F081C87DE64} = {1BD85C08-364B-4EC1-9986-48A19385FABA}
+		{D72C3720-AFBF-4F58-9111-E15B81AA7B89} = {1BD85C08-364B-4EC1-9986-48A19385FABA}
+		{6577820F-88D5-49B8-BA0D-80987B1FB0E9} = {D72C3720-AFBF-4F58-9111-E15B81AA7B89}
+		{DCEE797B-F497-4417-B657-AA15FA383F79} = {D72C3720-AFBF-4F58-9111-E15B81AA7B89}
+		{540FD58D-F533-4A65-8A20-9A5A8C528683} = {D72C3720-AFBF-4F58-9111-E15B81AA7B89}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {45CEBD1F-9930-46B2-BE25-3CDE6BA2DAC8}
