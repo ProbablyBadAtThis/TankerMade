@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\TankerMade.Core\TankerMade.Core.csproj" />
+  </ItemGroup>
+
 </Project>

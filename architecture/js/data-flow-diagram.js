@@ -1,48 +1,85 @@
-function mk(go) { return go.GraphObject.make; }
+function mk(go) {
+    return go.GraphObject.make;
+}
 
 window.renderDataFlowDiagram = function renderDataFlowDiagram() {
-  if (window._flowInited) return;
-  window._flowInited = true;
+    if (window._flowInited) return;
+    window._flowInited = true;
 
-  const $ = mk(go);
-  const d = $(go.Diagram, "dataFlowDiagram", {
-    "undoManager.isEnabled": false,
-    layout: $(go.LayeredDigraphLayout, { direction: 0, layerSpacing: 70 })
-  });
+    const $ = mk(go);
+    const canvas = document.getElementById("dataFlowDiagram");
 
-  d.nodeTemplate =
-    $(go.Node, "Auto",
-      $(go.Shape, "RoundedRectangle",
-        new go.Binding("fill", "fill"),
-        { stroke: "#2b2f3a", strokeWidth: 1 }),
-      $(go.TextBlock, { margin: 10, stroke: "#e7e9ee", font: "bold 12px sans-serif" },
-        new go.Binding("text", "key"))
-    );
+    const diagram = $(go.Diagram, "dataFlowDiagram", {
+        "undoManager.isEnabled": false,
+        layout: $(go.LayeredDigraphLayout, {
+            direction: 0,
+            layerSpacing: 80,
+            columnSpacing: 20
+        }),
+        "animationManager.isEnabled": false
+    });
 
-  d.linkTemplate =
-    $(go.Link, { routing: go.Link.AvoidsNodes, curve: go.Link.JumpGap, corner: 6 },
-      $(go.Shape, { stroke: "#8892b0" }),
-      $(go.Shape, { toArrow: "Standard", fill: "#8892b0", stroke: "#8892b0" })
-    );
+    // Clean node template for system flow
+    diagram.nodeTemplate =
+        $(go.Node, "Auto",
+            {
+                locationSpot: go.Spot.Center,
+                selectable: true
+            },
+            $(go.Shape, "RoundedRectangle",
+                {
+                    strokeWidth: 2
+                },
+                new go.Binding("fill", "fill"),
+                new go.Binding("stroke", "stroke")),
+            $(go.TextBlock,
+                {
+                    margin: 12,
+                    stroke: "#333",
+                    font: "bold 11px Inter, sans-serif",
+                    textAlign: "center",
+                    maxSize: new go.Size(100, NaN)
+                },
+                new go.Binding("text", "key"))
+        );
 
-  const nodes = [
-    { key: "UI (Client)", fill: "#263238" },
-    { key: "DTO (Input)", fill: "#14213d" },
-    { key: "Service Layer", fill: "#123524" },
-    { key: "Entity/Domain", fill: "#3a2a18" },
-    { key: "Database", fill: "#1f2430" },
-    { key: "DTO (Output)", fill: "#14213d" },
-    { key: "UI (Client View)", fill: "#263238" }
-  ];
+    // System flow links
+    diagram.linkTemplate =
+        $(go.Link,
+            {
+                routing: go.Link.AvoidsNodes,
+                curve: go.Link.JumpGap,
+                corner: 5
+            },
+            $(go.Shape, { strokeWidth: 3, stroke: "#2563eb" }),
+            $(go.Shape, {
+                toArrow: "Standard",
+                fill: "#2563eb",
+                stroke: "#2563eb",
+                scale: 1.5
+            })
+        );
 
-  const links = [
-    { from: "UI (Client)", to: "DTO (Input)" },
-    { from: "DTO (Input)", to: "Service Layer" },
-    { from: "Service Layer", to: "Entity/Domain" },
-    { from: "Entity/Domain", to: "Database" },
-    { from: "Service Layer", to: "DTO (Output)" },
-    { from: "DTO (Output)", to: "UI (Client View)" }
-  ];
+    // System architecture flow
+    const nodes = [
+        { key: "Blazor UI", fill: "#f3f4f6", stroke: "#6b7280" },
+        { key: "Input DTO", fill: "#dbeafe", stroke: "#2563eb" },
+        { key: "Service Layer", fill: "#dcfce7", stroke: "#16a34a" },
+        { key: "Entity/Domain", fill: "#fef3c7", stroke: "#d97706" },
+        { key: "SQLite/PostgreSQL", fill: "#f1f5f9", stroke: "#475569" },
+        { key: "Output DTO", fill: "#dbeafe", stroke: "#2563eb" },
+        { key: "UI Display", fill: "#f3f4f6", stroke: "#6b7280" }
+    ];
 
-  d.model = new go.GraphLinksModel(nodes, links);
+    const links = [
+        { from: "Blazor UI", to: "Input DTO" },
+        { from: "Input DTO", to: "Service Layer" },
+        { from: "Service Layer", to: "Entity/Domain" },
+        { from: "Entity/Domain", to: "SQLite/PostgreSQL" },
+        { from: "Service Layer", to: "Output DTO" },
+        { from: "Output DTO", to: "UI Display" }
+    ];
+
+    diagram.model = new go.GraphLinksModel(nodes, links);
+    canvas.classList.add('loaded');
 };

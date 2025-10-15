@@ -31,6 +31,7 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "architecture", "architectur
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
 		VWDPort = "56349"
+		SlnRelativePath = "architecture\"
 	EndProjectSection
 EndProject
 Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "documentation", "documentation\", "{1E232160-E4DB-EE13-1961-B70A2EEFA401}"
@@ -51,6 +52,7 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "documentation", "documentat
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
 		VWDPort = "56365"
+		SlnRelativePath = "documentation\"
 	EndProjectSection
 EndProject
 Global
@@ -150,5 +152,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {45CEBD1F-9930-46B2-BE25-3CDE6BA2DAC8}
 	EndGlobalSection
 EndGlobal
