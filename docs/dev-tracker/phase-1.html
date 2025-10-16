@@ -466,7 +466,7 @@
                         <div class="task-group-title">Initial Setup</div>
                         
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="create-solution">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-solution">
                             <div class="task-content">
                                 <div class="task-title">Create new solution</div>
                                 <div class="task-description">Run <code>dotnet new sln -n TankerMade</code> in empty folder</div>
@@ -475,7 +475,7 @@
                         </div>
 
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="create-core-project">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-core-project">
                             <div class="task-content">
                                 <div class="task-title">Create TankerMade.Core project</div>
                                 <div class="task-description">Class library: <code>dotnet new classlib -n TankerMade.Core</code></div>
@@ -484,7 +484,7 @@
                         </div>
 
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="create-contracts-project">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-contracts-project">
                             <div class="task-content">
                                 <div class="task-title">Create TankerMade.Contracts project</div>
                                 <div class="task-description">Class library: <code>dotnet new classlib -n TankerMade.Contracts</code></div>
@@ -493,7 +493,7 @@
                         </div>
 
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="create-client-project">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-client-project">
                             <div class="task-content">
                                 <div class="task-title">Create TankerMade.Client project</div>
                                 <div class="task-description">Blazor WASM: <code>dotnet new blazorwasm -n TankerMade.Client</code></div>
@@ -502,7 +502,7 @@
                         </div>
 
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="create-server-project">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-server-project">
                             <div class="task-content">
                                 <div class="task-title">Create TankerMade.Server project</div>
                                 <div class="task-description">Web API: <code>dotnet new webapi -n TankerMade.Server</code></div>
@@ -511,7 +511,7 @@
                         </div>
 
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="add-projects-to-solution">
+                            <input type="checkbox" checked class="task-checkbox" data-task="add-projects-to-solution">
                             <div class="task-content">
                                 <div class="task-title">Add all projects to solution</div>
                                 <div class="task-description">Run <code>dotnet sln add</code> commands for each project</div>
@@ -524,7 +524,7 @@
                         <div class="task-group-title">Domain Models (TankerMade.Core)</div>
                         
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="create-project-entity">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-project-entity">
                             <div class="task-content">
                                 <div class="task-title">Create Project entity</div>
                                 <div class="task-description">Include Id, Name, Slug, Description, PatternId, ThemeId, Difficulty, Progress, Timestamps, UserId</div>
@@ -533,7 +533,7 @@
                         </div>
 
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="create-pattern-entity">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-pattern-entity">
                             <div class="task-content">
                                 <div class="task-title">Create Pattern entity</div>
                                 <div class="task-description">Include Id, Name, Slug, Type, Form, Difficulty, ThemeId, SourceId, UserId</div>
@@ -542,7 +542,7 @@
                         </div>
 
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="create-user-entity">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-user-entity">
                             <div class="task-content">
                                 <div class="task-title">Create User entity</div>
                                 <div class="task-description">Include Id, Username, Email, Role, CreatedAt, LastLoginAt</div>
@@ -551,7 +551,7 @@
                         </div>
 
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="create-enums">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-enums">
                             <div class="task-content">
                                 <div class="task-title">Create enums</div>
                                 <div class="task-description">Difficulty, PatternType, PatternForm, UserRole</div>
@@ -560,7 +560,7 @@
                         </div>
 
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="create-reference-entities">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-reference-entities">
                             <div class="task-content">
                                 <div class="task-title">Create reference entities</div>
                                 <div class="task-description">Theme, Color, Source, Brand (all with Id, Name, Slug)</div>
@@ -573,7 +573,7 @@
                         <div class="task-group-title">Service Contracts (TankerMade.Contracts)</div>
                         
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="create-dtos">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-dtos">
                             <div class="task-content">
                                 <div class="task-title">Create DTOs</div>
                                 <div class="task-description">ProjectDto, CreateProjectDto, UpdateProjectDto, PatternDto, UserDto</div>
@@ -582,7 +582,7 @@
                         </div>
 
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="create-service-interfaces">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-service-interfaces">
                             <div class="task-content">
                                 <div class="task-title">Create service interfaces</div>
                                 <div class="task-description">IProjectService, IPatternService, IUserService with CRUD methods</div>
@@ -591,7 +591,7 @@
                         </div>
 
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="add-project-references">
+                            <input type="checkbox" checked class="task-checkbox" data-task="add-project-references">
                             <div class="task-content">
                                 <div class="task-title">Add project references</div>
                                 <div class="task-description">Contracts → Core; Client → Contracts; Server → Core + Contracts</div>
