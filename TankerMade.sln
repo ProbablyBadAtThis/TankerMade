@@ -24,8 +24,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "architecture", "architectur
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dev-tracker", "dev-tracker", "{58498133-468D-46E5-A1FC-95A6E8CB3E48}"
 	ProjectSection(SolutionItems) = preProject
-		docs\dev-tracker\phase-1.html = docs\dev-tracker\phase-1.html
 		docs\dev-tracker\index.html = docs\dev-tracker\index.html
+		docs\dev-tracker\phase-1.html = docs\dev-tracker\phase-1.html
 		docs\dev-tracker\phase-10.html = docs\dev-tracker\phase-10.html
 		docs\dev-tracker\phase-2.html = docs\dev-tracker\phase-2.html
 		docs\dev-tracker\phase-3.html = docs\dev-tracker\phase-3.html
@@ -35,6 +35,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dev-tracker", "dev-tracker"
 		docs\dev-tracker\phase-7.html = docs\dev-tracker\phase-7.html
 		docs\dev-tracker\phase-8.html = docs\dev-tracker\phase-8.html
 		docs\dev-tracker\phase-9.html = docs\dev-tracker\phase-9.html
+		docs\dev-tracker\shared.css = docs\dev-tracker\shared.css
+		docs\dev-tracker\shared.js = docs\dev-tracker\shared.js
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workbench", "workbench", "{AAAB81D3-E50E-46BD-9C8C-6F081C87DE64}"
