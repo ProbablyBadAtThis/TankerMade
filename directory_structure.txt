@@ -1,0 +1,198 @@
+¦   .gitattributes
+¦   .gitignore
+¦   directory_structure.txt
+¦   TankerMade.sln
+¦   
++---.github
+¦   +---workflows
++---artifacts
+¦       artifact.md
+¦       project-artifact.md
+¦       
++---docs
+¦   ¦   index.html
+¦   ¦   
+¦   +---architecture-visualizer
+¦   ¦   ¦   index.html
+¦   ¦   ¦   
+¦   ¦   +---assets
+¦   ¦   +---js
+¦   ¦   ¦       architecture-data.js
+¦   ¦   ¦       data-dictionary.js
+¦   ¦   ¦       data-flow-diagram.js
+¦   ¦   ¦       dto-flow-diagram.js
+¦   ¦   ¦       service-flow-diagram.js
+¦   ¦   ¦       
+¦   ¦   +---styles
+¦   ¦           diagram.css
+¦   ¦           main.css
+¦   ¦           
+¦   +---dev-tracker
+¦   ¦       index.html
+¦   ¦       phase-1.html
+¦   ¦       phase-10.html
+¦   ¦       phase-2.html
+¦   ¦       phase-3.html
+¦   ¦       phase-4.html
+¦   ¦       phase-5.html
+¦   ¦       phase-6.html
+¦   ¦       phase-7.html
+¦   ¦       phase-8.html
+¦   ¦       phase-9.html
+¦   ¦       shared.css
+¦   ¦       shared.js
+¦   ¦       
+¦   +---workbench
+¦           architecture.html
+¦           deployment.html
+¦           development-guidelines.html
+¦           domain-model.html
+¦           implementation-phases.html
+¦           index.html
+¦           technical-specs.html
+¦           ui-ux-specs.html
+¦           
++---exclude
+¦   +---docs
+¦           TANKERMADE_PATTERNS_EXAMPLES.md
+¦           TANKERMADE_PROJECT_CONTEXT.md
+¦           THREAD_STARTER_TEMPLATE.md
+¦           WEEKLY_REVIEW.md
+¦           
++---src
+    +---TankerMade.Application
+    ¦   ¦   TankerMade.Application.csproj          
+    ¦   +---Common
+    ¦   ¦   +---Exceptions
+    ¦   ¦           UnauthorizedException.cs
+    ¦   +---Services
+    ¦           UserService.cs
+    ¦           
+    +---TankerMade.Client
+    ¦   ¦   App.razor
+    ¦   ¦   Program.cs
+    ¦   ¦   TankerMade.Client.csproj
+    ¦   ¦   TankerMade.Client.csproj.user
+    ¦   ¦   _Imports.razor
+    ¦   +---Layout
+    ¦   ¦       MainLayout.razor
+    ¦   ¦       MainLayout.razor.css
+    ¦   ¦       NavMenu.razor
+    ¦   ¦       NavMenu.razor.css
+    ¦   +---Pages
+    ¦   ¦       Counter.razor
+    ¦   ¦       Home.razor
+    ¦   ¦       Weather.razor
+    ¦   ¦       
+    ¦   +---Properties
+    ¦   ¦       launchSettings.json
+    ¦   ¦       
+    ¦   +---wwwroot
+    ¦       ¦   favicon.png
+    ¦       ¦   icon-192.png
+    ¦       ¦   index.html
+    ¦       ¦   
+    ¦       +---css
+    ¦       ¦       app.css
+    ¦       ¦       
+    ¦       +---lib
+    ¦       ¦   +---bootstrap
+    ¦       ¦       +---dist
+    ¦       ¦           +---css
+    ¦       ¦           ¦       bootstrap-grid.css
+    ¦       ¦           ¦       bootstrap-grid.css.map
+    ¦       ¦           ¦       bootstrap-grid.min.css
+    ¦       ¦           ¦       bootstrap-grid.min.css.map
+    ¦       ¦           ¦       bootstrap-grid.rtl.css
+    ¦       ¦           ¦       bootstrap-grid.rtl.css.map
+    ¦       ¦           ¦       bootstrap-grid.rtl.min.css
+    ¦       ¦           ¦       bootstrap-grid.rtl.min.css.map
+    ¦       ¦           ¦       bootstrap-reboot.css
+    ¦       ¦           ¦       bootstrap-reboot.css.map
+    ¦       ¦           ¦       bootstrap-reboot.min.css
+    ¦       ¦           ¦       bootstrap-reboot.min.css.map
+    ¦       ¦           ¦       bootstrap-reboot.rtl.css
+    ¦       ¦           ¦       bootstrap-reboot.rtl.css.map
+    ¦       ¦           ¦       bootstrap-reboot.rtl.min.css
+    ¦       ¦           ¦       bootstrap-reboot.rtl.min.css.map
+    ¦       ¦           ¦       bootstrap-utilities.css
+    ¦       ¦           ¦       bootstrap-utilities.css.map
+    ¦       ¦           ¦       bootstrap-utilities.min.css
+    ¦       ¦           ¦       bootstrap-utilities.min.css.map
+    ¦       ¦           ¦       bootstrap-utilities.rtl.css
+    ¦       ¦           ¦       bootstrap-utilities.rtl.css.map
+    ¦       ¦           ¦       bootstrap-utilities.rtl.min.css
+    ¦       ¦           ¦       bootstrap-utilities.rtl.min.css.map
+    ¦       ¦           ¦       bootstrap.css
+    ¦       ¦           ¦       bootstrap.css.map
+    ¦       ¦           ¦       bootstrap.min.css
+    ¦       ¦           ¦       bootstrap.min.css.map
+    ¦       ¦           ¦       bootstrap.rtl.css
+    ¦       ¦           ¦       bootstrap.rtl.css.map
+    ¦       ¦           ¦       bootstrap.rtl.min.css
+    ¦       ¦           ¦       bootstrap.rtl.min.css.map
+    ¦       ¦           ¦       
+    ¦       ¦           +---js
+    ¦       ¦                   bootstrap.bundle.js
+    ¦       ¦                   bootstrap.bundle.js.map
+    ¦       ¦                   bootstrap.bundle.min.js
+    ¦       ¦                   bootstrap.bundle.min.js.map
+    ¦       ¦                   bootstrap.esm.js
+    ¦       ¦                   bootstrap.esm.js.map
+    ¦       ¦                   bootstrap.esm.min.js
+    ¦       ¦                   bootstrap.esm.min.js.map
+    ¦       ¦                   bootstrap.js
+    ¦       ¦                   bootstrap.js.map
+    ¦       ¦                   bootstrap.min.js
+    ¦       ¦                   bootstrap.min.js.map
+    ¦       ¦                   
+    ¦       +---sample-data
+    ¦               weather.json
+    ¦               
+    +---TankerMade.Contracts
+    ¦   ¦   Class1.cs
+    ¦   ¦   TankerMade.Contracts.csproj
+    ¦   +---DTOs
+    ¦   ¦   +---Patterns
+    ¦   ¦   ¦       CreatePatternDto.cs
+    ¦   ¦   ¦       PatternDto.cs
+    ¦   ¦   ¦       UpdatePatternDto.cs
+    ¦   ¦   ¦       
+    ¦   ¦   +---Projects
+    ¦   ¦   ¦       CreateProjectDto.cs
+    ¦   ¦   ¦       ProjectDto.cs
+    ¦   ¦   ¦       UpdateProjectDto.cs
+    ¦   ¦   ¦       
+    ¦   ¦   +---Users
+    ¦   ¦           CreateUserDto.cs
+    ¦   ¦           UpdateUserDto.cs
+    ¦   ¦           UserDto.cs
+    ¦   +---Services
+    ¦           IPatternService.cs
+    ¦           IProjectService.cs
+    ¦           IUserService.cs
+    +---TankerMade.Core
+    ¦   ¦   Class1.cs
+    ¦   ¦   TankerMade.Core.csproj
+    ¦   +---Entities
+    ¦   ¦       Brand.cs
+    ¦   ¦       Color.cs
+    ¦   ¦       Pattern.cs
+    ¦   ¦       Project.cs
+    ¦   ¦       Source.cs
+    ¦   ¦       Theme.cs
+    ¦   ¦       User.cs
+    ¦   ¦       
+    ¦   +---Enums
+    ¦   ¦       Difficulty.cs
+    ¦   ¦       PatternForm.cs
+    ¦   ¦       PatternType.cs
+    ¦   ¦       UserRole.cs
+    ¦                       
+    +---TankerMade.Server
+        ¦   appsettings.Development.json
+        ¦   appsettings.json
+        ¦   Program.cs
+        ¦   TankerMade.Server.csproj
+        ¦   TankerMade.Server.csproj.user
+        ¦   TankerMade.Server.http
