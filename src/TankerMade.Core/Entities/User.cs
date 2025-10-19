@@ -7,6 +7,7 @@ namespace TankerMade.Core.Entities
         public Guid Id { get; set; }
         public string Username { get; set; }
         public string Email { get; set; }
+        public string PasswordHash { get; set; }
         public string Role { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
@@ -15,11 +16,12 @@ namespace TankerMade.Core.Entities
         protected User() { }
 
         // Main constructor for creating new users
-        public User(Guid id, string username, string email, string role = "User")
+        public User(Guid id, string username, string email, string passwordHash, string role = "User")
         {
             Id = id;
             Username = username ?? throw new ArgumentNullException(nameof(username));
             Email = email ?? throw new ArgumentNullException(nameof(email));
+            PasswordHash = passwordHash ?? throw new ArgumentNullException(nameof(passwordHash));
             Role = role;
             CreatedAt = DateTime.UtcNow;
             LastLoginAt = null; // Set when user first logs in

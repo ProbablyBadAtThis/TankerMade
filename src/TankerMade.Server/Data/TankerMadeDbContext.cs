@@ -46,6 +46,10 @@ public class TankerMadeDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(255);
 
+            entity.Property(e => e.PasswordHash)
+                .IsRequired()
+                .HasMaxLength(500);  // BCrypt hashes are ~60 chars
+
             entity.Property(e => e.Role)
                 .IsRequired()
                 .HasMaxLength(50);
@@ -57,6 +61,7 @@ public class TankerMadeDbContext : DbContext
                 .IsUnique();
         });
     }
+
 
     private void ConfigureProject(ModelBuilder modelBuilder)
     {

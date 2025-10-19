@@ -495,48 +495,51 @@
 
                     <div class="task-group">
                         <div class="task-group-title">JWT Authentication</div>
-
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="install-jwt-packages">
+                            <input type="checkbox" checked class="task-checkbox" data-task="install-jwt-packages">
                             <div class="task-content">
                                 <div class="task-title">Install JWT packages</div>
-                                <div class="task-description">Microsoft.AspNetCore.Authentication.JwtBearer, System.IdentityModel.Tokens.Jwt</div>
+                                <div class="task-description">Microsoft.AspNetCore.Authentication.JwtBearer, BCrypt.Net-Next</div>
                             </div>
                             <div class="task-complexity complexity-easy">Easy</div>
                         </div>
-
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="configure-jwt">
+                            <input type="checkbox" checked class="task-checkbox" data-task="configure-jwt">
                             <div class="task-content">
                                 <div class="task-title">Configure JWT authentication</div>
-                                <div class="task-description">Setup JWT settings in appsettings.json and Program.cs</div>
+                                <div class="task-description">Add JwtSettings to appsettings.json (SecretKey, Issuer, Audience, ExpirationMinutes), configure AddAuthentication/AddJwtBearer in Program.cs</div>
                             </div>
                             <div class="task-complexity complexity-medium">Medium</div>
                         </div>
-
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="create-jwt-service">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-jwt-service">
                             <div class="task-content">
                                 <div class="task-title">Create JWT token service</div>
-                                <div class="task-description">Generate and validate JWT tokens, extract claims</div>
+                                <div class="task-description">Create JwtService.cs with IJwtService interface and implementation</div>
                             </div>
-                            <div class="task-complexity complexity-hard">Hard</div>
+                            <div class="task-complexity complexity-medium">Medium</div>
                         </div>
-
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="create-auth-endpoints">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-password-service">
+                            <div class="task-content">
+                                <div class="task-title">Create password hashing service</div>
+                                <div class="task-description">Create PasswordService.cs with IPasswordService interface and implementation</div>
+                            </div>
+                            <div class="task-complexity complexity-medium">Medium</div>
+                        </div>
+                        <div class="task-item">
+                            <input type="checkbox" checked class="task-checkbox" data-task="update-user-entity">
+                            <div class="task-content">
+                                <div class="task-title">Update User entity</div>
+                                <div class="task-description">Add PasswordHash property (string, max 500 chars), update constructor, create migration for new field</div>
+                            </div>
+                            <div class="task-complexity complexity-easy">Easy</div>
+                        </div>
+                        <div class="task-item">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-auth-endpoints">
                             <div class="task-content">
                                 <div class="task-title">Create auth endpoints</div>
                                 <div class="task-description">/api/auth/login and /api/auth/register with proper validation</div>
-                            </div>
-                            <div class="task-complexity complexity-medium">Medium</div>
-                        </div>
-
-                        <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="implement-password-hashing">
-                            <div class="task-content">
-                                <div class="task-title">Implement password hashing</div>
-                                <div class="task-description">Use BCrypt or Identity for secure password storage</div>
                             </div>
                             <div class="task-complexity complexity-medium">Medium</div>
                         </div>
