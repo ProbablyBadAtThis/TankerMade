@@ -64,6 +64,7 @@ function initializePhaseTracker(config) {
 
         // Then initialize tracker
         loadProgress();
+        updateSectionProgress();
         updateAllProgress();
         setupEventListeners();
         applyInitialCompletedStyles();
@@ -104,6 +105,7 @@ function initializePhaseTracker(config) {
                 checkbox.addEventListener('change', function () {
                     saveProgress();
                     updateAllProgress();
+                    updateSectionProgress();
                 });
             }
         });
@@ -236,20 +238,27 @@ function initializePhaseTracker(config) {
         updateSectionProgress();
     }
 
+    /**
+     * UPDATED updateSectionProgress function
+     * This version automatically detects sections by finding .deliverable-section elements
+     * and counts tasks within each section dynamically - no data attributes needed!
+     */
     function updateSectionProgress() {
-        // Look for section progress elements and update them
-        const sections = document.querySelectorAll('[data-section-tasks]');
-        sections.forEach(section => {
-            const sectionTaskIds = section.dataset.sectionTasks.split(',');
-            const completed = sectionTaskIds.filter(taskId => {
-                const checkbox = document.querySelector(`[data-task="${taskId}"]`);
-                return checkbox && checkbox.checked;
-            }).length;
+        // Find all deliverable sections
+        const sections = document.querySelectorAll('.deliverable-section');
 
-            const progressElement = section.querySelector('.section-progress');
-            if (progressElement) {
-                progressElement.textContent = `${completed}/${sectionTaskIds.length} tasks`;
-            }
+        sections.forEach(section => {
+            // Find the progress display element for this section
+            const progressElement = section.querySelector('.deliverable-progress');
+            if (!progressElement) return;
+
+            // Find all checkboxes within this section
+            const checkboxes = section.querySelectorAll('.task-checkbox');
+            const totalTasks = checkboxes.length;
+            const completedTasks = Array.from(checkboxes).filter(cb => cb.checked).length;
+
+            // Update the display
+            progressElement.textContent = `${completedTasks} / ${totalTasks} tasks`;
         });
     }
 
