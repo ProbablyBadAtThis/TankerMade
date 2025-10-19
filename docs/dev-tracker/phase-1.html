@@ -448,25 +448,25 @@
                         <div class="task-group-title">Database Setup</div>
 
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="install-ef-packages">
+                            <input type="checkbox" checked class="task-checkbox" data-task="install-ef-packages">
                             <div class="task-content">
                                 <div class="task-title">Install Entity Framework packages</div>
-                                <div class="task-description">Microsoft.EntityFrameworkCore.Sqlite, Microsoft.EntityFrameworkCore.Design</div>
+                                <div class="task-description">Microsoft.EntityFrameworkCore.SqlServer, Microsoft.EntityFrameworkCore.Design, Microsoft.EntityFrameworkCore.Tools</div>
                             </div>
                             <div class="task-complexity complexity-easy">Easy</div>
                         </div>
 
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="create-dbcontext">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-dbcontext">
                             <div class="task-content">
-                                <div class="task-title">Create TankerMadeContext</div>
+                                <div class="task-title">Create TankerMadeDbContext</div>
                                 <div class="task-description">DbContext with DbSets for Project, Pattern, User, reference entities</div>
                             </div>
                             <div class="task-complexity complexity-medium">Medium</div>
                         </div>
 
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="configure-entity-relationships">
+                            <input type="checkbox" checked class="task-checkbox" data-task="configure-entity-relationships">
                             <div class="task-content">
                                 <div class="task-title">Configure entity relationships</div>
                                 <div class="task-description">Foreign keys, navigation properties, required fields</div>
@@ -475,7 +475,7 @@
                         </div>
 
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="create-initial-migration">
+                            <input type="checkbox" checked class="task-checkbox" data-task="create-initial-migration">
                             <div class="task-content">
                                 <div class="task-title">Create initial migration</div>
                                 <div class="task-description">Run <code>dotnet ef migrations add Initial</code></div>
@@ -484,7 +484,7 @@
                         </div>
 
                         <div class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-task="seed-reference-data">
+                            <input type="checkbox" checked class="task-checkbox" data-task="seed-reference-data">
                             <div class="task-content">
                                 <div class="task-title">Seed reference data</div>
                                 <div class="task-description">Add basic themes, colors, difficulties in migration</div>
