@@ -37,14 +37,29 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// Configure CORS for Blazor client
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowBlazorClient", policy =>
+    {
+        policy.WithOrigins("https://localhost:7001", "http://localhost:5001") // Blazor WASM default ports
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 // Register services
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 
-// Add services to the container
+// Add controllers and API documentation
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
+
+// Add Swagger UI (requires Swashbuckle.AspNetCore package)
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -52,11 +67,18 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "TankerMade API v1");
+    });
 }
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication();  // Add this before UseAuthorization
+app.UseCors("AllowBlazorClient");
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

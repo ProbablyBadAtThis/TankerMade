@@ -7,7 +7,7 @@ namespace TankerMade.Contracts.DTOs.Projects
         public string Slug { get; set; }
         public string Description { get; set; }
         public Guid? PatternId { get; set; }
-        public string PatternName { get; set; }  // Flattened from Pattern entity
+        public string PatternName { get; set; } // Flattened from Pattern entity
         public Guid? ThemeId { get; set; }
         public string ThemeName { get; set; }    // Flattened from Theme entity
         public int Difficulty { get; set; }

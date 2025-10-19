@@ -5,8 +5,8 @@ namespace TankerMade.Core.Entities
     public class Brand
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
-        public string Slug { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
 
         // Protected constructor for Entity Framework

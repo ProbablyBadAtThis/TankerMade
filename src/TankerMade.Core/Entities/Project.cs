@@ -5,9 +5,9 @@ namespace TankerMade.Core.Entities
     public class Project
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
-        public string Slug { get; set; }
-        public string Description { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         public Guid? PatternId { get; set; }
         public Guid? ThemeId { get; set; }
         public int Difficulty { get; set; }
