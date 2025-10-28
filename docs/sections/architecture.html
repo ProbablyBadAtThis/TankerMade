@@ -1,0 +1,196 @@
+<!-- Architecture Visualizer Section Content -->
+<div class="architecture-header mb-6">
+    <h1 class="text-2xl font-bold mb-2">Architecture Visualizer</h1>
+    <p class="text-secondary">Interactive entity relationship diagrams, data flow visualization, and system architecture overview</p>
+</div>
+
+<div class="grid grid-cols-3 gap-6 mb-6">
+    <div class="card architecture-card" onclick="showEntityDiagram()">
+        <div class="card-header">
+            <h3 class="card-title">🗄️ Entity Relationships</h3>
+        </div>
+        <div class="card-body">
+            <p class="text-secondary mb-4">Interactive ERD showing data model relationships</p>
+            <div class="flex items-center justify-between">
+                <span class="badge badge-success">Available</span>
+                <button class="btn btn-sm btn-primary">
+                    View Diagram
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card architecture-card" onclick="showDataFlow()">
+        <div class="card-header">
+            <h3 class="card-title">🔄 Data Flow</h3>
+        </div>
+        <div class="card-body">
+            <p class="text-secondary mb-4">System interaction maps and data flow diagrams</p>
+            <div class="flex items-center justify-between">
+                <span class="badge badge-success">Available</span>
+                <button class="btn btn-sm btn-primary">
+                    View Flow
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card architecture-card" onclick="showSystemArchitecture()">
+        <div class="card-header">
+            <h3 class="card-title">🏗️ System Architecture</h3>
+        </div>
+        <div class="card-body">
+            <p class="text-secondary mb-4">Component dependencies and system overview</p>
+            <div class="flex items-center justify-between">
+                <span class="badge badge-success">Available</span>
+                <button class="btn btn-sm btn-primary">
+                    View Architecture
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="flex items-center justify-between">
+            <h3 class="card-title">Visualization Area</h3>
+            <div class="flex gap-2" id="visualization-controls" style="display: none;">
+                <button class="btn btn-sm btn-secondary" onclick="zoomOut()">🔍−</button>
+                <button class="btn btn-sm btn-secondary" onclick="resetZoom()">↻</button>
+                <button class="btn btn-sm btn-secondary" onclick="zoomIn()">🔍+</button>
+                <button class="btn btn-sm btn-secondary" onclick="exportDiagram()">📁</button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div id="visualization-container" class="visualization-area">
+            <div class="visualization-placeholder">
+                <div class="text-4xl mb-4">🏗️</div>
+                <h3 class="text-lg font-semibold mb-2">Architecture Visualizer</h3>
+                <p class="text-secondary">Select a visualization type above to begin</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-2 gap-6 mt-6">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Quick Stats</h3>
+        </div>
+        <div class="card-body">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-primary">15</div>
+                    <div class="text-sm text-secondary">Core Entities</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-primary">8</div>
+                    <div class="text-sm text-secondary">Service Layers</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-primary">32</div>
+                    <div class="text-sm text-secondary">Relationships</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-primary">6</div>
+                    <div class="text-sm text-secondary">Modules</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Legend & Controls</h3>
+        </div>
+        <div class="card-body" id="legend-container">
+            <div class="legend-placeholder">
+                <p class="text-secondary">Select a visualization to see legend and controls</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.architecture-card {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.architecture-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.visualization-area {
+    min-height: 500px;
+    border: 2px dashed var(--color-border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-secondary);
+    position: relative;
+}
+
+.visualization-placeholder {
+    text-align: center;
+    padding: 2rem;
+}
+
+.visualization-content {
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
+}
+
+.entity-diagram {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.data-flow-diagram {
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    border-radius: 8px;
+    padding: 2rem;
+    border: 1px solid var(--color-border);
+}
+
+.system-architecture-diagram {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+    .grid-cols-3 {
+        grid-template-columns: 1fr;
+    }
+
+    .grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .visualization-area {
+        min-height: 300px;
+    }
+}
+</style>

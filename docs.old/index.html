@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TankerMade Documentation Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .card-link {
+            display: inline-flex;
+            align-items: center;
+            color: #667eea;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .card-link:hover {
+            text-decoration: underline;
+        }
+
+        .card-link::after {
+            content: '→';
+            margin-left: 8px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .card:hover .card-link::after {
+            margin-left: 12px;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2rem;
+            }
+
+            header p {
+                font-size: 1rem;
+            }
+
+            .card {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛠️ TankerMade</h1>
+            <p>Documentation & Development Hub</p>
+        </header>
+
+        <div class="cards">
+            <a href="/dev-tracker/" class="card">
+                <div class="card-icon">📊</div>
+                <h2>Dev Tracker</h2>
+                <p>Track project progress through development phases, view current status, and see what's coming next.</p>
+                <span class="card-link">Open Dev Tracker</span>
+            </a>
+
+            <a href="/workbench/" class="card">
+                <div class="card-icon">📚</div>
+                <h2>Workbench</h2>
+                <p>Architecture decisions, domain model documentation, development guidelines, and technical specifications.</p>
+                <span class="card-link">Open Workbench</span>
+            </a>
+
+            <a href="/architecture-visualizer/" class="card">
+                <div class="card-icon">🏗️</div>
+                <h2>Architecture Visualizer</h2>
+                <p>Interactive entity relationship diagrams, data flow visualization, and system architecture overview.</p>
+                <span class="card-link">Open Visualizer</span>
+            </a>
+        </div>
+
+        <footer>
+            <p>Last updated: October 15, 2025 | Phase 1 - Service Contracts</p>
+        </footer>
+    </div>
+</body>
+</html>
