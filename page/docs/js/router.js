@@ -368,6 +368,18 @@ class TankerMadeRouter {
                 console.warn(`Failed to initialize section: ${initFunction}`, error);
             }
         }
+
+        // Fallback: special-case for DashboardSection
+        if (this.currentSection?.key === 'dashboard' || location.hash.replace('#','') === 'dashboard') {
+            if (window.DashboardSection) {
+                const section = new window.DashboardSection();
+                section.init();
+                window.__dashboardSection = section;
+             } 
+            else {
+                console.error('DashboardSection not found. Ensure         js/sections/dashboard.js is loaded.');
+        }
+
     }
 
     showLoading() {
