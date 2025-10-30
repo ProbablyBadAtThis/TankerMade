@@ -1,5 +1,4 @@
 /* 
- * APPEND THESE STYLES TO YOUR EXISTING docs/styles/app.css FILE
  * Dashboard Layout Styles - Updated Layout with Current Focus + Recent Activity
  */
 
@@ -28,9 +27,9 @@
     margin-bottom: var(--space-6);
 }
 
-/* First row - unchanged (Overall Progress + Current Phase) */
+/* First row - 3 cards (Overall Progress + Current Phase + Incidents) */
 .dashboard-grid-row:first-of-type {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
 }
 
 /* Second row - Current Focus (80%) + Recent Activity (20%) */
@@ -51,7 +50,7 @@
     overflow: hidden;
 }
 
-/* Focus Columns */
+/* Focus Columns - NO DIVIDER */
 .focus-column {
     flex: 1;
     display: flex;
@@ -60,14 +59,6 @@
     overflow-y: auto;
     max-height: 450px;
     padding-right: var(--space-2);
-}
-
-/* Vertical Divider */
-.focus-divider {
-    width: 1px;
-    background: var(--color-border);
-    margin: var(--space-2) 0;
-    flex-shrink: 0;
 }
 
 /* Focus Sections */
@@ -331,6 +322,15 @@
     .dashboard-focus-row {
         grid-template-columns: 3fr 1fr;
     }
+
+    .dashboard-grid-row:first-of-type {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* Stack third card below on medium screens */
+    .incidents-card {
+        grid-column: span 2;
+    }
 }
 
 @media (max-width: 768px) {
@@ -350,12 +350,6 @@
         flex-direction: column;
     }
 
-    .focus-divider {
-        width: 100%;
-        height: 1px;
-        margin: var(--space-3) 0;
-    }
-
     .focus-column {
         max-height: 300px;
     }
@@ -366,6 +360,10 @@
 
     .activity-feed {
         max-height: 250px;
+    }
+
+    .incidents-card {
+        grid-column: span 1;
     }
 }
 

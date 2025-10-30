@@ -129,9 +129,6 @@ class DashboardSection {
                                 </div>
                             </div>
 
-                            <!-- Vertical Divider -->
-                            <div class="focus-divider"></div>
-
                             <!-- Right Column -->
                             <div class="focus-column focus-right">
                                 <div class="focus-section">
