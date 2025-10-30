@@ -210,7 +210,7 @@ class TankerMadeRouter {
             }
 
             // Initialize section-specific functionality
-            this.initializeSection(route.initFunction, params);
+            this.initializeSection(route.initFunction, params, sectionKey);
 
             // Store current section
             this.currentSection = { key: sectionKey, params, route };
@@ -359,7 +359,38 @@ class TankerMadeRouter {
         return url;
     }
 
-    initializeSection(initFunction, params) {
+    initializeSection(initFunction, params, sectionKey) {
+        // Special handling for Dashboard section
+        if (sectionKey === 'dashboard') {
+            // Wait for the DOM to be ready, then initialize DashboardSection
+            setTimeout(async () => {
+                try {
+                    const dashboardRoot = document.getElementById('dashboard-root');
+                    if (!dashboardRoot) {
+                        console.warn('⚠️ dashboard-root not found, retrying...');
+                        setTimeout(() => this.initializeSection(initFunction, params, sectionKey), 100);
+                        return;
+                    }
+
+                    if (window.DashboardSection) {
+                        console.log('🏠 Initializing DashboardSection...');
+                        const dashboardInstance = new window.DashboardSection();
+                        await dashboardInstance.init();
+
+                        // Store reference for later use
+                        window.__currentDashboard = dashboardInstance;
+
+                        console.log('✅ Dashboard initialization complete');
+                    } else {
+                        console.error('❌ DashboardSection class not found. Check if js/sections/dashboard.js is loaded.');
+                    }
+                } catch (error) {
+                    console.error('❌ Dashboard initialization failed:', error);
+                }
+            }, 50); // Small delay to ensure DOM is ready
+            return;
+        }
+
         // Call section-specific initialization function if it exists
         if (initFunction && typeof window[initFunction] === 'function') {
             try {
@@ -368,18 +399,6 @@ class TankerMadeRouter {
                 console.warn(`Failed to initialize section: ${initFunction}`, error);
             }
         }
-
-        // Fallback: special-case for DashboardSection
-        if (this.currentSection?.key === 'dashboard' || location.hash.replace('#','') === 'dashboard') {
-            if (window.DashboardSection) {
-                const section = new window.DashboardSection();
-                section.init();
-                window.__dashboardSection = section;
-             } 
-            else {
-                console.error('DashboardSection not found. Ensure         js/sections/dashboard.js is loaded.');
-        }
-
     }
 
     showLoading() {
