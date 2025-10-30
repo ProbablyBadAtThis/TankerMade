@@ -27,36 +27,26 @@
             <div class="status-overview">
                 <span class="current-phase" id="current-phase">Phase 1: Foundation</span>
                 <div class="progress-mini">
-                    <div class="progress-fill" id="header-progress" style="width: 0%"></div>
+                    <div class="progress-fill" id="header-progress" style="width: 35%"></div>
                 </div>
-                <span class="progress-text" id="progress-text">0% Complete</span>
+                <span class="progress-text" id="progress-text">35% Complete</span>
             </div>
         </div>
 
         <div class="header-right">
-            <!-- GitHub Authentication Button (replaces old buttons) -->
-            <div class="auth-section" id="auth-section">
-                <!-- Shown when not authenticated -->
-                <button class="github-login-btn" id="github-login-btn" style="display: none;">
-                    <svg class="github-icon" viewBox="0 0 24 24" width="20" height="20">
-                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                    </svg>
-                    Sign in with GitHub
-                </button>
-
-                <!-- Shown when authenticated -->
-                <div class="user-info" id="user-info" style="display: none;">
-                    <img class="user-avatar" id="user-avatar" alt="User avatar">
-                    <div class="user-details">
-                        <span class="user-name" id="user-name"></span>
-                        <button class="logout-btn" id="logout-btn" title="Sign out">
-                            <svg viewBox="0 0 24 24" width="16" height="16">
-                                <path d="M16 17v-3H9v-4h7V7l5 5-5 5M14 2a2 2 0 0 1 2 2v2h-2V4H4v16h10v-2h2v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10z"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <button class="header-action" id="search-btn" title="Search documentation" aria-label="Search documentation">
+                <span class="icon">🔍</span>
+            </button>
+            <button class="header-action" id="export-btn" title="Export progress" aria-label="Export progress">
+                <span class="icon">📤</span>
+            </button>
+            <button class="header-action incidents-badge" id="incidents-btn" title="View incidents" aria-label="View incidents">
+                <span class="icon">🚨</span>
+                <span class="badge-count" id="incident-count">0</span>
+            </button>
+            <button class="header-action" id="settings-btn" title="Settings" aria-label="Settings">
+                <span class="icon">⚙️</span>
+            </button>
 
             <!-- Mobile menu toggle -->
             <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle navigation menu">
@@ -69,16 +59,11 @@
     <div class="app-container">
         <!-- Sidebar Navigation -->
         <nav class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
-            <!-- Always visible section -->
             <div class="nav-section">
                 <a href="#dashboard" class="nav-item active" data-section="dashboard">
                     <span class="nav-icon">🏠</span>
                     <span class="nav-text">Dashboard</span>
                 </a>
-            </div>
-
-            <!-- Protected sections - hidden when not authenticated -->
-            <div class="nav-section nav-protected" id="nav-protected" style="display: none;">
                 <a href="#dev-tracker" class="nav-item" data-section="dev-tracker">
                     <span class="nav-icon">📊</span>
                     <span class="nav-text">Dev Tracker</span>
@@ -98,8 +83,7 @@
                 </a>
             </div>
 
-            <!-- Protected Tools section - hidden when not authenticated -->
-            <div class="nav-section nav-tools nav-protected" id="nav-tools-protected" style="display: none;">
+            <div class="nav-section nav-tools">
                 <div class="nav-section-title">Tools</div>
                 <button class="nav-item" id="global-search">
                     <span class="nav-icon">🔍</span>
@@ -117,20 +101,6 @@
                     <span class="nav-icon">⚙️</span>
                     <span class="nav-text">Settings</span>
                 </button>
-            </div>
-
-            <!-- Authentication prompt for non-authenticated users -->
-            <div class="nav-section nav-auth-prompt" id="nav-auth-prompt" style="display: block;">
-                <div class="auth-prompt-card">
-                    <div class="auth-prompt-icon">🔐</div>
-                    <h3>Sign in Required</h3>
-                    <p class="text-sm text-secondary">
-                        Sign in with GitHub to access development tools and track your progress.
-                    </p>
-                    <button class="btn btn-primary btn-sm" onclick="window.TankerMadeAuth.login()">
-                        Sign in with GitHub
-                    </button>
-                </div>
             </div>
         </nav>
 
@@ -161,26 +131,23 @@
             <span class="bottom-nav-icon">🏠</span>
             <span class="bottom-nav-text">Dashboard</span>
         </a>
-        <!-- Protected mobile nav items - hidden when not authenticated -->
-        <div class="bottom-nav-protected" id="bottom-nav-protected" style="display: none;">
-            <a href="#dev-tracker" class="bottom-nav-item" data-section="dev-tracker">
-                <span class="bottom-nav-icon">📊</span>
-                <span class="bottom-nav-text">Tracker</span>
-            </a>
-            <a href="#workbench" class="bottom-nav-item" data-section="workbench">
-                <span class="bottom-nav-icon">📚</span>
-                <span class="bottom-nav-text">Docs</span>
-            </a>
-            <a href="#architecture" class="bottom-nav-item" data-section="architecture">
-                <span class="bottom-nav-icon">🏗️</span>
-                <span class="bottom-nav-text">Arch</span>
-            </a>
-            <a href="#incidents" class="bottom-nav-item" data-section="incidents">
-                <span class="bottom-nav-icon">🚨</span>
-                <span class="bottom-nav-text">Issues</span>
-                <span class="bottom-nav-badge" id="bottom-incident-count">0</span>
-            </a>
-        </div>
+        <a href="#dev-tracker" class="bottom-nav-item" data-section="dev-tracker">
+            <span class="bottom-nav-icon">📊</span>
+            <span class="bottom-nav-text">Tracker</span>
+        </a>
+        <a href="#workbench" class="bottom-nav-item" data-section="workbench">
+            <span class="bottom-nav-icon">📚</span>
+            <span class="bottom-nav-text">Docs</span>
+        </a>
+        <a href="#architecture" class="bottom-nav-item" data-section="architecture">
+            <span class="bottom-nav-icon">🏗️</span>
+            <span class="bottom-nav-text">Arch</span>
+        </a>
+        <a href="#incidents" class="bottom-nav-item" data-section="incidents">
+            <span class="bottom-nav-icon">🚨</span>
+            <span class="bottom-nav-text">Issues</span>
+            <span class="bottom-nav-badge" id="bottom-incident-count">0</span>
+        </a>
     </nav>
 
     <!-- Search Modal -->
@@ -200,15 +167,13 @@
     <!-- Footer -->
     <footer class="app-footer" role="contentinfo">
         <div class="footer-content">
-            <span>Last updated: <span id="last-updated">October 30, 2025</span></span>
+            <span>Last updated: <span id="last-updated">October 28, 2025</span></span>
             <span>Week <span id="current-week">2</span> of 21</span>
             <span>Next: <span id="next-task">Complete auth service</span></span>
         </div>
     </footer>
 
     <!-- Scripts -->
-    <script src="js/auth.js"></script>
-    <script src="js/github-api.js"></script>
     <script src="js/app.js"></script>
     <script src="js/router.js"></script>
     <script src="js/sections/dashboard.js"></script>

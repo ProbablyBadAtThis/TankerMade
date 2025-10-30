@@ -5,55 +5,46 @@
 
 class TankerMadeApp {
     constructor() {
-    this.state = {
-        currentPhase: 1,
-        totalPhases: 10,
-        currentWeek: 2,
-        totalWeeks: 21,
-        overallProgress: 12, // Updated to match your screenshot
-        completedTasks: 0,
-        totalTasks: 0,
-        openIncidents: 0,
-        lastUpdated: new Date().toLocaleDateString()
-    };
+        this.state = {
+            currentPhase: 1,
+            totalPhases: 10,
+            currentWeek: 2,
+            totalWeeks: 21,
+            overallProgress: 35,
+            completedTasks: 12,
+            totalTasks: 23,
+            openIncidents: 0,
+            lastUpdated: new Date().toLocaleDateString()
+        };
 
-    this.eventListeners = new Map();
-    this.searchIndex = new Map();
-    this.isAuthenticated = false;
+        this.eventListeners = new Map();
+        this.searchIndex = new Map();
 
-    // Initialize after DOM is loaded
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => this.init());
-    } else {
-        this.init();
-    }
-}
-    async init() {
-    console.log('🧶 TankerMade Developer Dashboard starting...');
-
-    // Initialize authentication first
-    const auth = await window.TankerMadeAuth.init();
-    this.isAuthenticated = !!auth;
-
-    // Initialize GitHub data store if authenticated
-    if (this.isAuthenticated) {
-        window.TankerMadeData = new GitHubDataStore(window.TankerMadeAuth);
-        await window.TankerMadeData.init();
+        // Initialize after DOM is loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.init());
+        } else {
+            this.init();
+        }
     }
 
-    // Initialize core functionality
-    this.setupEventListeners();
-    this.updateHeaderStatus();
-    this.setupMobileNavigation();
-    this.initializeSearch();
-    this.setupKeyboardShortcuts();
+    init() {
+        console.log('🧶 TankerMade Developer Dashboard starting...');
 
-    // Load initial data
-    await this.loadProgressData();
-    this.loadIncidentData();
+        // Initialize core functionality
+        this.setupEventListeners();
+        this.loadApplicationState();
+        this.updateHeaderStatus();
+        this.setupMobileNavigation();
+        this.initializeSearch();
+        this.setupKeyboardShortcuts();
 
-    console.log('✅ TankerMade Application initialized');
-}
+        // Load initial data
+        this.loadProgressData();
+        this.loadIncidentData();
+
+        console.log('✅ TankerMade Application initialized');
+    }
 
     setupEventListeners() {
         // Global search functionality
@@ -279,30 +270,19 @@ class TankerMadeApp {
         }
     }
 
-    async loadProgressData() {
-    try {
-        if (this.isAuthenticated && window.TankerMadeData) {
-            // Use GitHub API data
-            const phases = await window.TankerMadeData.getAllPhaseProgress();
-
-            let totalTasks = 0;
-            let completedTasks = 0;
-
-            phases.forEach(phase => {
-                completedTasks += phase.completed || 0;
-                totalTasks += phase.total || 0;
-            });
-
-            this.state.totalTasks = totalTasks;
-            this.state.completedTasks = completedTasks;
-            this.state.overallProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-        } else {
-            // Fallback to localStorage for non-authenticated users
+    loadProgressData() {
+        // Load progress data from Dev Tracker localStorage
+        try {
             const phases = [
-                { id: 1, taskCount: 23 }, { id: 2, taskCount: 31 }, { id: 3, taskCount: 18 },
-                { id: 4, taskCount: 15 }, { id: 5, taskCount: 25 }, { id: 6, taskCount: 12 },
-                { id: 7, taskCount: 14 }, { id: 8, taskCount: 19 }, { id: 9, taskCount: 17 },
+                { id: 1, taskCount: 23 },
+                { id: 2, taskCount: 31 },
+                { id: 3, taskCount: 18 },
+                { id: 4, taskCount: 15 },
+                { id: 5, taskCount: 25 },
+                { id: 6, taskCount: 12 },
+                { id: 7, taskCount: 14 },
+                { id: 8, taskCount: 19 },
+                { id: 9, taskCount: 17 },
                 { id: 10, taskCount: 22 }
             ];
 
@@ -324,15 +304,14 @@ class TankerMadeApp {
             this.state.totalTasks = totalTasks;
             this.state.completedTasks = completedTasks;
             this.state.overallProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+            this.updateHeaderStatus();
+            this.saveApplicationState();
+
+        } catch (error) {
+            console.warn('Failed to load progress data:', error);
         }
-
-        this.updateHeaderStatus();
-        this.saveApplicationState();
-
-    } catch (error) {
-        console.warn('Failed to load progress data:', error);
     }
-}
 
     loadIncidentData() {
         // Load incident count (placeholder - will be replaced with actual GitHub API call)

@@ -1,0 +1,3 @@
+# Data directory for TankerMade progress tracking
+# This directory will contain JSON files storing development progress
+# Files are created automatically via GitHub API when tasks are updated

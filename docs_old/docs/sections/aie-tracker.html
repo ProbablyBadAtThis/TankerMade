@@ -1,0 +1,214 @@
+<!-- AIE Tracker Section Content -->
+<div class="aie-tracker-header mb-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold mb-2">AIE Tracker - Incident Monitoring</h1>
+            <p class="text-secondary">Monitor and manage development incidents integrated with GitHub Issues</p>
+        </div>
+        <div class="flex gap-2">
+            <button class="btn btn-primary" onclick="createNewIncident()">
+                ➕ New Incident
+            </button>
+            <button class="btn btn-secondary" onclick="refreshIncidents()">
+                🔄 Refresh
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-5 gap-4 mb-6">
+    <div class="card text-center">
+        <div class="card-body">
+            <div class="text-2xl font-bold text-primary" id="incidents-total">0</div>
+            <div class="text-sm text-secondary">Total</div>
+        </div>
+    </div>
+    <div class="card text-center">
+        <div class="card-body">
+            <div class="text-2xl font-bold text-error" id="incidents-critical">0</div>
+            <div class="text-sm text-secondary">Critical</div>
+        </div>
+    </div>
+    <div class="card text-center">
+        <div class="card-body">
+            <div class="text-2xl font-bold text-warning" id="incidents-high">0</div>
+            <div class="text-sm text-secondary">High</div>
+        </div>
+    </div>
+    <div class="card text-center">
+        <div class="card-body">
+            <div class="text-2xl font-bold text-info" id="incidents-medium">0</div>
+            <div class="text-sm text-secondary">Medium</div>
+        </div>
+    </div>
+    <div class="card text-center">
+        <div class="card-body">
+            <div class="text-2xl font-bold text-secondary" id="incidents-low">0</div>
+            <div class="text-sm text-secondary">Low</div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-6">
+    <div class="card-header">
+        <h3 class="card-title">Filters</h3>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-cols-4 gap-4">
+            <select id="severity-filter" class="form-input">
+                <option value="">All Severities</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+            </select>
+            <select id="status-filter" class="form-input">
+                <option value="">All Statuses</option>
+                <option value="open">Open</option>
+                <option value="in-progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+                <option value="closed">Closed</option>
+            </select>
+            <select id="phase-filter" class="form-input">
+                <option value="">All Phases</option>
+                <option value="1">Phase 1</option>
+                <option value="2">Phase 2</option>
+                <option value="3">Phase 3</option>
+                <option value="4">Phase 4</option>
+                <option value="5">Phase 5</option>
+            </select>
+            <input type="search" id="search-incidents" class="form-input" placeholder="Search incidents...">
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Incidents</h3>
+    </div>
+    <div class="card-body">
+        <div id="incidents-list">
+            <!-- No incidents state -->
+            <div class="text-center py-8" id="no-incidents-state">
+                <div class="text-4xl mb-4">🎉</div>
+                <h3 class="text-lg font-semibold mb-2">No Open Incidents</h3>
+                <p class="text-secondary">Great job! All incidents are resolved.</p>
+                <button class="btn btn-primary mt-4" onclick="createSampleIncident()">
+                    Create Sample Incident
+                </button>
+            </div>
+
+            <!-- Sample incident (hidden by default, shown when sample is created) -->
+            <div class="incident-item border-b py-4 hidden" id="sample-incident" data-incident-id="sample">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="badge badge-warning">high</span>
+                            <span class="badge badge-error">open</span>
+                            <span class="badge badge-secondary">Phase 1</span>
+                        </div>
+                        <h4 class="font-semibold mb-1">
+                            <a href="#incident-details/sample" class="text-primary hover:underline" data-section="incident-details" data-param-incidentId="sample">
+                                #123 - Authentication token expiry causes 401 loops
+                            </a>
+                        </h4>
+                        <p class="text-secondary text-sm mb-2">Users are getting stuck in authentication loops when tokens expire during active sessions.</p>
+                        <div class="flex items-center gap-4 text-xs text-secondary">
+                            <span>Created: <span id="sample-created-date"></span></span>
+                            <span>Assigned to: developer</span>
+                            <a href="https://github.com/ProbablyBadAtThis/TankerMade/issues/123" target="_blank" class="text-primary hover:underline">View on GitHub</a>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn btn-sm btn-secondary" onclick="editIncident('sample')">
+                            Edit
+                        </button>
+                        <button class="btn btn-sm btn-success" onclick="resolveIncident('sample')">
+                            Resolve
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.incident-item {
+    transition: background-color 0.2s ease;
+}
+
+.incident-item:hover {
+    background-color: var(--color-bg-secondary);
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-weight: 600;
+}
+
+.badge-critical,
+.badge-error { 
+    background: var(--color-error); 
+    color: white; 
+}
+
+.badge-warning { 
+    background: var(--color-warning); 
+    color: white; 
+}
+
+.badge-info { 
+    background: var(--color-info); 
+    color: white; 
+}
+
+.badge-success { 
+    background: var(--color-success); 
+    color: white; 
+}
+
+.badge-secondary { 
+    background: var(--color-bg-tertiary); 
+    color: var(--color-text-secondary); 
+}
+
+@media (max-width: 768px) {
+    .grid-cols-5 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .grid-cols-4 {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .aie-tracker-header .flex {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .incident-item .flex {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .incident-item .flex:last-child {
+        flex-direction: row;
+        justify-content: flex-end;
+    }
+}
+</style>
+
+<script>
+// Set current date for sample incident
+document.addEventListener('DOMContentLoaded', function() {
+    const dateEl = document.getElementById('sample-created-date');
+    if (dateEl) {
+        dateEl.textContent = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+});
+</script>

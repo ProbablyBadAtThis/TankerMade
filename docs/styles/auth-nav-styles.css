@@ -1,0 +1,70 @@
+/* 
+ * APPEND THESE STYLES TO YOUR EXISTING docs/styles/app.css FILE
+ * These styles are for the authentication-based navigation
+ */
+
+/* Auth prompt card in sidebar */
+.auth-prompt-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: var(--space-4);
+    text-align: center;
+    margin: var(--space-4);
+}
+
+.auth-prompt-icon {
+    font-size: 2rem;
+    margin-bottom: var(--space-2);
+    opacity: 0.7;
+}
+
+.auth-prompt-card h3 {
+    color: var(--color-text-inverse);
+    font-size: var(--text-base);
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+}
+
+.auth-prompt-card p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    margin-bottom: var(--space-4);
+}
+
+.auth-prompt-card .btn {
+    width: 100%;
+}
+
+/* Protected navigation sections */
+.nav-protected {
+    transition: opacity var(--transition-normal);
+}
+
+/* Bottom navigation protected items */
+.bottom-nav-protected {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.bottom-nav-protected .bottom-nav-item {
+    flex: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 639px) {
+    .auth-prompt-card {
+        margin: var(--space-2);
+        padding: var(--space-3);
+    }
+
+    .auth-prompt-card h3 {
+        font-size: var(--text-sm);
+    }
+
+    .auth-prompt-card p {
+        font-size: var(--text-xs);
+    }
+}
