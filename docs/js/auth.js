@@ -4,7 +4,7 @@
 
 class GitHubAuth {
     constructor() {
-        this.clientId = 'YOUR_GITHUB_CLIENT_ID'; // Replace with your actual client ID
+        this.clientId = 'Ov23li4SwVUvCxmD3L3W'; // Replace with your actual client ID
         this.scopes = 'repo read:user';
         this.redirectUri = window.location.origin + '/auth/callback.html';
         this.apiBase = 'https://api.github.com';
