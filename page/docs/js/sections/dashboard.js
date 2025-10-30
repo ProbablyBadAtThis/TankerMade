@@ -33,7 +33,7 @@ class DashboardSection {
                 </div>
 
                 <!-- First Row - Overall Progress & Current Phase & Incidents -->
-                <div class="dashboard-grid-row">
+                <div class="dashboard-grid-row dashboard-top-row">
                     <div class="card dashboard-card progress-card">
                         <div class="card-header">
                             <h2>Overall Progress</h2>
@@ -129,7 +129,7 @@ class DashboardSection {
                                 </div>
                             </div>
 
-                            <!-- Right Column -->
+                            <!-- Right Column - NO DIVIDER -->
                             <div class="focus-column focus-right">
                                 <div class="focus-section">
                                     <h3 class="focus-section-title">🔧 Dev Environment</h3>

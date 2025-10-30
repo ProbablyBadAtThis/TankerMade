@@ -20,17 +20,24 @@
     margin-top: var(--space-2);
 }
 
-/* Dashboard Grid Layout */
+/* Dashboard Grid Layout - Base Rules */
 .dashboard-grid-row {
     display: grid;
     gap: var(--space-6);
     margin-bottom: var(--space-6);
 }
 
-/* First row - 3 cards (Overall Progress + Current Phase + Incidents) */
-.dashboard-grid-row:first-of-type {
-    grid-template-columns: 1fr 1fr 1fr;
-    align-items:center;
+/* FORCE 3-COLUMN TOP ROW - HIGH SPECIFICITY */
+.dashboard-top-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: var(--space-6) !important;
+    align-items: stretch !important;
+}
+
+/* BACKUP - Double specificity for first row */
+.dashboard-container > .dashboard-grid-row:first-of-type {
+    grid-template-columns: 1fr 1fr 1fr !important;
 }
 
 /* Second row - Current Focus (80%) + Recent Activity (20%) */
@@ -324,8 +331,12 @@
         grid-template-columns: 3fr 1fr;
     }
 
-    .dashboard-grid-row:first-of-type {
-        grid-template-columns: 1fr 1fr;
+    .dashboard-top-row {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    .dashboard-container > .dashboard-grid-row:first-of-type {
+        grid-template-columns: 1fr 1fr !important;
     }
 
     /* Stack third card below on medium screens */
@@ -339,8 +350,9 @@
         padding: var(--space-4);
     }
 
-    .dashboard-grid-row:first-of-type {
-        grid-template-columns: 1fr;
+    .dashboard-top-row,
+    .dashboard-container > .dashboard-grid-row:first-of-type {
+        grid-template-columns: 1fr !important;
     }
 
     .dashboard-focus-row {
