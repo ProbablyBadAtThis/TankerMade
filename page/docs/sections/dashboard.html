@@ -1,61 +1,6 @@
-<!-- Dashboard Section Content -->
-<div class="dashboard-header mb-6">
-    <h1 class="text-2xl font-bold mb-2">Developer Dashboard</h1>
-    <p class="text-secondary">Your TankerMade development progress at a glance</p>
-</div>
-
-<div class="grid grid-cols-3 gap-6 mb-6">
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Overall Progress</h3>
-        </div>
-        <div class="card-body">
-            <div class="progress-bar mb-4">
-                <div class="progress-bar-fill" id="dashboard-progress" style="width: 35%"></div>
-            </div>
-            <div class="progress-bar-text">
-                <span id="dashboard-tasks">12 / 23 tasks</span>
-                <span id="dashboard-percentage">35%</span>
-            </div>
-            <p class="text-sm text-secondary mt-2">Week <span id="dashboard-week">2</span> of 21</p>
-        </div>
+<div id="dashboard-root" class="dashboard-loading">
+    <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Loading Developer Dashboard...</p>
     </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Current Phase</h3>
-        </div>
-        <div class="card-body">
-            <h4 class="font-semibold">Phase 1: Foundation</h4>
-            <p class="text-secondary">Basic infrastructure and authentication</p>
-            <div class="mt-4">
-                <a href="#dev-tracker" class="btn btn-primary" data-section="dev-tracker">
-                    View Details
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Incidents</h3>
-            <span class="badge badge-success" id="dashboard-incident-badge">
-                0 open
-            </span>
-        </div>
-        <div class="card-body">
-            <p class="text-secondary" id="dashboard-incident-text">
-                No open incidents
-            </p>
-            <div class="mt-4">
-                <a href="#incidents" class="btn btn-secondary" data-section="incidents">
-                    View Tracker
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="dashboard-grid-row dashboard-focus-row" id="dashboard-second-row">
-    <!-- JavaScript will populate with Current Focus (80%) + Recent Activity (20%) -->
 </div>
