@@ -30,6 +30,7 @@
 /* First row - 3 cards (Overall Progress + Current Phase + Incidents) */
 .dashboard-grid-row:first-of-type {
     grid-template-columns: 1fr 1fr 1fr;
+    align-items:center;
 }
 
 /* Second row - Current Focus (80%) + Recent Activity (20%) */
