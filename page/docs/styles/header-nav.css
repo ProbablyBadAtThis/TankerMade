@@ -1,0 +1,42 @@
+/* Sticky header */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000; /* above content */
+  background: var(--color-surface, #0c1220);
+}
+
+/* Layout container uses CSS grid */
+.app-container {
+  display: grid;
+  grid-template-columns: 260px 1fr; /* sidebar + content */
+  gap: 0;
+  min-height: calc(100vh - 64px); /* adjust if header height differs */
+}
+
+/* Sticky sidebar */
+.sidebar {
+  position: sticky;
+  top: var(--header-height, 64px);
+  align-self: start;
+  height: calc(100vh - var(--header-height, 64px));
+  overflow: auto;            /* sidebar scrolls independently if long */
+  padding-bottom: var(--space-6);
+  z-index: 999;
+  background: var(--color-surface, #0c1220);
+  border-right: 1px solid var(--color-border, rgba(255,255,255,0.08));
+}
+
+/* Main content scrolls; prevents whole-page scroll jumps */
+.main-content {
+  height: calc(100vh - var(--header-height, 64px));
+  overflow: auto;
+  padding: var(--space-6);
+}
+
+/* Optional: make bottom mobile nav stay above content */
+.bottom-nav {
+  position: sticky;
+  bottom: 0;
+  z-index: 1000;
+}
