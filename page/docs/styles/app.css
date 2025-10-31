@@ -791,10 +791,12 @@ input[type="checkbox"]:disabled {
     }
 }
 
-/* NUCLEAR STATUS OVERVIEW FIX - Forces proper horizontal alignment */
+/* TARGETED STATUS OVERVIEW FIX - Only affects header, not dashboard */
 
-/* Force flexbox behavior and prevent wrapping */
-.status-overview {
+/* Only target the header status-overview, not dashboard cards */
+.app-header .status-overview,
+.header-content .status-overview,
+header .status-overview {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
@@ -808,8 +810,35 @@ input[type="checkbox"]:disabled {
     position: relative !important;
 }
 
-/* Phase text - force left positioning */
-.status-overview .current-phase {
+/* Header progress text - only target within header */
+.app-header .status-overview .progress-text,
+.header-content .status-overview .progress-text,
+header .status-overview .progress-text {
+    display: block !important;
+    position: static !important;
+    float: none !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    white-space: nowrap !important;
+    flex: 0 0 auto !important;
+    text-align: right !important;
+    margin-right: 5px !important;
+    padding: 0 !important;
+    line-height: 1.4 !important;
+    vertical-align: baseline !important;
+    transform: none !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    min-width: 80px !important;
+}
+
+/* Header current phase - only target within header */
+.app-header .status-overview .current-phase,
+.header-content .status-overview .current-phase,
+header .status-overview .current-phase {
     display: block !important;
     position: static !important;
     float: none !important;
@@ -832,8 +861,10 @@ input[type="checkbox"]:disabled {
     bottom: auto !important;
 }
 
-/* Progress bar - force center positioning */
-.status-overview .progress-mini {
+/* Header progress bar - only target within header */
+.app-header .status-overview .progress-mini,
+.header-content .status-overview .progress-mini,
+header .status-overview .progress-mini {
     display: block !important;
     position: static !important;
     float: none !important;
@@ -852,96 +883,59 @@ input[type="checkbox"]:disabled {
     bottom: auto !important;
 }
 
-.status-overview .progress-mini .progress-fill {
-    height: 100% !important;
-    background: #22c55e !important;
-    border-radius: 2px !important;
-    transition: width 0.3s ease !important;
-    width: 0% !important;
-    display: block !important;
+/* RESTORE NORMAL BEHAVIOR FOR DASHBOARD CARDS */
+/* Allow dashboard progress-text to have normal behavior */
+.dashboard-card .progress-text,
+.card .progress-text,
+.phase-mini-card .progress-text {
     position: static !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* Progress text - force right positioning */
-.status-overview .progress-text {
-    display: block !important;
-    position: static !important;
-    float: none !important;
-    font-size: 14px !important;
-    font-weight: 500 !important;
-    color: rgba(255, 255, 255, 0.9) !important;
-    white-space: nowrap !important;
-    flex: 0 0 auto !important;
-    text-align: right !important;
-    margin-right: 5px !important;
-    padding: 0 !important;
-    line-height: 1.4 !important;
-    vertical-align: baseline !important;
     transform: none !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    min-width: 80px !important;
+    transition: all 0.2s ease !important;
+    /* Remove the !important declarations that were breaking hover effects */
 }
 
-/* Kill any absolute/relative positioning on child elements */
-.status-overview * {
-    position: static !important;
-    float: none !important;
-    clear: none !important;
-    transform: none !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
+/* Ensure dashboard cards can still have hover effects */
+.dashboard-card:hover .progress-text,
+.card:hover .progress-text,
+.phase-mini-card:hover .progress-text {
+    /* Allow normal hover behavior */
+    position: static;
+    transform: none;
 }
 
-/* Alternative selectors for different parent containers */
-.app-header .status-overview,
-.header-content .status-overview,
-header .status-overview {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    flex-wrap: nowrap !important;
+/* If dashboard cards need specific hover transforms, add them here */
+.dashboard-card:hover {
+    transform: translateY(-2px);
 }
 
-/* Debug - add temporary background to see what's happening */
-/*
-.status-overview {
-    background: rgba(255, 0, 0, 0.2) !important;
-    border: 1px solid red !important;
+.phase-mini-card:hover {
+    transform: scale(1.02);
 }
-.status-overview .current-phase {
-    background: rgba(0, 255, 0, 0.2) !important;
-}
-.status-overview .progress-mini {
-    background: rgba(0, 0, 255, 0.2) !important;
-}
-.status-overview .progress-text {
-    background: rgba(255, 255, 0, 0.2) !important;
-}
-*/
 
-/* Responsive - only on very small screens */
+/* Responsive - only for header */
 @media (max-width: 480px) {
-    .status-overview {
+    .app-header .status-overview,
+    .header-content .status-overview,
+    header .status-overview {
         flex-direction: column !important;
         gap: 4px !important;
         min-width: 0 !important;
         max-width: none !important;
     }
 
-    .status-overview .current-phase,
-    .status-overview .progress-text {
+    .app-header .status-overview .current-phase,
+    .app-header .status-overview .progress-text,
+    .header-content .status-overview .current-phase,
+    .header-content .status-overview .progress-text,
+    header .status-overview .current-phase,
+    header .status-overview .progress-text {
         text-align: center !important;
         font-size: 12px !important;
     }
 
-    .status-overview .progress-mini {
+    .app-header .status-overview .progress-mini,
+    .header-content .status-overview .progress-mini,
+    header .status-overview .progress-mini {
         width: 100% !important;
         margin: 2px 0 !important;
     }
