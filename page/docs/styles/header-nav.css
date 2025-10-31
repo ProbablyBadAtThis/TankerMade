@@ -9,9 +9,10 @@
 /* Layout container uses CSS grid */
 .app-container {
   display: grid;
-  grid-template-columns: 260px 1fr; /* sidebar + content */
+  grid-template-columns: auto 1fr; /* sidebar + content */
   gap: 0;
   min-height: calc(100vh - 64px); /* adjust if header height differs */
+  background: lime;
 }
 
 /* Sticky sidebar */
