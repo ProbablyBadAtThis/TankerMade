@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
 using TankerMade.Server.Data;
 using TankerMade.Server.Services;
 
@@ -12,7 +13,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<TankerMadeDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlite(connectionString));
 
 // Add JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -42,7 +43,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorClient", policy =>
     {
-        policy.WithOrigins("https://localhost:7001", "http://localhost:5001") // Blazor WASM default ports
+        policy.WithOrigins("https://localhost:7001", "http://localhost:5001")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -53,34 +54,37 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 
-// Add controllers and API documentation
+// Add controllers and OpenAPI
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
-// Add Swagger UI (requires Swashbuckle.AspNetCore package)
-builder.Services.AddSwaggerGen();
-
 var app = builder.Build();
+
+// Ensure App_Data directory exists and apply migrations
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<TankerMadeDbContext>();
+    var dataDir = Path.Combine(Directory.GetCurrentDirectory(), "App_Data");
+    Directory.CreateDirectory(dataDir);
+    db.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
+    app.MapScalarApiReference(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "TankerMade API v1");
+        options.Title = "TankerMade API";
+        options.Theme = ScalarTheme.Mars;
     });
 }
 
-app.UseHttpsRedirection();
-
+// HTTPS redirect disabled for local dev — run with --launch-profile https to enable
+// app.UseHttpsRedirection();
 app.UseCors("AllowBlazorClient");
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
