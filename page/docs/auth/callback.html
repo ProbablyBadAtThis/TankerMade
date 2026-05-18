@@ -62,12 +62,24 @@
 
       } catch (err) {
         console.error('OAuth callback error:', err);
-        card.innerHTML = [
-          '<div style="font-size:2rem;margin-bottom:1rem;">&#10060;</div>',
-          '<h2>Sign-in failed</h2>',
-          '<p>' + (err.message || 'An unexpected error occurred.') + '</p>',
-          '<p style="margin-top:1rem;font-size:0.8rem;">Redirecting back&hellip;</p>'
-        ].join('');
+        card.replaceChildren();
+
+        var icon = document.createElement('div');
+        icon.style.cssText = 'font-size:2rem;margin-bottom:1rem;';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = '\u274C';
+
+        var title = document.createElement('h2');
+        title.textContent = 'Sign-in failed';
+
+        var message = document.createElement('p');
+        message.textContent = err.message || 'An unexpected error occurred.';
+
+        var redirect = document.createElement('p');
+        redirect.style.cssText = 'margin-top:1rem;font-size:0.8rem;';
+        redirect.textContent = 'Redirecting back...';
+
+        card.append(icon, title, message, redirect);
         setTimeout(function () { window.location.href = '/'; }, 3500);
       }
     }
