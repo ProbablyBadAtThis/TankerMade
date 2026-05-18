@@ -16,6 +16,16 @@
 # Development overrides
 **/dev-overrides.js
 docs_old/
+Scratch/
+
+# macOS
+.DS_Store
+
+# SQLite database files
+App_Data/
+*.db
+*.db-shm
+*.db-wal
 
 # Mono auto generated files
 mono_crash.*
