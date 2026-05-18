@@ -1,220 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TankerMade Developer Dashboard</title>
-    <link rel="stylesheet" href="styles/dev-tracker.css">
-    <link rel="stylesheet" href="styles/app.css">
-    <link rel="stylesheet" href="styles/components.css">
-    <link rel="stylesheet" href="styles/responsive.css">
-    <link rel="stylesheet" href="styles/dashboard-layout.css">
-    <link rel="stylesheet" href="styles/dashboard-pure-js.css">
-    <link rel="stylesheet" href="styles/header-nav.css">
-    <link rel="stylesheet" href="styles/task-completion.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TankerMade Dev</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Skip link for accessibility -->
-    <a href="#main-content" class="skip-link">Skip to main content</a>
 
-    <!-- Application Header -->
-    <header class="app-header" role="banner">
-        <div class="header-left">
-            <h1 class="logo">🧶 TankerMade Dev</h1>
-            <nav class="breadcrumb" aria-label="Breadcrumb">
-                <ol id="breadcrumb-list">
-                    <li><a href="#dashboard">Dashboard</a></li>
-                </ol>
-            </nav>
-        </div>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
 
-        <div class="header-center">
-            <div class="status-overview">
-                <span class="current-phase" id="current-phase">Phase 1: Foundation</span>
-                <div class="progress-mini">
-                    <div class="progress-fill" id="header-progress" style="width: 0%"></div>
-                </div>
-                <span class="progress-text" id="progress-text">0% Complete</span>
-            </div>
-        </div>
+  <!-- ── Application Header ──────────────────────────────────── -->
+  <header class="app-header" role="banner">
 
-        <div class="header-right">
-            <!-- GitHub Authentication Button (replaces old buttons) -->
-            <div class="auth-section" id="auth-section">
-                <!-- Shown when not authenticated -->
-                <button class="github-login-btn" id="github-login-btn" style="display: none;">
-                    <svg class="github-icon" viewBox="0 0 24 24" width="20" height="20">
-                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                    </svg>
-                    Sign in with GitHub
-                </button>
+    <div class="header-left">
+      <a href="#dashboard" class="logo" aria-label="TankerMade Dev home">
+        <span class="logo-mark" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="4" width="5" height="9" rx="1" fill="white" fill-opacity="0.9"/>
+            <rect x="8" y="1" width="5" height="5" rx="1" fill="white"/>
+            <rect x="8" y="8" width="5" height="5" rx="1" fill="white" fill-opacity="0.6"/>
+          </svg>
+        </span>
+        TankerMade Dev
+      </a>
 
-                <!-- Shown when authenticated -->
-                <div class="user-info" id="user-info" style="display: none;">
-                    <img class="user-avatar" id="user-avatar" alt="User avatar">
-                    <div class="user-details">
-                        <span class="user-name" id="user-name"></span>
-                        <button class="logout-btn" id="logout-btn" title="Sign out">
-                            <svg viewBox="0 0 24 24" width="16" height="16">
-                                <path d="M16 17v-3H9v-4h7V7l5 5-5 5M14 2a2 2 0 0 1 2 2v2h-2V4H4v16h10v-2h2v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10z"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Mobile menu toggle -->
-            <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle navigation menu">
-                <span class="hamburger-icon">☰</span>
-            </button>
-        </div>
-    </header>
-
-    <!-- Main Application Container -->
-    <div class="app-container">
-        <!-- Sidebar Navigation -->
-        <nav class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
-            <!-- Always visible section -->
-            <div class="nav-section">
-                <a href="#dashboard" class="nav-item active" data-section="dashboard">
-                    <span class="nav-icon">🏠</span>
-                    <span class="nav-text">Dashboard</span>
-                </a>
-            </div>
-
-            <!-- Protected sections - hidden when not authenticated -->
-            <div class="nav-section nav-protected" id="nav-protected" style="display: none;">
-                <a href="#dev-tracker" class="nav-item" data-section="dev-tracker">
-                    <span class="nav-icon">📊</span>
-                    <span class="nav-text">Dev Tracker</span>
-                </a>
-                <a href="#workbench" class="nav-item" data-section="workbench">
-                    <span class="nav-icon">📚</span>
-                    <span class="nav-text">Workbench</span>
-                </a>
-                <a href="#architecture" class="nav-item" data-section="architecture">
-                    <span class="nav-icon">🏗️</span>
-                    <span class="nav-text">Architecture</span>
-                </a>
-                <a href="#incidents" class="nav-item" data-section="incidents">
-                    <span class="nav-icon">🚨</span>
-                    <span class="nav-text">Incidents</span>
-                    <span class="nav-badge" id="sidebar-incident-count">0</span>
-                </a>
-            </div>
-
-            <!-- Protected Tools section - hidden when not authenticated -->
-            <div class="nav-section nav-tools nav-protected" id="nav-tools-protected" style="display: none;">
-                <div class="nav-section-title">Tools</div>
-                <button class="nav-item" id="global-search">
-                    <span class="nav-icon">🔍</span>
-                    <span class="nav-text">Search</span>
-                </button>
-                <button class="nav-item" id="app-settings">
-                    <span class="nav-icon">⚙️</span>
-                    <span class="nav-text">Settings</span>
-                </button>
-            </div>
-
-            <!-- Authentication prompt for non-authenticated users -->
-            <div class="nav-section nav-auth-prompt" id="nav-auth-prompt" style="display: block;">
-                <div class="auth-prompt-card">
-                    <div class="auth-prompt-icon">🔐</div>
-                    <h3>Sign in Required</h3>
-                    <p class="text-sm text-secondary">
-                        Sign in with GitHub to access development tools and track your progress.
-                    </p>
-                    <button class="btn btn-primary btn-sm" onclick="window.TankerMadeAuth.login()">
-                        Sign in with GitHub
-                    </button>
-                </div>
-            </div>
-        </nav>
-
-        <!-- Main Content Area -->
-        <main class="main-content" id="main-content" role="main">
-            <div class="loading-indicator" id="loading-indicator" style="display: none;">
-                <div class="spinner"></div>
-                <span>Loading...</span>
-            </div>
-
-            <div class="error-state" id="error-state" style="display: none;">
-                <div class="error-icon">❌</div>
-                <h2>Failed to load content</h2>
-                <p>Please try again or check your connection.</p>
-                <button class="retry-btn" id="retry-btn">Retry</button>
-            </div>
-
-            <!-- Content will be dynamically loaded here -->
-            <div id="content-container">
-                <!-- Dashboard content loaded by default -->
-            </div>
-        </main>
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <ol id="breadcrumb-list">
+          <li><span aria-current="page">Dashboard</span></li>
+        </ol>
+      </nav>
     </div>
 
-    <!-- Bottom Navigation for Mobile -->
-    <nav class="bottom-nav" id="bottom-nav" role="navigation" aria-label="Mobile navigation">
-        <a href="#dashboard" class="bottom-nav-item active" data-section="dashboard">
-            <span class="bottom-nav-icon">🏠</span>
-            <span class="bottom-nav-text">Dashboard</span>
-        </a>
-        <!-- Protected mobile nav items - hidden when not authenticated -->
-        <div class="bottom-nav-protected" id="bottom-nav-protected" style="display: none;">
-            <a href="#dev-tracker" class="bottom-nav-item" data-section="dev-tracker">
-                <span class="bottom-nav-icon">📊</span>
-                <span class="bottom-nav-text">Tracker</span>
-            </a>
-            <a href="#workbench" class="bottom-nav-item" data-section="workbench">
-                <span class="bottom-nav-icon">📚</span>
-                <span class="bottom-nav-text">Docs</span>
-            </a>
-            <a href="#architecture" class="bottom-nav-item" data-section="architecture">
-                <span class="bottom-nav-icon">🏗️</span>
-                <span class="bottom-nav-text">Arch</span>
-            </a>
-            <a href="#incidents" class="bottom-nav-item" data-section="incidents">
-                <span class="bottom-nav-icon">🚨</span>
-                <span class="bottom-nav-text">Issues</span>
-                <span class="bottom-nav-badge" id="bottom-incident-count">0</span>
-            </a>
+    <div class="header-center">
+      <div class="status-overview">
+        <span class="current-phase" id="current-phase">Phase 1: Foundation</span>
+        <div class="progress-mini">
+          <div class="progress-fill" id="header-progress" style="width:0%"></div>
         </div>
+        <span class="progress-text" id="progress-text">0%</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="auth-section" id="auth-section">
+        <!-- Login button (shown when logged out) -->
+        <button class="github-login-btn" id="github-login-btn" style="display:none" aria-label="Sign in with GitHub">
+          <svg class="github-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+          </svg>
+          Sign in with GitHub
+        </button>
+
+        <!-- User pill (shown when logged in) -->
+        <div class="user-info" id="user-info" style="display:none">
+          <img class="user-avatar" id="user-avatar" alt="" width="26" height="26">
+          <div class="user-details">
+            <span class="user-name" id="user-name"></span>
+            <button class="logout-btn" id="logout-btn" aria-label="Sign out">
+              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                <path d="M16 17v-3H9v-4h7V7l5 5-5 5M14 2a2 2 0 0 1 2 2v2h-2V4H4v16h10v-2h2v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button class="mobile-menu-toggle" id="mobile-menu-toggle"
+        aria-label="Toggle navigation" aria-expanded="false" aria-controls="sidebar">
+        <span class="hamburger-icon" aria-hidden="true">&#9776;</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── App Shell ──────────────────────────────────────────── -->
+  <div class="app-container">
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+
+      <!-- Public -->
+      <div class="nav-section">
+        <a href="#dashboard" class="nav-item active" data-section="dashboard" aria-current="page">
+          <span class="nav-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+          </span>
+          Dashboard
+        </a>
+      </div>
+
+      <!-- Protected nav (shown when authenticated) -->
+      <div class="nav-section nav-protected" id="nav-protected" style="display:none">
+        <a href="#dev-tracker" class="nav-item" data-section="dev-tracker">
+          <span class="nav-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+          </span>
+          Dev Tracker
+        </a>
+        <a href="#workbench" class="nav-item" data-section="workbench">
+          <span class="nav-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+          </span>
+          Workbench
+        </a>
+        <a href="#architecture" class="nav-item" data-section="architecture">
+          <span class="nav-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+              <line x1="12" y1="22" x2="12" y2="15.5"/>
+              <polyline points="22 8.5 12 15.5 2 8.5"/>
+            </svg>
+          </span>
+          Architecture
+        </a>
+        <a href="#incidents" class="nav-item" data-section="incidents">
+          <span class="nav-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </span>
+          Incidents
+          <span class="nav-badge" id="sidebar-incident-count" style="display:none">0</span>
+        </a>
+      </div>
+
+      <!-- Tools section (authenticated) -->
+      <div class="nav-section nav-protected" id="nav-tools-protected" style="display:none">
+        <div class="nav-section-title">Tools</div>
+        <button class="nav-item" id="global-search" aria-label="Open search">
+          <span class="nav-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </span>
+          Search
+        </button>
+        <button class="nav-item" id="app-settings" aria-label="Settings">
+          <span class="nav-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </span>
+          Settings
+        </button>
+      </div>
+
+      <!-- Auth prompt (shown when logged out) -->
+      <div class="nav-section" id="nav-auth-prompt">
+        <div class="auth-prompt-card">
+          <div class="auth-prompt-icon" aria-hidden="true">&#128274;</div>
+          <h3>Sign in required</h3>
+          <p>Sign in with GitHub to access development tools and track progress.</p>
+          <button class="btn btn-primary btn-sm" onclick="window.TankerMadeAuth && window.TankerMadeAuth.login()">
+            Sign in with GitHub
+          </button>
+        </div>
+      </div>
     </nav>
 
-    <!-- Search Modal -->
-    <div class="modal" id="search-modal" role="dialog" aria-labelledby="search-title" aria-hidden="true">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="search-title">Search Documentation</h2>
-                <button class="modal-close" aria-label="Close search">&times;</button>
-            </div>
-            <div class="modal-body">
-                <input type="search" id="search-input" placeholder="Search across all sections..." aria-label="Search documentation">
-                <div id="search-results"></div>
-            </div>
-        </div>
+    <!-- Main content -->
+    <main class="main-content" id="main-content" role="main" tabindex="-1">
+      <div class="loading-indicator" id="loading-indicator" style="display:none" aria-live="polite" aria-label="Loading">
+        <div class="spinner" role="status"></div>
+        <span>Loading&hellip;</span>
+      </div>
+      <div class="error-state" id="error-state" style="display:none">
+        <div class="error-icon" aria-hidden="true">&#10060;</div>
+        <p class="text-secondary">Failed to load content. Please try again.</p>
+        <button class="retry-btn" id="retry-btn">Retry</button>
+      </div>
+      <div id="content-container"></div>
+    </main>
+  </div>
+
+  <!-- Mobile bottom nav -->
+  <nav class="bottom-nav" id="bottom-nav" role="navigation" aria-label="Mobile navigation">
+    <a href="#dashboard" class="bottom-nav-item active" data-section="dashboard">
+      <span class="bottom-nav-icon" aria-hidden="true">&#8962;</span>
+      <span class="bottom-nav-text">Home</span>
+    </a>
+    <div class="bottom-nav-protected" id="bottom-nav-protected" style="display:none">
+      <a href="#dev-tracker" class="bottom-nav-item" data-section="dev-tracker">
+        <span class="bottom-nav-icon" aria-hidden="true">&#9636;</span>
+        <span class="bottom-nav-text">Tracker</span>
+      </a>
+      <a href="#workbench" class="bottom-nav-item" data-section="workbench">
+        <span class="bottom-nav-icon" aria-hidden="true">&#128218;</span>
+        <span class="bottom-nav-text">Docs</span>
+      </a>
+      <a href="#architecture" class="bottom-nav-item" data-section="architecture">
+        <span class="bottom-nav-icon" aria-hidden="true">&#9698;</span>
+        <span class="bottom-nav-text">Arch</span>
+      </a>
+      <a href="#incidents" class="bottom-nav-item" data-section="incidents">
+        <span class="bottom-nav-icon" aria-hidden="true">&#9888;</span>
+        <span class="bottom-nav-text">Issues</span>
+        <span class="bottom-nav-badge" id="bottom-incident-count" style="display:none">0</span>
+      </a>
     </div>
+  </nav>
 
-    <!-- Footer -->
-    <footer class="app-footer" role="contentinfo">
-        <div class="footer-content">
-            <span>Last updated: <span id="last-updated">October 30, 2025</span></span>
-            <span>Week <span id="current-week">2</span> of 21</span>
-            <span>Next: <span id="next-task">Complete auth service</span></span>
-        </div>
-    </footer>
+  <!-- Search modal -->
+  <div class="modal" id="search-modal" role="dialog" aria-labelledby="search-title" aria-hidden="true" aria-modal="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="search-title">Search</h2>
+        <button class="modal-close" aria-label="Close search">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="search" id="search-input" placeholder="Search across all sections&hellip;"
+          aria-label="Search documentation" autocomplete="off">
+        <div id="search-results" role="list"></div>
+      </div>
+    </div>
+  </div>
 
-    <!-- Scripts -->
-    <script src="js/dev-overrides.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/progress-manager.js"></script>
-    <script src="js/checkbox-helper.js"></script>
-    <script src="js/github-api.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/router.js"></script>
-    <script src="js/sections/dashboard.js"></script>
-    <script src="js/sections/dev-tracker.js"></script>
-    <script src="js/sections/workbench.js"></script>
-    <script src="js/sections/architecture.js"></script>
-    <script src="js/sections/aie-tracker.js"></script>
+  <!-- Sidebar overlay -->
+  <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+
+  <!-- Footer -->
+  <footer class="app-footer" role="contentinfo">
+    <div class="footer-content">
+      <span>TankerMade Dev</span>
+      <span id="footer-week"></span>
+      <span id="footer-phase">Phase 1: Foundation</span>
+    </div>
+  </footer>
+
+  <!-- Scripts: auth first, then app layer -->
+  <script src="js/auth.js"></script>
+  <script src="js/progress-manager.js"></script>
+  <script src="js/checkbox-helper.js"></script>
+  <script src="js/github-api.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/router.js"></script>
+  <script src="js/sections/dashboard.js"></script>
+  <script src="js/sections/dev-tracker.js"></script>
+  <script src="js/sections/workbench.js"></script>
+  <script src="js/sections/architecture.js"></script>
+  <script src="js/sections/aie-tracker.js"></script>
+
+  <script>
+    // Dynamic footer week — never stale
+    (function () {
+      var start = new Date('2025-10-13'); // Monday of week 1
+      var now   = new Date();
+      var week  = Math.max(1, Math.min(21, Math.ceil((now - start) / (7 * 24 * 60 * 60 * 1000))));
+      var el    = document.getElementById('footer-week');
+      if (el) el.textContent = 'Week ' + week + ' of 21';
+    }());
+  </script>
+
 </body>
 </html>

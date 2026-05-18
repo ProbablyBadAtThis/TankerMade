@@ -1,101 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Authentication - TankerMade</title>
-    <link rel="stylesheet" href="../styles/app.css">
-    <link rel="stylesheet" href="../styles/components.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signing in &mdash; TankerMade Dev</title>
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    body {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; background: var(--surface-page);
+    }
+    .callback-card {
+      background: var(--surface-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+      padding: 2.5rem 2rem; text-align: center; max-width: 360px; width: 90%;
+    }
+    .callback-card h2 {
+      font-size: 1.1rem; font-weight: 600;
+      margin: 1rem 0 0.5rem; color: var(--text-primary);
+    }
+    .callback-card p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; }
+    .callback-card .spinner { margin: 0 auto; }
+  </style>
 </head>
 <body>
-    <div class="auth-callback-container">
-        <div class="card text-center">
-            <div class="card-body">
-                <div class="spinner mb-4"></div>
-                <h2>Completing GitHub Authentication</h2>
-                <p class="text-secondary">Please wait while we sign you in...</p>
-            </div>
-        </div>
-    </div>
+  <div class="callback-card">
+    <div class="spinner" role="status" aria-label="Authenticating"></div>
+    <h2>Completing sign-in</h2>
+    <p>Exchanging credentials with GitHub&hellip;</p>
+  </div>
 
-    <script>
-        // Handle OAuth callback
-        async function handleCallback() {
-            try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const code = urlParams.get('code');
-                const state = urlParams.get('state');
-                const error = urlParams.get('error');
+  <script>
+    async function handleCallback() {
+      var card = document.querySelector('.callback-card');
 
-                if (error) {
-                    throw new Error(`GitHub OAuth error: ${error}`);
-                }
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var code   = params.get('code');
+        var state  = params.get('state');
+        var error  = params.get('error');
 
-                if (!code) {
-                    throw new Error('No authorization code received');
-                }
+        if (error) throw new Error('GitHub declined: ' + error);
+        if (!code)  throw new Error('No authorisation code received');
 
-                // Validate state
-                const savedState = localStorage.getItem('oauth-state');
-                if (state !== savedState) {
-                    throw new Error('Invalid OAuth state parameter');
-                }
+        var saved = localStorage.getItem('oauth-state');
+        if (state !== saved) throw new Error('State mismatch \u2014 possible CSRF attempt');
 
-                // Exchange code for token
-                const response = await fetch('/api/oauth/token', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code })
-                });
+        var res = await fetch('/api/oauth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: code })
+        });
 
-                if (!response.ok) {
-                    throw new Error('Failed to exchange code for token');
-                }
+        if (!res.ok) throw new Error('Token exchange failed (' + res.status + ')');
 
-                const { access_token } = await response.json();
+        var data = await res.json();
+        localStorage.setItem('github-token', data.access_token);
+        localStorage.removeItem('oauth-state');
 
-                // Store token
-                localStorage.setItem('github-token', access_token);
-                localStorage.removeItem('oauth-state');
+        window.location.href = '/';
 
-                // Redirect back to main app
-                window.location.href = '/';
+      } catch (err) {
+        console.error('OAuth callback error:', err);
+        card.innerHTML = [
+          '<div style="font-size:2rem;margin-bottom:1rem;">&#10060;</div>',
+          '<h2>Sign-in failed</h2>',
+          '<p>' + (err.message || 'An unexpected error occurred.') + '</p>',
+          '<p style="margin-top:1rem;font-size:0.8rem;">Redirecting back&hellip;</p>'
+        ].join('');
+        setTimeout(function () { window.location.href = '/'; }, 3500);
+      }
+    }
 
-            } catch (error) {
-                console.error('OAuth callback error:', error);
-
-                // Show error and redirect after delay
-                document.querySelector('.card-body').innerHTML = `
-                    <div class="error-icon">❌</div>
-                    <h2>Authentication Failed</h2>
-                    <p class="text-secondary">${error.message}</p>
-                    <p class="text-sm text-secondary mt-4">Redirecting back to dashboard...</p>
-                `;
-
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 3000);
-            }
-        }
-
-        // Run callback handler when page loads
-        handleCallback();
-    </script>
-
-    <style>
-        .auth-callback-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background: var(--color-bg-secondary);
-            padding: var(--space-6);
-        }
-
-        .card {
-            max-width: 400px;
-            width: 100%;
-        }
-    </style>
+    handleCallback();
+  </script>
 </body>
 </html>
