@@ -1,6 +1,6 @@
 # TankerMade — Project Charter
 Source: project-artifact.md (original project brief, preserved content)
-Last reviewed: 2025-05-17 — architecture section updated; vision/goals/principles retained verbatim.
+Last reviewed: 2026-05-20 — architecture section updated; vision/goals/principles retained verbatim.
 
 ---
 

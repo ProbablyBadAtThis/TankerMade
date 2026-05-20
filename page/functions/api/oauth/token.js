@@ -2,11 +2,21 @@ export async function onRequestPost(context) {
     const { request, env } = context;
 
     try {
-        const { code } = await request.json();
+        const { code, redirect_uri } = await request.json();
 
         if (!code) {
             return new Response(JSON.stringify({ error: 'Missing authorization code' }), {
                 status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        if (!env.GITHUB_CLIENT_ID || !env.GITHUB_CLIENT_SECRET) {
+            return new Response(JSON.stringify({
+                error: 'OAuth is not configured',
+                details: 'Missing GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET Cloudflare environment variable'
+            }), {
+                status: 500,
                 headers: { 'Content-Type': 'application/json' }
             });
         }
@@ -24,7 +34,8 @@ export async function onRequestPost(context) {
             body: JSON.stringify({
                 client_id: env.GITHUB_CLIENT_ID,
                 client_secret: env.GITHUB_CLIENT_SECRET,
-                code: code
+                code: code,
+                redirect_uri
             })
         });
 

@@ -21,11 +21,24 @@ export default {
         // Handle OAuth token exchange
         if (request.method === 'POST' && request.url.includes('/api/oauth/token')) {
             try {
-                const { code } = await request.json();
+                const { code, redirect_uri } = await request.json();
 
                 if (!code) {
                     return new Response(JSON.stringify({ error: 'Missing authorization code' }), {
                         status: 400,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || '*'
+                        }
+                    });
+                }
+
+                if (!env.GITHUB_CLIENT_ID || !env.GITHUB_CLIENT_SECRET) {
+                    return new Response(JSON.stringify({
+                        error: 'OAuth is not configured',
+                        details: 'Missing GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET'
+                    }), {
+                        status: 500,
                         headers: {
                             'Content-Type': 'application/json',
                             'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || '*'
@@ -44,7 +57,8 @@ export default {
                     body: JSON.stringify({
                         client_id: env.GITHUB_CLIENT_ID,
                         client_secret: env.GITHUB_CLIENT_SECRET,
-                        code: code
+                        code: code,
+                        redirect_uri
                     })
                 });
 

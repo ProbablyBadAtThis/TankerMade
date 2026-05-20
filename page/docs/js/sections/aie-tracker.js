@@ -25,12 +25,8 @@ function loadAIETrackerOverview() {
                     <p>Monitor and manage development incidents integrated with GitHub Issues</p>
                 </div>
                 <div class="flex gap-2">
-                    <button class="btn btn-primary" onclick="createNewIncident()">
-                        ➕ New Incident
-                    </button>
-                    <button class="btn btn-secondary" onclick="refreshIncidents()">
-                        🔄 Refresh
-                    </button>
+                    <button class="btn btn-primary" onclick="createNewIncident()">New Incident</button>
+                    <button class="btn btn-secondary" onclick="refreshIncidents()">Refresh</button>
                 </div>
             </div>
         </div>
@@ -122,7 +118,6 @@ function generateIncidentsList(incidents) {
     if (incidents.length === 0) {
         return `
             <div class="text-center py-8">
-                <div class="text-4xl mb-4">🎉</div>
                 <h3 class="text-lg font-semibold mb-2">No Open Incidents</h3>
                 <p class="text-secondary">Great job! All incidents are resolved.</p>
                 <button class="btn btn-primary mt-4" onclick="createSampleIncident()">

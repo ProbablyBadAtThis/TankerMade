@@ -44,7 +44,8 @@ class TankerMadeRouter {
             path: '/sections/dashboard.html',
             breadcrumb: ['Dashboard'],
             icon: '🏠',
-            initFunction: 'initDashboard'
+            initFunction: 'initDashboard',
+            public: true
         });
 
         this.routes.set('dev-tracker', {
@@ -52,7 +53,8 @@ class TankerMadeRouter {
             path: '/sections/dev-tracker.html',
             breadcrumb: ['Dashboard', 'Dev Tracker'],
             icon: '📊',
-            initFunction: 'initDevTracker'
+            initFunction: 'initDevTracker',
+            public: false
         });
 
         this.routes.set('dev-tracker-phase', {
@@ -60,7 +62,8 @@ class TankerMadeRouter {
             path: '/sections/dev-tracker-phase.html',
             breadcrumb: ['Dashboard', 'Dev Tracker', 'Phase'],
             icon: '📊',
-            initFunction: 'initDevTrackerPhase'
+            initFunction: 'initDevTrackerPhase',
+            public: false
         });
 
         this.routes.set('workbench', {
@@ -68,7 +71,8 @@ class TankerMadeRouter {
             path: '/sections/workbench.html',
             breadcrumb: ['Dashboard', 'Workbench'],
             icon: '📚',
-            initFunction: 'initWorkbench'
+            initFunction: 'initWorkbench',
+            public: false
         });
 
         this.routes.set('workbench-section', {
@@ -76,7 +80,8 @@ class TankerMadeRouter {
             path: '/sections/workbench-section.html',
             breadcrumb: ['Dashboard', 'Workbench', 'Documentation'],
             icon: '📚',
-            initFunction: 'initWorkbenchSection'
+            initFunction: 'initWorkbenchSection',
+            public: false
         });
 
         this.routes.set('architecture', {
@@ -84,7 +89,8 @@ class TankerMadeRouter {
             path: '/sections/architecture.html',
             breadcrumb: ['Dashboard', 'Architecture Visualizer'],
             icon: '🏗️',
-            initFunction: 'initArchitecture'
+            initFunction: 'initArchitecture',
+            public: false
         });
 
         this.routes.set('incidents', {
@@ -92,7 +98,8 @@ class TankerMadeRouter {
             path: '/sections/aie-tracker.html',
             breadcrumb: ['Dashboard', 'AIE Tracker'],
             icon: '🚨',
-            initFunction: 'initAIETracker'
+            initFunction: 'initAIETracker',
+            public: false
         });
 
         this.routes.set('incident-details', {
@@ -100,8 +107,15 @@ class TankerMadeRouter {
             path: '/sections/incident-details.html',
             breadcrumb: ['Dashboard', 'AIE Tracker', 'Incident'],
             icon: '🚨',
-            initFunction: 'initIncidentDetails'
+            initFunction: 'initIncidentDetails',
+            public: false
         });
+    }
+
+    canAccess(route) {
+        if (route.public) return true;
+        if (window.TankerMadeAuth?.isAuthenticated?.()) return true;
+        return !!localStorage.getItem('github-token');
     }
 
     setupEventListeners() {
@@ -191,6 +205,13 @@ class TankerMadeRouter {
             return;
         }
 
+        if (!this.canAccess(route)) {
+            history.replaceState({ section: 'dashboard', params: {} }, '', '#dashboard');
+            this.navigate('dashboard', {}, false);
+            window.TankerMadeApp?.showNotification?.('Sign in to open the full tracker.', 'info');
+            return;
+        }
+
         // Show loading state
         this.showLoading();
 
@@ -238,12 +259,19 @@ class TankerMadeRouter {
             fullPath = `/sections/${path}`;
         }
 
-        const response = await fetch(fullPath);
+        const cacheBustedPath = fullPath.includes('?')
+            ? `${fullPath}&v=20260520`
+            : `${fullPath}?v=20260520`;
+
+        const response = await fetch(cacheBustedPath);
 
         if (!response.ok) {
             // Fallback: try to load from current directory structure
             const fallbackPath = path.replace('/sections/', '');
-            const fallbackResponse = await fetch(fallbackPath);
+            const cacheBustedFallbackPath = fallbackPath.includes('?')
+                ? `${fallbackPath}&v=20260520`
+                : `${fallbackPath}?v=20260520`;
+            const fallbackResponse = await fetch(cacheBustedFallbackPath);
 
             if (!fallbackResponse.ok) {
                 throw new Error(`Failed to load content: ${response.status}`);
@@ -262,11 +290,18 @@ class TankerMadeRouter {
     }
 
     updateNavigation(sectionKey) {
+        const parentMap = {
+            'dev-tracker-phase': 'dev-tracker',
+            'workbench-section': 'workbench',
+            'incident-details': 'incidents'
+        };
+        const navSectionKey = parentMap[sectionKey] || sectionKey;
+
         // Update sidebar navigation
         const sidebarItems = document.querySelectorAll('.sidebar .nav-item');
         sidebarItems.forEach(item => {
             item.classList.remove('active');
-            if (item.getAttribute('data-section') === sectionKey) {
+            if (item.getAttribute('data-section') === navSectionKey) {
                 item.classList.add('active');
             }
         });
@@ -275,8 +310,19 @@ class TankerMadeRouter {
         const bottomNavItems = document.querySelectorAll('.bottom-nav .bottom-nav-item');
         bottomNavItems.forEach(item => {
             item.classList.remove('active');
-            if (item.getAttribute('data-section') === sectionKey) {
+            if (item.getAttribute('data-section') === navSectionKey) {
                 item.classList.add('active');
+            }
+        });
+
+        // Update unified header navigation
+        const headerNavItems = document.querySelectorAll('.unified-nav .nav-item');
+        headerNavItems.forEach(item => {
+            item.classList.remove('active');
+            item.removeAttribute('aria-current');
+            if (item.getAttribute('data-section') === navSectionKey) {
+                item.classList.add('active');
+                item.setAttribute('aria-current', 'page');
             }
         });
     }

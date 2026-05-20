@@ -8,10 +8,11 @@ class TankerMadeApp {
   constructor() {
     this.state = {
       currentPhase:    1,
-      totalPhases:     10,
+      currentPhaseLabel: 'A',
+      totalPhases:     9,
       overallProgress: 0,   // always derived, never hardcoded
-      completedTasks:  0,
-      totalTasks:      196,
+      completedTasks:  13,
+      totalTasks:      60,
       openIncidents:   0,
     };
 
@@ -39,6 +40,7 @@ class TankerMadeApp {
 
     this.setupEventListeners();
     this.setupMobileNavigation();
+    this.setupUnifiedNavigation();
     this.initializeSearch();
     this.setupKeyboardShortcuts();
 
@@ -90,6 +92,37 @@ class TankerMadeApp {
     }
   }
 
+  setupUnifiedNavigation() {
+    const parentMap = {
+      'dev-tracker-phase': 'dev-tracker',
+      'workbench-section': 'workbench',
+      'incident-details': 'incidents'
+    };
+
+    const sync = () => {
+      const rawSection = (window.location.hash.slice(1).split('/')[0] || 'dashboard');
+      const section = parentMap[rawSection] || rawSection;
+      document.querySelectorAll('.unified-nav .nav-item').forEach(item => {
+        const isActive = item.getAttribute('data-section') === section;
+        item.classList.toggle('active', isActive);
+        if (isActive) {
+          item.setAttribute('aria-current', 'page');
+        } else {
+          item.removeAttribute('aria-current');
+        }
+      });
+    };
+
+    sync();
+    window.addEventListener('hashchange', sync);
+    window.addEventListener('popstate', sync);
+    document.addEventListener('click', event => {
+      if (event.target.closest('.unified-nav [data-section]')) {
+        requestAnimationFrame(sync);
+      }
+    });
+  }
+
   setupKeyboardShortcuts() {
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
@@ -122,7 +155,7 @@ class TankerMadeApp {
       let completedTasks = 0;
       let totalTasks     = 0;
 
-      const phaseCounts = [23, 31, 18, 15, 25, 12, 14, 19, 17, 22];
+      const phaseCounts = [20, 5, 6, 9, 3, 5, 3, 4, 5];
 
       if (this.isAuthenticated && window.TankerMadeData) {
         const phases = await window.TankerMadeData.getAllPhaseProgress();
@@ -155,7 +188,7 @@ class TankerMadeApp {
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     const setStyle = (id, prop, val) => { const el = document.getElementById(id); if (el) el.style[prop] = val; };
 
-    set('current-phase', 'Phase ' + this.state.currentPhase + ': Foundation');
+    set('current-phase', 'Phase ' + this.state.currentPhaseLabel + ': Hardening & Foundation');
     set('progress-text', this.state.overallProgress + '%');
     setStyle('header-progress', 'width', this.state.overallProgress + '%');
   }
@@ -175,7 +208,7 @@ class TankerMadeApp {
 
   updateIncidentBadges() {
     const count = this.state.openIncidents;
-    ['sidebar-incident-count', 'bottom-incident-count'].forEach(id => {
+    ['sidebar-incident-count', 'bottom-incident-count', 'header-incident-count'].forEach(id => {
       const el = document.getElementById(id);
       if (!el) return;
       el.textContent    = count;
@@ -211,7 +244,7 @@ class TankerMadeApp {
   initializeSearch() {
     const entries = [
       { key: 'dashboard',    title: 'Dashboard',                excerpt: 'Project status overview, quick actions, recent activity' },
-      { key: 'dev-tracker',  title: 'Dev Tracker',              excerpt: 'Phase progress, task tracking, 21-week timeline' },
+      { key: 'dev-tracker',  title: 'Dev Tracker',              excerpt: 'Roadmap phase progress and task tracking' },
       { key: 'workbench',    title: 'Workbench',                excerpt: 'Documentation, domain model, development guidelines' },
       { key: 'architecture', title: 'Architecture',             excerpt: 'Entity diagrams, data flow, system architecture' },
       { key: 'incidents',    title: 'AIE / Incident Tracker',   excerpt: 'Incident monitoring, GitHub issues, problem log' },

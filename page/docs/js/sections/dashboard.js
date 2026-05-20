@@ -7,16 +7,14 @@ class DashboardSection {
     constructor() {
         this.sectionId = 'dashboard';
         this.data = {
-            totalTasks: 196,
-            completedTasks: 12,
-            currentWeek: 2,
-            totalWeeks: 21,
+            totalTasks: 60,
+            completedTasks: 13,
             currentPhase: {
-                number: 1,
-                title: "Foundation",
-                description: "Basic infrastructure and authentication",
-                completed: 3,
-                total: 23
+                number: "A",
+                title: "Hardening & Foundation",
+                description: "Core entities, services, controllers, tests, CI, and secret handling",
+                completed: 13,
+                total: 20
             }
         };
     }
@@ -24,12 +22,15 @@ class DashboardSection {
     async render() {
         const progressPercentage = Math.round((this.data.completedTasks / this.data.totalTasks) * 100);
         const phasePercentage = Math.round((this.data.currentPhase.completed / this.data.currentPhase.total) * 100);
+        const isAuthenticated = !!window.TankerMadeAuth?.isAuthenticated?.();
 
         return `
             <div class="dashboard-container">
                 <div class="dashboard-header">
                     <h1>Developer Dashboard</h1>
-                    <p class="dashboard-subtitle">Your TankerMade development progress at a glance</p>
+                    <p class="dashboard-subtitle">${isAuthenticated
+                        ? 'Foundation status, implementation focus, and release health in one working surface.'
+                        : 'A public glimpse of TankerMade progress. Sign in for tracker details, docs, architecture, and incidents.'}</p>
                 </div>
 
                 <!-- First Row - Overall Progress & Current Phase & Incidents -->
@@ -46,8 +47,8 @@ class DashboardSection {
                                         <span class="stat-label">/ <span id="total-tasks">${this.data.totalTasks}</span> tasks</span>
                                     </span>
                                     <span class="progress-stat">
-                                        <span class="stat-value" id="current-week">Week ${this.data.currentWeek}</span>
-                                        <span class="stat-label">of ${this.data.totalWeeks}</span>
+                                        <span class="stat-value" id="current-week">Phase ${this.data.currentPhase.number}</span>
+                                        <span class="stat-label">current</span>
                                     </span>
                                 </div>
 
@@ -77,14 +78,14 @@ class DashboardSection {
                                     <span class="progress-text" id="phase-progress-text">${this.data.currentPhase.completed} / ${this.data.currentPhase.total} tasks</span>
                                 </div>
 
-                                <button class="btn btn-primary phase-details-btn" onclick="window.TankerMadeRouter.navigate('dev-tracker')">
-                                    View Details
-                                </button>
+                                ${isAuthenticated
+                                    ? `<button class="btn btn-primary phase-details-btn" onclick="window.TankerMadeRouter.navigate('dev-tracker')">View Details</button>`
+                                    : `<button class="btn btn-primary phase-details-btn" onclick="window.TankerMadeAuth && window.TankerMadeAuth.login()">Sign in for Details</button>`}
                             </div>
                         </div>
                     </div>
 
-                    <div class="card dashboard-card incidents-card">
+                    ${isAuthenticated ? `<div class="card dashboard-card incidents-card">
                         <div class="card-header">
                             <h2>Incidents</h2>
                             <span class="badge badge-success" id="dashboard-incident-badge">
@@ -101,62 +102,74 @@ class DashboardSection {
                                 </button>
                             </div>
                         </div>
+                    </div>` : this.renderPublicGlimpseCard()}
+                </div>
+
+                <div class="public-roadmap-section">
+                    <div class="card dashboard-card focus-panel">
+                        <div class="card-header">
+                            <h2>Roadmap Pulse</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="focus-content week-summary-grid" id="week-summary">
+                                ${this.renderWeekSummary()}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Second Row - Current Focus (80%) & Recent Activity (20%) -->
-                <div class="dashboard-grid-row dashboard-focus-row">
-                    <!-- Current Focus Card - 80% width with two columns -->
-                    <div class="card dashboard-card current-focus-card">
+                ${isAuthenticated ? `
+                <div class="dashboard-section-title">
+                    <h2>Current Focus</h2>
+                    <p>Open Phase A work split into scan-friendly panels.</p>
+                </div>
+
+                <div class="dashboard-focus-panels">
+                    <div class="card dashboard-card focus-panel focus-panel-wide">
                         <div class="card-header">
-                            <h2>Current Focus</h2>
+                            <h2>Active Tasks</h2>
                         </div>
-                        <div class="card-body current-focus-body">
-                            <!-- Left Column -->
-                            <div class="focus-column focus-left">
-                                <div class="focus-section">
-                                    <h3 class="focus-section-title">🎯 Active Tasks</h3>
-                                    <div class="focus-content" id="active-tasks">
-                                        ${this.renderActiveTasks()}
-                                    </div>
-                                </div>
-
-                                <div class="focus-section">
-                                    <h3 class="focus-section-title">📊 Phase Breakdown</h3>
-                                    <div class="focus-content" id="phase-breakdown">
-                                        ${this.renderPhaseBreakdown()}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Right Column - NO DIVIDER -->
-                            <div class="focus-column focus-right">
-                                <div class="focus-section">
-                                    <h3 class="focus-section-title">🔧 Dev Environment</h3>
-                                    <div class="focus-content" id="dev-environment">
-                                        ${this.renderDevEnvironment()}
-                                    </div>
-                                </div>
-
-                                <div class="focus-section">
-                                    <h3 class="focus-section-title">📈 This Week</h3>
-                                    <div class="focus-content" id="week-summary">
-                                        ${this.renderWeekSummary()}
-                                    </div>
-                                </div>
-
-                                <div class="focus-section">
-                                    <h3 class="focus-section-title">🎯 Next Up</h3>
-                                    <div class="focus-content" id="next-tasks">
-                                        ${this.renderNextTasks()}
-                                    </div>
-                                </div>
+                        <div class="card-body">
+                            <div class="focus-content" id="active-tasks">
+                                ${this.renderActiveTasks()}
                             </div>
                         </div>
                     </div>
 
-                    <!-- Recent Activity Card - 20% width -->
-                    <div class="card dashboard-card recent-activity-card">
+                    <div class="card dashboard-card focus-panel">
+                        <div class="card-header">
+                            <h2>Phase Breakdown</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="focus-content" id="phase-breakdown">
+                                ${this.renderPhaseBreakdown()}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card dashboard-card focus-panel">
+                        <div class="card-header">
+                            <h2>Dev Environment</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="focus-content" id="dev-environment">
+                                ${this.renderDevEnvironment()}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card dashboard-card focus-panel">
+                        <div class="card-header">
+                            <h2>Next Up</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="focus-content" id="next-tasks">
+                                ${this.renderNextTasks()}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card dashboard-card focus-panel recent-activity-card">
                         <div class="card-header">
                             <h2>Recent Activity</h2>
                         </div>
@@ -167,15 +180,36 @@ class DashboardSection {
                         </div>
                     </div>
                 </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    renderPublicGlimpseCard() {
+        return `
+            <div class="card dashboard-card public-glimpse-card">
+                <div class="card-header">
+                    <h2>Project Glimpse</h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-secondary">TankerMade is a local-first modular maker workbench, currently in foundation hardening.</p>
+                    <div class="mt-4">
+                        <button class="btn btn-primary" onclick="window.TankerMadeAuth && window.TankerMadeAuth.login()">
+                            Sign in with GitHub
+                        </button>
+                    </div>
+                </div>
             </div>
         `;
     }
 
     renderActiveTasks() {
         const tasks = [
-            { title: "Complete GitHub OAuth implementation", meta: "Phase 1 • Authentication", status: "active" },
-            { title: "Set up progress tracking system", meta: "Phase 1 • Data Management", status: "active" },
-            { title: "Implement responsive dashboard layout", meta: "Phase 1 • UI/UX", status: "active" }
+            { title: "Add missing Core entities", meta: "Phase A • Domain model", status: "active" },
+            { title: "Register entities in DbContext and add migration", meta: "Phase A • Persistence", status: "active" },
+            { title: "Implement ProjectService and PatternService", meta: "Phase A • Application services", status: "active" },
+            { title: "Add Projects and Patterns API controllers", meta: "Phase A • Server API", status: "active" },
+            { title: "Add focused service/API tests", meta: "Phase A • Verification", status: "active" }
         ];
 
         return tasks.map(task => `
@@ -191,8 +225,9 @@ class DashboardSection {
 
     renderPhaseBreakdown() {
         const phases = [
-            { number: 1, title: "Foundation", completed: 3, total: 23, active: true },
-            { number: 2, title: "Core Features", completed: 0, total: 31, active: false }
+            { number: "A", title: "Hardening & Foundation", completed: 13, total: 20, active: true },
+            { number: "B", title: "Patterns V2", completed: 0, total: 5, active: false },
+            { number: "C", title: "Project Workspace", completed: 0, total: 6, active: false }
         ];
 
         return phases.map(phase => {
@@ -216,9 +251,9 @@ class DashboardSection {
 
     renderDevEnvironment() {
         const services = [
-            { title: "GitHub Integration", meta: "Connected as ProbablyBadAtThis", status: "online" },
-            { title: "Cloudflare Pages", meta: "Deployed • Functions Active", status: "online" },
-            { title: "OAuth Service", meta: "Operational", status: "online" }
+            { title: "GitHub OAuth", meta: "Client ID and callback flow configured", status: "online" },
+            { title: "Cloudflare Pages", meta: "Static site plus Functions token exchange", status: "online" },
+            { title: "Local Preview", meta: "Serving current Pages build", status: "online" }
         ];
 
         return services.map(service => `
@@ -234,9 +269,9 @@ class DashboardSection {
 
     renderWeekSummary() {
         const stats = [
-            { value: "3", label: "Tasks Completed" },
-            { value: "12", label: "Commits Made" },
-            { value: "4.2", label: "Hours Focused" }
+            { value: "13", label: "Done" },
+            { value: "7", label: "Open in Phase A" },
+            { value: "9", label: "Roadmap Phases" }
         ];
 
         return stats.map(stat => `
@@ -249,8 +284,8 @@ class DashboardSection {
 
     renderNextTasks() {
         const tasks = [
-            { title: "Dashboard UX improvements", phase: "Phase 1" },
-            { title: "Mobile responsive testing", phase: "Phase 1" }
+            { title: "Move JWT secret to user-secrets or env vars", phase: "Phase A" },
+            { title: "Add GitHub Actions restore/build/test workflow", phase: "Phase A" }
         ];
 
         return tasks.map(task => `
@@ -263,12 +298,12 @@ class DashboardSection {
 
     renderRecentActivity() {
         const activities = [
-            { icon: "✅", title: "OAuth implementation complete", time: "2 hours ago" },
-            { icon: "🔧", title: "Functions deployed to Cloudflare", time: "3 hours ago" },
-            { icon: "📝", title: "Updated project structure", time: "4 hours ago" },
-            { icon: "🎨", title: "Implemented auth-based navigation", time: "5 hours ago" },
-            { icon: "🔐", title: "GitHub OAuth app configured", time: "6 hours ago" },
-            { icon: "📊", title: "Dashboard layout redesigned", time: "1 day ago" }
+            { icon: "", title: "OAuth implementation complete", time: "2 hours ago" },
+            { icon: "", title: "Functions deployed to Cloudflare", time: "3 hours ago" },
+            { icon: "", title: "Updated project structure", time: "4 hours ago" },
+            { icon: "", title: "Implemented auth-based navigation", time: "5 hours ago" },
+            { icon: "", title: "GitHub OAuth app configured", time: "6 hours ago" },
+            { icon: "", title: "Dashboard layout redesigned", time: "1 day ago" }
         ];
 
         return activities.map(activity => `

@@ -142,6 +142,7 @@ class GitHubAuth {
 
         if (loginBtn) loginBtn.style.display = 'flex';
         if (userInfo) userInfo.style.display = 'none';
+        document.body.classList.remove('is-authenticated');
 
         // Hide protected navigation sections
         this.hideProtectedNavigation();
@@ -157,6 +158,7 @@ class GitHubAuth {
 
         if (loginBtn) loginBtn.style.display = 'none';
         if (userInfo) userInfo.style.display = 'flex';
+        document.body.classList.add('is-authenticated');
 
         if (userAvatar && this.user) {
             userAvatar.src = this.user.avatar_url;
@@ -190,6 +192,16 @@ class GitHubAuth {
         if (bottomNavProtected) {
             bottomNavProtected.style.display = 'none';
         }
+
+        document.querySelectorAll('.nav-auth-required').forEach(item => {
+            item.hidden = true;
+            item.setAttribute('aria-hidden', 'true');
+        });
+
+        const currentSection = window.location.hash.slice(1).split('/')[0];
+        if (currentSection && currentSection !== 'dashboard') {
+            window.TankerMadeRouter?.goToSection('dashboard');
+        }
     }
 
     // Show protected navigation elements
@@ -211,6 +223,11 @@ class GitHubAuth {
         if (bottomNavProtected) {
             bottomNavProtected.style.display = 'flex';
         }
+
+        document.querySelectorAll('.nav-auth-required').forEach(item => {
+            item.hidden = false;
+            item.removeAttribute('aria-hidden');
+        });
     }
 
     // Check if user is authenticated

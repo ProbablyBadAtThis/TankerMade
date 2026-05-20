@@ -9,60 +9,39 @@ function initArchitecture(params = {}) {
 
 function loadArchitectureVisualizer() {
     const architectureContent = `
-        <div class="architecture-header mb-6">
-            <h1>Architecture Visualizer</h1>
-            <p>Interactive entity relationship diagrams, data flow visualization, and system architecture overview</p>
-        </div>
-
-        <div class="grid grid-cols-3 gap-6 mb-6">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">🗄️ Entity Relationships</h3>
-                </div>
-                <div class="card-body">
-                    <p class="text-secondary">Interactive ERD showing data model relationships</p>
-                    <button class="btn btn-primary mt-4" onclick="showEntityDiagram()">
-                        View Diagram
-                    </button>
-                </div>
+        <div class="architecture-container">
+            <div class="architecture-header mb-6">
+                <h1>Architecture Visualizer</h1>
+                <p>Entity relationships, data movement, and system boundaries for the local-first maker workbench.</p>
             </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">🔄 Data Flow</h3>
-                </div>
-                <div class="card-body">
-                    <p class="text-secondary">System interaction maps and data flow diagrams</p>
-                    <button class="btn btn-primary mt-4" onclick="showDataFlow()">
-                        View Flow
-                    </button>
-                </div>
+            <div class="section-tabs" role="tablist" aria-label="Architecture views">
+                <button class="section-tab active" type="button" role="tab" aria-selected="true" onclick="showEntityDiagram()">Entity Relationships</button>
+                <button class="section-tab" type="button" role="tab" aria-selected="false" onclick="showDataFlow()">Data Flow</button>
+                <button class="section-tab" type="button" role="tab" aria-selected="false" onclick="showSystemArchitecture()">System Architecture</button>
             </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">🏗️ System Architecture</h3>
+            <section class="page-panel architecture-workspace">
+                <div class="architecture-toolbar">
+                    <div>
+                        <h2 id="architecture-view-title">Entity Relationships</h2>
+                        <p id="architecture-view-description">Interactive ERD showing data model relationships.</p>
+                    </div>
+                    <div class="architecture-actions" id="visualization-controls">
+                        <button class="btn btn-sm btn-secondary" onclick="zoomOut()" aria-label="Zoom out">−</button>
+                        <button class="btn btn-sm btn-secondary" onclick="resetZoom()" aria-label="Reset zoom">Reset</button>
+                        <button class="btn btn-sm btn-secondary" onclick="zoomIn()" aria-label="Zoom in">+</button>
+                        <button class="btn btn-sm btn-primary" onclick="exportDiagram()" aria-label="Export diagram">Export</button>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <p class="text-secondary">Component dependencies and system overview</p>
-                    <button class="btn btn-primary mt-4" onclick="showSystemArchitecture()">
-                        View Architecture
-                    </button>
-                </div>
-            </div>
-        </div>
 
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Visualization Area</h3>
-            </div>
-            <div class="card-body">
-                <div id="visualization-container" class="text-center py-12">
-                    <div class="text-4xl mb-4">🏗️</div>
-                    <h3 class="text-lg font-semibold mb-2">Architecture Visualizer</h3>
-                    <p class="text-secondary">Select a visualization type above to begin</p>
+                <div id="visualization-container" class="architecture-canvas">
+                    <div>
+                        <h3>Entity Relationship Diagram</h3>
+                        <p>Interactive diagram content will render here as the visualizer matures.</p>
+                    </div>
                 </div>
-            </div>
+            </section>
         </div>
     `;
 
@@ -72,15 +51,30 @@ function loadArchitectureVisualizer() {
     }
 }
 
+function setArchitectureTab(label) {
+    document.querySelectorAll('.section-tab').forEach(tab => {
+        const isActive = tab.textContent.trim() === label;
+        tab.classList.toggle('active', isActive);
+        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+}
+
+function setArchitectureHeader(title, description) {
+    const titleEl = document.getElementById('architecture-view-title');
+    const descriptionEl = document.getElementById('architecture-view-description');
+    if (titleEl) titleEl.textContent = title;
+    if (descriptionEl) descriptionEl.textContent = description;
+}
+
 function showEntityDiagram() {
+    setArchitectureTab('Entity Relationships');
+    setArchitectureHeader('Entity Relationships', 'Interactive ERD showing data model relationships.');
     const container = document.getElementById('visualization-container');
     if (container) {
         container.innerHTML = `
-            <div class="text-center py-8">
-                <h4 class="text-lg font-semibold mb-4">Entity Relationship Diagram</h4>
-                <div class="alert alert-info">
-                    <p><strong>Content Migration Notice:</strong> The interactive ERD will be migrated from the existing architecture visualizer once content migration is complete.</p>
-                </div>
+            <div>
+                <h3>Entity Relationship Diagram</h3>
+                <p>The interactive ERD will live here once the visualizer content is migrated.</p>
                 <button class="btn btn-primary mt-4" onclick="loadExistingArchitecture()">
                     Load Existing Visualizer
                 </button>
@@ -90,28 +84,28 @@ function showEntityDiagram() {
 }
 
 function showDataFlow() {
+    setArchitectureTab('Data Flow');
+    setArchitectureHeader('Data Flow', 'System interaction maps and data flow diagrams.');
     const container = document.getElementById('visualization-container');
     if (container) {
         container.innerHTML = `
-            <div class="text-center py-8">
-                <h4 class="text-lg font-semibold mb-4">Data Flow Diagram</h4>
-                <div class="alert alert-info">
-                    <p><strong>Content Migration Notice:</strong> Data flow visualizations will be available after content migration.</p>
-                </div>
+            <div>
+                <h3>Data Flow Diagram</h3>
+                <p>Data flow visualizations will be available after content migration.</p>
             </div>
         `;
     }
 }
 
 function showSystemArchitecture() {
+    setArchitectureTab('System Architecture');
+    setArchitectureHeader('System Architecture', 'Component dependencies and system overview.');
     const container = document.getElementById('visualization-container');
     if (container) {
         container.innerHTML = `
-            <div class="text-center py-8">
-                <h4 class="text-lg font-semibold mb-4">System Architecture</h4>
-                <div class="alert alert-info">
-                    <p><strong>Content Migration Notice:</strong> System architecture diagrams will be integrated after content migration.</p>
-                </div>
+            <div>
+                <h3>System Architecture</h3>
+                <p>System architecture diagrams will be integrated after content migration.</p>
             </div>
         `;
     }

@@ -171,7 +171,7 @@ class GitHubDataStore {
     async getAllPhaseProgress() {
         const phases = [];
 
-        for (let i = 1; i <= 10; i++) {
+        for (let i = 1; i <= 9; i++) {
             try {
                 const progress = await this.getPhaseProgress(i);
                 phases.push({ id: i, ...progress });
@@ -200,8 +200,8 @@ class GitHubDataStore {
     // Get task count for each phase (from existing dev-tracker.js)
     getPhaseTaskCount(phaseId) {
         const taskCounts = {
-            1: 23, 2: 31, 3: 18, 4: 15, 5: 25,
-            6: 12, 7: 14, 8: 19, 9: 17, 10: 22
+            1: 20, 2: 5, 3: 6, 4: 9, 5: 3,
+            6: 5, 7: 3, 8: 4, 9: 5
         };
         return taskCounts[phaseId] || 0;
     }

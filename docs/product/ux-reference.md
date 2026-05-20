@@ -1,7 +1,7 @@
 # TankerMade — UX Wireframes Reference
 Source: YarnProject.pdf (original hand-sketched wireframe spec)
 Status: CURRENT — no UI has been built yet, so nothing here is superseded.
-Last reviewed: 2025-05-17
+Last reviewed: 2026-05-20
 
 The PDF is attached to the Claude Project. Do not remove it — it is the primary UX specification.
 

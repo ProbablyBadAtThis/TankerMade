@@ -16,13 +16,13 @@ function loadWorkbenchOverview() {
     const workbenchContent = `
         <div class="workbench-header mb-6">
             <h1>Documentation Workbench</h1>
-            <p>Architecture decisions, domain model documentation, development guidelines, and technical specifications</p>
+            <p>Architecture decisions, domain notes, development guidelines, and implementation references.</p>
         </div>
 
         <div class="grid grid-cols-2 gap-6">
             <div class="card" onclick="navigateToWorkbenchSection('architecture')">
                 <div class="card-header">
-                    <h3 class="card-title">🏗️ Architecture</h3>
+                    <h3 class="card-title">Architecture</h3>
                 </div>
                 <div class="card-body">
                     <p class="text-secondary">System architecture, patterns, and design decisions</p>
@@ -31,7 +31,7 @@ function loadWorkbenchOverview() {
 
             <div class="card" onclick="navigateToWorkbenchSection('domain-model')">
                 <div class="card-header">
-                    <h3 class="card-title">🗄️ Domain Model</h3>
+                    <h3 class="card-title">Domain Model</h3>
                 </div>
                 <div class="card-body">
                     <p class="text-secondary">Entity specifications and data relationships</p>
@@ -40,7 +40,7 @@ function loadWorkbenchOverview() {
 
             <div class="card" onclick="navigateToWorkbenchSection('guidelines')">
                 <div class="card-header">
-                    <h3 class="card-title">📋 Development Guidelines</h3>
+                    <h3 class="card-title">Development Guidelines</h3>
                 </div>
                 <div class="card-body">
                     <p class="text-secondary">Coding standards, best practices, and workflows</p>
@@ -49,7 +49,7 @@ function loadWorkbenchOverview() {
 
             <div class="card" onclick="navigateToWorkbenchSection('technical-specs')">
                 <div class="card-header">
-                    <h3 class="card-title">⚙️ Technical Specifications</h3>
+                    <h3 class="card-title">Technical Specifications</h3>
                 </div>
                 <div class="card-body">
                     <p class="text-secondary">Detailed technical requirements and specifications</p>
@@ -58,7 +58,7 @@ function loadWorkbenchOverview() {
 
             <div class="card" onclick="navigateToWorkbenchSection('ui-ux-specs')">
                 <div class="card-header">
-                    <h3 class="card-title">🎨 UI/UX Specifications</h3>
+                    <h3 class="card-title">UI/UX Specifications</h3>
                 </div>
                 <div class="card-body">
                     <p class="text-secondary">User interface and experience requirements</p>
@@ -67,7 +67,7 @@ function loadWorkbenchOverview() {
 
             <div class="card" onclick="navigateToWorkbenchSection('deployment')">
                 <div class="card-header">
-                    <h3 class="card-title">🚀 Deployment</h3>
+                    <h3 class="card-title">Deployment</h3>
                 </div>
                 <div class="card-body">
                     <p class="text-secondary">Deployment guides and infrastructure setup</p>

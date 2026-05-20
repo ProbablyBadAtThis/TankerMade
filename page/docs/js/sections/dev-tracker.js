@@ -7,90 +7,99 @@ class DevTrackerSection {
     constructor() {
         this.sectionId = 'dev-tracker';
         this.data = {
-            totalTasks: 196,
-            completedTasks: 12,
-            currentWeek: 2,
-            totalWeeks: 21,
-            totalPhases: 7,
+            totalTasks: 60,
+            completedTasks: 13,
+            totalPhases: 9,
             completedPhases: 0,
             currentPhase: {
-                number: 1,
-                title: "Foundation",
-                description: "Basic infrastructure and authentication",
-                completed: 3,
-                total: 23,
-                color: "#2563eb"
+                number: "A",
+                title: "Hardening & Foundation",
+                description: "Core entities, services, controllers, tests, CI, and secret handling",
+                completed: 13,
+                total: 20,
+                color: "#2dd4bf"
             },
             phases: [
                 {
-                    number: 1,
-                    title: "Foundation",
-                    description: "Basic infrastructure and authentication",
-                    completed: 3,
-                    total: 23,
-                    color: "#2563eb",
-                    status: "active",
-                    weeks: [1, 2, 3]
+                    number: "A",
+                    title: "Hardening & Foundation",
+                    description: "Current foundation work from the repo roadmap.",
+                    completed: 13,
+                    total: 20,
+                    color: "#2dd4bf",
+                    status: "active"
                 },
                 {
-                    number: 2,
-                    title: "Core Features",
-                    description: "Essential functionality and user management",
+                    number: "B",
+                    title: "Patterns V2",
+                    description: "Pattern pieces, steps, reordering, aggregation, and validation.",
                     completed: 0,
-                    total: 31,
-                    color: "#7c3aed",
-                    status: "upcoming",
-                    weeks: [4, 5, 6, 7]
+                    total: 5,
+                    color: "#60a5fa",
+                    status: "upcoming"
                 },
                 {
-                    number: 3,
-                    title: "Advanced Features",
-                    description: "Enhanced functionality and integrations",
+                    number: "C",
+                    title: "Project Workspace",
+                    description: "Step progress, timers, completion, pieces, archive, and editing.",
                     completed: 0,
-                    total: 28,
-                    color: "#059669",
-                    status: "upcoming",
-                    weeks: [8, 9, 10, 11]
+                    total: 6,
+                    color: "#a78bfa",
+                    status: "upcoming"
                 },
                 {
-                    number: 4,
-                    title: "UI/UX Enhancement",
-                    description: "Design improvements and user experience",
+                    number: "D",
+                    title: "Inventory & Kits",
+                    description: "Yarn, tools, notions, lot tracking, purchases, linking, and kits.",
                     completed: 0,
-                    total: 25,
-                    color: "#dc2626",
-                    status: "upcoming",
-                    weeks: [12, 13, 14, 15]
+                    total: 9,
+                    color: "#f59e0b",
+                    status: "upcoming"
                 },
                 {
-                    number: 5,
-                    title: "Testing & QA",
-                    description: "Comprehensive testing and quality assurance",
+                    number: "E",
+                    title: "Reference Data Integration",
+                    description: "Settings-backed reference data in forms and inline creation.",
                     completed: 0,
-                    total: 22,
-                    color: "#ea580c",
-                    status: "upcoming",
-                    weeks: [16, 17, 18]
+                    total: 3,
+                    color: "#34d399",
+                    status: "upcoming"
                 },
                 {
-                    number: 6,
-                    title: "Performance Optimization",
-                    description: "Speed and efficiency improvements",
+                    number: "F",
+                    title: "Module Platform V1",
+                    description: "Module contracts, discovery, UI extension points, and examples.",
                     completed: 0,
-                    total: 18,
-                    color: "#0891b2",
-                    status: "upcoming",
-                    weeks: [19, 20]
+                    total: 5,
+                    color: "#fb7185",
+                    status: "upcoming"
                 },
                 {
-                    number: 7,
-                    title: "Launch Preparation",
-                    description: "Final preparations and deployment",
+                    number: "G",
+                    title: "Images & Assets",
+                    description: "Local file storage, thumbnails, and image pickers.",
                     completed: 0,
-                    total: 15,
-                    color: "#be185d",
-                    status: "upcoming",
-                    weeks: [21]
+                    total: 3,
+                    color: "#38bdf8",
+                    status: "upcoming"
+                },
+                {
+                    number: "H",
+                    title: "Performance & Search",
+                    description: "Indexes, filters, pagination, search, and caching.",
+                    completed: 0,
+                    total: 4,
+                    color: "#818cf8",
+                    status: "upcoming"
+                },
+                {
+                    number: "I",
+                    title: "Security, Ops & Cleanup",
+                    description: "Secrets, HTTPS, keys, export/import, cleanup, and deployment guidance.",
+                    completed: 0,
+                    total: 5,
+                    color: "#f472b6",
+                    status: "upcoming"
                 }
             ]
         };
@@ -158,7 +167,7 @@ class DevTrackerSection {
         }
 
         if (percentageEl) percentageEl.textContent = `${progressPercentage}%`;
-        if (currentWeekEl) currentWeekEl.textContent = this.data.currentWeek;
+        if (currentWeekEl) currentWeekEl.textContent = this.data.currentPhase.number;
         if (currentPhaseEl) currentPhaseEl.textContent = `Phase ${this.data.currentPhase.number}: ${this.data.currentPhase.title}`;
     }
 
@@ -167,7 +176,7 @@ class DevTrackerSection {
         const updates = {
             'completed-tasks': this.data.completedTasks,
             'total-tasks': this.data.totalTasks,
-            'current-week-display': `Week ${this.data.currentWeek}`,
+            'current-week-display': `Phase ${this.data.currentPhase.number}`,
             'completed-phases': this.data.completedPhases,
             'total-phases': this.data.totalPhases,
             'current-phase-progress': `${Math.round((this.data.currentPhase.completed / this.data.currentPhase.total) * 100)}%`
@@ -184,19 +193,16 @@ class DevTrackerSection {
         if (!weekTracker) return;
 
         let html = '';
-        for (let week = 1; week <= this.data.totalWeeks; week++) {
-            const isCompleted = week < this.data.currentWeek;
-            const isCurrent = week === this.data.currentWeek;
-            const phase = this.getPhaseForWeek(week);
-
+        this.data.phases.forEach(phase => {
+            const isCompleted = phase.completed === phase.total && phase.total > 0;
             html += `
-                <div class="week-item ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}"
-                     style="--phase-color: ${phase?.color || 'var(--color-border)'}">
-                    <div class="week-number">${week}</div>
-                    <div class="week-label">Week ${week}</div>
+                <div class="week-item ${isCompleted ? 'completed' : ''} ${phase.status === 'active' ? 'current' : ''}"
+                     style="--phase-color: ${phase.color}">
+                    <div class="week-number">${phase.number}</div>
+                    <div class="week-label">Phase ${phase.number}</div>
                 </div>
             `;
-        }
+        });
         weekTracker.innerHTML = html;
     }
 
@@ -226,8 +232,8 @@ class DevTrackerSection {
                                 <span class="stat-value">${phase.completed}/${phase.total}</span>
                             </div>
                             <div class="stat">
-                                <span class="stat-label">Weeks</span>
-                                <span class="stat-value">${phase.weeks.join(', ')}</span>
+                                <span class="stat-label">Status</span>
+                                <span class="stat-value">${phase.status}</span>
                             </div>
                         </div>
                         <div class="phase-progress">
@@ -248,8 +254,8 @@ class DevTrackerSection {
         phasesGrid.innerHTML = html;
     }
 
-    getPhaseForWeek(week) {
-        return this.data.phases.find(phase => phase.weeks.includes(week));
+    getPhaseForWeek(phaseNumber) {
+        return this.data.phases.find(phase => phase.number === phaseNumber);
     }
 
     setupEventHandlers() {
@@ -295,9 +301,93 @@ class DevTrackerSection {
     }
 }
 
+function getRoadmapPhase(phaseNumber) {
+    const tracker = new DevTrackerSection();
+    return tracker.data.phases.find(phase => String(phase.number) === String(phaseNumber)) || tracker.data.currentPhase;
+}
+
+function initDevTrackerPhase(params = {}) {
+    const phaseNumber = params.phase || params.phaseId || 'A';
+    const phase = getRoadmapPhase(phaseNumber);
+    const progressPercent = Math.round((phase.completed / phase.total) * 100);
+    const contentContainer = document.getElementById('content-container');
+
+    if (!contentContainer) return;
+
+    contentContainer.innerHTML = `
+        <div class="dev-tracker-container">
+            <div class="phase-detail-header mb-6">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <button class="btn btn-secondary mb-4" onclick="window.TankerMadeRouter.goToSection('dev-tracker')">
+                            Back to Tracker
+                        </button>
+                        <h1>Phase ${phase.number}: ${phase.title}</h1>
+                        <p class="text-secondary">${phase.description}</p>
+                    </div>
+                    <span class="badge badge-${phase.status === 'active' ? 'success' : 'neutral'}">${phase.status}</span>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <div class="stat-value">${phase.completed}</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <div class="stat-value">${phase.total}</div>
+                        <div class="stat-label">Total Items</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <div class="stat-value">${progressPercent}%</div>
+                        <div class="stat-label">Complete</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <div class="stat-value">${phase.status}</div>
+                        <div class="stat-label">Status</div>
+                    </div>
+                </div>
+            </div>
+
+            <section class="page-panel architecture-workspace mt-6">
+                <div class="architecture-toolbar">
+                    <div>
+                        <h2>Roadmap Notes</h2>
+                        <p>This detail view mirrors docs/project/roadmap.md. Detailed task checklists can be added here once Phase A service/API work starts moving.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="window.TankerMadeRouter.goToSection('workbench')">Open Workbench</button>
+                </div>
+                <div class="architecture-canvas">
+                    <div>
+                        <h3>Phase ${phase.number}</h3>
+                        <p>${phase.completed} of ${phase.total} roadmap items complete.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    `;
+}
+
 // Export for app initialization
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = DevTrackerSection;
 } else {
     window.DevTrackerSection = DevTrackerSection;
+    window.initDevTrackerPhase = initDevTrackerPhase;
+    window.initDevTracker = function initDevTracker() {
+        const tracker = new DevTrackerSection();
+        tracker.updateOverallProgress();
+        tracker.updateStatsGrid();
+        tracker.renderWeekTimeline();
+        tracker.renderPhaseCards();
+        tracker.setupEventHandlers();
+        window.__currentDevTracker = tracker;
+    };
 }

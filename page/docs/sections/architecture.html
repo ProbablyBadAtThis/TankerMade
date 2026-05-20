@@ -1,116 +1,36 @@
-<!-- Architecture Visualizer Section Content -->
-<div class="architecture-header mb-6">
-    <h1 class="text-2xl font-bold mb-2">Architecture Visualizer</h1>
-    <p class="text-secondary">Interactive entity relationship diagrams, data flow visualization, and system architecture overview</p>
-</div>
-
-<div class="grid grid-cols-3 gap-6 mb-6">
-    <div class="card architecture-card" onclick="showEntityDiagram()">
-        <div class="card-header">
-            <h3 class="card-title">🗄️ Entity Relationships</h3>
-        </div>
-        <div class="card-body">
-            <p class="text-secondary mb-4">Interactive ERD showing data model relationships</p>
-            <div class="flex items-center justify-between">
-                <span class="badge badge-success">Available</span>
-                <button class="btn btn-sm btn-primary">
-                    View Diagram
-                </button>
-            </div>
-        </div>
+<div class="architecture-container">
+    <div class="architecture-header mb-6">
+        <h1 class="text-2xl font-bold mb-2">Architecture Visualizer</h1>
+        <p class="text-secondary">Entity relationships, data movement, and system boundaries for the local-first maker workbench.</p>
     </div>
 
-    <div class="card architecture-card" onclick="showDataFlow()">
-        <div class="card-header">
-            <h3 class="card-title">🔄 Data Flow</h3>
-        </div>
-        <div class="card-body">
-            <p class="text-secondary mb-4">System interaction maps and data flow diagrams</p>
-            <div class="flex items-center justify-between">
-                <span class="badge badge-success">Available</span>
-                <button class="btn btn-sm btn-primary">
-                    View Flow
-                </button>
-            </div>
-        </div>
+    <div class="section-tabs" role="tablist" aria-label="Architecture views">
+        <button class="section-tab active" type="button" role="tab" aria-selected="true" onclick="showEntityDiagram()">Entity Relationships</button>
+        <button class="section-tab" type="button" role="tab" aria-selected="false" onclick="showDataFlow()">Data Flow</button>
+        <button class="section-tab" type="button" role="tab" aria-selected="false" onclick="showSystemArchitecture()">System Architecture</button>
     </div>
 
-    <div class="card architecture-card" onclick="showSystemArchitecture()">
-        <div class="card-header">
-            <h3 class="card-title">🏗️ System Architecture</h3>
-        </div>
-        <div class="card-body">
-            <p class="text-secondary mb-4">Component dependencies and system overview</p>
-            <div class="flex items-center justify-between">
-                <span class="badge badge-success">Available</span>
-                <button class="btn btn-sm btn-primary">
-                    View Architecture
-                </button>
+    <section class="page-panel architecture-workspace">
+        <div class="architecture-toolbar">
+            <div>
+                <h2 id="architecture-view-title">Entity Relationships</h2>
+                <p id="architecture-view-description">Interactive ERD showing data model relationships.</p>
+            </div>
+            <div class="architecture-actions" id="visualization-controls">
+                <button class="btn btn-sm btn-secondary" onclick="zoomOut()" aria-label="Zoom out">−</button>
+                <button class="btn btn-sm btn-secondary" onclick="resetZoom()" aria-label="Reset zoom">Reset</button>
+                <button class="btn btn-sm btn-secondary" onclick="zoomIn()" aria-label="Zoom in">+</button>
+                <button class="btn btn-sm btn-primary" onclick="exportDiagram()" aria-label="Export diagram">Export</button>
             </div>
         </div>
-    </div>
-</div>
 
-<div class="card">
-    <div class="card-header">
-        <div class="flex items-center justify-between">
-            <h3 class="card-title">Visualization Area</h3>
-            <div class="flex gap-2" id="visualization-controls" style="display: none;">
-                <button class="btn btn-sm btn-secondary" onclick="zoomOut()">🔍−</button>
-                <button class="btn btn-sm btn-secondary" onclick="resetZoom()">↻</button>
-                <button class="btn btn-sm btn-secondary" onclick="zoomIn()">🔍+</button>
-                <button class="btn btn-sm btn-secondary" onclick="exportDiagram()">📁</button>
+        <div id="visualization-container" class="architecture-canvas">
+            <div>
+                <h3>Entity Relationship Diagram</h3>
+                <p>Interactive diagram content will render here as the visualizer matures.</p>
             </div>
         </div>
-    </div>
-    <div class="card-body">
-        <div id="visualization-container" class="visualization-area">
-            <div class="visualization-placeholder">
-                <div class="text-4xl mb-4">🏗️</div>
-                <h3 class="text-lg font-semibold mb-2">Architecture Visualizer</h3>
-                <p class="text-secondary">Select a visualization type above to begin</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="grid grid-cols-2 gap-6 mt-6">
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Quick Stats</h3>
-        </div>
-        <div class="card-body">
-            <div class="grid grid-cols-2 gap-4">
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-primary">15</div>
-                    <div class="text-sm text-secondary">Core Entities</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-primary">8</div>
-                    <div class="text-sm text-secondary">Service Layers</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-primary">32</div>
-                    <div class="text-sm text-secondary">Relationships</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-primary">6</div>
-                    <div class="text-sm text-secondary">Modules</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Legend & Controls</h3>
-        </div>
-        <div class="card-body" id="legend-container">
-            <div class="legend-placeholder">
-                <p class="text-secondary">Select a visualization to see legend and controls</p>
-            </div>
-        </div>
-    </div>
+    </section>
 </div>
 
 <style>
