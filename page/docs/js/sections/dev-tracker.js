@@ -8,15 +8,15 @@ class DevTrackerSection {
         this.sectionId = 'dev-tracker';
         this.data = {
             totalTasks: 60,
-            completedTasks: 13,
+            completedTasks: 12,
             totalPhases: 9,
             completedPhases: 0,
             currentPhase: {
                 number: "A",
                 title: "Hardening & Foundation",
                 description: "Core entities, services, controllers, tests, CI, and secret handling",
-                completed: 13,
-                total: 20,
+                completed: 12,
+                total: 19,
                 color: "#2dd4bf"
             },
             phases: [
@@ -24,8 +24,8 @@ class DevTrackerSection {
                     number: "A",
                     title: "Hardening & Foundation",
                     description: "Current foundation work from the repo roadmap.",
-                    completed: 13,
-                    total: 20,
+                    completed: 12,
+                    total: 19,
                     color: "#2dd4bf",
                     status: "active"
                 },
@@ -97,7 +97,7 @@ class DevTrackerSection {
                     title: "Security, Ops & Cleanup",
                     description: "Secrets, HTTPS, keys, export/import, cleanup, and deployment guidance.",
                     completed: 0,
-                    total: 5,
+                    total: 6,
                     color: "#f472b6",
                     status: "upcoming"
                 }
@@ -306,9 +306,104 @@ function getRoadmapPhase(phaseNumber) {
     return tracker.data.phases.find(phase => String(phase.number) === String(phaseNumber)) || tracker.data.currentPhase;
 }
 
+const ROADMAP_PHASE_TASKS = {
+    A: [
+        { title: 'Stack decided: Blazor WASM + ASP.NET Core + SQLite + EF Core 10', status: 'done', area: 'Foundation' },
+        { title: 'Solution structure: Core / Contracts / Application / Server / Client', status: 'done', area: 'Foundation' },
+        { title: 'SQL Server to SQLite swap', status: 'done', area: 'Data' },
+        { title: 'All projects upgraded to net10.0', status: 'done', area: 'Platform' },
+        { title: 'Misplaced packages removed from Core, Application, Contracts', status: 'done', area: 'Cleanup' },
+        { title: 'Swashbuckle replaced with Scalar', status: 'done', area: 'API Docs' },
+        { title: 'IDesignTimeDbContextFactory added', status: 'done', area: 'EF Core' },
+        { title: 'Auto-migration on startup', status: 'done', area: 'EF Core' },
+        { title: 'InitialCreate migration: Users, Projects, Patterns, reference data seeded', status: 'done', area: 'Data' },
+        { title: 'JWT auth + BCrypt password hashing wired', status: 'done', area: 'Auth' },
+        { title: 'AuthController present with register/login', status: 'done', area: 'API' },
+        { title: 'Server running, DB created, Scalar docs accessible', status: 'done', area: 'Verification' },
+        { title: 'Add missing Core entities', status: 'todo', area: 'Domain' },
+        { title: 'Register new entities in DbContext and add migration', status: 'todo', area: 'Data' },
+        { title: 'Implement ProjectService and PatternService', status: 'todo', area: 'Application' },
+        { title: 'Add ProjectsController and PatternsController', status: 'todo', area: 'API' },
+        { title: 'Add tests for services with xUnit', status: 'todo', area: 'Tests' },
+        { title: 'Add GitHub Actions CI workflow for restore/build/test', status: 'todo', area: 'CI' },
+        { title: 'Move JWT secret to user-secrets or environment variables', status: 'todo', area: 'Security' }
+    ],
+    B: [
+        { title: 'Full CRUD and reorder for PatternPieces and PatternSteps', status: 'todo', area: 'Patterns' },
+        { title: 'Pattern detail page in client', status: 'todo', area: 'Client' },
+        { title: 'Step range display for repeated rows', status: 'todo', area: 'UX' },
+        { title: 'Stitch count aggregation per piece and pattern', status: 'todo', area: 'Domain' },
+        { title: 'Validation and improved pattern UX', status: 'todo', area: 'UX' }
+    ],
+    C: [
+        { title: 'Step checklist with ProjectStepProgress tracking', status: 'todo', area: 'Projects' },
+        { title: 'Per-piece timers with play/pause', status: 'todo', area: 'Projects' },
+        { title: 'Completion percentage from checked steps and stitch counts', status: 'todo', area: 'Progress' },
+        { title: 'Piece selector on project detail', status: 'todo', area: 'Client' },
+        { title: 'Archive flag and archive flow', status: 'todo', area: 'Projects' },
+        { title: 'Non-destructive editing', status: 'todo', area: 'Safety' }
+    ],
+    D: [
+        { title: 'Yarn inventory with brand, color, weight, fiber type, lot tracking', status: 'todo', area: 'Inventory' },
+        { title: 'Tool inventory with type, brand, size, purchase history', status: 'todo', area: 'Inventory' },
+        { title: 'Notions inventory with type, brand, size, color, multi-listing support', status: 'todo', area: 'Inventory' },
+        { title: 'Fiber tags for filtering', status: 'todo', area: 'Filters' },
+        { title: 'Lot number tracking with estimated remaining length calculation', status: 'todo', area: 'Lots' },
+        { title: 'Purchase history per source and sale price handling', status: 'todo', area: 'Purchases' },
+        { title: 'Project to inventory linking', status: 'todo', area: 'Relations' },
+        { title: 'Kit entity as multi-piece bundle with progress tracking', status: 'todo', area: 'Kits' },
+        { title: 'Kit to project flows', status: 'todo', area: 'Kits' }
+    ],
+    E: [
+        { title: 'Wire Settings / ReferenceItem categories into forms', status: 'todo', area: 'Settings' },
+        { title: 'Theme, Color, Source, Brand, FiberType selectable in UI', status: 'todo', area: 'Forms' },
+        { title: 'Add/new option inline in dropdowns', status: 'todo', area: 'UX' }
+    ],
+    F: [
+        { title: 'Define IModule contract and registration', status: 'todo', area: 'Modules' },
+        { title: 'Module discovery from directory', status: 'todo', area: 'Modules' },
+        { title: 'UI extension points via DynamicComponent', status: 'todo', area: 'Client' },
+        { title: 'Crafting module extracted as first example', status: 'todo', area: 'Modules' },
+        { title: '3D printing module scaffold', status: 'todo', area: 'Modules' }
+    ],
+    G: [
+        { title: 'Local disk file storage', status: 'todo', area: 'Assets' },
+        { title: 'Thumbnail generation', status: 'todo', area: 'Assets' },
+        { title: 'Image pickers on Projects, Patterns, Inventory items', status: 'todo', area: 'Client' }
+    ],
+    H: [
+        { title: 'DB indexes on commonly filtered columns', status: 'todo', area: 'Performance' },
+        { title: 'Server-side filters and pagination on all list endpoints', status: 'todo', area: 'API' },
+        { title: 'Full-text search with SQLite FTS if needed', status: 'todo', area: 'Search' },
+        { title: 'Caching where beneficial', status: 'todo', area: 'Performance' }
+    ],
+    I: [
+        { title: 'JWT secret properly managed', status: 'todo', area: 'Security' },
+        { title: 'HTTPS enforced in production', status: 'todo', area: 'Ops' },
+        { title: 'Data Protection key persistence', status: 'todo', area: 'Ops' },
+        { title: 'Export/import round-trip tested and documented', status: 'todo', area: 'Admin' },
+        { title: 'Legacy code removal', status: 'todo', area: 'Cleanup' },
+        { title: 'Deployment guidance', status: 'todo', area: 'Docs' }
+    ]
+};
+
+function renderRoadmapTaskList(tasks) {
+    return tasks.map((task, index) => `
+        <div class="roadmap-task ${task.status === 'done' ? 'is-done' : 'is-open'}">
+            <div class="roadmap-task-check" aria-hidden="true">${task.status === 'done' ? '✓' : index + 1}</div>
+            <div class="roadmap-task-body">
+                <div class="roadmap-task-title">${task.title}</div>
+                <div class="roadmap-task-meta">${task.area}</div>
+            </div>
+            <span class="badge badge-${task.status === 'done' ? 'success' : 'neutral'}">${task.status === 'done' ? 'Done' : 'Open'}</span>
+        </div>
+    `).join('');
+}
+
 function initDevTrackerPhase(params = {}) {
     const phaseNumber = params.phase || params.phaseId || 'A';
     const phase = getRoadmapPhase(phaseNumber);
+    const tasks = ROADMAP_PHASE_TASKS[phase.number] || [];
     const progressPercent = Math.round((phase.completed / phase.total) * 100);
     const contentContainer = document.getElementById('content-container');
 
@@ -356,21 +451,43 @@ function initDevTrackerPhase(params = {}) {
                 </div>
             </div>
 
-            <section class="page-panel architecture-workspace mt-6">
-                <div class="architecture-toolbar">
-                    <div>
-                        <h2>Roadmap Notes</h2>
-                        <p>This detail view mirrors docs/project/roadmap.md. Detailed task checklists can be added here once Phase A service/API work starts moving.</p>
+            <div class="phase-detail-grid mt-6">
+                <section class="page-panel phase-task-panel">
+                    <div class="phase-detail-panel-header">
+                        <div>
+                            <h2>Phase Tasks</h2>
+                            <p>${tasks.length ? 'Mirrors docs/project/roadmap.md for this phase.' : 'No task list has been defined for this phase yet.'}</p>
+                        </div>
                     </div>
-                    <button class="btn btn-primary" onclick="window.TankerMadeRouter.goToSection('workbench')">Open Workbench</button>
-                </div>
-                <div class="architecture-canvas">
-                    <div>
-                        <h3>Phase ${phase.number}</h3>
-                        <p>${phase.completed} of ${phase.total} roadmap items complete.</p>
+                    <div class="roadmap-task-list">
+                        ${tasks.length ? renderRoadmapTaskList(tasks) : '<p class="text-secondary">Tasks will appear here as this phase is planned.</p>'}
                     </div>
-                </div>
-            </section>
+                </section>
+
+                <aside class="page-panel phase-notes-panel">
+                    <div class="phase-detail-panel-header">
+                        <div>
+                            <h2>Notes</h2>
+                            <p>Current implementation state.</p>
+                        </div>
+                    </div>
+                    <div class="phase-note-list">
+                        <div class="phase-note">
+                            <span class="phase-note-label">Source</span>
+                            <span>docs/project/roadmap.md</span>
+                        </div>
+                        <div class="phase-note">
+                            <span class="phase-note-label">Progress</span>
+                            <span>${phase.completed} of ${phase.total}</span>
+                        </div>
+                        <div class="phase-note">
+                            <span class="phase-note-label">Status</span>
+                            <span>${phase.status}</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary w-full mt-4" onclick="window.TankerMadeRouter.goToSection('workbench')">Open Workbench</button>
+                </aside>
+            </div>
         </div>
     `;
 }

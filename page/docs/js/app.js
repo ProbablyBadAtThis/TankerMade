@@ -11,7 +11,7 @@ class TankerMadeApp {
       currentPhaseLabel: 'A',
       totalPhases:     9,
       overallProgress: 0,   // always derived, never hardcoded
-      completedTasks:  13,
+      completedTasks:  12,
       totalTasks:      60,
       openIncidents:   0,
     };
@@ -155,7 +155,7 @@ class TankerMadeApp {
       let completedTasks = 0;
       let totalTasks     = 0;
 
-      const phaseCounts = [20, 5, 6, 9, 3, 5, 3, 4, 5];
+      const phaseCounts = [19, 5, 6, 9, 3, 5, 3, 4, 6];
 
       if (this.isAuthenticated && window.TankerMadeData) {
         const phases = await window.TankerMadeData.getAllPhaseProgress();

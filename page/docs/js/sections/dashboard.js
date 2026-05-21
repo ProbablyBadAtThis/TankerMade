@@ -8,13 +8,13 @@ class DashboardSection {
         this.sectionId = 'dashboard';
         this.data = {
             totalTasks: 60,
-            completedTasks: 13,
+            completedTasks: 12,
             currentPhase: {
                 number: "A",
                 title: "Hardening & Foundation",
                 description: "Core entities, services, controllers, tests, CI, and secret handling",
-                completed: 13,
-                total: 20
+                completed: 12,
+                total: 19
             }
         };
     }
@@ -225,7 +225,7 @@ class DashboardSection {
 
     renderPhaseBreakdown() {
         const phases = [
-            { number: "A", title: "Hardening & Foundation", completed: 13, total: 20, active: true },
+            { number: "A", title: "Hardening & Foundation", completed: 12, total: 19, active: true },
             { number: "B", title: "Patterns V2", completed: 0, total: 5, active: false },
             { number: "C", title: "Project Workspace", completed: 0, total: 6, active: false }
         ];
@@ -269,7 +269,7 @@ class DashboardSection {
 
     renderWeekSummary() {
         const stats = [
-            { value: "13", label: "Done" },
+            { value: "12", label: "Done" },
             { value: "7", label: "Open in Phase A" },
             { value: "9", label: "Roadmap Phases" }
         ];
