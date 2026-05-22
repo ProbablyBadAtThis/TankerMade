@@ -96,6 +96,29 @@ public class CraftingProjectsController : ControllerBase
         }
     }
 
+    [HttpPut("{id:guid}/steps/{stepId:guid}/progress")]
+    public async Task<ActionResult<CraftingProjectDto>> SetStepProgress(
+        Guid id,
+        Guid stepId,
+        UpdateCraftingProjectStepProgressDto request)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            var project = await _projectService.SetStepProgressAsync(id, stepId, request, userId.Value);
+            return project == null ? NotFound() : Ok(project);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult> Delete(Guid id)
     {

@@ -54,6 +54,10 @@ else
                     <strong>@PatternStepCount</strong>
                     <span>Steps</span>
                 </div>
+                <div>
+                    <strong>@ChecklistText</strong>
+                    <span>Done</span>
+                </div>
             </div>
         </div>
 
@@ -135,12 +139,39 @@ else
                     }
                     else
                     {
-                        <ol class="project-piece-preview">
+                        <ol class="project-piece-checklist">
                             @foreach (var piece in linkedPattern.Pieces)
                             {
                                 <li>
-                                    <strong>@piece.Name</strong>
-                                    <span>@piece.Steps.Count steps</span>
+                                    <div class="project-piece-checklist-header">
+                                        <strong>@piece.Name</strong>
+                                        <span>@piece.Steps.Count steps</span>
+                                    </div>
+
+                                    @if (piece.Steps.Count == 0)
+                                    {
+                                        <p class="muted-copy">No steps yet.</p>
+                                    }
+                                    else
+                                    {
+                                        <ol class="project-step-checklist">
+                                            @foreach (var step in piece.Steps)
+                                            {
+                                                <li>
+                                                    <label class="project-step-check">
+                                                        <input type="checkbox"
+                                                               checked="@IsStepComplete(step.Id)"
+                                                               disabled="@busy"
+                                                               @onchange="async args => await SetStepProgressAsync(step.Id, args)" />
+                                                        <span>
+                                                            <strong>@StepLabel(step)</strong>
+                                                            <small>@step.Instructions</small>
+                                                        </span>
+                                                    </label>
+                                                </li>
+                                            }
+                                        </ol>
+                                    }
                                 </li>
                             }
                         </ol>
@@ -184,6 +215,10 @@ else
     private int PatternPieceCount => linkedPattern?.PieceCount ?? 0;
 
     private int PatternStepCount => linkedPattern?.StepCount ?? 0;
+
+    private string ChecklistText => project == null
+        ? "0/0"
+        : $"{project.CompletedStepCount}/{project.TotalStepCount}";
 
     protected override async Task OnInitializedAsync()
     {
@@ -253,11 +288,48 @@ else
         }
     }
 
+    private async Task SetStepProgressAsync(Guid patternStepId, ChangeEventArgs args)
+    {
+        var isComplete = args.Value is bool isChecked && isChecked;
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var updated = await ApiClient.SetCraftingProjectStepProgressAsync(ProjectId, patternStepId, isComplete);
+            if (updated != null)
+            {
+                project = updated;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
     private async Task LoadLinkedPatternAsync()
     {
         linkedPattern = project?.PatternId == null
             ? null
             : await ApiClient.GetCraftingPatternAsync(project.PatternId.Value);
+    }
+
+    private bool IsStepComplete(Guid patternStepId)
+    {
+        return project?.StepProgress.Any(progress => progress.PatternStepId == patternStepId && progress.IsComplete) == true;
+    }
+
+    private static string StepLabel(TankerMade.Client.Services.CraftingPatternStepDetail step)
+    {
+        var label = string.IsNullOrWhiteSpace(step.Label) ? "Step" : step.Label;
+        return string.IsNullOrWhiteSpace(step.DisplayRange)
+            ? label
+            : $"{step.DisplayRange}: {label}";
     }
 
     private sealed class ProjectFormModel

@@ -106,6 +106,46 @@ public class CraftingProjectService : ICraftingProjectService
         return await MapListAsync(projects);
     }
 
+    public async Task<CraftingProjectDto?> SetStepProgressAsync(
+        Guid projectId,
+        Guid patternStepId,
+        UpdateCraftingProjectStepProgressDto updateDto,
+        Guid userId)
+    {
+        var project = await _context.CraftingProjects
+            .SingleOrDefaultAsync(p => p.Id == projectId && p.UserId == userId);
+
+        if (project == null)
+        {
+            return null;
+        }
+
+        await EnsureStepBelongsToLinkedPatternAsync(project, patternStepId);
+
+        var existing = await _context.CraftingProjectStepProgress
+            .SingleOrDefaultAsync(progress => progress.ProjectId == projectId && progress.PatternStepId == patternStepId);
+
+        if (updateDto.IsComplete)
+        {
+            if (existing == null)
+            {
+                _context.CraftingProjectStepProgress.Add(new CraftingProjectStepProgress(Guid.NewGuid(), projectId, patternStepId));
+            }
+            else if (!existing.IsComplete)
+            {
+                existing.Complete();
+            }
+        }
+        else if (existing != null)
+        {
+            _context.CraftingProjectStepProgress.Remove(existing);
+        }
+
+        await _context.SaveChangesAsync();
+
+        return await MapAsync(project);
+    }
+
     private async Task<CraftingProjectDto> MapAsync(CraftingProject project)
     {
         var userName = await _context.Users
@@ -127,6 +167,28 @@ public class CraftingProjectService : ICraftingProjectService
                 .Select(t => t.Name)
                 .SingleOrDefaultAsync() ?? string.Empty;
 
+        var patternStepIds = await GetLinkedPatternStepIdsAsync(project);
+        var stepProgress = new List<CraftingProjectStepProgressDto>();
+        if (patternStepIds.Count > 0)
+        {
+            var patternStepIdSet = patternStepIds.ToHashSet();
+            var completedProgress = await _context.CraftingProjectStepProgress
+                .Where(progress => progress.ProjectId == project.Id && progress.IsComplete)
+                .OrderBy(progress => progress.CompletedAt)
+                .ToListAsync();
+
+            stepProgress = completedProgress
+                .Where(progress => patternStepIdSet.Contains(progress.PatternStepId))
+                .Select(progress => new CraftingProjectStepProgressDto
+                {
+                    ProjectId = progress.ProjectId,
+                    PatternStepId = progress.PatternStepId,
+                    IsComplete = progress.IsComplete,
+                    CompletedAt = progress.CompletedAt
+                })
+                .ToList();
+        }
+
         return new CraftingProjectDto
         {
             Id = project.Id,
@@ -140,6 +202,9 @@ public class CraftingProjectService : ICraftingProjectService
             Difficulty = project.Difficulty,
             DifficultyLabel = GetDifficultyLabel(project.Difficulty),
             Progress = project.Progress,
+            CompletedStepCount = stepProgress.Count,
+            TotalStepCount = patternStepIds.Count,
+            StepProgress = stepProgress,
             UserId = project.UserId,
             Username = userName,
             CreatedAt = project.CreatedAt,
@@ -186,5 +251,44 @@ public class CraftingProjectService : ICraftingProjectService
         {
             throw new InvalidOperationException("The selected pattern is not available for this project.");
         }
+    }
+
+    private async Task EnsureStepBelongsToLinkedPatternAsync(CraftingProject project, Guid patternStepId)
+    {
+        if (project.PatternId == null)
+        {
+            throw new InvalidOperationException("Link a pattern before tracking step progress.");
+        }
+
+        var belongsToPattern = await _context.CraftingPatternSteps
+            .Join(
+                _context.CraftingPatternPieces,
+                step => step.PatternPieceId,
+                piece => piece.Id,
+                (step, piece) => new { step.Id, piece.PatternId })
+            .AnyAsync(step => step.Id == patternStepId && step.PatternId == project.PatternId);
+
+        if (!belongsToPattern)
+        {
+            throw new InvalidOperationException("The selected step is not available for this project.");
+        }
+    }
+
+    private async Task<IReadOnlyList<Guid>> GetLinkedPatternStepIdsAsync(CraftingProject project)
+    {
+        if (project.PatternId == null)
+        {
+            return [];
+        }
+
+        return await _context.CraftingPatternSteps
+            .Join(
+                _context.CraftingPatternPieces,
+                step => step.PatternPieceId,
+                piece => piece.Id,
+                (step, piece) => new { step.Id, piece.PatternId })
+            .Where(step => step.PatternId == project.PatternId)
+            .Select(step => step.Id)
+            .ToListAsync();
     }
 }

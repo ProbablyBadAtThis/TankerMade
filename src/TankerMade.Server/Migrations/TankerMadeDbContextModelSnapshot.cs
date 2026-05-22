@@ -205,6 +205,22 @@ partial class TankerMadeDbContextModelSnapshot : ModelSnapshot
             b.ToTable("CraftingProjects");
         });
 
+        modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectStepProgress", b =>
+        {
+            b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("TEXT");
+            b.Property<DateTime>("CompletedAt").HasColumnType("TEXT");
+            b.Property<DateTime>("CreatedAt").HasColumnType("TEXT");
+            b.Property<bool>("IsComplete").HasColumnType("INTEGER");
+            b.Property<Guid>("PatternStepId").HasColumnType("TEXT");
+            b.Property<Guid>("ProjectId").HasColumnType("TEXT");
+            b.Property<DateTime>("UpdatedAt").HasColumnType("TEXT");
+            b.HasKey("Id");
+            b.HasIndex("PatternStepId");
+            b.HasIndex("ProjectId");
+            b.HasIndex("ProjectId", "PatternStepId").IsUnique();
+            b.ToTable("CraftingProjectStepProgress");
+        });
+
         modelBuilder.Entity("TankerMade.Core.Entities.UserModuleActivation", b =>
         {
             b.HasOne("TankerMade.Core.Entities.ModuleDefinition", null)
@@ -272,6 +288,21 @@ partial class TankerMadeDbContextModelSnapshot : ModelSnapshot
             b.HasOne("TankerMade.Core.Entities.User", null)
                 .WithMany()
                 .HasForeignKey("UserId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectStepProgress", b =>
+        {
+            b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPatternStep", null)
+                .WithMany()
+                .HasForeignKey("PatternStepId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+
+            b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingProject", null)
+                .WithMany()
+                .HasForeignKey("ProjectId")
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired();
         });

@@ -8,14 +8,14 @@ class DevTrackerSection {
         this.sectionId = 'dev-tracker';
         this.data = {
             totalTasks: 65,
-            completedTasks: 31,
+            completedTasks: 32,
             totalPhases: 9,
             completedPhases: 2,
             currentPhase: {
                 number: "C",
                 title: "Module Project Workspace",
                 description: "Step progress, timers, completion, pieces, archive, and editing",
-                completed: 0,
+                completed: 1,
                 total: 6,
                 color: "#a78bfa"
             },
@@ -42,7 +42,7 @@ class DevTrackerSection {
                     number: "C",
                     title: "Module Project Workspace",
                     description: "Step progress, timers, completion, pieces, archive, and editing.",
-                    completed: 0,
+                    completed: 1,
                     total: 6,
                     color: "#a78bfa",
                     status: "active"
@@ -343,7 +343,7 @@ const ROADMAP_PHASE_TASKS = {
         { title: 'Expand module-owned project workspace screens beyond the Phase A reference baseline', status: 'done', area: 'Projects' }
     ],
     C: [
-        { title: 'Step checklist with ProjectStepProgress tracking', status: 'todo', area: 'Projects' },
+        { title: 'Step checklist with ProjectStepProgress tracking', status: 'done', area: 'Projects' },
         { title: 'Per-piece timers with play/pause', status: 'todo', area: 'Projects' },
         { title: 'Completion percentage from checked steps and stitch counts', status: 'todo', area: 'Progress' },
         { title: 'Piece selector on project detail', status: 'todo', area: 'Client' },

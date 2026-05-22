@@ -11,4 +11,5 @@ public interface ICraftingProjectService
     Task<CraftingProjectDto?> UpdateAsync(UpdateCraftingProjectDto updateDto, Guid userId);
     Task<bool> DeleteAsync(Guid id, Guid userId);
     Task<IReadOnlyList<CraftingProjectDto>> SearchAsync(string searchTerm, Guid userId);
+    Task<CraftingProjectDto?> SetStepProgressAsync(Guid projectId, Guid patternStepId, UpdateCraftingProjectStepProgressDto updateDto, Guid userId);
 }

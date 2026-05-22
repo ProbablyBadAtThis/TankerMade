@@ -8,12 +8,12 @@ class DashboardSection {
         this.sectionId = 'dashboard';
         this.data = {
             totalTasks: 65,
-            completedTasks: 31,
+            completedTasks: 32,
             currentPhase: {
                 number: "C",
                 title: "Module Project Workspace",
                 description: "Step progress, timers, completion, pieces, archive, and editing",
-                completed: 0,
+                completed: 1,
                 total: 6
             }
         };
@@ -210,7 +210,7 @@ class DashboardSection {
             { title: "Add step range display", meta: "Phase B • UX", status: "done" },
             { title: "Add progress aggregation and validation", meta: "Phase B • Domain behavior", status: "done" },
             { title: "Expand module-owned project workspace screens", meta: "Phase B • Projects", status: "done" },
-            { title: "Add module-owned step/checklist progress", meta: "Phase C • Projects", status: "active" },
+            { title: "Add module-owned step/checklist progress", meta: "Phase C • Projects", status: "done" },
             { title: "Add module-owned timers", meta: "Phase C • Projects", status: "active" }
         ];
 
@@ -229,7 +229,7 @@ class DashboardSection {
         const phases = [
             { number: "A", title: "Module Host & Reference Module", completed: 26, total: 26, active: false },
             { number: "B", title: "Crafting Module V2", completed: 5, total: 5, active: false },
-            { number: "C", title: "Module Project Workspace", completed: 0, total: 6, active: true }
+            { number: "C", title: "Module Project Workspace", completed: 1, total: 6, active: true }
         ];
 
         return phases.map(phase => {
@@ -271,8 +271,8 @@ class DashboardSection {
 
     renderWeekSummary() {
         const stats = [
-            { value: "31", label: "Done" },
-            { value: "6", label: "Open in Phase C" },
+            { value: "32", label: "Done" },
+            { value: "5", label: "Open in Phase C" },
             { value: "9", label: "Roadmap Phases" }
         ];
 
@@ -286,9 +286,9 @@ class DashboardSection {
 
     renderNextTasks() {
         const tasks = [
-            { title: "Module-owned step/checklist progress", phase: "Phase C" },
             { title: "Module-owned timers with play/pause", phase: "Phase C" },
-            { title: "Module-specific completion percentage logic", phase: "Phase C" }
+            { title: "Module-specific completion percentage logic", phase: "Phase C" },
+            { title: "Module-specific piece/section selector", phase: "Phase C" }
         ];
 
         return tasks.map(task => `

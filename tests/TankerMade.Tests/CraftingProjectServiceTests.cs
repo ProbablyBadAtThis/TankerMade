@@ -130,4 +130,130 @@ public class CraftingProjectServiceTests
                 Progress = -1
             }, user.Id));
     }
+
+    [Fact]
+    public async Task SetStepProgressAsync_tracks_completion_for_linked_pattern_steps()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+        var user = new User(Guid.NewGuid(), "maker", "maker@example.test", "hash");
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var patternService = new CraftingPatternService(context);
+        var projectService = new CraftingProjectService(context);
+        var pattern = await patternService.CreateAsync(new CreateCraftingPatternDto
+        {
+            Name = "Tracked Pattern"
+        }, user.Id);
+        var piece = await patternService.AddPieceAsync(pattern.Id, new CreateCraftingPatternPieceDto
+        {
+            Name = "Main"
+        }, user.Id);
+
+        Assert.NotNull(piece);
+
+        var firstStep = await patternService.AddStepAsync(pattern.Id, piece.Id, new CreateCraftingPatternStepDto
+        {
+            RangeStart = 1,
+            RangeEnd = 1,
+            Label = "Start",
+            Instructions = "Start here."
+        }, user.Id);
+
+        Assert.NotNull(firstStep);
+
+        await patternService.AddStepAsync(pattern.Id, piece.Id, new CreateCraftingPatternStepDto
+        {
+            RangeStart = 2,
+            RangeEnd = 2,
+            Label = "Continue",
+            Instructions = "Keep going."
+        }, user.Id);
+        var project = await projectService.CreateAsync(new CreateCraftingProjectDto
+        {
+            Name = "Tracked Project",
+            PatternId = pattern.Id
+        }, user.Id);
+
+        var checkedProject = await projectService.SetStepProgressAsync(
+            project.Id,
+            firstStep.Id,
+            new UpdateCraftingProjectStepProgressDto { IsComplete = true },
+            user.Id);
+        var uncheckedProject = await projectService.SetStepProgressAsync(
+            project.Id,
+            firstStep.Id,
+            new UpdateCraftingProjectStepProgressDto { IsComplete = false },
+            user.Id);
+
+        Assert.NotNull(checkedProject);
+        Assert.Equal(1, checkedProject.CompletedStepCount);
+        Assert.Equal(2, checkedProject.TotalStepCount);
+        Assert.Contains(checkedProject.StepProgress, progress => progress.PatternStepId == firstStep.Id && progress.IsComplete);
+        Assert.NotNull(uncheckedProject);
+        Assert.Equal(0, uncheckedProject.CompletedStepCount);
+        Assert.Equal(2, uncheckedProject.TotalStepCount);
+        Assert.Empty(uncheckedProject.StepProgress);
+    }
+
+    [Fact]
+    public async Task SetStepProgressAsync_rejects_steps_outside_linked_pattern()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+        var user = new User(Guid.NewGuid(), "maker", "maker@example.test", "hash");
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var patternService = new CraftingPatternService(context);
+        var projectService = new CraftingProjectService(context);
+        var linkedPattern = await patternService.CreateAsync(new CreateCraftingPatternDto
+        {
+            Name = "Linked Pattern"
+        }, user.Id);
+        var linkedPiece = await patternService.AddPieceAsync(linkedPattern.Id, new CreateCraftingPatternPieceDto
+        {
+            Name = "Linked Piece"
+        }, user.Id);
+        var otherPattern = await patternService.CreateAsync(new CreateCraftingPatternDto
+        {
+            Name = "Other Pattern"
+        }, user.Id);
+        var otherPiece = await patternService.AddPieceAsync(otherPattern.Id, new CreateCraftingPatternPieceDto
+        {
+            Name = "Other Piece"
+        }, user.Id);
+
+        Assert.NotNull(linkedPiece);
+        Assert.NotNull(otherPiece);
+
+        await patternService.AddStepAsync(linkedPattern.Id, linkedPiece.Id, new CreateCraftingPatternStepDto
+        {
+            Label = "Allowed",
+            Instructions = "This one belongs."
+        }, user.Id);
+        var otherStep = await patternService.AddStepAsync(otherPattern.Id, otherPiece.Id, new CreateCraftingPatternStepDto
+        {
+            Label = "Rejected",
+            Instructions = "This one does not."
+        }, user.Id);
+
+        Assert.NotNull(otherStep);
+
+        var project = await projectService.CreateAsync(new CreateCraftingProjectDto
+        {
+            Name = "Linked Project",
+            PatternId = linkedPattern.Id
+        }, user.Id);
+
+        var rejected = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            projectService.SetStepProgressAsync(
+                project.Id,
+                otherStep.Id,
+                new UpdateCraftingProjectStepProgressDto { IsComplete = true },
+                user.Id));
+
+        Assert.Equal("The selected step is not available for this project.", rejected.Message);
+    }
 }

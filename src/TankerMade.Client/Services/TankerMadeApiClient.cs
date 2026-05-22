@@ -90,6 +90,24 @@ public class TankerMadeApiClient
         return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>();
     }
 
+    public async Task<CraftingProjectSummary?> SetCraftingProjectStepProgressAsync(
+        Guid projectId,
+        Guid patternStepId,
+        bool isComplete)
+    {
+        var response = await _http.PutAsJsonAsync(
+            $"api/modules/crafting/projects/{projectId}/steps/{patternStepId}/progress",
+            new CraftingProjectStepProgressRequest { IsComplete = isComplete });
+
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>();
+    }
+
     public async Task<CraftingPatternDetail?> GetCraftingPatternAsync(Guid patternId)
     {
         var response = await _http.GetAsync($"api/modules/crafting/patterns/{patternId}");
@@ -275,6 +293,11 @@ public class CraftingProjectFormRequest
     public int Progress { get; set; }
 }
 
+public class CraftingProjectStepProgressRequest
+{
+    public bool IsComplete { get; set; }
+}
+
 public class CraftingProjectSummary
 {
     public Guid Id { get; set; }
@@ -288,8 +311,19 @@ public class CraftingProjectSummary
     public int Difficulty { get; set; }
     public string DifficultyLabel { get; set; } = string.Empty;
     public int Progress { get; set; }
+    public int CompletedStepCount { get; set; }
+    public int TotalStepCount { get; set; }
+    public IReadOnlyList<CraftingProjectStepProgressDetail> StepProgress { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+}
+
+public class CraftingProjectStepProgressDetail
+{
+    public Guid ProjectId { get; set; }
+    public Guid PatternStepId { get; set; }
+    public bool IsComplete { get; set; }
+    public DateTime CompletedAt { get; set; }
 }
 
 public class CraftingPatternSummary

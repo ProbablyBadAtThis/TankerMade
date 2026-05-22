@@ -21,6 +21,7 @@ public class TankerMadeDbContext : DbContext
 
     // Reference crafting module entities
     public DbSet<CraftingProject> CraftingProjects { get; set; }
+    public DbSet<CraftingProjectStepProgress> CraftingProjectStepProgress { get; set; }
     public DbSet<CraftingPattern> CraftingPatterns { get; set; }
     public DbSet<CraftingPatternPiece> CraftingPatternPieces { get; set; }
     public DbSet<CraftingPatternStep> CraftingPatternSteps { get; set; }
@@ -38,6 +39,7 @@ public class TankerMadeDbContext : DbContext
         ConfigureUser(modelBuilder);
         ConfigureModules(modelBuilder);
         ConfigureCraftingProject(modelBuilder);
+        ConfigureCraftingProjectStepProgress(modelBuilder);
         ConfigureCraftingPattern(modelBuilder);
         ConfigureCraftingPatternPiece(modelBuilder);
         ConfigureCraftingPatternStep(modelBuilder);
@@ -146,6 +148,33 @@ public class TankerMadeDbContext : DbContext
 
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.Slug);
+        });
+    }
+
+    private void ConfigureCraftingProjectStepProgress(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CraftingProjectStepProgress>(entity =>
+        {
+            entity.ToTable("CraftingProjectStepProgress");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.IsComplete)
+                .IsRequired();
+
+            entity.HasOne<CraftingProject>()
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<CraftingPatternStep>()
+                .WithMany()
+                .HasForeignKey(e => e.PatternStepId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.PatternStepId);
+            entity.HasIndex(e => new { e.ProjectId, e.PatternStepId })
+                .IsUnique();
         });
     }
 

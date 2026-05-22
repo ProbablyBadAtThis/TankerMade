@@ -22,6 +22,9 @@ public class MigrationTests
         Assert.Contains(
             "20260522140000_CraftingPatternPiecesAndSteps",
             context.Database.GetMigrations());
+        Assert.Contains(
+            "20260522170000_CraftingProjectStepProgress",
+            context.Database.GetMigrations());
     }
 
     [Fact]
@@ -58,6 +61,7 @@ public class MigrationTests
             Assert.Contains("CraftingPatterns", tables);
             Assert.Contains("CraftingPatternPieces", tables);
             Assert.Contains("CraftingPatternSteps", tables);
+            Assert.Contains("CraftingProjectStepProgress", tables);
         }
         finally
         {

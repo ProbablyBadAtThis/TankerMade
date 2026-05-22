@@ -443,26 +443,60 @@ code {
     color: #536173;
 }
 
-.project-piece-preview {
+.project-piece-checklist {
     display: grid;
-    gap: 0.5rem;
+    gap: 0.75rem;
     list-style: none;
     margin: 0;
     padding: 0;
 }
 
-.project-piece-preview li {
-    align-items: center;
+.project-piece-checklist > li {
     border: 1px solid #d9dee7;
     border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
     padding: 0.7rem 0.75rem;
 }
 
-.project-piece-preview span {
+.project-piece-checklist-header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.project-piece-checklist-header span {
     color: #536173;
     font-size: 0.85rem;
+}
+
+.project-step-checklist {
+    display: grid;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+}
+
+.project-step-check {
+    align-items: start;
+    border-top: 1px solid #eef2f6;
+    display: grid;
+    gap: 0.65rem;
+    grid-template-columns: auto minmax(0, 1fr);
+    padding-top: 0.5rem;
+}
+
+.project-step-check input {
+    margin-top: 0.25rem;
+}
+
+.project-step-check span {
+    display: grid;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.project-step-check small {
+    color: #536173;
 }
 
 .piece-list {

@@ -61,7 +61,7 @@ Phase B continues to treat `TankerMade.Modules.Crafting` as a reference/template
 
 ## Phase C — Module Project Workspace
 
-- [ ] Module-owned step/checklist progress
+- [x] Module-owned step/checklist progress
 - [ ] Module-owned timers with play/pause
 - [ ] Module-specific completion percentage logic
 - [ ] Module-specific piece/section selector
