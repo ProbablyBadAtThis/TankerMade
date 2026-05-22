@@ -7,14 +7,14 @@ class DashboardSection {
     constructor() {
         this.sectionId = 'dashboard';
         this.data = {
-            totalTasks: 60,
-            completedTasks: 12,
+            totalTasks: 65,
+            completedTasks: 26,
             currentPhase: {
-                number: "A",
-                title: "Hardening & Foundation",
-                description: "Core entities, services, controllers, tests, CI, and secret handling",
-                completed: 12,
-                total: 19
+                number: "B",
+                title: "Crafting Module V2",
+                description: "Module-owned pattern pieces, steps, detail UI, progress behavior, and workspace expansion",
+                completed: 0,
+                total: 5
             }
         };
     }
@@ -29,7 +29,7 @@ class DashboardSection {
                 <div class="dashboard-header">
                     <h1>Developer Dashboard</h1>
                     <p class="dashboard-subtitle">${isAuthenticated
-                        ? 'Foundation status, implementation focus, and release health in one working surface.'
+                        ? 'Module progress, implementation focus, and release health in one working surface.'
                         : 'A public glimpse of TankerMade progress. Sign in for tracker details, docs, architecture, and incidents.'}</p>
                 </div>
 
@@ -121,7 +121,7 @@ class DashboardSection {
                 ${isAuthenticated ? `
                 <div class="dashboard-section-title">
                     <h2>Current Focus</h2>
-                    <p>Open Phase A work split into scan-friendly panels.</p>
+                    <p>Open Phase B work split into scan-friendly panels.</p>
                 </div>
 
                 <div class="dashboard-focus-panels">
@@ -192,7 +192,7 @@ class DashboardSection {
                     <h2>Project Glimpse</h2>
                 </div>
                 <div class="card-body">
-                    <p class="text-secondary">TankerMade is a local-first modular maker workbench, currently in foundation hardening.</p>
+                    <p class="text-secondary">TankerMade is a local-first modular maker workbench. Phase A is complete; Phase B is expanding the Crafting module.</p>
                     <div class="mt-4">
                         <button class="btn btn-primary" onclick="window.TankerMadeAuth && window.TankerMadeAuth.login()">
                             Sign in with GitHub
@@ -205,11 +205,11 @@ class DashboardSection {
 
     renderActiveTasks() {
         const tasks = [
-            { title: "Add missing Core entities", meta: "Phase A • Domain model", status: "active" },
-            { title: "Register entities in DbContext and add migration", meta: "Phase A • Persistence", status: "active" },
-            { title: "Implement ProjectService and PatternService", meta: "Phase A • Application services", status: "active" },
-            { title: "Add Projects and Patterns API controllers", meta: "Phase A • Server API", status: "active" },
-            { title: "Add focused service/API tests", meta: "Phase A • Verification", status: "active" }
+            { title: "Add pattern pieces and steps", meta: "Phase B • Crafting module", status: "active" },
+            { title: "Build pattern detail page", meta: "Phase B • Module UI", status: "active" },
+            { title: "Add step range display", meta: "Phase B • UX", status: "active" },
+            { title: "Add progress aggregation and validation", meta: "Phase B • Domain behavior", status: "active" },
+            { title: "Expand module-owned project workspace screens", meta: "Phase B • Projects", status: "active" }
         ];
 
         return tasks.map(task => `
@@ -225,9 +225,9 @@ class DashboardSection {
 
     renderPhaseBreakdown() {
         const phases = [
-            { number: "A", title: "Hardening & Foundation", completed: 12, total: 19, active: true },
-            { number: "B", title: "Patterns V2", completed: 0, total: 5, active: false },
-            { number: "C", title: "Project Workspace", completed: 0, total: 6, active: false }
+            { number: "A", title: "Module Host & Reference Module", completed: 26, total: 26, active: false },
+            { number: "B", title: "Crafting Module V2", completed: 0, total: 5, active: true },
+            { number: "C", title: "Module Project Workspace", completed: 0, total: 6, active: false }
         ];
 
         return phases.map(phase => {
@@ -269,8 +269,8 @@ class DashboardSection {
 
     renderWeekSummary() {
         const stats = [
-            { value: "12", label: "Done" },
-            { value: "7", label: "Open in Phase A" },
+            { value: "26", label: "Done" },
+            { value: "5", label: "Open in Phase B" },
             { value: "9", label: "Roadmap Phases" }
         ];
 
@@ -284,8 +284,9 @@ class DashboardSection {
 
     renderNextTasks() {
         const tasks = [
-            { title: "Move JWT secret to user-secrets or env vars", phase: "Phase A" },
-            { title: "Add GitHub Actions restore/build/test workflow", phase: "Phase A" }
+            { title: "Full CRUD and reorder for pattern pieces and steps", phase: "Phase B" },
+            { title: "Pattern detail page in module UI", phase: "Phase B" },
+            { title: "Progress aggregation and validation", phase: "Phase B" }
         ];
 
         return tasks.map(task => `
@@ -298,12 +299,12 @@ class DashboardSection {
 
     renderRecentActivity() {
         const activities = [
-            { icon: "", title: "OAuth implementation complete", time: "2 hours ago" },
-            { icon: "", title: "Functions deployed to Cloudflare", time: "3 hours ago" },
-            { icon: "", title: "Updated project structure", time: "4 hours ago" },
-            { icon: "", title: "Implemented auth-based navigation", time: "5 hours ago" },
-            { icon: "", title: "GitHub OAuth app configured", time: "6 hours ago" },
-            { icon: "", title: "Dashboard layout redesigned", time: "1 day ago" }
+            { icon: "", title: "Phase A smoke test passed", time: "Today" },
+            { icon: "", title: "Crafting module activation verified in client", time: "Today" },
+            { icon: "", title: "Pattern and project CRUD verified", time: "Today" },
+            { icon: "", title: "Cross-user ownership check passed", time: "Today" },
+            { icon: "", title: "Module migration metadata repaired", time: "Today" },
+            { icon: "", title: "Partial update behavior patched", time: "Today" }
         ];
 
         return activities.map(activity => `

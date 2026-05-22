@@ -1,0 +1,28 @@
+using TankerMade.Core.Entities;
+using TankerMade.Modules.Crafting;
+using TankerMade.Server.Services;
+using Xunit;
+
+namespace TankerMade.Tests;
+
+public class ModuleServiceTests
+{
+    [Fact]
+    public async Task ActivateAsync_marks_bundled_crafting_module_active_for_user()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+        var user = new User(Guid.NewGuid(), "maker", "maker@example.test", "hash");
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var service = new ModuleService(context);
+
+        var activated = await service.ActivateAsync(CraftingModule.ModuleKey, user.Id);
+        var activeModules = await service.GetActiveModulesAsync(user.Id);
+
+        Assert.NotNull(activated);
+        Assert.True(activated.IsActive);
+        Assert.Contains(activeModules, module => module.ModuleKey == CraftingModule.ModuleKey);
+    }
+}

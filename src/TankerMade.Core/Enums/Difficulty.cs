@@ -3,9 +3,10 @@
     public enum Difficulty
     {
         Beginner = 1,
-        Easy = 2,
+        BeginnerPlus = 2,
         Intermediate = 3,
-        Advanced = 4,
-        Expert = 5
+        IntermediatePlus = 4,
+        Advanced = 5,
+        AdvancedPlus = 6
     }
 }

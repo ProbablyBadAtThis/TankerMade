@@ -165,17 +165,6 @@ namespace TankerMade.Server.Migrations
                 });
 
             migrationBuilder.InsertData(
-                table: "Brands",
-                columns: new[] { "Id", "CreatedAt", "Name", "Slug" },
-                values: new object[,]
-                {
-                    { new Guid("44444444-4444-4444-4444-444444444441"), new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc), "Red Heart", "red-heart" },
-                    { new Guid("44444444-4444-4444-4444-444444444442"), new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc), "Lion Brand", "lion-brand" },
-                    { new Guid("44444444-4444-4444-4444-444444444443"), new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc), "Bernat", "bernat" },
-                    { new Guid("44444444-4444-4444-4444-444444444444"), new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc), "Caron", "caron" }
-                });
-
-            migrationBuilder.InsertData(
                 table: "Colors",
                 columns: new[] { "Id", "CreatedAt", "Name", "Slug" },
                 values: new object[,]
@@ -193,9 +182,9 @@ namespace TankerMade.Server.Migrations
                 columns: new[] { "Id", "CreatedAt", "Name", "Slug" },
                 values: new object[,]
                 {
-                    { new Guid("33333333-3333-3333-3333-333333333331"), new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc), "Ravelry", "ravelry" },
-                    { new Guid("33333333-3333-3333-3333-333333333332"), new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc), "Etsy", "etsy" },
-                    { new Guid("33333333-3333-3333-3333-333333333333"), new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc), "YouTube", "youtube" },
+                    { new Guid("33333333-3333-3333-3333-333333333331"), new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc), "Website", "website" },
+                    { new Guid("33333333-3333-3333-3333-333333333332"), new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc), "Marketplace", "marketplace" },
+                    { new Guid("33333333-3333-3333-3333-333333333333"), new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc), "Video", "video" },
                     { new Guid("33333333-3333-3333-3333-333333333334"), new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc), "Book", "book" },
                     { new Guid("33333333-3333-3333-3333-333333333335"), new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc), "Custom", "custom" }
                 });

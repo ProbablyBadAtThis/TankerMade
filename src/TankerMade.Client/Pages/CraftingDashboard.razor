@@ -1,0 +1,26 @@
+@page "/modules/crafting"
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+
+<PageTitle>Crafting</PageTitle>
+
+<h1>Crafting</h1>
+
+@if (!ModuleState.IsActive("crafting"))
+{
+    <p>Activate the Crafting module from Home to load its tools.</p>
+}
+else
+{
+    <p>The Crafting module is active. Project and pattern workflows are supplied by this module.</p>
+
+    <div class="list-group">
+        <div class="list-group-item">
+            <h2 class="h5 mb-1">Projects</h2>
+            <p class="mb-0">Module-owned project tracking endpoint: <code>api/modules/crafting/projects</code></p>
+        </div>
+        <div class="list-group-item">
+            <h2 class="h5 mb-1">Patterns</h2>
+            <p class="mb-0">Module-owned pattern endpoint: <code>api/modules/crafting/patterns</code></p>
+        </div>
+    </div>
+}

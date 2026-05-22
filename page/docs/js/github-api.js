@@ -200,7 +200,7 @@ class GitHubDataStore {
     // Get task count for each phase (from existing dev-tracker.js)
     getPhaseTaskCount(phaseId) {
         const taskCounts = {
-            1: 19, 2: 5, 3: 6, 4: 9, 5: 3,
+            1: 26, 2: 5, 3: 6, 4: 7, 5: 3,
             6: 5, 7: 3, 8: 4, 9: 6
         };
         return taskCounts[phaseId] || 0;

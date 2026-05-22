@@ -13,7 +13,7 @@ Local, ignored scratch material may exist in `Scratch/`. Treat it as temporary o
 
 ## Project Shape
 
-TankerMade is a local-first modular maker workbench. Crafting is the first module; 3D printing is planned later.
+TankerMade is a local-first modular maker workbench. The primary program is a core host/shell; craft and maker workflows are supplied by separately loaded modules. Crafting should be an installable/loadable module, and 3D printing should be another module.
 
 Current stack:
 
@@ -36,7 +36,8 @@ Solution layout:
 
 - Keep namespaces under `TankerMade.*`.
 - Prefer direct `DbContext` injection in services for now; do not add a repository abstraction unless there is a clear need.
-- Keep Core craft-agnostic where practical. Craft-specific fields and flows should eventually live in modules.
+- Keep Core craft-agnostic. Craft-specific fields, workflows, navigation, validation, seed data, and UI live in modules.
+- The base program should not expose project/pattern/inventory craft workflows by itself. On first run, it should load the shell and ask which module(s) to activate.
 - Keep changes small, focused, and aligned with the roadmap.
 - Read files before editing them.
 - Do not commit local databases, Finder metadata, build outputs, or `Scratch/` content.
@@ -103,11 +104,13 @@ http://localhost:5236/scalar/v1
 
 Use `docs/project/roadmap.md` as the source of truth. As of the current docs, Phase A focuses on foundation work:
 
-- Add missing Core entities.
-- Register entities in `TankerMadeDbContext`.
+- Add core module-host entities.
+- Register module-host entities in `TankerMadeDbContext`.
 - Add migrations.
-- Implement `ProjectService` and `PatternService`.
-- Add Projects and Patterns API controllers.
+- Implement module discovery/activation service contracts and service implementations.
+- Add module host API endpoints.
+- Scaffold the first crafting module as a separate module project.
+- Extract existing project/pattern foundation into that crafting module as the reference implementation.
 - Add focused tests.
 
 ## UX Expectations
@@ -129,4 +132,3 @@ dotnet build TankerMade.sln
 ```
 
 Add or run tests when changing service behavior, API behavior, migrations, or shared contracts.
-

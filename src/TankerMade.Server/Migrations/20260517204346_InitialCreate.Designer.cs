@@ -45,36 +45,6 @@ namespace TankerMade.Server.Migrations
                         .IsUnique();
 
                     b.ToTable("Brands");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("44444444-4444-4444-4444-444444444441"),
-                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Red Heart",
-                            Slug = "red-heart"
-                        },
-                        new
-                        {
-                            Id = new Guid("44444444-4444-4444-4444-444444444442"),
-                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Lion Brand",
-                            Slug = "lion-brand"
-                        },
-                        new
-                        {
-                            Id = new Guid("44444444-4444-4444-4444-444444444443"),
-                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Bernat",
-                            Slug = "bernat"
-                        },
-                        new
-                        {
-                            Id = new Guid("44444444-4444-4444-4444-444444444444"),
-                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Caron",
-                            Slug = "caron"
-                        });
                 });
 
             modelBuilder.Entity("TankerMade.Core.Entities.Color", b =>
@@ -294,22 +264,22 @@ namespace TankerMade.Server.Migrations
                         {
                             Id = new Guid("33333333-3333-3333-3333-333333333331"),
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Ravelry",
-                            Slug = "ravelry"
+                            Name = "Website",
+                            Slug = "website"
                         },
                         new
                         {
                             Id = new Guid("33333333-3333-3333-3333-333333333332"),
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Etsy",
-                            Slug = "etsy"
+                            Name = "Marketplace",
+                            Slug = "marketplace"
                         },
                         new
                         {
                             Id = new Guid("33333333-3333-3333-3333-333333333333"),
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "YouTube",
-                            Slug = "youtube"
+                            Name = "Video",
+                            Slug = "video"
                         },
                         new
                         {

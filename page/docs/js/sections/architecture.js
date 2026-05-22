@@ -38,11 +38,12 @@ function loadArchitectureVisualizer() {
                 <div id="visualization-container" class="architecture-canvas">
                     <div>
                         <h3>Entity Relationship Map</h3>
-                        <p>Current model: Users, Projects, Patterns, Themes, Colors, Sources, and Brands. Planned model details are tracked in Phase A-D.</p>
+                        <p>Current model: Users, module definitions, user module activations, Crafting projects/patterns, Themes, Colors, Sources, and Brands. Planned model details are tracked in Phase B-D.</p>
                         <div class="architecture-mini-map" aria-label="Current entity overview">
                             <span>User</span>
-                            <span>Project</span>
-                            <span>Pattern</span>
+                            <span>Module</span>
+                            <span>Crafting Project</span>
+                            <span>Crafting Pattern</span>
                             <span>Theme</span>
                             <span>Source</span>
                             <span>Brand</span>
@@ -83,11 +84,12 @@ function showEntityDiagram() {
         container.innerHTML = `
             <div>
                 <h3>Entity Relationship Map</h3>
-                <p>Current persisted model: Users, Projects, Patterns, and shared reference data. Piece, step, timer, inventory, kit, and asset entities are still roadmap work.</p>
+                <p>Current persisted model: Users, module definitions, module activations, Crafting projects/patterns, and shared reference data. Piece, step, timer, inventory, kit, and asset entities are still roadmap work.</p>
                 <div class="architecture-mini-map" aria-label="Current entity overview">
                     <span>User</span>
-                    <span>Project</span>
-                    <span>Pattern</span>
+                    <span>Module</span>
+                    <span>Crafting Project</span>
+                    <span>Crafting Pattern</span>
                     <span>Theme</span>
                     <span>Source</span>
                     <span>Brand</span>
@@ -127,10 +129,11 @@ function showSystemArchitecture() {
         container.innerHTML = `
             <div>
                 <h3>Solution Shape</h3>
-                <p>Core stays dependency-light, Contracts references Core, Application implements service behavior, Server hosts API/EF/auth, and Client references Contracts.</p>
+                <p>Core stays dependency-light and craft-agnostic, Contracts references Core, modules own maker-domain behavior, Server hosts API/EF/auth, and Client loads module-provided surfaces.</p>
                 <div class="architecture-flow-list">
                     <span>Core</span>
                     <span>Contracts</span>
+                    <span>Modules</span>
                     <span>Application</span>
                     <span>Server</span>
                     <span>Client</span>

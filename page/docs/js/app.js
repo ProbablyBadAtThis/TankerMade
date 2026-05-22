@@ -7,12 +7,12 @@
 class TankerMadeApp {
   constructor() {
     this.state = {
-      currentPhase:    1,
-      currentPhaseLabel: 'A',
+      currentPhase:    2,
+      currentPhaseLabel: 'B',
       totalPhases:     9,
       overallProgress: 0,   // always derived, never hardcoded
-      completedTasks:  12,
-      totalTasks:      60,
+      completedTasks:  26,
+      totalTasks:      65,
       openIncidents:   0,
     };
 
@@ -155,7 +155,8 @@ class TankerMadeApp {
       let completedTasks = 0;
       let totalTasks     = 0;
 
-      const phaseCounts = [19, 5, 6, 9, 3, 5, 3, 4, 6];
+      const phaseCounts = [26, 5, 6, 7, 3, 5, 3, 4, 6];
+      const baselineCompleted = [26, 0, 0, 0, 0, 0, 0, 0, 0];
 
       if (this.isAuthenticated && window.TankerMadeData) {
         const phases = await window.TankerMadeData.getAllPhaseProgress();
@@ -169,7 +170,11 @@ class TankerMadeApp {
           totalTasks += count;
           const raw  = localStorage.getItem('phase-' + (i + 1) + '-progress');
           if (raw) {
-            try { completedTasks += JSON.parse(raw).completed || 0; } catch (_) {}
+            try { completedTasks += JSON.parse(raw).completed || baselineCompleted[i] || 0; } catch (_) {
+              completedTasks += baselineCompleted[i] || 0;
+            }
+          } else {
+            completedTasks += baselineCompleted[i] || 0;
           }
         });
       }
@@ -188,7 +193,7 @@ class TankerMadeApp {
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     const setStyle = (id, prop, val) => { const el = document.getElementById(id); if (el) el.style[prop] = val; };
 
-    set('current-phase', 'Phase ' + this.state.currentPhaseLabel + ': Hardening & Foundation');
+    set('current-phase', 'Phase ' + this.state.currentPhaseLabel + ': Crafting Module V2');
     set('progress-text', this.state.overallProgress + '%');
     setStyle('header-progress', 'width', this.state.overallProgress + '%');
   }

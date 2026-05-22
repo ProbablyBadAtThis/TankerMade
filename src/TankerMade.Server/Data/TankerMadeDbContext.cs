@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TankerMade.Core.Entities;
+using TankerMade.Modules.Crafting;
+using TankerMade.Modules.Crafting.Entities;
 
 namespace TankerMade.Server.Data;
 
@@ -12,8 +14,14 @@ public class TankerMadeDbContext : DbContext
 
     // User-owned entities
     public DbSet<User> Users { get; set; }
-    public DbSet<Project> Projects { get; set; }
-    public DbSet<Pattern> Patterns { get; set; }
+
+    // Module host entities
+    public DbSet<ModuleDefinition> ModuleDefinitions { get; set; }
+    public DbSet<UserModuleActivation> UserModuleActivations { get; set; }
+
+    // Reference crafting module entities
+    public DbSet<CraftingProject> CraftingProjects { get; set; }
+    public DbSet<CraftingPattern> CraftingPatterns { get; set; }
 
     // Reference entities (shared)
     public DbSet<Theme> Themes { get; set; }
@@ -26,8 +34,9 @@ public class TankerMadeDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         ConfigureUser(modelBuilder);
-        ConfigureProject(modelBuilder);
-        ConfigurePattern(modelBuilder);
+        ConfigureModules(modelBuilder);
+        ConfigureCraftingProject(modelBuilder);
+        ConfigureCraftingPattern(modelBuilder);
         ConfigureReferenceEntities(modelBuilder);
         SeedReferenceData(modelBuilder);
     }
@@ -63,10 +72,42 @@ public class TankerMadeDbContext : DbContext
     }
 
 
-    private void ConfigureProject(ModelBuilder modelBuilder)
+    private void ConfigureModules(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Project>(entity =>
+        modelBuilder.Entity<ModuleDefinition>(entity =>
         {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ModuleKey).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.Version).IsRequired().HasMaxLength(50);
+            entity.HasIndex(e => e.ModuleKey).IsUnique();
+        });
+
+        modelBuilder.Entity<UserModuleActivation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<ModuleDefinition>()
+                .WithMany()
+                .HasForeignKey(e => e.ModuleDefinitionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.UserId, e.ModuleDefinitionId })
+                .IsUnique();
+        });
+    }
+
+    private void ConfigureCraftingProject(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CraftingProject>(entity =>
+        {
+            entity.ToTable("CraftingProjects");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Name)
@@ -92,7 +133,7 @@ public class TankerMadeDbContext : DbContext
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasOne<Pattern>()
+            entity.HasOne<CraftingPattern>()
                 .WithMany()
                 .HasForeignKey(e => e.PatternId)
                 .OnDelete(DeleteBehavior.SetNull);
@@ -107,10 +148,11 @@ public class TankerMadeDbContext : DbContext
         });
     }
 
-    private void ConfigurePattern(ModelBuilder modelBuilder)
+    private void ConfigureCraftingPattern(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Pattern>(entity =>
+        modelBuilder.Entity<CraftingPattern>(entity =>
         {
+            entity.ToTable("CraftingPatterns");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Name)
@@ -134,7 +176,7 @@ public class TankerMadeDbContext : DbContext
             entity.HasOne<User>()
                 .WithMany()
                 .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Restrict);  // Changed from Cascade to Restrict
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne<Theme>()
                 .WithMany()
@@ -194,6 +236,19 @@ public class TankerMadeDbContext : DbContext
     {
         var now = new DateTime(2025, 10, 18, 0, 0, 0, DateTimeKind.Utc);
 
+        modelBuilder.Entity<ModuleDefinition>().HasData(
+            new
+            {
+                Id = Guid.Parse("55555555-5555-5555-5555-555555555551"),
+                ModuleKey = CraftingModule.ModuleKey,
+                Name = CraftingModule.Name,
+                Description = CraftingModule.Description,
+                Version = CraftingModule.Version,
+                IsBundled = true,
+                CreatedAt = now
+            }
+        );
+
         // Seed Themes
         modelBuilder.Entity<Theme>().HasData(
             new { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), Name = "Animals", Slug = "animals", CreatedAt = now },
@@ -215,19 +270,12 @@ public class TankerMadeDbContext : DbContext
 
         // Seed Sources
         modelBuilder.Entity<Source>().HasData(
-            new { Id = Guid.Parse("33333333-3333-3333-3333-333333333331"), Name = "Ravelry", Slug = "ravelry", CreatedAt = now },
-            new { Id = Guid.Parse("33333333-3333-3333-3333-333333333332"), Name = "Etsy", Slug = "etsy", CreatedAt = now },
-            new { Id = Guid.Parse("33333333-3333-3333-3333-333333333333"), Name = "YouTube", Slug = "youtube", CreatedAt = now },
+            new { Id = Guid.Parse("33333333-3333-3333-3333-333333333331"), Name = "Website", Slug = "website", CreatedAt = now },
+            new { Id = Guid.Parse("33333333-3333-3333-3333-333333333332"), Name = "Marketplace", Slug = "marketplace", CreatedAt = now },
+            new { Id = Guid.Parse("33333333-3333-3333-3333-333333333333"), Name = "Video", Slug = "video", CreatedAt = now },
             new { Id = Guid.Parse("33333333-3333-3333-3333-333333333334"), Name = "Book", Slug = "book", CreatedAt = now },
             new { Id = Guid.Parse("33333333-3333-3333-3333-333333333335"), Name = "Custom", Slug = "custom", CreatedAt = now }
         );
 
-        // Seed Brands
-        modelBuilder.Entity<Brand>().HasData(
-            new { Id = Guid.Parse("44444444-4444-4444-4444-444444444441"), Name = "Red Heart", Slug = "red-heart", CreatedAt = now },
-            new { Id = Guid.Parse("44444444-4444-4444-4444-444444444442"), Name = "Lion Brand", Slug = "lion-brand", CreatedAt = now },
-            new { Id = Guid.Parse("44444444-4444-4444-4444-444444444443"), Name = "Bernat", Slug = "bernat", CreatedAt = now },
-            new { Id = Guid.Parse("44444444-4444-4444-4444-444444444444"), Name = "Caron", Slug = "caron", CreatedAt = now }
-        );
     }
 }

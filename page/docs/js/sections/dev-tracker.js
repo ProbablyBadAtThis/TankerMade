@@ -7,40 +7,40 @@ class DevTrackerSection {
     constructor() {
         this.sectionId = 'dev-tracker';
         this.data = {
-            totalTasks: 60,
-            completedTasks: 12,
+            totalTasks: 65,
+            completedTasks: 26,
             totalPhases: 9,
-            completedPhases: 0,
+            completedPhases: 1,
             currentPhase: {
-                number: "A",
-                title: "Hardening & Foundation",
-                description: "Core entities, services, controllers, tests, CI, and secret handling",
-                completed: 12,
-                total: 19,
-                color: "#2dd4bf"
+                number: "B",
+                title: "Crafting Module V2",
+                description: "Module-owned pattern pieces, steps, detail UI, progress behavior, and workspace expansion",
+                completed: 0,
+                total: 5,
+                color: "#60a5fa"
             },
             phases: [
                 {
                     number: "A",
-                    title: "Hardening & Foundation",
-                    description: "Current foundation work from the repo roadmap.",
-                    completed: 12,
-                    total: 19,
+                    title: "Hardening, Module Host & Reference Module",
+                    description: "Completed module-host foundation and bundled Crafting reference module.",
+                    completed: 26,
+                    total: 26,
                     color: "#2dd4bf",
-                    status: "active"
+                    status: "completed"
                 },
                 {
                     number: "B",
-                    title: "Patterns V2",
-                    description: "Pattern pieces, steps, reordering, aggregation, and validation.",
+                    title: "Crafting Module V2",
+                    description: "Pattern pieces, steps, reordering, aggregation, validation, and expanded module UI.",
                     completed: 0,
                     total: 5,
                     color: "#60a5fa",
-                    status: "upcoming"
+                    status: "active"
                 },
                 {
                     number: "C",
-                    title: "Project Workspace",
+                    title: "Module Project Workspace",
                     description: "Step progress, timers, completion, pieces, archive, and editing.",
                     completed: 0,
                     total: 6,
@@ -52,7 +52,7 @@ class DevTrackerSection {
                     title: "Inventory & Kits",
                     description: "Yarn, tools, notions, lot tracking, purchases, linking, and kits.",
                     completed: 0,
-                    total: 9,
+                    total: 7,
                     color: "#f59e0b",
                     status: "upcoming"
                 },
@@ -320,20 +320,27 @@ const ROADMAP_PHASE_TASKS = {
         { title: 'JWT auth + BCrypt password hashing wired', status: 'done', area: 'Auth' },
         { title: 'AuthController present with register/login', status: 'done', area: 'API' },
         { title: 'Server running, DB created, Scalar docs accessible', status: 'done', area: 'Verification' },
-        { title: 'Add missing Core entities', status: 'todo', area: 'Domain' },
-        { title: 'Register new entities in DbContext and add migration', status: 'todo', area: 'Data' },
-        { title: 'Implement ProjectService and PatternService', status: 'todo', area: 'Application' },
-        { title: 'Add ProjectsController and PatternsController', status: 'todo', area: 'API' },
-        { title: 'Add tests for services with xUnit', status: 'todo', area: 'Tests' },
-        { title: 'Add GitHub Actions CI workflow for restore/build/test', status: 'todo', area: 'CI' },
-        { title: 'Move JWT secret to user-secrets or environment variables', status: 'todo', area: 'Security' }
+        { title: 'Modularity guardrail documented: base app is a module host, not a built-in craft app', status: 'done', area: 'Architecture' },
+        { title: 'GitHub Actions CI workflow for restore/build/test', status: 'done', area: 'CI' },
+        { title: 'JWT secret moved out of committed config', status: 'done', area: 'Security' },
+        { title: 'Add Core module-host entities', status: 'done', area: 'Domain' },
+        { title: 'Register module-host entities in DbContext and add migration', status: 'done', area: 'Data' },
+        { title: 'Implement module discovery and activation services', status: 'done', area: 'Application' },
+        { title: 'Add module host API endpoints', status: 'done', area: 'API' },
+        { title: 'Scaffold first Crafting module as a separate module project', status: 'done', area: 'Modules' },
+        { title: 'Extract project/pattern foundation into the Crafting module', status: 'done', area: 'Modules' },
+        { title: 'Add module-owned project/pattern entities, services, and APIs', status: 'done', area: 'Modules' },
+        { title: 'Add minimal module-provided navigation and UI surfaces', status: 'done', area: 'Client' },
+        { title: 'Add module host and reference module service tests', status: 'done', area: 'Tests' },
+        { title: 'Manual smoke test: auth, activation, module APIs, CRUD, ownership, and client nav', status: 'done', area: 'Verification' },
+        { title: 'Patch module-owned partial update behavior', status: 'done', area: 'API' }
     ],
     B: [
-        { title: 'Full CRUD and reorder for PatternPieces and PatternSteps', status: 'todo', area: 'Patterns' },
-        { title: 'Pattern detail page in client', status: 'todo', area: 'Client' },
-        { title: 'Step range display for repeated rows', status: 'todo', area: 'UX' },
-        { title: 'Stitch count aggregation per piece and pattern', status: 'todo', area: 'Domain' },
-        { title: 'Validation and improved pattern UX', status: 'todo', area: 'UX' }
+        { title: 'Full CRUD and reorder for module-owned pattern pieces and steps', status: 'todo', area: 'Patterns' },
+        { title: 'Pattern detail page in module UI', status: 'todo', area: 'Client' },
+        { title: 'Step range display where relevant to the module', status: 'todo', area: 'UX' },
+        { title: 'Progress aggregation and validation where relevant to the module', status: 'todo', area: 'Domain' },
+        { title: 'Expand module-owned project workspace screens beyond the Phase A reference baseline', status: 'todo', area: 'Projects' }
     ],
     C: [
         { title: 'Step checklist with ProjectStepProgress tracking', status: 'todo', area: 'Projects' },
@@ -344,15 +351,13 @@ const ROADMAP_PHASE_TASKS = {
         { title: 'Non-destructive editing', status: 'todo', area: 'Safety' }
     ],
     D: [
-        { title: 'Yarn inventory with brand, color, weight, fiber type, lot tracking', status: 'todo', area: 'Inventory' },
-        { title: 'Tool inventory with type, brand, size, purchase history', status: 'todo', area: 'Inventory' },
-        { title: 'Notions inventory with type, brand, size, color, multi-listing support', status: 'todo', area: 'Inventory' },
-        { title: 'Fiber tags for filtering', status: 'todo', area: 'Filters' },
-        { title: 'Lot number tracking with estimated remaining length calculation', status: 'todo', area: 'Lots' },
+        { title: 'Craft module inventory: yarn, tools, notions, lots, purchase history, and sale price handling', status: 'todo', area: 'Inventory' },
+        { title: '3D printing module inventory: materials, spools, printer/tooling needs, and purchase history', status: 'todo', area: 'Inventory' },
+        { title: 'Module-owned filtering and reference data', status: 'todo', area: 'Filters' },
         { title: 'Purchase history per source and sale price handling', status: 'todo', area: 'Purchases' },
-        { title: 'Project to inventory linking', status: 'todo', area: 'Relations' },
-        { title: 'Kit entity as multi-piece bundle with progress tracking', status: 'todo', area: 'Kits' },
-        { title: 'Kit to project flows', status: 'todo', area: 'Kits' }
+        { title: 'Module-owned project/inventory linking', status: 'todo', area: 'Relations' },
+        { title: 'Module-owned kit/grouping behavior', status: 'todo', area: 'Kits' },
+        { title: 'Module-owned kit/grouping to project flows', status: 'todo', area: 'Kits' }
     ],
     E: [
         { title: 'Wire Settings / ReferenceItem categories into forms', status: 'todo', area: 'Settings' },

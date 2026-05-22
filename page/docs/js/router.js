@@ -260,8 +260,8 @@ class TankerMadeRouter {
         }
 
         const cacheBustedPath = fullPath.includes('?')
-            ? `${fullPath}&v=20260520`
-            : `${fullPath}?v=20260520`;
+            ? `${fullPath}&v=20260522`
+            : `${fullPath}?v=20260522`;
 
         const response = await fetch(cacheBustedPath);
 
@@ -269,8 +269,8 @@ class TankerMadeRouter {
             // Fallback: try to load from current directory structure
             const fallbackPath = path.replace('/sections/', '');
             const cacheBustedFallbackPath = fallbackPath.includes('?')
-                ? `${fallbackPath}&v=20260520`
-                : `${fallbackPath}?v=20260520`;
+                ? `${fallbackPath}&v=20260522`
+                : `${fallbackPath}?v=20260522`;
             const fallbackResponse = await fetch(cacheBustedFallbackPath);
 
             if (!fallbackResponse.ok) {

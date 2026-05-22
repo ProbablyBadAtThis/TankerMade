@@ -1,16 +1,31 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using Scalar.AspNetCore;
+using TankerMade.Contracts.Services;
+using TankerMade.Modules.Crafting.Services;
 using TankerMade.Server.Data;
 using TankerMade.Server.Services;
+using TankerMade.Server.Services.Crafting;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add DbContext
+var dataDir = Path.Combine(builder.Environment.ContentRootPath, "App_Data");
+Directory.CreateDirectory(dataDir);
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+var connectionBuilder = new SqliteConnectionStringBuilder(connectionString);
+if (!Path.IsPathRooted(connectionBuilder.DataSource))
+{
+    connectionBuilder.DataSource = Path.Combine(builder.Environment.ContentRootPath, connectionBuilder.DataSource);
+    connectionString = connectionBuilder.ConnectionString;
+}
 
 builder.Services.AddDbContext<TankerMadeDbContext>(options =>
     options.UseSqlite(connectionString));
@@ -53,10 +68,35 @@ builder.Services.AddCors(options =>
 // Register services
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
+builder.Services.AddScoped<IModuleService, ModuleService>();
+builder.Services.AddScoped<ICraftingProjectService, CraftingProjectService>();
+builder.Services.AddScoped<ICraftingPatternService, CraftingPatternService>();
 
 // Add controllers and OpenAPI
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, _, _) =>
+    {
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            Description = "Paste the JWT from /api/Auth/login. Scalar adds the 'Bearer' prefix."
+        };
+
+        document.Security ??= [];
+        document.Security.Add(new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference("Bearer", document, null)] = []
+        });
+
+        return Task.CompletedTask;
+    });
+});
 
 var app = builder.Build();
 
@@ -64,8 +104,6 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<TankerMadeDbContext>();
-    var dataDir = Path.Combine(Directory.GetCurrentDirectory(), "App_Data");
-    Directory.CreateDirectory(dataDir);
     db.Database.Migrate();
 }
 

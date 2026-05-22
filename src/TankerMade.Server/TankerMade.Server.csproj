@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>5ca363d5-8334-4e4b-bd61-3100e820cf32</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +27,7 @@
     <ProjectReference Include="..\TankerMade.Application\TankerMade.Application.csproj" />
     <ProjectReference Include="..\TankerMade.Contracts\TankerMade.Contracts.csproj" />
     <ProjectReference Include="..\TankerMade.Core\TankerMade.Core.csproj" />
+    <ProjectReference Include="..\TankerMade.Modules.Crafting\TankerMade.Modules.Crafting.csproj" />
   </ItemGroup>
 
 </Project>
