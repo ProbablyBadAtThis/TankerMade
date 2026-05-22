@@ -17,6 +17,7 @@ public class CraftingPatternDto
     public IReadOnlyList<CraftingPatternPieceDto> Pieces { get; set; } = [];
     public int PieceCount { get; set; }
     public int StepCount { get; set; }
+    public CraftingPatternProgressDto Progress { get; set; } = new();
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

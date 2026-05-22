@@ -8,12 +8,12 @@ class DashboardSection {
         this.sectionId = 'dashboard';
         this.data = {
             totalTasks: 65,
-            completedTasks: 29,
+            completedTasks: 30,
             currentPhase: {
                 number: "B",
                 title: "Crafting Module V2",
                 description: "Module-owned pattern pieces, steps, detail UI, progress behavior, and workspace expansion",
-                completed: 3,
+                completed: 4,
                 total: 5
             }
         };
@@ -208,7 +208,7 @@ class DashboardSection {
             { title: "Add pattern pieces and steps", meta: "Phase B • Crafting module", status: "done" },
             { title: "Build pattern detail page", meta: "Phase B • Module UI", status: "done" },
             { title: "Add step range display", meta: "Phase B • UX", status: "done" },
-            { title: "Add progress aggregation and validation", meta: "Phase B • Domain behavior", status: "active" },
+            { title: "Add progress aggregation and validation", meta: "Phase B • Domain behavior", status: "done" },
             { title: "Expand module-owned project workspace screens", meta: "Phase B • Projects", status: "active" }
         ];
 
@@ -226,7 +226,7 @@ class DashboardSection {
     renderPhaseBreakdown() {
         const phases = [
             { number: "A", title: "Module Host & Reference Module", completed: 26, total: 26, active: false },
-            { number: "B", title: "Crafting Module V2", completed: 3, total: 5, active: true },
+            { number: "B", title: "Crafting Module V2", completed: 4, total: 5, active: true },
             { number: "C", title: "Module Project Workspace", completed: 0, total: 6, active: false }
         ];
 
@@ -269,8 +269,8 @@ class DashboardSection {
 
     renderWeekSummary() {
         const stats = [
-            { value: "29", label: "Done" },
-            { value: "2", label: "Open in Phase B" },
+            { value: "30", label: "Done" },
+            { value: "1", label: "Open in Phase B" },
             { value: "9", label: "Roadmap Phases" }
         ];
 
@@ -284,9 +284,9 @@ class DashboardSection {
 
     renderNextTasks() {
         const tasks = [
-            { title: "Full CRUD and reorder for pattern pieces and steps", phase: "Phase B" },
-            { title: "Pattern detail page in module UI", phase: "Phase B" },
-            { title: "Progress aggregation and validation", phase: "Phase B" }
+            { title: "Expand module-owned project workspace screens", phase: "Phase B" },
+            { title: "Module-owned step/checklist progress", phase: "Phase C" },
+            { title: "Module-owned timers with play/pause", phase: "Phase C" }
         ];
 
         return tasks.map(task => `

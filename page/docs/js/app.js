@@ -11,7 +11,7 @@ class TankerMadeApp {
       currentPhaseLabel: 'B',
       totalPhases:     9,
       overallProgress: 0,   // always derived, never hardcoded
-      completedTasks:  26,
+      completedTasks:  30,
       totalTasks:      65,
       openIncidents:   0,
     };

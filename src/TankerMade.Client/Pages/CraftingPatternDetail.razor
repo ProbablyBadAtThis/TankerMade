@@ -45,8 +45,25 @@ else
                     <strong>@StepCount</strong>
                     <span>Steps</span>
                 </div>
+                <div class="@ReadinessClass">
+                    <strong>@ReadinessLabel</strong>
+                    <span>Status</span>
+                </div>
             </div>
         </div>
+
+        @if (Pattern.ValidationMessages.Count > 0)
+        {
+            <div class="validation-summary-panel">
+                <h2>Pattern Setup</h2>
+                <ul>
+                    @foreach (var message in Pattern.ValidationMessages)
+                    {
+                        <li>@message</li>
+                    }
+                </ul>
+            </div>
+        }
 
         <div class="pattern-workspace">
             <aside class="piece-list" aria-label="Pieces">
@@ -264,6 +281,8 @@ else
         "Reference",
         "Multi-piece",
         "Intermediate",
+        true,
+        [],
         [
             new(
                 Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1"),
@@ -296,6 +315,12 @@ else
     private int StepCount => Pattern.Pieces.Sum(piece => piece.Steps.Count);
 
     private bool CanEdit => PatternId != null;
+
+    private string ReadinessLabel => Pattern.IsReadyForProject ? "Ready" : "Needs Setup";
+
+    private string ReadinessClass => Pattern.IsReadyForProject
+        ? "pattern-ready"
+        : "pattern-needs-setup";
 
     private string PiecePositionText
     {
@@ -767,6 +792,8 @@ else
             detail.Type,
             detail.Form,
             detail.Difficulty,
+            detail.Progress.IsReadyForProject,
+            detail.Progress.ValidationMessages.ToList(),
             pieces);
     }
 
@@ -775,6 +802,8 @@ else
         string Type,
         string Form,
         string Difficulty,
+        bool IsReadyForProject,
+        List<string> ValidationMessages,
         List<PatternPieceViewModel> Pieces);
 
     private sealed record PatternPieceViewModel(

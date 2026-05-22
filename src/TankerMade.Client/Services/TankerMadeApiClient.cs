@@ -240,6 +240,19 @@ public class CraftingPatternSummary
 public class CraftingPatternDetail : CraftingPatternSummary
 {
     public IReadOnlyList<CraftingPatternPieceDetail> Pieces { get; set; } = [];
+    public CraftingPatternProgressDetail Progress { get; set; } = new();
+}
+
+public class CraftingPatternProgressDetail
+{
+    public int PieceCount { get; set; }
+    public int StepCount { get; set; }
+    public int EmptyPieceCount { get; set; }
+    public int InvalidRangeCount { get; set; }
+    public bool HasPieces { get; set; }
+    public bool HasSteps { get; set; }
+    public bool IsReadyForProject { get; set; }
+    public IReadOnlyList<string> ValidationMessages { get; set; } = [];
 }
 
 public class CraftingPatternPieceDetail

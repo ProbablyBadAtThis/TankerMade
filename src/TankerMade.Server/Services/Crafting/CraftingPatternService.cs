@@ -333,6 +333,7 @@ public class CraftingPatternService : ICraftingPatternService
 
         var pieces = await MapPiecesAsync(pattern.Id);
         var stepCount = pieces.Sum(p => p.Steps.Count);
+        var progress = BuildProgress(pieces);
 
         return new CraftingPatternDto
         {
@@ -351,6 +352,7 @@ public class CraftingPatternService : ICraftingPatternService
             Pieces = pieces,
             PieceCount = pieces.Count,
             StepCount = stepCount,
+            Progress = progress,
             CreatedAt = pattern.CreatedAt,
             UpdatedAt = pattern.UpdatedAt
         };
@@ -514,6 +516,45 @@ public class CraftingPatternService : ICraftingPatternService
         }
 
         return $"{rangeStart}-{rangeEnd}";
+    }
+
+    private static CraftingPatternProgressDto BuildProgress(IReadOnlyList<CraftingPatternPieceDto> pieces)
+    {
+        var stepCount = pieces.Sum(piece => piece.Steps.Count);
+        var emptyPieceCount = pieces.Count(piece => piece.Steps.Count == 0);
+        var invalidRangeCount = pieces
+            .SelectMany(piece => piece.Steps)
+            .Count(step => step.RangeStart.HasValue && step.RangeEnd.HasValue && step.RangeEnd.Value < step.RangeStart.Value);
+
+        var messages = new List<string>();
+        if (pieces.Count == 0)
+        {
+            messages.Add("Add at least one piece before using this pattern for a project.");
+        }
+
+        if (stepCount == 0)
+        {
+            messages.Add("Add at least one step before using this pattern for a project.");
+        }
+
+        if (emptyPieceCount > 0)
+        {
+            messages.Add($"{emptyPieceCount} piece(s) do not have steps yet.");
+        }
+
+        if (invalidRangeCount > 0)
+        {
+            messages.Add($"{invalidRangeCount} step range(s) need attention.");
+        }
+
+        return new CraftingPatternProgressDto
+        {
+            PieceCount = pieces.Count,
+            StepCount = stepCount,
+            EmptyPieceCount = emptyPieceCount,
+            InvalidRangeCount = invalidRangeCount,
+            ValidationMessages = messages
+        };
     }
 
     private static bool ContainsSameIds(IEnumerable<Guid> currentIds, IReadOnlyList<Guid> orderedIds)

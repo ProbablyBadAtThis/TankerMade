@@ -89,6 +89,8 @@ public class CraftingPatternServiceTests
         Assert.Equal(1, detail.StepCount);
         Assert.Equal(["Body", "Sleeve"], detail.Pieces.Select(p => p.Name).ToArray());
         Assert.Equal("Work the established repeat.", detail.Pieces[0].Steps[0].Instructions);
+        Assert.False(detail.Progress.IsReadyForProject);
+        Assert.Contains("1 piece(s) do not have steps yet.", detail.Progress.ValidationMessages);
     }
 
     [Fact]
@@ -157,5 +159,67 @@ public class CraftingPatternServiceTests
         Assert.NotNull(detail);
         Assert.Equal(["Second", "First"], detail.Pieces.Select(p => p.Name).ToArray());
         Assert.Equal(["B", "A"], detail.Pieces[1].Steps.Select(s => s.Label).ToArray());
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_returns_progress_validation_for_empty_pattern()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+        var user = new User(Guid.NewGuid(), "maker", "maker@example.test", "hash");
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var service = new CraftingPatternService(context);
+        var pattern = await service.CreateAsync(new CreateCraftingPatternDto
+        {
+            Name = "Empty Pattern"
+        }, user.Id);
+
+        var detail = await service.GetByIdAsync(pattern.Id, user.Id);
+
+        Assert.NotNull(detail);
+        Assert.False(detail.Progress.HasPieces);
+        Assert.False(detail.Progress.HasSteps);
+        Assert.False(detail.Progress.IsReadyForProject);
+        Assert.Equal(2, detail.Progress.ValidationMessages.Count);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_marks_pattern_ready_when_it_has_piece_and_step_content()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+        var user = new User(Guid.NewGuid(), "maker", "maker@example.test", "hash");
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var service = new CraftingPatternService(context);
+        var pattern = await service.CreateAsync(new CreateCraftingPatternDto
+        {
+            Name = "Ready Pattern"
+        }, user.Id);
+        var piece = await service.AddPieceAsync(pattern.Id, new CreateCraftingPatternPieceDto
+        {
+            Name = "Main"
+        }, user.Id);
+
+        Assert.NotNull(piece);
+
+        await service.AddStepAsync(pattern.Id, piece.Id, new CreateCraftingPatternStepDto
+        {
+            RangeStart = 1,
+            RangeEnd = 2,
+            Label = "Build",
+            Instructions = "Make the thing."
+        }, user.Id);
+
+        var detail = await service.GetByIdAsync(pattern.Id, user.Id);
+
+        Assert.NotNull(detail);
+        Assert.True(detail.Progress.HasPieces);
+        Assert.True(detail.Progress.HasSteps);
+        Assert.True(detail.Progress.IsReadyForProject);
+        Assert.Empty(detail.Progress.ValidationMessages);
     }
 }

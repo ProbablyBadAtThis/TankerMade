@@ -54,7 +54,7 @@ Phase B continues to treat `TankerMade.Modules.Crafting` as a reference/template
 - [x] Full CRUD + reorder for module-owned pattern pieces and steps
 - [x] Pattern detail page in module UI
 - [x] Step range display where relevant to the module
-- [ ] Progress aggregation and validation where relevant to the module
+- [x] Progress aggregation and validation where relevant to the module
 - [ ] Expand module-owned project workspace screens beyond the Phase A reference baseline
 
 ---
