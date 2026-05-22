@@ -50,12 +50,19 @@ Phase A proved the module-host boundary with a bundled `Crafting` reference modu
 - Crafting navigation appears in the client only after activation.
 - Pattern/project CRUD and cross-user ownership scoping were manually smoke-tested.
 
+## Reference Module vs. Golive Modules
+
+`TankerMade.Modules.Crafting` is the reference/template module used to prove platform behavior and provide an implementation pattern for future modules. It may include neutral sample workflows such as patterns, pieces, steps, ordering, and progress aggregation, but it should stay niche-neutral.
+
+Production golive modules should be specific maker domains, for example knitting, crochet, sewing, quilting, or 3D printing. Domain-specific language, validation, supplies, progress rules, and UI belong in those dedicated modules rather than being folded into the reference Crafting module.
+
 ## Module Boundary Guardrails
 
 - Keep `TankerMade.Core` dependency-light and craft-agnostic.
 - Build the core program as a module host first, not as a built-in crafting app.
 - Include the first crafting module in Phase A as a reference implementation so the module host is proven against a real module.
 - Extract existing project/pattern foundation into that crafting module rather than continuing it in the base host.
+- Keep the Crafting module copyable as a module template; avoid knitting, crochet, sewing, or other niche-specific behavior unless it is intentionally neutral sample behavior.
 - Prefer strings or configurable/reference records for early values that modules will later own.
 - Seed only neutral base reference data in `TankerMadeDbContext`.
 - Put craft-specific seed data in the future crafting module, not the base migration.

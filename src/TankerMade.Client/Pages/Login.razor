@@ -1,0 +1,55 @@
+@page "/login"
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject NavigationManager Navigation
+
+<PageTitle>Sign in</PageTitle>
+
+<h1>Sign in</h1>
+
+<EditForm Model="request" OnValidSubmit="SubmitAsync" class="auth-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <label>
+        <span>Username</span>
+        <InputText class="form-control" @bind-Value="request.Username" />
+    </label>
+
+    <label>
+        <span>Password</span>
+        <InputText class="form-control" type="password" @bind-Value="request.Password" />
+    </label>
+
+    <div class="auth-actions">
+        <button class="btn btn-primary" disabled="@busy" type="submit">Sign in</button>
+        <a class="btn btn-outline-secondary" href="register">Create account</a>
+    </div>
+</EditForm>
+
+@code {
+    private readonly TankerMade.Contracts.DTOs.Auth.LoginRequest request = new();
+    private bool busy;
+    private string errorMessage = string.Empty;
+
+    private async Task SubmitAsync()
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        var result = await AuthSession.LoginAsync(request);
+        busy = false;
+
+        if (!result.Succeeded)
+        {
+            errorMessage = result.Error;
+            return;
+        }
+
+        Navigation.NavigateTo("/");
+    }
+}

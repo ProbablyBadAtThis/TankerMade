@@ -110,6 +110,206 @@ public class CraftingPatternService : ICraftingPatternService
         return true;
     }
 
+    public async Task<CraftingPatternPieceDto?> AddPieceAsync(Guid patternId, CreateCraftingPatternPieceDto createDto, Guid userId)
+    {
+        if (!await PatternExistsAsync(patternId, userId))
+        {
+            return null;
+        }
+
+        var nextSortOrder = await _context.CraftingPatternPieces
+            .Where(p => p.PatternId == patternId)
+            .Select(p => (int?)p.SortOrder)
+            .MaxAsync() ?? 0;
+
+        var piece = new CraftingPatternPiece(Guid.NewGuid(), patternId, createDto.Name, nextSortOrder + 1);
+        _context.CraftingPatternPieces.Add(piece);
+        await TouchPatternAsync(patternId);
+        await _context.SaveChangesAsync();
+
+        return await MapPieceAsync(piece.Id);
+    }
+
+    public async Task<CraftingPatternPieceDto?> UpdatePieceAsync(Guid patternId, UpdateCraftingPatternPieceDto updateDto, Guid userId)
+    {
+        if (!await PatternExistsAsync(patternId, userId))
+        {
+            return null;
+        }
+
+        var piece = await _context.CraftingPatternPieces
+            .SingleOrDefaultAsync(p => p.Id == updateDto.Id && p.PatternId == patternId);
+
+        if (piece == null)
+        {
+            return null;
+        }
+
+        piece.Update(updateDto.Name);
+        await TouchPatternAsync(patternId);
+        await _context.SaveChangesAsync();
+
+        return await MapPieceAsync(piece.Id);
+    }
+
+    public async Task<bool> DeletePieceAsync(Guid patternId, Guid pieceId, Guid userId)
+    {
+        if (!await PatternExistsAsync(patternId, userId))
+        {
+            return false;
+        }
+
+        var piece = await _context.CraftingPatternPieces
+            .SingleOrDefaultAsync(p => p.Id == pieceId && p.PatternId == patternId);
+
+        if (piece == null)
+        {
+            return false;
+        }
+
+        _context.CraftingPatternPieces.Remove(piece);
+        await TouchPatternAsync(patternId);
+        await _context.SaveChangesAsync();
+        await NormalizePieceOrderAsync(patternId);
+        return true;
+    }
+
+    public async Task<bool> ReorderPiecesAsync(Guid patternId, ReorderCraftingPatternItemsDto reorderDto, Guid userId)
+    {
+        if (!await PatternExistsAsync(patternId, userId))
+        {
+            return false;
+        }
+
+        var pieces = await _context.CraftingPatternPieces
+            .Where(p => p.PatternId == patternId)
+            .ToListAsync();
+
+        if (!ContainsSameIds(pieces.Select(p => p.Id), reorderDto.OrderedIds))
+        {
+            return false;
+        }
+
+        for (var i = 0; i < reorderDto.OrderedIds.Count; i++)
+        {
+            pieces.Single(p => p.Id == reorderDto.OrderedIds[i]).MoveTo(i + 1);
+        }
+
+        await TouchPatternAsync(patternId);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<CraftingPatternStepDto?> AddStepAsync(
+        Guid patternId,
+        Guid pieceId,
+        CreateCraftingPatternStepDto createDto,
+        Guid userId)
+    {
+        if (!await PieceBelongsToUserPatternAsync(patternId, pieceId, userId))
+        {
+            return null;
+        }
+
+        var nextSortOrder = await _context.CraftingPatternSteps
+            .Where(s => s.PatternPieceId == pieceId)
+            .Select(s => (int?)s.SortOrder)
+            .MaxAsync() ?? 0;
+
+        var step = new CraftingPatternStep(
+            Guid.NewGuid(),
+            pieceId,
+            createDto.RangeStart,
+            createDto.RangeEnd,
+            createDto.Label,
+            createDto.Instructions,
+            nextSortOrder + 1);
+
+        _context.CraftingPatternSteps.Add(step);
+        await TouchPatternAsync(patternId);
+        await _context.SaveChangesAsync();
+
+        return await MapStepAsync(step.Id);
+    }
+
+    public async Task<CraftingPatternStepDto?> UpdateStepAsync(
+        Guid patternId,
+        Guid pieceId,
+        UpdateCraftingPatternStepDto updateDto,
+        Guid userId)
+    {
+        if (!await PieceBelongsToUserPatternAsync(patternId, pieceId, userId))
+        {
+            return null;
+        }
+
+        var step = await _context.CraftingPatternSteps
+            .SingleOrDefaultAsync(s => s.Id == updateDto.Id && s.PatternPieceId == pieceId);
+
+        if (step == null)
+        {
+            return null;
+        }
+
+        step.Update(updateDto.RangeStart, updateDto.RangeEnd, updateDto.Label, updateDto.Instructions);
+        await TouchPatternAsync(patternId);
+        await _context.SaveChangesAsync();
+
+        return await MapStepAsync(step.Id);
+    }
+
+    public async Task<bool> DeleteStepAsync(Guid patternId, Guid pieceId, Guid stepId, Guid userId)
+    {
+        if (!await PieceBelongsToUserPatternAsync(patternId, pieceId, userId))
+        {
+            return false;
+        }
+
+        var step = await _context.CraftingPatternSteps
+            .SingleOrDefaultAsync(s => s.Id == stepId && s.PatternPieceId == pieceId);
+
+        if (step == null)
+        {
+            return false;
+        }
+
+        _context.CraftingPatternSteps.Remove(step);
+        await TouchPatternAsync(patternId);
+        await _context.SaveChangesAsync();
+        await NormalizeStepOrderAsync(pieceId);
+        return true;
+    }
+
+    public async Task<bool> ReorderStepsAsync(
+        Guid patternId,
+        Guid pieceId,
+        ReorderCraftingPatternItemsDto reorderDto,
+        Guid userId)
+    {
+        if (!await PieceBelongsToUserPatternAsync(patternId, pieceId, userId))
+        {
+            return false;
+        }
+
+        var steps = await _context.CraftingPatternSteps
+            .Where(s => s.PatternPieceId == pieceId)
+            .ToListAsync();
+
+        if (!ContainsSameIds(steps.Select(s => s.Id), reorderDto.OrderedIds))
+        {
+            return false;
+        }
+
+        for (var i = 0; i < reorderDto.OrderedIds.Count; i++)
+        {
+            steps.Single(s => s.Id == reorderDto.OrderedIds[i]).MoveTo(i + 1);
+        }
+
+        await TouchPatternAsync(patternId);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     private async Task<CraftingPatternDto> MapAsync(CraftingPattern pattern)
     {
         var userName = await _context.Users
@@ -131,6 +331,9 @@ public class CraftingPatternService : ICraftingPatternService
                 .Select(s => s.Name)
                 .SingleOrDefaultAsync() ?? string.Empty;
 
+        var pieces = await MapPiecesAsync(pattern.Id);
+        var stepCount = pieces.Sum(p => p.Steps.Count);
+
         return new CraftingPatternDto
         {
             Id = pattern.Id,
@@ -145,6 +348,9 @@ public class CraftingPatternService : ICraftingPatternService
             SourceName = sourceName,
             UserId = pattern.UserId,
             Username = userName,
+            Pieces = pieces,
+            PieceCount = pieces.Count,
+            StepCount = stepCount,
             CreatedAt = pattern.CreatedAt,
             UpdatedAt = pattern.UpdatedAt
         };
@@ -166,5 +372,157 @@ public class CraftingPatternService : ICraftingPatternService
         return string.IsNullOrWhiteSpace(incomingValue)
             ? currentValue
             : incomingValue.Trim();
+    }
+
+    private async Task<bool> PatternExistsAsync(Guid patternId, Guid userId)
+    {
+        return await _context.CraftingPatterns
+            .AnyAsync(p => p.Id == patternId && p.UserId == userId);
+    }
+
+    private async Task<bool> PieceBelongsToUserPatternAsync(Guid patternId, Guid pieceId, Guid userId)
+    {
+        return await _context.CraftingPatternPieces
+            .AnyAsync(piece => piece.Id == pieceId
+                && piece.PatternId == patternId
+                && _context.CraftingPatterns.Any(pattern => pattern.Id == patternId && pattern.UserId == userId));
+    }
+
+    private async Task TouchPatternAsync(Guid patternId)
+    {
+        var pattern = await _context.CraftingPatterns.SingleAsync(p => p.Id == patternId);
+        pattern.UpdatedAt = DateTime.UtcNow;
+    }
+
+    private async Task NormalizePieceOrderAsync(Guid patternId)
+    {
+        var pieces = await _context.CraftingPatternPieces
+            .Where(p => p.PatternId == patternId)
+            .OrderBy(p => p.SortOrder)
+            .ThenBy(p => p.CreatedAt)
+            .ToListAsync();
+
+        for (var i = 0; i < pieces.Count; i++)
+        {
+            pieces[i].MoveTo(i + 1);
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task NormalizeStepOrderAsync(Guid pieceId)
+    {
+        var steps = await _context.CraftingPatternSteps
+            .Where(s => s.PatternPieceId == pieceId)
+            .OrderBy(s => s.SortOrder)
+            .ThenBy(s => s.CreatedAt)
+            .ToListAsync();
+
+        for (var i = 0; i < steps.Count; i++)
+        {
+            steps[i].MoveTo(i + 1);
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task<IReadOnlyList<CraftingPatternPieceDto>> MapPiecesAsync(Guid patternId)
+    {
+        var pieces = await _context.CraftingPatternPieces
+            .Where(p => p.PatternId == patternId)
+            .OrderBy(p => p.SortOrder)
+            .ThenBy(p => p.CreatedAt)
+            .ToListAsync();
+
+        var results = new List<CraftingPatternPieceDto>(pieces.Count);
+        foreach (var piece in pieces)
+        {
+            results.Add(await MapPiece(piece));
+        }
+
+        return results;
+    }
+
+    private async Task<CraftingPatternPieceDto?> MapPieceAsync(Guid pieceId)
+    {
+        var piece = await _context.CraftingPatternPieces
+            .SingleOrDefaultAsync(p => p.Id == pieceId);
+
+        return piece == null ? null : await MapPiece(piece);
+    }
+
+    private async Task<CraftingPatternPieceDto> MapPiece(CraftingPatternPiece piece)
+    {
+        var steps = await _context.CraftingPatternSteps
+            .Where(s => s.PatternPieceId == piece.Id)
+            .OrderBy(s => s.SortOrder)
+            .ThenBy(s => s.CreatedAt)
+            .ToListAsync();
+
+        return new CraftingPatternPieceDto
+        {
+            Id = piece.Id,
+            PatternId = piece.PatternId,
+            Name = piece.Name,
+            SortOrder = piece.SortOrder,
+            Steps = steps.Select(MapStep).ToList(),
+            CreatedAt = piece.CreatedAt,
+            UpdatedAt = piece.UpdatedAt
+        };
+    }
+
+    private async Task<CraftingPatternStepDto?> MapStepAsync(Guid stepId)
+    {
+        var step = await _context.CraftingPatternSteps
+            .SingleOrDefaultAsync(s => s.Id == stepId);
+
+        return step == null ? null : MapStep(step);
+    }
+
+    private static CraftingPatternStepDto MapStep(CraftingPatternStep step)
+    {
+        return new CraftingPatternStepDto
+        {
+            Id = step.Id,
+            PatternPieceId = step.PatternPieceId,
+            RangeStart = step.RangeStart,
+            RangeEnd = step.RangeEnd,
+            DisplayRange = FormatRange(step.RangeStart, step.RangeEnd),
+            Label = step.Label,
+            Instructions = step.Instructions,
+            SortOrder = step.SortOrder,
+            CreatedAt = step.CreatedAt,
+            UpdatedAt = step.UpdatedAt
+        };
+    }
+
+    private static string FormatRange(int? rangeStart, int? rangeEnd)
+    {
+        if (rangeStart == null && rangeEnd == null)
+        {
+            return string.Empty;
+        }
+
+        if (rangeStart == rangeEnd || rangeEnd == null)
+        {
+            return rangeStart?.ToString() ?? string.Empty;
+        }
+
+        if (rangeStart == null)
+        {
+            return rangeEnd.Value.ToString();
+        }
+
+        return $"{rangeStart}-{rangeEnd}";
+    }
+
+    private static bool ContainsSameIds(IEnumerable<Guid> currentIds, IReadOnlyList<Guid> orderedIds)
+    {
+        var currentSet = currentIds.ToHashSet();
+        var orderedSet = orderedIds.ToHashSet();
+
+        return currentSet.Count == orderedIds.Count
+            && orderedSet.Count == orderedIds.Count
+            && currentSet.SetEquals(orderedSet);
     }
 }

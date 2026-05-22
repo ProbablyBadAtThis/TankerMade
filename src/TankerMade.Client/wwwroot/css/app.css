@@ -104,6 +104,223 @@ code {
     color: #c02d76;
 }
 
+.auth-form {
+    display: grid;
+    gap: 1rem;
+    max-width: 28rem;
+}
+
+.auth-form label {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.auth-form label span {
+    font-weight: 600;
+}
+
+.auth-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.crafting-dashboard {
+    display: grid;
+    gap: 1rem;
+    max-width: 56rem;
+}
+
+.crafting-panel {
+    align-items: center;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 1rem;
+}
+
+.crafting-panel h2 {
+    font-size: 1.1rem;
+    margin: 0 0 0.25rem;
+}
+
+.crafting-panel p {
+    color: #536173;
+    margin: 0;
+}
+
+.pattern-detail {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.pattern-header {
+    align-items: end;
+    border-bottom: 1px solid #d9dee7;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding-bottom: 1rem;
+}
+
+.pattern-header h1 {
+    margin: 0;
+}
+
+.pattern-header p {
+    color: #536173;
+    margin: 0.25rem 0 0;
+}
+
+.pattern-back-link {
+    display: inline-block;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.pattern-stats {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.pattern-stats div {
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    min-width: 5rem;
+    padding: 0.65rem 0.8rem;
+    text-align: center;
+}
+
+.pattern-stats strong,
+.pattern-stats span {
+    display: block;
+}
+
+.pattern-stats span {
+    color: #536173;
+    font-size: 0.8rem;
+}
+
+.pattern-workspace {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr);
+}
+
+.piece-list {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.piece-button {
+    background: #fff;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    color: #1f2937;
+    display: flex;
+    justify-content: space-between;
+    min-height: 3rem;
+    padding: 0.7rem 0.8rem;
+    text-align: left;
+}
+
+.piece-button.active {
+    background: #e8f1fb;
+    border-color: #1b6ec2;
+}
+
+.piece-button small {
+    color: #536173;
+}
+
+.step-panel {
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    min-width: 0;
+    padding: 1rem;
+}
+
+.step-panel-header {
+    align-items: start;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.step-panel-header h2 {
+    font-size: 1.25rem;
+    margin: 0;
+}
+
+.step-panel-header p {
+    color: #536173;
+    margin: 0.25rem 0 0;
+}
+
+.step-panel-header span {
+    color: #536173;
+    white-space: nowrap;
+}
+
+.step-list {
+    display: grid;
+    gap: 0.75rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.step-list li {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: 4rem minmax(0, 1fr);
+}
+
+.step-range {
+    align-items: center;
+    background: #f3f6f9;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    display: flex;
+    font-weight: 700;
+    justify-content: center;
+    min-height: 3rem;
+}
+
+.step-list h3 {
+    font-size: 1rem;
+    margin: 0;
+}
+
+.step-list p {
+    color: #384657;
+    margin: 0.25rem 0 0;
+}
+
+@media (max-width: 760px) {
+    .crafting-panel,
+    .pattern-header,
+    .step-panel-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .pattern-workspace {
+        grid-template-columns: 1fr;
+    }
+
+    .pattern-stats {
+        width: 100%;
+    }
+
+    .pattern-stats div {
+        flex: 1;
+    }
+}
+
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
     color: var(--bs-secondary-color);
     text-align: end;

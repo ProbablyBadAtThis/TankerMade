@@ -1,0 +1,270 @@
+@page "/modules/crafting/patterns"
+@page "/modules/crafting/patterns/{PatternId:guid}"
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+
+<PageTitle>Reference Pattern</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>Crafting</h1>
+    <p>Sign in to load Crafting patterns.</p>
+    <a class="btn btn-primary" href="login">Sign in</a>
+}
+else if (!ModuleState.IsActive("crafting"))
+{
+    <h1>Crafting</h1>
+    <p>Activate the Crafting module from Home to load its tools.</p>
+}
+else if (loading)
+{
+    <h1>Patterns</h1>
+    <p>Loading...</p>
+}
+else
+{
+    <div class="pattern-detail">
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-warning">@errorMessage</div>
+        }
+
+        <div class="pattern-header">
+            <div>
+                <a class="pattern-back-link" href="modules/crafting">Crafting</a>
+                <h1>@Pattern.Name</h1>
+                <p>@Pattern.Type &middot; @Pattern.Form &middot; @Pattern.Difficulty</p>
+            </div>
+            <div class="pattern-stats" aria-label="Pattern summary">
+                <div>
+                    <strong>@Pattern.Pieces.Count</strong>
+                    <span>Pieces</span>
+                </div>
+                <div>
+                    <strong>@StepCount</strong>
+                    <span>Steps</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="pattern-workspace">
+            <aside class="piece-list" aria-label="Pieces">
+                @foreach (var piece in Pattern.Pieces)
+                {
+                    <button class="@GetPieceButtonClass(piece.Id)" @onclick="() => SelectPiece(piece.Id)">
+                        <span>@piece.Name</span>
+                        <small>@piece.Steps.Count steps</small>
+                    </button>
+                }
+            </aside>
+
+            <section class="step-panel" aria-label="Selected piece steps">
+                @if (SelectedPiece is null)
+                {
+                    <p>No piece selected.</p>
+                }
+                else
+                {
+                    <div class="step-panel-header">
+                        <div>
+                            <h2>@SelectedPiece.Name</h2>
+                            <p>@SelectedPiece.Steps.Count ordered steps</p>
+                        </div>
+                        <span>@PiecePositionText</span>
+                    </div>
+
+                    <ol class="step-list">
+                        @foreach (var step in SelectedPiece.Steps)
+                        {
+                            <li>
+                                <div class="step-range">@step.DisplayRange</div>
+                                <div>
+                                    <h3>@step.Label</h3>
+                                    <p>@step.Instructions</p>
+                                </div>
+                            </li>
+                        }
+                    </ol>
+                }
+            </section>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid? PatternId { get; set; }
+
+    private PatternViewModel Pattern = SamplePattern;
+    private bool loading = true;
+    private string errorMessage = string.Empty;
+    private Guid? selectedPieceId;
+
+    private static readonly PatternViewModel SamplePattern = new(
+        "Modular Reference Pattern",
+        "Reference",
+        "Multi-piece",
+        "Intermediate",
+        [
+            new(
+                Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1"),
+                "Main Piece",
+                [
+                    new("1", "Foundation", "Create the base structure for this piece."),
+                    new("2-4", "Build", "Repeat the main construction sequence."),
+                    new("5", "Settle", "Check shape and prepare for the next piece.")
+                ]),
+            new(
+                Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2"),
+                "Detail Piece",
+                [
+                    new("1", "Prepare", "Create the detail element."),
+                    new("2-3", "Repeat", "Work the detail sequence twice."),
+                    new("4", "Attach", "Join the detail to the main piece.")
+                ]),
+            new(
+                Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3"),
+                "Finish",
+                [
+                    new("1", "Review", "Check all pieces against the pattern notes."),
+                    new("2", "Complete", "Record final adjustments before project use.")
+                ])
+        ]);
+
+    private PatternPieceViewModel? SelectedPiece =>
+        Pattern.Pieces.FirstOrDefault(piece => piece.Id == selectedPieceId) ?? Pattern.Pieces.FirstOrDefault();
+
+    private int StepCount => Pattern.Pieces.Sum(piece => piece.Steps.Count);
+
+    private string PiecePositionText
+    {
+        get
+        {
+            if (SelectedPiece is null)
+            {
+                return string.Empty;
+            }
+
+            var index = Pattern.Pieces.FindIndex(piece => piece.Id == SelectedPiece.Id);
+            return $"{index + 1}/{Pattern.Pieces.Count}";
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadPatternAsync();
+        selectedPieceId = Pattern.Pieces.FirstOrDefault()?.Id;
+    }
+
+    private async Task LoadPatternAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive("crafting"))
+            {
+                return;
+            }
+
+            var patternId = PatternId;
+            if (patternId == null)
+            {
+                var patterns = await ApiClient.GetCraftingPatternsAsync();
+                patternId = patterns.FirstOrDefault()?.Id;
+            }
+
+            if (patternId == null)
+            {
+                Pattern = SamplePattern;
+                errorMessage = "No saved patterns yet. Showing the reference template pattern.";
+                return;
+            }
+
+            var detail = await ApiClient.GetCraftingPatternAsync(patternId.Value);
+            if (detail == null)
+            {
+                Pattern = SamplePattern;
+                errorMessage = "Pattern was not found. Showing the reference template pattern.";
+                return;
+            }
+
+            Pattern = MapPattern(detail);
+        }
+        catch (Exception ex)
+        {
+            Pattern = SamplePattern;
+            errorMessage = $"Could not load saved patterns. Showing the reference template pattern. {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private void SelectPiece(Guid pieceId)
+    {
+        selectedPieceId = pieceId;
+    }
+
+    private string GetPieceButtonClass(Guid pieceId)
+    {
+        return pieceId == SelectedPiece?.Id
+            ? "piece-button active"
+            : "piece-button";
+    }
+
+    private static PatternViewModel MapPattern(TankerMade.Client.Services.CraftingPatternDetail detail)
+    {
+        var pieces = detail.Pieces
+            .OrderBy(piece => piece.SortOrder)
+            .Select(piece => new PatternPieceViewModel(
+                piece.Id,
+                piece.Name,
+                piece.Steps
+                    .OrderBy(step => step.SortOrder)
+                    .Select(step => new PatternStepViewModel(
+                        step.DisplayRange,
+                        string.IsNullOrWhiteSpace(step.Label) ? "Step" : step.Label,
+                        step.Instructions))
+                    .ToList()))
+            .ToList();
+
+        if (pieces.Count == 0)
+        {
+            pieces.Add(new PatternPieceViewModel(Guid.NewGuid(), "Pattern", []));
+        }
+
+        return new PatternViewModel(
+            detail.Name,
+            detail.Type,
+            detail.Form,
+            detail.Difficulty,
+            pieces);
+    }
+
+    private sealed record PatternViewModel(
+        string Name,
+        string Type,
+        string Form,
+        string Difficulty,
+        List<PatternPieceViewModel> Pieces);
+
+    private sealed record PatternPieceViewModel(
+        Guid Id,
+        string Name,
+        List<PatternStepViewModel> Steps);
+
+    private sealed record PatternStepViewModel(
+        string DisplayRange,
+        string Label,
+        string Instructions);
+}

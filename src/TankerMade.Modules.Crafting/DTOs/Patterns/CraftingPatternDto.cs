@@ -14,6 +14,9 @@ public class CraftingPatternDto
     public string SourceName { get; set; } = string.Empty;
     public Guid UserId { get; set; }
     public string Username { get; set; } = string.Empty;
+    public IReadOnlyList<CraftingPatternPieceDto> Pieces { get; set; } = [];
+    public int PieceCount { get; set; }
+    public int StepCount { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

@@ -12,4 +12,12 @@ public interface ICraftingPatternService
     Task<IReadOnlyList<CraftingPatternDto>> SearchAsync(string searchTerm, Guid userId);
     Task<CraftingPatternDto?> UpdateAsync(UpdateCraftingPatternDto updateDto, Guid userId);
     Task<bool> DeleteAsync(Guid id, Guid userId);
+    Task<CraftingPatternPieceDto?> AddPieceAsync(Guid patternId, CreateCraftingPatternPieceDto createDto, Guid userId);
+    Task<CraftingPatternPieceDto?> UpdatePieceAsync(Guid patternId, UpdateCraftingPatternPieceDto updateDto, Guid userId);
+    Task<bool> DeletePieceAsync(Guid patternId, Guid pieceId, Guid userId);
+    Task<bool> ReorderPiecesAsync(Guid patternId, ReorderCraftingPatternItemsDto reorderDto, Guid userId);
+    Task<CraftingPatternStepDto?> AddStepAsync(Guid patternId, Guid pieceId, CreateCraftingPatternStepDto createDto, Guid userId);
+    Task<CraftingPatternStepDto?> UpdateStepAsync(Guid patternId, Guid pieceId, UpdateCraftingPatternStepDto updateDto, Guid userId);
+    Task<bool> DeleteStepAsync(Guid patternId, Guid pieceId, Guid stepId, Guid userId);
+    Task<bool> ReorderStepsAsync(Guid patternId, Guid pieceId, ReorderCraftingPatternItemsDto reorderDto, Guid userId);
 }

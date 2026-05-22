@@ -87,6 +87,129 @@ public class CraftingPatternsController : ControllerBase
         return deleted ? NoContent() : NotFound();
     }
 
+    [HttpPost("{patternId:guid}/pieces")]
+    public async Task<ActionResult<CraftingPatternPieceDto>> AddPiece(
+        Guid patternId,
+        CreateCraftingPatternPieceDto request)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        var piece = await _patternService.AddPieceAsync(patternId, request, userId.Value);
+        return piece == null ? NotFound() : CreatedAtAction(nameof(GetById), new { id = patternId }, piece);
+    }
+
+    [HttpPut("{patternId:guid}/pieces/{pieceId:guid}")]
+    public async Task<ActionResult<CraftingPatternPieceDto>> UpdatePiece(
+        Guid patternId,
+        Guid pieceId,
+        UpdateCraftingPatternPieceDto request)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        request.Id = pieceId;
+        var piece = await _patternService.UpdatePieceAsync(patternId, request, userId.Value);
+        return piece == null ? NotFound() : Ok(piece);
+    }
+
+    [HttpDelete("{patternId:guid}/pieces/{pieceId:guid}")]
+    public async Task<ActionResult> DeletePiece(Guid patternId, Guid pieceId)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        var deleted = await _patternService.DeletePieceAsync(patternId, pieceId, userId.Value);
+        return deleted ? NoContent() : NotFound();
+    }
+
+    [HttpPut("{patternId:guid}/pieces/reorder")]
+    public async Task<ActionResult> ReorderPieces(
+        Guid patternId,
+        ReorderCraftingPatternItemsDto request)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        var reordered = await _patternService.ReorderPiecesAsync(patternId, request, userId.Value);
+        return reordered ? NoContent() : NotFound();
+    }
+
+    [HttpPost("{patternId:guid}/pieces/{pieceId:guid}/steps")]
+    public async Task<ActionResult<CraftingPatternStepDto>> AddStep(
+        Guid patternId,
+        Guid pieceId,
+        CreateCraftingPatternStepDto request)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        var step = await _patternService.AddStepAsync(patternId, pieceId, request, userId.Value);
+        return step == null ? NotFound() : CreatedAtAction(nameof(GetById), new { id = patternId }, step);
+    }
+
+    [HttpPut("{patternId:guid}/pieces/{pieceId:guid}/steps/{stepId:guid}")]
+    public async Task<ActionResult<CraftingPatternStepDto>> UpdateStep(
+        Guid patternId,
+        Guid pieceId,
+        Guid stepId,
+        UpdateCraftingPatternStepDto request)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        request.Id = stepId;
+        var step = await _patternService.UpdateStepAsync(patternId, pieceId, request, userId.Value);
+        return step == null ? NotFound() : Ok(step);
+    }
+
+    [HttpDelete("{patternId:guid}/pieces/{pieceId:guid}/steps/{stepId:guid}")]
+    public async Task<ActionResult> DeleteStep(Guid patternId, Guid pieceId, Guid stepId)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        var deleted = await _patternService.DeleteStepAsync(patternId, pieceId, stepId, userId.Value);
+        return deleted ? NoContent() : NotFound();
+    }
+
+    [HttpPut("{patternId:guid}/pieces/{pieceId:guid}/steps/reorder")]
+    public async Task<ActionResult> ReorderSteps(
+        Guid patternId,
+        Guid pieceId,
+        ReorderCraftingPatternItemsDto request)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        var reordered = await _patternService.ReorderStepsAsync(patternId, pieceId, request, userId.Value);
+        return reordered ? NoContent() : NotFound();
+    }
+
     private async Task<Guid?> GetActiveModuleUserIdAsync()
     {
         var userId = User.GetUserId();

@@ -153,6 +153,37 @@ partial class TankerMadeDbContextModelSnapshot : ModelSnapshot
             b.ToTable("CraftingPatterns");
         });
 
+        modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingPatternPiece", b =>
+        {
+            b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("TEXT");
+            b.Property<DateTime>("CreatedAt").HasColumnType("TEXT");
+            b.Property<string>("Name").IsRequired().HasMaxLength(200).HasColumnType("TEXT");
+            b.Property<Guid>("PatternId").HasColumnType("TEXT");
+            b.Property<int>("SortOrder").HasColumnType("INTEGER");
+            b.Property<DateTime>("UpdatedAt").HasColumnType("TEXT");
+            b.HasKey("Id");
+            b.HasIndex("PatternId");
+            b.HasIndex("PatternId", "SortOrder");
+            b.ToTable("CraftingPatternPieces");
+        });
+
+        modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingPatternStep", b =>
+        {
+            b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("TEXT");
+            b.Property<DateTime>("CreatedAt").HasColumnType("TEXT");
+            b.Property<string>("Instructions").IsRequired().HasMaxLength(4000).HasColumnType("TEXT");
+            b.Property<string>("Label").IsRequired().HasMaxLength(100).HasColumnType("TEXT");
+            b.Property<Guid>("PatternPieceId").HasColumnType("TEXT");
+            b.Property<int?>("RangeEnd").HasColumnType("INTEGER");
+            b.Property<int?>("RangeStart").HasColumnType("INTEGER");
+            b.Property<int>("SortOrder").HasColumnType("INTEGER");
+            b.Property<DateTime>("UpdatedAt").HasColumnType("TEXT");
+            b.HasKey("Id");
+            b.HasIndex("PatternPieceId");
+            b.HasIndex("PatternPieceId", "SortOrder");
+            b.ToTable("CraftingPatternSteps");
+        });
+
         modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProject", b =>
         {
             b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("TEXT");
@@ -205,6 +236,24 @@ partial class TankerMadeDbContextModelSnapshot : ModelSnapshot
                 .WithMany()
                 .HasForeignKey("UserId")
                 .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingPatternPiece", b =>
+        {
+            b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPattern", null)
+                .WithMany()
+                .HasForeignKey("PatternId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingPatternStep", b =>
+        {
+            b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPatternPiece", null)
+                .WithMany()
+                .HasForeignKey("PatternPieceId")
+                .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired();
         });
 

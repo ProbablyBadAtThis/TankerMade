@@ -19,6 +19,9 @@ public class MigrationTests
         Assert.Contains(
             "20260521210000_ModuleHostAndCraftingReference",
             context.Database.GetMigrations());
+        Assert.Contains(
+            "20260522140000_CraftingPatternPiecesAndSteps",
+            context.Database.GetMigrations());
     }
 
     [Fact]
@@ -53,6 +56,8 @@ public class MigrationTests
             Assert.Contains("UserModuleActivations", tables);
             Assert.Contains("CraftingProjects", tables);
             Assert.Contains("CraftingPatterns", tables);
+            Assert.Contains("CraftingPatternPieces", tables);
+            Assert.Contains("CraftingPatternSteps", tables);
         }
         finally
         {

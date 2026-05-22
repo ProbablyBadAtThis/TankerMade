@@ -1,4 +1,5 @@
 ﻿@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
 @implements IDisposable
 
 <div class="top-row ps-3 navbar navbar-dark">
@@ -17,6 +18,14 @@
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
+        @if (!AuthSession.IsSignedIn)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="login">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Sign in
+                </NavLink>
+            </div>
+        }
         @if (ModuleState.IsActive("crafting"))
         {
             <div class="nav-item px-3">
@@ -40,11 +49,13 @@
 
     protected override void OnInitialized()
     {
+        AuthSession.Changed += StateHasChanged;
         ModuleState.Changed += StateHasChanged;
     }
 
     public void Dispose()
     {
+        AuthSession.Changed -= StateHasChanged;
         ModuleState.Changed -= StateHasChanged;
     }
 }

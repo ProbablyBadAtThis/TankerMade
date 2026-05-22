@@ -49,6 +49,8 @@ Phase A is behavior-complete as of the May 22, 2026 smoke test. The base app now
 
 ## Phase B — Crafting Module V2
 
+Phase B continues to treat `TankerMade.Modules.Crafting` as a reference/template module for development and platform proving. It should demonstrate module patterns that future golive niche modules can copy, but it should not become the production catch-all for knitting, crochet, sewing, or other specific crafts. Niche-specific rules belong in future dedicated modules unless represented here as neutral sample behavior.
+
 - [ ] Full CRUD + reorder for module-owned pattern pieces and steps
 - [ ] Pattern detail page in module UI
 - [ ] Step range display where relevant to the module

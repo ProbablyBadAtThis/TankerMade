@@ -22,6 +22,8 @@ public class TankerMadeDbContext : DbContext
     // Reference crafting module entities
     public DbSet<CraftingProject> CraftingProjects { get; set; }
     public DbSet<CraftingPattern> CraftingPatterns { get; set; }
+    public DbSet<CraftingPatternPiece> CraftingPatternPieces { get; set; }
+    public DbSet<CraftingPatternStep> CraftingPatternSteps { get; set; }
 
     // Reference entities (shared)
     public DbSet<Theme> Themes { get; set; }
@@ -37,6 +39,8 @@ public class TankerMadeDbContext : DbContext
         ConfigureModules(modelBuilder);
         ConfigureCraftingProject(modelBuilder);
         ConfigureCraftingPattern(modelBuilder);
+        ConfigureCraftingPatternPiece(modelBuilder);
+        ConfigureCraftingPatternStep(modelBuilder);
         ConfigureReferenceEntities(modelBuilder);
         SeedReferenceData(modelBuilder);
     }
@@ -190,6 +194,50 @@ public class TankerMadeDbContext : DbContext
 
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.Slug);
+        });
+    }
+
+    private void ConfigureCraftingPatternPiece(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CraftingPatternPiece>(entity =>
+        {
+            entity.ToTable("CraftingPatternPieces");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Name)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.HasOne<CraftingPattern>()
+                .WithMany()
+                .HasForeignKey(e => e.PatternId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.PatternId);
+            entity.HasIndex(e => new { e.PatternId, e.SortOrder });
+        });
+    }
+
+    private void ConfigureCraftingPatternStep(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CraftingPatternStep>(entity =>
+        {
+            entity.ToTable("CraftingPatternSteps");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Label)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.Instructions)
+                .HasMaxLength(4000);
+
+            entity.HasOne<CraftingPatternPiece>()
+                .WithMany()
+                .HasForeignKey(e => e.PatternPieceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.PatternPieceId);
+            entity.HasIndex(e => new { e.PatternPieceId, e.SortOrder });
         });
     }
 

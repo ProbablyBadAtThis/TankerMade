@@ -102,16 +102,13 @@ http://localhost:5236/scalar/v1
 
 ## Current Roadmap Focus
 
-Use `docs/project/roadmap.md` as the source of truth. As of the current docs, Phase A focuses on foundation work:
+Use `docs/project/roadmap.md` as the source of truth. As of the current docs, Phase B focuses on Crafting Module V2:
 
-- Add core module-host entities.
-- Register module-host entities in `TankerMadeDbContext`.
-- Add migrations.
-- Implement module discovery/activation service contracts and service implementations.
-- Add module host API endpoints.
-- Scaffold the first crafting module as a separate module project.
-- Extract existing project/pattern foundation into that crafting module as the reference implementation.
-- Add focused tests.
+- Keep `TankerMade.Modules.Crafting` as a reference/template module, not the eventual production catch-all for knitting, crochet, sewing, or another niche.
+- Add full CRUD and reorder behavior for module-owned pattern pieces and steps.
+- Add pattern detail UI and step range display where relevant.
+- Add progress aggregation and validation foundations where they fit the reference module.
+- Expand module-owned project workspace screens beyond the Phase A reference baseline.
 
 ## UX Expectations
 
@@ -132,3 +129,5 @@ dotnet build TankerMade.sln
 ```
 
 Add or run tests when changing service behavior, API behavior, migrations, or shared contracts.
+
+In Codex sandbox sessions, solution/server builds can silently hang and fail after several minutes with no useful diagnostics. Do not spend time repeatedly trying sandbox builds. When verification is needed, ask the user to run the build/tests locally and provide the results. Small project-level builds may be used only when they are quick and clearly useful.

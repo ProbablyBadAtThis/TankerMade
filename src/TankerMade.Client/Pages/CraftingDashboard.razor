@@ -11,16 +11,22 @@
 }
 else
 {
-    <p>The Crafting module is active. Project and pattern workflows are supplied by this module.</p>
+    <p>The Crafting module is active. Project and pattern workflows are supplied by this reference module.</p>
 
-    <div class="list-group">
-        <div class="list-group-item">
-            <h2 class="h5 mb-1">Projects</h2>
-            <p class="mb-0">Module-owned project tracking endpoint: <code>api/modules/crafting/projects</code></p>
+    <div class="crafting-dashboard">
+        <div class="crafting-panel">
+            <div>
+                <h2>Patterns</h2>
+                <p>Reference pattern workspace with pieces, ordered steps, and compact ranges.</p>
+            </div>
+            <a class="btn btn-primary" href="modules/crafting/patterns">Open</a>
         </div>
-        <div class="list-group-item">
-            <h2 class="h5 mb-1">Patterns</h2>
-            <p class="mb-0">Module-owned pattern endpoint: <code>api/modules/crafting/patterns</code></p>
+        <div class="crafting-panel">
+            <div>
+                <h2>Projects</h2>
+                <p>Project workspaces will build on pattern pieces and steps in the next slice.</p>
+            </div>
+            <button class="btn btn-outline-secondary" disabled>Pending</button>
         </div>
     </div>
 }

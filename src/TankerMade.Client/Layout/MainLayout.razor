@@ -1,4 +1,9 @@
 ﻿@inherits LayoutComponentBase
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject NavigationManager Navigation
+@implements IDisposable
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
@@ -6,7 +11,15 @@
 
     <main>
         <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            @if (AuthSession.IsSignedIn)
+            {
+                <span>@AuthSession.State.Username</span>
+                <button class="btn btn-link" @onclick="SignOutAsync">Sign out</button>
+            }
+            else
+            {
+                <a href="login">Sign in</a>
+            }
         </div>
 
         <article class="content px-4">
@@ -14,3 +27,28 @@
         </article>
     </main>
 </div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        AuthSession.Changed += StateHasChanged;
+        await AuthSession.InitializeAsync();
+
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+    }
+
+    private async Task SignOutAsync()
+    {
+        await AuthSession.SignOutAsync();
+        ModuleState.Reset();
+        Navigation.NavigateTo("/");
+    }
+
+    public void Dispose()
+    {
+        AuthSession.Changed -= StateHasChanged;
+    }
+}
