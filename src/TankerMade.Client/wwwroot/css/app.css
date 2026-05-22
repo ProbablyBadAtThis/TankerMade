@@ -354,9 +354,16 @@ code {
     color: #1f2937;
     display: flex;
     justify-content: space-between;
-    min-height: 3rem;
+    min-height: 6rem;
     padding: 0.7rem 0.8rem;
     text-align: left;
+}
+
+.piece-row {
+    align-items: stretch;
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .piece-button.active {
@@ -409,6 +416,52 @@ code {
     flex-wrap: wrap;
     gap: 0.5rem;
     justify-content: flex-end;
+}
+
+.order-actions {
+    display: grid;
+    gap: 0.35rem;
+    grid-template-rows: auto 1fr auto;
+    min-height: 6rem;
+}
+
+.order-actions.inline {
+    align-self: stretch;
+    min-height: 5rem;
+}
+
+.order-button {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    color: #1f2937;
+    display: inline-flex;
+    font-weight: 700;
+    height: 1.9rem;
+    justify-content: center;
+    min-width: 1.9rem;
+    padding: 0;
+}
+
+.order-group {
+    display: grid;
+    gap: 0.25rem;
+}
+
+.order-group.top {
+    align-self: start;
+    grid-row: 1;
+}
+
+.order-group.bottom {
+    align-self: end;
+    grid-row: 3;
+}
+
+.order-button:disabled {
+    color: #9aa5b1;
+    background: #f3f6f9;
 }
 
 .step-list {

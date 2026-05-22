@@ -8,14 +8,14 @@ class DevTrackerSection {
         this.sectionId = 'dev-tracker';
         this.data = {
             totalTasks: 65,
-            completedTasks: 26,
+            completedTasks: 29,
             totalPhases: 9,
             completedPhases: 1,
             currentPhase: {
                 number: "B",
                 title: "Crafting Module V2",
                 description: "Module-owned pattern pieces, steps, detail UI, progress behavior, and workspace expansion",
-                completed: 0,
+                completed: 3,
                 total: 5,
                 color: "#60a5fa"
             },
@@ -33,7 +33,7 @@ class DevTrackerSection {
                     number: "B",
                     title: "Crafting Module V2",
                     description: "Pattern pieces, steps, reordering, aggregation, validation, and expanded module UI.",
-                    completed: 0,
+                    completed: 3,
                     total: 5,
                     color: "#60a5fa",
                     status: "active"
@@ -336,9 +336,9 @@ const ROADMAP_PHASE_TASKS = {
         { title: 'Patch module-owned partial update behavior', status: 'done', area: 'API' }
     ],
     B: [
-        { title: 'Full CRUD and reorder for module-owned pattern pieces and steps', status: 'todo', area: 'Patterns' },
-        { title: 'Pattern detail page in module UI', status: 'todo', area: 'Client' },
-        { title: 'Step range display where relevant to the module', status: 'todo', area: 'UX' },
+        { title: 'Full CRUD and reorder for module-owned pattern pieces and steps', status: 'done', area: 'Patterns' },
+        { title: 'Pattern detail page in module UI', status: 'done', area: 'Client' },
+        { title: 'Step range display where relevant to the module', status: 'done', area: 'UX' },
         { title: 'Progress aggregation and validation where relevant to the module', status: 'todo', area: 'Domain' },
         { title: 'Expand module-owned project workspace screens beyond the Phase A reference baseline', status: 'todo', area: 'Projects' }
     ],

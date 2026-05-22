@@ -124,6 +124,21 @@ public class TankerMadeApiClient
         return true;
     }
 
+    public async Task<bool> ReorderCraftingPatternPiecesAsync(Guid patternId, IReadOnlyList<Guid> orderedIds)
+    {
+        var response = await _http.PutAsJsonAsync(
+            $"api/modules/crafting/patterns/{patternId}/pieces/reorder",
+            new ReorderCraftingPatternItemsRequest { OrderedIds = orderedIds });
+
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return false;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return true;
+    }
+
     public async Task<CraftingPatternStepDetail?> AddCraftingPatternStepAsync(
         Guid patternId,
         Guid pieceId,
@@ -166,6 +181,21 @@ public class TankerMadeApiClient
         response.EnsureSuccessStatusCode();
         return true;
     }
+
+    public async Task<bool> ReorderCraftingPatternStepsAsync(Guid patternId, Guid pieceId, IReadOnlyList<Guid> orderedIds)
+    {
+        var response = await _http.PutAsJsonAsync(
+            $"api/modules/crafting/patterns/{patternId}/pieces/{pieceId}/steps/reorder",
+            new ReorderCraftingPatternItemsRequest { OrderedIds = orderedIds });
+
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return false;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return true;
+    }
 }
 
 public class CraftingPatternFormRequest
@@ -189,6 +219,11 @@ public class CraftingPatternStepFormRequest
     public int? RangeEnd { get; set; }
     public string Label { get; set; } = string.Empty;
     public string Instructions { get; set; } = string.Empty;
+}
+
+public class ReorderCraftingPatternItemsRequest
+{
+    public IReadOnlyList<Guid> OrderedIds { get; set; } = [];
 }
 
 public class CraftingPatternSummary

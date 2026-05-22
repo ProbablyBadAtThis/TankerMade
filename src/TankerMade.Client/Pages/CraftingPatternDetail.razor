@@ -69,12 +69,31 @@ else
                 }
                 else
                 {
-                    @foreach (var piece in Pattern.Pieces)
+                    @for (var i = 0; i < Pattern.Pieces.Count; i++)
                     {
-                        <button class="@GetPieceButtonClass(piece.Id)" @onclick="() => SelectPiece(piece.Id)">
-                            <span>@piece.Name</span>
-                            <small>@piece.Steps.Count steps</small>
-                        </button>
+                        var piece = Pattern.Pieces[i];
+                        var pieceId = piece.Id;
+                        var pieceIndex = i;
+
+                        <div class="piece-row">
+                            <button class="@GetPieceButtonClass(pieceId)" @onclick="() => SelectPiece(pieceId)">
+                                <span>@piece.Name</span>
+                                <small>@piece.Steps.Count steps</small>
+                            </button>
+                            @if (CanEdit)
+                            {
+                                <div class="order-actions" aria-label="Move piece">
+                                    <div class="order-group top">
+                                        <button class="order-button" aria-label="Move piece up one row" disabled="@(busy || pieceIndex == 0)" @onclick="() => MovePieceAsync(pieceId, -1)">↑</button>
+                                        <button class="order-button" aria-label="Move piece to top" disabled="@(busy || pieceIndex == 0)" @onclick="() => MovePieceToEdgeAsync(pieceId, 0)">⇈</button>
+                                    </div>
+                                    <div class="order-group bottom">
+                                        <button class="order-button" aria-label="Move piece to bottom" disabled="@(busy || pieceIndex == Pattern.Pieces.Count - 1)" @onclick="() => MovePieceToEdgeAsync(pieceId, Pattern.Pieces.Count - 1)">⇊</button>
+                                        <button class="order-button" aria-label="Move piece down one row" disabled="@(busy || pieceIndex == Pattern.Pieces.Count - 1)" @onclick="() => MovePieceAsync(pieceId, 1)">↓</button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
                     }
                 }
             </aside>
@@ -152,8 +171,12 @@ else
                     else
                     {
                         <ol class="step-list">
-                            @foreach (var step in SelectedPiece.Steps)
+                            @for (var i = 0; i < SelectedPiece.Steps.Count; i++)
                             {
+                                var step = SelectedPiece.Steps[i];
+                                var stepId = step.Id;
+                                var stepIndex = i;
+
                                 <li>
                                     <div class="step-range">@step.DisplayRange</div>
                                     <div class="step-content">
@@ -163,6 +186,16 @@ else
                                             {
                                                 <div class="piece-actions">
                                                     <button class="btn btn-outline-secondary" disabled="@busy" @onclick="() => StartEditingStep(step)">Edit</button>
+                                                    <div class="order-actions inline" aria-label="Move step">
+                                                        <div class="order-group top">
+                                                            <button class="order-button" aria-label="Move step up one row" disabled="@(busy || stepIndex == 0)" @onclick="() => MoveStepAsync(stepId, -1)">↑</button>
+                                                            <button class="order-button" aria-label="Move step to top" disabled="@(busy || stepIndex == 0)" @onclick="() => MoveStepToEdgeAsync(stepId, 0)">⇈</button>
+                                                        </div>
+                                                        <div class="order-group bottom">
+                                                            <button class="order-button" aria-label="Move step to bottom" disabled="@(busy || stepIndex == SelectedPiece.Steps.Count - 1)" @onclick="() => MoveStepToEdgeAsync(stepId, SelectedPiece.Steps.Count - 1)">⇊</button>
+                                                            <button class="order-button" aria-label="Move step down one row" disabled="@(busy || stepIndex == SelectedPiece.Steps.Count - 1)" @onclick="() => MoveStepAsync(stepId, 1)">↓</button>
+                                                        </div>
+                                                    </div>
                                                     <button class="btn btn-outline-danger" disabled="@busy" @onclick="() => DeleteStepAsync(step.Id)">Delete</button>
                                                 </div>
                                             }
@@ -444,6 +477,60 @@ else
         });
     }
 
+    private async Task MovePieceAsync(Guid pieceId, int direction)
+    {
+        if (PatternId == null)
+        {
+            return;
+        }
+
+        var orderedIds = Pattern.Pieces.Select(piece => piece.Id).ToList();
+        if (!TryMoveItem(orderedIds, pieceId, direction))
+        {
+            return;
+        }
+
+        await RunPieceActionAsync(async () =>
+        {
+            var reordered = await ApiClient.ReorderCraftingPatternPiecesAsync(PatternId.Value, orderedIds);
+            if (!reordered)
+            {
+                errorMessage = "Could not reorder pieces.";
+                return;
+            }
+
+            selectedPieceId = pieceId;
+            await LoadPatternAsync();
+        });
+    }
+
+    private async Task MovePieceToEdgeAsync(Guid pieceId, int targetIndex)
+    {
+        if (PatternId == null)
+        {
+            return;
+        }
+
+        var orderedIds = Pattern.Pieces.Select(piece => piece.Id).ToList();
+        if (!TryMoveItemToIndex(orderedIds, pieceId, targetIndex))
+        {
+            return;
+        }
+
+        await RunPieceActionAsync(async () =>
+        {
+            var reordered = await ApiClient.ReorderCraftingPatternPiecesAsync(PatternId.Value, orderedIds);
+            if (!reordered)
+            {
+                errorMessage = "Could not reorder pieces.";
+                return;
+            }
+
+            selectedPieceId = pieceId;
+            await LoadPatternAsync();
+        });
+    }
+
     private async Task AddStepAsync()
     {
         if (PatternId == null || SelectedPiece == null)
@@ -542,6 +629,62 @@ else
         });
     }
 
+    private async Task MoveStepAsync(Guid stepId, int direction)
+    {
+        if (PatternId == null || SelectedPiece == null)
+        {
+            return;
+        }
+
+        var pieceId = SelectedPiece.Id;
+        var orderedIds = SelectedPiece.Steps.Select(step => step.Id).ToList();
+        if (!TryMoveItem(orderedIds, stepId, direction))
+        {
+            return;
+        }
+
+        await RunPieceActionAsync(async () =>
+        {
+            var reordered = await ApiClient.ReorderCraftingPatternStepsAsync(PatternId.Value, pieceId, orderedIds);
+            if (!reordered)
+            {
+                errorMessage = "Could not reorder steps.";
+                return;
+            }
+
+            selectedPieceId = pieceId;
+            await LoadPatternAsync();
+        });
+    }
+
+    private async Task MoveStepToEdgeAsync(Guid stepId, int targetIndex)
+    {
+        if (PatternId == null || SelectedPiece == null)
+        {
+            return;
+        }
+
+        var pieceId = SelectedPiece.Id;
+        var orderedIds = SelectedPiece.Steps.Select(step => step.Id).ToList();
+        if (!TryMoveItemToIndex(orderedIds, stepId, targetIndex))
+        {
+            return;
+        }
+
+        await RunPieceActionAsync(async () =>
+        {
+            var reordered = await ApiClient.ReorderCraftingPatternStepsAsync(PatternId.Value, pieceId, orderedIds);
+            if (!reordered)
+            {
+                errorMessage = "Could not reorder steps.";
+                return;
+            }
+
+            selectedPieceId = pieceId;
+            await LoadPatternAsync();
+        });
+    }
+
     private static TankerMade.Client.Services.CraftingPatternStepFormRequest ToStepRequest(StepFormModel form)
     {
         return new TankerMade.Client.Services.CraftingPatternStepFormRequest
@@ -551,6 +694,34 @@ else
             Label = form.Label,
             Instructions = form.Instructions
         };
+    }
+
+    private static bool TryMoveItem(List<Guid> orderedIds, Guid itemId, int direction)
+    {
+        var currentIndex = orderedIds.IndexOf(itemId);
+        var targetIndex = currentIndex + direction;
+
+        if (currentIndex < 0 || targetIndex < 0 || targetIndex >= orderedIds.Count)
+        {
+            return false;
+        }
+
+        (orderedIds[currentIndex], orderedIds[targetIndex]) = (orderedIds[targetIndex], orderedIds[currentIndex]);
+        return true;
+    }
+
+    private static bool TryMoveItemToIndex(List<Guid> orderedIds, Guid itemId, int targetIndex)
+    {
+        var currentIndex = orderedIds.IndexOf(itemId);
+
+        if (currentIndex < 0 || targetIndex < 0 || targetIndex >= orderedIds.Count || currentIndex == targetIndex)
+        {
+            return false;
+        }
+
+        orderedIds.RemoveAt(currentIndex);
+        orderedIds.Insert(targetIndex, itemId);
+        return true;
     }
 
     private async Task RunPieceActionAsync(Func<Task> action)

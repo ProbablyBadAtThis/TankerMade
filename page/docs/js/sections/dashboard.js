@@ -8,12 +8,12 @@ class DashboardSection {
         this.sectionId = 'dashboard';
         this.data = {
             totalTasks: 65,
-            completedTasks: 26,
+            completedTasks: 29,
             currentPhase: {
                 number: "B",
                 title: "Crafting Module V2",
                 description: "Module-owned pattern pieces, steps, detail UI, progress behavior, and workspace expansion",
-                completed: 0,
+                completed: 3,
                 total: 5
             }
         };
@@ -205,9 +205,9 @@ class DashboardSection {
 
     renderActiveTasks() {
         const tasks = [
-            { title: "Add pattern pieces and steps", meta: "Phase B • Crafting module", status: "active" },
-            { title: "Build pattern detail page", meta: "Phase B • Module UI", status: "active" },
-            { title: "Add step range display", meta: "Phase B • UX", status: "active" },
+            { title: "Add pattern pieces and steps", meta: "Phase B • Crafting module", status: "done" },
+            { title: "Build pattern detail page", meta: "Phase B • Module UI", status: "done" },
+            { title: "Add step range display", meta: "Phase B • UX", status: "done" },
             { title: "Add progress aggregation and validation", meta: "Phase B • Domain behavior", status: "active" },
             { title: "Expand module-owned project workspace screens", meta: "Phase B • Projects", status: "active" }
         ];
@@ -226,7 +226,7 @@ class DashboardSection {
     renderPhaseBreakdown() {
         const phases = [
             { number: "A", title: "Module Host & Reference Module", completed: 26, total: 26, active: false },
-            { number: "B", title: "Crafting Module V2", completed: 0, total: 5, active: true },
+            { number: "B", title: "Crafting Module V2", completed: 3, total: 5, active: true },
             { number: "C", title: "Module Project Workspace", completed: 0, total: 6, active: false }
         ];
 
@@ -269,8 +269,8 @@ class DashboardSection {
 
     renderWeekSummary() {
         const stats = [
-            { value: "26", label: "Done" },
-            { value: "5", label: "Open in Phase B" },
+            { value: "29", label: "Done" },
+            { value: "2", label: "Open in Phase B" },
             { value: "9", label: "Roadmap Phases" }
         ];
 
