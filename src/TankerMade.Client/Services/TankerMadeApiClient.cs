@@ -63,6 +63,132 @@ public class TankerMadeApiClient
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<CraftingPatternDetail>();
     }
+
+    public async Task<CraftingPatternDetail> CreateCraftingPatternAsync(CraftingPatternFormRequest request)
+    {
+        var response = await _http.PostAsJsonAsync("api/modules/crafting/patterns", request);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<CraftingPatternDetail>()
+            ?? throw new InvalidOperationException("The server returned an empty pattern response.");
+    }
+
+    public async Task<CraftingPatternDetail?> UpdateCraftingPatternAsync(Guid patternId, CraftingPatternFormRequest request)
+    {
+        var response = await _http.PutAsJsonAsync($"api/modules/crafting/patterns/{patternId}", request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CraftingPatternDetail>();
+    }
+
+    public async Task<CraftingPatternPieceDetail?> AddCraftingPatternPieceAsync(Guid patternId, CraftingPatternPieceFormRequest request)
+    {
+        var response = await _http.PostAsJsonAsync($"api/modules/crafting/patterns/{patternId}/pieces", request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CraftingPatternPieceDetail>();
+    }
+
+    public async Task<CraftingPatternPieceDetail?> UpdateCraftingPatternPieceAsync(
+        Guid patternId,
+        Guid pieceId,
+        CraftingPatternPieceFormRequest request)
+    {
+        var response = await _http.PutAsJsonAsync($"api/modules/crafting/patterns/{patternId}/pieces/{pieceId}", request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CraftingPatternPieceDetail>();
+    }
+
+    public async Task<bool> DeleteCraftingPatternPieceAsync(Guid patternId, Guid pieceId)
+    {
+        var response = await _http.DeleteAsync($"api/modules/crafting/patterns/{patternId}/pieces/{pieceId}");
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return false;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return true;
+    }
+
+    public async Task<CraftingPatternStepDetail?> AddCraftingPatternStepAsync(
+        Guid patternId,
+        Guid pieceId,
+        CraftingPatternStepFormRequest request)
+    {
+        var response = await _http.PostAsJsonAsync($"api/modules/crafting/patterns/{patternId}/pieces/{pieceId}/steps", request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CraftingPatternStepDetail>();
+    }
+
+    public async Task<CraftingPatternStepDetail?> UpdateCraftingPatternStepAsync(
+        Guid patternId,
+        Guid pieceId,
+        Guid stepId,
+        CraftingPatternStepFormRequest request)
+    {
+        var response = await _http.PutAsJsonAsync($"api/modules/crafting/patterns/{patternId}/pieces/{pieceId}/steps/{stepId}", request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CraftingPatternStepDetail>();
+    }
+
+    public async Task<bool> DeleteCraftingPatternStepAsync(Guid patternId, Guid pieceId, Guid stepId)
+    {
+        var response = await _http.DeleteAsync($"api/modules/crafting/patterns/{patternId}/pieces/{pieceId}/steps/{stepId}");
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return false;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return true;
+    }
+}
+
+public class CraftingPatternFormRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string Form { get; set; } = string.Empty;
+    public string Difficulty { get; set; } = string.Empty;
+    public Guid? ThemeId { get; set; }
+    public Guid? SourceId { get; set; }
+}
+
+public class CraftingPatternPieceFormRequest
+{
+    public string Name { get; set; } = string.Empty;
+}
+
+public class CraftingPatternStepFormRequest
+{
+    public int? RangeStart { get; set; }
+    public int? RangeEnd { get; set; }
+    public string Label { get; set; } = string.Empty;
+    public string Instructions { get; set; } = string.Empty;
 }
 
 public class CraftingPatternSummary
@@ -92,6 +218,8 @@ public class CraftingPatternPieceDetail
 public class CraftingPatternStepDetail
 {
     public Guid Id { get; set; }
+    public int? RangeStart { get; set; }
+    public int? RangeEnd { get; set; }
     public string DisplayRange { get; set; } = string.Empty;
     public string Label { get; set; } = string.Empty;
     public string Instructions { get; set; } = string.Empty;

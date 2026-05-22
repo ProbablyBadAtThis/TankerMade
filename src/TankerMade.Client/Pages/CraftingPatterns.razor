@@ -1,0 +1,117 @@
+@page "/modules/crafting/patterns"
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+
+<PageTitle>Patterns</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>Patterns</h1>
+    <p>Sign in to load Crafting patterns.</p>
+    <a class="btn btn-primary" href="login">Sign in</a>
+}
+else if (!ModuleState.IsActive("crafting"))
+{
+    <h1>Patterns</h1>
+    <p>Activate the Crafting module from Home to load its tools.</p>
+}
+else if (loading)
+{
+    <h1>Patterns</h1>
+    <p>Loading...</p>
+}
+else
+{
+    <div class="page-heading">
+        <div>
+            <a class="pattern-back-link" href="modules/crafting">Crafting</a>
+            <h1>Patterns</h1>
+            <p>Saved reference-module patterns.</p>
+        </div>
+        <a class="btn btn-primary" href="modules/crafting/patterns/new">New Pattern</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    @if (patterns.Count == 0)
+    {
+        <div class="empty-state">
+            <h2>No Patterns Yet</h2>
+            <p>Create a pattern to start adding module-owned pieces and steps.</p>
+            <div class="auth-actions">
+                <a class="btn btn-primary" href="modules/crafting/patterns/new">New Pattern</a>
+                <a class="btn btn-outline-secondary" href="modules/crafting/patterns/reference">Reference Template</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="pattern-card-grid">
+            @foreach (var pattern in patterns)
+            {
+                <a class="pattern-card" href="@($"modules/crafting/patterns/{pattern.Id}")">
+                    <h2>@pattern.Name</h2>
+                    <p>@DisplayMetadata(pattern)</p>
+                    <div class="pattern-card-stats">
+                        <span>@pattern.PieceCount pieces</span>
+                        <span>@pattern.StepCount steps</span>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+}
+
+@code {
+    private readonly List<TankerMade.Client.Services.CraftingPatternSummary> patterns = [];
+    private bool loading = true;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadPatternsAsync();
+    }
+
+    private async Task LoadPatternsAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive("crafting"))
+            {
+                return;
+            }
+
+            patterns.Clear();
+            patterns.AddRange(await ApiClient.GetCraftingPatternsAsync());
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private static string DisplayMetadata(TankerMade.Client.Services.CraftingPatternSummary pattern)
+    {
+        var parts = new[] { pattern.Type, pattern.Form, pattern.Difficulty }
+            .Where(part => !string.IsNullOrWhiteSpace(part));
+
+        return string.Join(" - ", parts);
+    }
+}

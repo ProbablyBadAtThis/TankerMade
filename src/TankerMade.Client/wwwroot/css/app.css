@@ -125,6 +125,42 @@ code {
     gap: 0.75rem;
 }
 
+.page-heading {
+    align-items: end;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+
+.page-heading h1 {
+    margin: 0;
+}
+
+.page-heading p {
+    color: #536173;
+    margin: 0.25rem 0 0;
+}
+
+.empty-state {
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    display: grid;
+    gap: 0.5rem;
+    max-width: 36rem;
+    padding: 1.25rem;
+}
+
+.empty-state h2 {
+    font-size: 1.25rem;
+    margin: 0;
+}
+
+.empty-state p {
+    color: #536173;
+    margin: 0;
+}
+
 .crafting-dashboard {
     display: grid;
     gap: 1rem;
@@ -154,6 +190,72 @@ code {
 .pattern-detail {
     display: grid;
     gap: 1.25rem;
+}
+
+.pattern-card-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+.pattern-card {
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    color: inherit;
+    display: grid;
+    gap: 0.6rem;
+    padding: 1rem;
+    text-decoration: none;
+}
+
+.pattern-card:hover {
+    border-color: #1b6ec2;
+}
+
+.pattern-card h2 {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.pattern-card p {
+    color: #536173;
+    margin: 0;
+}
+
+.pattern-card-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.pattern-card-stats span {
+    background: #f3f6f9;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    color: #384657;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.5rem;
+}
+
+.pattern-form {
+    display: grid;
+    gap: 1rem;
+    max-width: 46rem;
+}
+
+.pattern-form label {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.pattern-form label span {
+    font-weight: 600;
+}
+
+.form-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
 }
 
 .pattern-header {
@@ -214,6 +316,37 @@ code {
     gap: 0.5rem;
 }
 
+.piece-create-form,
+.piece-edit-form,
+.step-form {
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    display: grid;
+    gap: 0.65rem;
+    padding: 0.75rem;
+}
+
+.piece-create-form label,
+.piece-edit-form label,
+.step-form label {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.piece-create-form label span,
+.piece-edit-form label span,
+.step-form label span {
+    font-weight: 600;
+}
+
+.step-form {
+    margin-bottom: 1rem;
+}
+
+.step-form.compact {
+    margin: 0.75rem 0 0;
+}
+
 .piece-button {
     background: #fff;
     border: 1px solid #d9dee7;
@@ -233,6 +366,11 @@ code {
 
 .piece-button small {
     color: #536173;
+}
+
+.muted-copy {
+    color: #536173;
+    margin: 0;
 }
 
 .step-panel {
@@ -265,6 +403,14 @@ code {
     white-space: nowrap;
 }
 
+.piece-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
 .step-list {
     display: grid;
     gap: 0.75rem;
@@ -277,6 +423,17 @@ code {
     display: grid;
     gap: 0.75rem;
     grid-template-columns: 4rem minmax(0, 1fr);
+}
+
+.step-content {
+    min-width: 0;
+}
+
+.step-title-row {
+    align-items: start;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: space-between;
 }
 
 .step-range {
@@ -302,6 +459,7 @@ code {
 
 @media (max-width: 760px) {
     .crafting-panel,
+    .page-heading,
     .pattern-header,
     .step-panel-header {
         align-items: stretch;

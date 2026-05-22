@@ -1,0 +1,132 @@
+@page "/modules/crafting/patterns/new"
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>New Pattern</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>New Pattern</h1>
+    <p>Sign in to create Crafting patterns.</p>
+    <a class="btn btn-primary" href="login">Sign in</a>
+}
+else if (!ModuleState.IsActive("crafting"))
+{
+    <h1>New Pattern</h1>
+    <p>Activate the Crafting module from Home to load its tools.</p>
+}
+else
+{
+    <div class="page-heading">
+        <div>
+            <a class="pattern-back-link" href="modules/crafting/patterns">Patterns</a>
+            <h1>New Pattern</h1>
+            <p>Create a saved pattern record in the reference Crafting module.</p>
+        </div>
+    </div>
+
+    <EditForm Model="form" OnValidSubmit="SubmitAsync" class="pattern-form">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <label>
+            <span>Name</span>
+            <InputText class="form-control" @bind-Value="form.Name" />
+        </label>
+
+        <div class="form-grid">
+            <label>
+                <span>Type</span>
+                <InputText class="form-control" @bind-Value="form.Type" />
+            </label>
+
+            <label>
+                <span>Form</span>
+                <InputText class="form-control" @bind-Value="form.Form" />
+            </label>
+
+            <label>
+                <span>Difficulty</span>
+                <InputSelect class="form-control" @bind-Value="form.Difficulty">
+                    <option value="">Unspecified</option>
+                    <option>Beginner</option>
+                    <option>Beginner+</option>
+                    <option>Intermediate</option>
+                    <option>Intermediate+</option>
+                    <option>Advanced</option>
+                    <option>Advanced+</option>
+                </InputSelect>
+            </label>
+        </div>
+
+        <div class="auth-actions">
+            <button class="btn btn-primary" disabled="@busy" type="submit">Create Pattern</button>
+            <a class="btn btn-outline-secondary" href="modules/crafting/patterns">Cancel</a>
+        </div>
+    </EditForm>
+}
+
+@code {
+    private readonly PatternFormModel form = new();
+    private bool busy;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var pattern = await ApiClient.CreateCraftingPatternAsync(new TankerMade.Client.Services.CraftingPatternFormRequest
+            {
+                Name = form.Name,
+                Type = form.Type,
+                Form = form.Form,
+                Difficulty = form.Difficulty
+            });
+
+            Navigation.NavigateTo($"modules/crafting/patterns/{pattern.Id}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private sealed class PatternFormModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Name is required")]
+        [System.ComponentModel.DataAnnotations.StringLength(200, ErrorMessage = "Name cannot exceed 200 characters")]
+        public string Name { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(50, ErrorMessage = "Type cannot exceed 50 characters")]
+        public string Type { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(50, ErrorMessage = "Form cannot exceed 50 characters")]
+        public string Form { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(50, ErrorMessage = "Difficulty cannot exceed 50 characters")]
+        public string Difficulty { get; set; } = string.Empty;
+    }
+}

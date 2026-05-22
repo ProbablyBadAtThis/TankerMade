@@ -1,5 +1,5 @@
-@page "/modules/crafting/patterns"
 @page "/modules/crafting/patterns/{PatternId:guid}"
+@page "/modules/crafting/patterns/reference"
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
@@ -32,7 +32,7 @@ else
 
         <div class="pattern-header">
             <div>
-                <a class="pattern-back-link" href="modules/crafting">Crafting</a>
+                <a class="pattern-back-link" href="modules/crafting/patterns">Patterns</a>
                 <h1>@Pattern.Name</h1>
                 <p>@Pattern.Type &middot; @Pattern.Form &middot; @Pattern.Difficulty</p>
             </div>
@@ -50,12 +50,32 @@ else
 
         <div class="pattern-workspace">
             <aside class="piece-list" aria-label="Pieces">
-                @foreach (var piece in Pattern.Pieces)
+                @if (CanEdit)
                 {
-                    <button class="@GetPieceButtonClass(piece.Id)" @onclick="() => SelectPiece(piece.Id)">
-                        <span>@piece.Name</span>
-                        <small>@piece.Steps.Count steps</small>
-                    </button>
+                    <EditForm Model="newPiece" OnValidSubmit="AddPieceAsync" class="piece-create-form">
+                        <DataAnnotationsValidator />
+                        <label>
+                            <span>New Piece</span>
+                            <InputText class="form-control" @bind-Value="newPiece.Name" />
+                            <ValidationMessage For="() => newPiece.Name" />
+                        </label>
+                        <button class="btn btn-primary" disabled="@busy" type="submit">Add</button>
+                    </EditForm>
+                }
+
+                @if (Pattern.Pieces.Count == 0)
+                {
+                    <p class="muted-copy">No pieces yet.</p>
+                }
+                else
+                {
+                    @foreach (var piece in Pattern.Pieces)
+                    {
+                        <button class="@GetPieceButtonClass(piece.Id)" @onclick="() => SelectPiece(piece.Id)">
+                            <span>@piece.Name</span>
+                            <small>@piece.Steps.Count steps</small>
+                        </button>
+                    }
                 }
             </aside>
 
@@ -71,21 +91,119 @@ else
                             <h2>@SelectedPiece.Name</h2>
                             <p>@SelectedPiece.Steps.Count ordered steps</p>
                         </div>
-                        <span>@PiecePositionText</span>
+                        <div class="piece-actions">
+                            <span>@PiecePositionText</span>
+                            @if (CanEdit)
+                            {
+                                <button class="btn btn-outline-secondary" disabled="@busy" @onclick="StartEditingSelectedPiece">Rename</button>
+                                <button class="btn btn-outline-danger" disabled="@busy" @onclick="DeleteSelectedPieceAsync">Delete</button>
+                            }
+                        </div>
                     </div>
 
-                    <ol class="step-list">
-                        @foreach (var step in SelectedPiece.Steps)
-                        {
-                            <li>
-                                <div class="step-range">@step.DisplayRange</div>
-                                <div>
-                                    <h3>@step.Label</h3>
-                                    <p>@step.Instructions</p>
-                                </div>
-                            </li>
-                        }
-                    </ol>
+                    @if (editingPieceId == SelectedPiece.Id)
+                    {
+                        <EditForm Model="editPiece" OnValidSubmit="UpdateSelectedPieceAsync" class="piece-edit-form">
+                            <DataAnnotationsValidator />
+                            <label>
+                                <span>Piece Name</span>
+                                <InputText class="form-control" @bind-Value="editPiece.Name" />
+                                <ValidationMessage For="() => editPiece.Name" />
+                            </label>
+                            <div class="auth-actions">
+                                <button class="btn btn-primary" disabled="@busy" type="submit">Save</button>
+                                <button class="btn btn-outline-secondary" disabled="@busy" type="button" @onclick="CancelEditingPiece">Cancel</button>
+                            </div>
+                        </EditForm>
+                    }
+
+                    @if (CanEdit)
+                    {
+                        <EditForm Model="newStep" OnValidSubmit="AddStepAsync" class="step-form">
+                            <DataAnnotationsValidator />
+                            <div class="form-grid">
+                                <label>
+                                    <span>Range Start</span>
+                                    <InputNumber class="form-control" @bind-Value="newStep.RangeStart" />
+                                </label>
+                                <label>
+                                    <span>Range End</span>
+                                    <InputNumber class="form-control" @bind-Value="newStep.RangeEnd" />
+                                </label>
+                                <label>
+                                    <span>Label</span>
+                                    <InputText class="form-control" @bind-Value="newStep.Label" />
+                                    <ValidationMessage For="() => newStep.Label" />
+                                </label>
+                            </div>
+                            <label>
+                                <span>Instructions</span>
+                                <InputTextArea class="form-control" @bind-Value="newStep.Instructions" />
+                                <ValidationMessage For="() => newStep.Instructions" />
+                            </label>
+                            <button class="btn btn-primary" disabled="@busy" type="submit">Add Step</button>
+                        </EditForm>
+                    }
+
+                    @if (SelectedPiece.Steps.Count == 0)
+                    {
+                        <p class="muted-copy">No steps yet.</p>
+                    }
+                    else
+                    {
+                        <ol class="step-list">
+                            @foreach (var step in SelectedPiece.Steps)
+                            {
+                                <li>
+                                    <div class="step-range">@step.DisplayRange</div>
+                                    <div class="step-content">
+                                        <div class="step-title-row">
+                                            <h3>@step.Label</h3>
+                                            @if (CanEdit)
+                                            {
+                                                <div class="piece-actions">
+                                                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="() => StartEditingStep(step)">Edit</button>
+                                                    <button class="btn btn-outline-danger" disabled="@busy" @onclick="() => DeleteStepAsync(step.Id)">Delete</button>
+                                                </div>
+                                            }
+                                        </div>
+                                        <p>@step.Instructions</p>
+
+                                        @if (editingStepId == step.Id)
+                                        {
+                                            <EditForm Model="editStep" OnValidSubmit="UpdateStepAsync" class="step-form compact">
+                                                <DataAnnotationsValidator />
+                                                <div class="form-grid">
+                                                    <label>
+                                                        <span>Range Start</span>
+                                                        <InputNumber class="form-control" @bind-Value="editStep.RangeStart" />
+                                                    </label>
+                                                    <label>
+                                                        <span>Range End</span>
+                                                        <InputNumber class="form-control" @bind-Value="editStep.RangeEnd" />
+                                                    </label>
+                                                    <label>
+                                                        <span>Label</span>
+                                                        <InputText class="form-control" @bind-Value="editStep.Label" />
+                                                        <ValidationMessage For="() => editStep.Label" />
+                                                    </label>
+                                                </div>
+                                                <label>
+                                                    <span>Instructions</span>
+                                                    <InputTextArea class="form-control" @bind-Value="editStep.Instructions" />
+                                                    <ValidationMessage For="() => editStep.Instructions" />
+                                                </label>
+                                                <div class="auth-actions">
+                                                    <button class="btn btn-primary" disabled="@busy" type="submit">Save Step</button>
+                                                    <button class="btn btn-outline-secondary" disabled="@busy" type="button" @onclick="CancelEditingStep">Cancel</button>
+                                                </div>
+                                            </EditForm>
+                                        }
+                                    </div>
+                                </li>
+                            }
+                        </ol>
+                    }
                 }
             </section>
         </div>
@@ -98,8 +216,15 @@ else
 
     private PatternViewModel Pattern = SamplePattern;
     private bool loading = true;
+    private bool busy;
     private string errorMessage = string.Empty;
     private Guid? selectedPieceId;
+    private Guid? editingPieceId;
+    private Guid? editingStepId;
+    private PieceFormModel newPiece = new();
+    private PieceFormModel editPiece = new();
+    private StepFormModel newStep = new();
+    private StepFormModel editStep = new();
 
     private static readonly PatternViewModel SamplePattern = new(
         "Modular Reference Pattern",
@@ -111,24 +236,24 @@ else
                 Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1"),
                 "Main Piece",
                 [
-                    new("1", "Foundation", "Create the base structure for this piece."),
-                    new("2-4", "Build", "Repeat the main construction sequence."),
-                    new("5", "Settle", "Check shape and prepare for the next piece.")
+                    new(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1"), 1, 1, "1", "Foundation", "Create the base structure for this piece."),
+                    new(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2"), 2, 4, "2-4", "Build", "Repeat the main construction sequence."),
+                    new(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb3"), 5, 5, "5", "Settle", "Check shape and prepare for the next piece.")
                 ]),
             new(
                 Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2"),
                 "Detail Piece",
                 [
-                    new("1", "Prepare", "Create the detail element."),
-                    new("2-3", "Repeat", "Work the detail sequence twice."),
-                    new("4", "Attach", "Join the detail to the main piece.")
+                    new(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb4"), 1, 1, "1", "Prepare", "Create the detail element."),
+                    new(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb5"), 2, 3, "2-3", "Repeat", "Work the detail sequence twice."),
+                    new(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb6"), 4, 4, "4", "Attach", "Join the detail to the main piece.")
                 ]),
             new(
                 Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3"),
                 "Finish",
                 [
-                    new("1", "Review", "Check all pieces against the pattern notes."),
-                    new("2", "Complete", "Record final adjustments before project use.")
+                    new(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb7"), 1, 1, "1", "Review", "Check all pieces against the pattern notes."),
+                    new(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb8"), 2, 2, "2", "Complete", "Record final adjustments before project use.")
                 ])
         ]);
 
@@ -136,6 +261,8 @@ else
         Pattern.Pieces.FirstOrDefault(piece => piece.Id == selectedPieceId) ?? Pattern.Pieces.FirstOrDefault();
 
     private int StepCount => Pattern.Pieces.Sum(piece => piece.Steps.Count);
+
+    private bool CanEdit => PatternId != null;
 
     private string PiecePositionText
     {
@@ -160,11 +287,11 @@ else
         }
 
         await LoadPatternAsync();
-        selectedPieceId = Pattern.Pieces.FirstOrDefault()?.Id;
     }
 
     private async Task LoadPatternAsync()
     {
+        var previouslySelectedPieceId = selectedPieceId;
         loading = true;
         errorMessage = string.Empty;
 
@@ -175,21 +302,14 @@ else
                 return;
             }
 
-            var patternId = PatternId;
-            if (patternId == null)
-            {
-                var patterns = await ApiClient.GetCraftingPatternsAsync();
-                patternId = patterns.FirstOrDefault()?.Id;
-            }
-
-            if (patternId == null)
+            if (PatternId == null)
             {
                 Pattern = SamplePattern;
-                errorMessage = "No saved patterns yet. Showing the reference template pattern.";
+                errorMessage = "Showing the reference template pattern.";
                 return;
             }
 
-            var detail = await ApiClient.GetCraftingPatternAsync(patternId.Value);
+            var detail = await ApiClient.GetCraftingPatternAsync(PatternId.Value);
             if (detail == null)
             {
                 Pattern = SamplePattern;
@@ -198,6 +318,9 @@ else
             }
 
             Pattern = MapPattern(detail);
+            selectedPieceId = Pattern.Pieces.Any(piece => piece.Id == previouslySelectedPieceId)
+                ? previouslySelectedPieceId
+                : Pattern.Pieces.FirstOrDefault()?.Id;
         }
         catch (Exception ex)
         {
@@ -208,6 +331,8 @@ else
         {
             loading = false;
         }
+
+        selectedPieceId ??= Pattern.Pieces.FirstOrDefault()?.Id;
     }
 
     private void SelectPiece(Guid pieceId)
@@ -222,6 +347,231 @@ else
             : "piece-button";
     }
 
+    private async Task AddPieceAsync()
+    {
+        if (PatternId == null)
+        {
+            return;
+        }
+
+        await RunPieceActionAsync(async () =>
+        {
+            var piece = await ApiClient.AddCraftingPatternPieceAsync(PatternId.Value, new TankerMade.Client.Services.CraftingPatternPieceFormRequest
+            {
+                Name = newPiece.Name
+            });
+
+            if (piece == null)
+            {
+                errorMessage = "Could not add that piece.";
+                return;
+            }
+
+            selectedPieceId = piece.Id;
+            newPiece = new();
+            await LoadPatternAsync();
+        });
+    }
+
+    private void StartEditingSelectedPiece()
+    {
+        if (SelectedPiece == null)
+        {
+            return;
+        }
+
+        editingPieceId = SelectedPiece.Id;
+        editPiece = new PieceFormModel { Name = SelectedPiece.Name };
+    }
+
+    private void CancelEditingPiece()
+    {
+        editingPieceId = null;
+        editPiece = new();
+    }
+
+    private async Task UpdateSelectedPieceAsync()
+    {
+        if (PatternId == null || SelectedPiece == null)
+        {
+            return;
+        }
+
+        var pieceId = SelectedPiece.Id;
+        await RunPieceActionAsync(async () =>
+        {
+            var piece = await ApiClient.UpdateCraftingPatternPieceAsync(
+                PatternId.Value,
+                pieceId,
+                new TankerMade.Client.Services.CraftingPatternPieceFormRequest
+                {
+                    Name = editPiece.Name
+                });
+
+            if (piece == null)
+            {
+                errorMessage = "Could not update that piece.";
+                return;
+            }
+
+            selectedPieceId = piece.Id;
+            editingPieceId = null;
+            editPiece = new();
+            await LoadPatternAsync();
+        });
+    }
+
+    private async Task DeleteSelectedPieceAsync()
+    {
+        if (PatternId == null || SelectedPiece == null)
+        {
+            return;
+        }
+
+        var pieceId = SelectedPiece.Id;
+        await RunPieceActionAsync(async () =>
+        {
+            var deleted = await ApiClient.DeleteCraftingPatternPieceAsync(PatternId.Value, pieceId);
+            if (!deleted)
+            {
+                errorMessage = "Could not delete that piece.";
+                return;
+            }
+
+            selectedPieceId = null;
+            editingPieceId = null;
+            await LoadPatternAsync();
+        });
+    }
+
+    private async Task AddStepAsync()
+    {
+        if (PatternId == null || SelectedPiece == null)
+        {
+            return;
+        }
+
+        var pieceId = SelectedPiece.Id;
+        await RunPieceActionAsync(async () =>
+        {
+            var step = await ApiClient.AddCraftingPatternStepAsync(
+                PatternId.Value,
+                pieceId,
+                ToStepRequest(newStep));
+
+            if (step == null)
+            {
+                errorMessage = "Could not add that step.";
+                return;
+            }
+
+            selectedPieceId = pieceId;
+            newStep = new();
+            await LoadPatternAsync();
+        });
+    }
+
+    private void StartEditingStep(PatternStepViewModel step)
+    {
+        editingStepId = step.Id;
+        editStep = new StepFormModel
+        {
+            RangeStart = step.RangeStart,
+            RangeEnd = step.RangeEnd,
+            Label = step.Label,
+            Instructions = step.Instructions
+        };
+    }
+
+    private void CancelEditingStep()
+    {
+        editingStepId = null;
+        editStep = new();
+    }
+
+    private async Task UpdateStepAsync()
+    {
+        if (PatternId == null || SelectedPiece == null || editingStepId == null)
+        {
+            return;
+        }
+
+        var pieceId = SelectedPiece.Id;
+        var stepId = editingStepId.Value;
+        await RunPieceActionAsync(async () =>
+        {
+            var step = await ApiClient.UpdateCraftingPatternStepAsync(
+                PatternId.Value,
+                pieceId,
+                stepId,
+                ToStepRequest(editStep));
+
+            if (step == null)
+            {
+                errorMessage = "Could not update that step.";
+                return;
+            }
+
+            selectedPieceId = pieceId;
+            editingStepId = null;
+            editStep = new();
+            await LoadPatternAsync();
+        });
+    }
+
+    private async Task DeleteStepAsync(Guid stepId)
+    {
+        if (PatternId == null || SelectedPiece == null)
+        {
+            return;
+        }
+
+        var pieceId = SelectedPiece.Id;
+        await RunPieceActionAsync(async () =>
+        {
+            var deleted = await ApiClient.DeleteCraftingPatternStepAsync(PatternId.Value, pieceId, stepId);
+            if (!deleted)
+            {
+                errorMessage = "Could not delete that step.";
+                return;
+            }
+
+            selectedPieceId = pieceId;
+            editingStepId = null;
+            await LoadPatternAsync();
+        });
+    }
+
+    private static TankerMade.Client.Services.CraftingPatternStepFormRequest ToStepRequest(StepFormModel form)
+    {
+        return new TankerMade.Client.Services.CraftingPatternStepFormRequest
+        {
+            RangeStart = form.RangeStart,
+            RangeEnd = form.RangeEnd,
+            Label = form.Label,
+            Instructions = form.Instructions
+        };
+    }
+
+    private async Task RunPieceActionAsync(Func<Task> action)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
     private static PatternViewModel MapPattern(TankerMade.Client.Services.CraftingPatternDetail detail)
     {
         var pieces = detail.Pieces
@@ -232,16 +582,14 @@ else
                 piece.Steps
                     .OrderBy(step => step.SortOrder)
                     .Select(step => new PatternStepViewModel(
+                        step.Id,
+                        step.RangeStart,
+                        step.RangeEnd,
                         step.DisplayRange,
                         string.IsNullOrWhiteSpace(step.Label) ? "Step" : step.Label,
                         step.Instructions))
                     .ToList()))
             .ToList();
-
-        if (pieces.Count == 0)
-        {
-            pieces.Add(new PatternPieceViewModel(Guid.NewGuid(), "Pattern", []));
-        }
 
         return new PatternViewModel(
             detail.Name,
@@ -264,7 +612,30 @@ else
         List<PatternStepViewModel> Steps);
 
     private sealed record PatternStepViewModel(
+        Guid Id,
+        int? RangeStart,
+        int? RangeEnd,
         string DisplayRange,
         string Label,
         string Instructions);
+
+    private sealed class PieceFormModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Piece name is required")]
+        [System.ComponentModel.DataAnnotations.StringLength(200, ErrorMessage = "Piece name cannot exceed 200 characters")]
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private sealed class StepFormModel
+    {
+        public int? RangeStart { get; set; }
+
+        public int? RangeEnd { get; set; }
+
+        [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "Label cannot exceed 100 characters")]
+        public string Label { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(4000, ErrorMessage = "Instructions cannot exceed 4000 characters")]
+        public string Instructions { get; set; } = string.Empty;
+    }
 }
