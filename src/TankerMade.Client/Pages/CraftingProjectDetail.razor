@@ -1,0 +1,302 @@
+@page "/modules/crafting/projects/{ProjectId:guid}"
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+
+<PageTitle>@(project?.Name ?? "Project")</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>Project</h1>
+    <p>Sign in to load Crafting projects.</p>
+    <a class="btn btn-primary" href="login">Sign in</a>
+}
+else if (!ModuleState.IsActive("crafting"))
+{
+    <h1>Project</h1>
+    <p>Activate the Crafting module from Home to load its tools.</p>
+}
+else if (loading)
+{
+    <h1>Project</h1>
+    <p>Loading...</p>
+}
+else if (project == null)
+{
+    <h1>Project Not Found</h1>
+    <p>This Crafting project is not available.</p>
+    <a class="btn btn-primary" href="modules/crafting/projects">Projects</a>
+}
+else
+{
+    <div class="pattern-detail">
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-warning">@errorMessage</div>
+        }
+
+        <div class="pattern-header">
+            <div>
+                <a class="pattern-back-link" href="modules/crafting/projects">Projects</a>
+                <h1>@project.Name</h1>
+                <p>@ProjectMeta</p>
+            </div>
+            <div class="pattern-stats" aria-label="Project summary">
+                <div>
+                    <strong>@($"{project.Progress}%")</strong>
+                    <span>Progress</span>
+                </div>
+                <div>
+                    <strong>@PatternPieceCount</strong>
+                    <span>Pieces</span>
+                </div>
+                <div>
+                    <strong>@PatternStepCount</strong>
+                    <span>Steps</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="project-workspace">
+            <section class="project-panel">
+                <h2>Workspace Setup</h2>
+                <EditForm Model="form" OnValidSubmit="SaveAsync" class="project-edit-form">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <label>
+                        <span>Name</span>
+                        <InputText class="form-control" @bind-Value="form.Name" />
+                    </label>
+
+                    <label>
+                        <span>Description</span>
+                        <InputTextArea class="form-control" @bind-Value="form.Description" />
+                    </label>
+
+                    <div class="form-grid">
+                        <label>
+                            <span>Pattern</span>
+                            <InputSelect class="form-control" @bind-Value="form.PatternIdText">
+                                <option value="">No pattern linked</option>
+                                @foreach (var pattern in patterns)
+                                {
+                                    <option value="@pattern.Id">@pattern.Name</option>
+                                }
+                            </InputSelect>
+                        </label>
+
+                        <label>
+                            <span>Difficulty</span>
+                            <InputSelect class="form-control" @bind-Value="form.Difficulty">
+                                <option value="0">Unspecified</option>
+                                <option value="1">Beginner</option>
+                                <option value="2">Beginner+</option>
+                                <option value="3">Intermediate</option>
+                                <option value="4">Intermediate+</option>
+                                <option value="5">Advanced</option>
+                                <option value="6">Advanced+</option>
+                            </InputSelect>
+                        </label>
+
+                        <label>
+                            <span>Progress</span>
+                            <InputNumber class="form-control" min="0" max="100" step="1" @bind-Value="form.Progress" />
+                        </label>
+                    </div>
+
+                    <button class="btn btn-primary" disabled="@busy" type="submit">Save Project</button>
+                </EditForm>
+            </section>
+
+            <section class="project-panel">
+                <div class="project-panel-header">
+                    <h2>Pattern Context</h2>
+                    @if (linkedPattern != null)
+                    {
+                        <a class="btn btn-outline-secondary btn-sm" href="@($"modules/crafting/patterns/{linkedPattern.Id}")">Open Pattern</a>
+                    }
+                </div>
+
+                @if (linkedPattern == null)
+                {
+                    <p class="muted-copy">Link a pattern to preview its pieces and ordered steps here.</p>
+                }
+                else
+                {
+                    <div class="linked-pattern-summary">
+                        <strong>@linkedPattern.Name</strong>
+                        <span>@PatternSummaryText</span>
+                    </div>
+
+                    @if (linkedPattern.Pieces.Count == 0)
+                    {
+                        <p class="muted-copy">This pattern does not have pieces yet.</p>
+                    }
+                    else
+                    {
+                        <ol class="project-piece-preview">
+                            @foreach (var piece in linkedPattern.Pieces)
+                            {
+                                <li>
+                                    <strong>@piece.Name</strong>
+                                    <span>@piece.Steps.Count steps</span>
+                                </li>
+                            }
+                        </ol>
+                    }
+                }
+            </section>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid ProjectId { get; set; }
+
+    private TankerMade.Client.Services.CraftingProjectSummary? project;
+    private TankerMade.Client.Services.CraftingPatternDetail? linkedPattern;
+    private readonly List<TankerMade.Client.Services.CraftingPatternSummary> patterns = [];
+    private readonly ProjectFormModel form = new();
+    private bool loading = true;
+    private bool busy;
+    private string errorMessage = string.Empty;
+
+    private string ProjectMeta
+    {
+        get
+        {
+            var parts = new[]
+            {
+                string.IsNullOrWhiteSpace(project?.PatternName) ? "No pattern linked" : project.PatternName,
+                string.IsNullOrWhiteSpace(project?.DifficultyLabel) ? "Difficulty unset" : project.DifficultyLabel
+            };
+
+            return string.Join(" - ", parts);
+        }
+    }
+
+    private string PatternSummaryText => linkedPattern == null
+        ? string.Empty
+        : $"{linkedPattern.PieceCount} pieces - {linkedPattern.StepCount} steps";
+
+    private int PatternPieceCount => linkedPattern?.PieceCount ?? 0;
+
+    private int PatternStepCount => linkedPattern?.StepCount ?? 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadProjectAsync();
+    }
+
+    private async Task LoadProjectAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive("crafting"))
+            {
+                return;
+            }
+
+            patterns.Clear();
+            patterns.AddRange(await ApiClient.GetCraftingPatternsAsync());
+            project = await ApiClient.GetCraftingProjectAsync(ProjectId);
+            if (project == null)
+            {
+                return;
+            }
+
+            form.Load(project);
+            await LoadLinkedPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            project = await ApiClient.UpdateCraftingProjectAsync(ProjectId, form.ToRequest());
+            if (project != null)
+            {
+                form.Load(project);
+                await LoadLinkedPatternAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task LoadLinkedPatternAsync()
+    {
+        linkedPattern = project?.PatternId == null
+            ? null
+            : await ApiClient.GetCraftingPatternAsync(project.PatternId.Value);
+    }
+
+    private sealed class ProjectFormModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Name is required")]
+        [System.ComponentModel.DataAnnotations.StringLength(200, ErrorMessage = "Name cannot exceed 200 characters")]
+        public string Name { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
+        public string Description { get; set; } = string.Empty;
+
+        public string PatternIdText { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Range(0, 6, ErrorMessage = "Choose a valid difficulty")]
+        public int Difficulty { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Range(0, 100, ErrorMessage = "Progress must be between 0 and 100")]
+        public int Progress { get; set; }
+
+        public void Load(TankerMade.Client.Services.CraftingProjectSummary project)
+        {
+            Name = project.Name;
+            Description = project.Description;
+            PatternIdText = project.PatternId?.ToString() ?? string.Empty;
+            Difficulty = project.Difficulty;
+            Progress = project.Progress;
+        }
+
+        public TankerMade.Client.Services.CraftingProjectFormRequest ToRequest()
+        {
+            return new()
+            {
+                Name = Name,
+                Description = Description,
+                PatternId = Guid.TryParse(PatternIdText, out var patternId) ? patternId : null,
+                ClearPatternId = string.IsNullOrWhiteSpace(PatternIdText),
+                Difficulty = Difficulty,
+                Progress = Progress
+            };
+        }
+    }
+}

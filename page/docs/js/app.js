@@ -7,11 +7,11 @@
 class TankerMadeApp {
   constructor() {
     this.state = {
-      currentPhase:    2,
-      currentPhaseLabel: 'B',
+      currentPhase:    3,
+      currentPhaseLabel: 'C',
       totalPhases:     9,
       overallProgress: 0,   // always derived, never hardcoded
-      completedTasks:  30,
+      completedTasks:  31,
       totalTasks:      65,
       openIncidents:   0,
     };
@@ -156,7 +156,7 @@ class TankerMadeApp {
       let totalTasks     = 0;
 
       const phaseCounts = [26, 5, 6, 7, 3, 5, 3, 4, 6];
-      const baselineCompleted = [26, 0, 0, 0, 0, 0, 0, 0, 0];
+      const baselineCompleted = [26, 5, 0, 0, 0, 0, 0, 0, 0];
 
       if (this.isAuthenticated && window.TankerMadeData) {
         const phases = await window.TankerMadeData.getAllPhaseProgress();
@@ -193,7 +193,7 @@ class TankerMadeApp {
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     const setStyle = (id, prop, val) => { const el = document.getElementById(id); if (el) el.style[prop] = val; };
 
-    set('current-phase', 'Phase ' + this.state.currentPhaseLabel + ': Crafting Module V2');
+    set('current-phase', 'Phase ' + this.state.currentPhaseLabel + ': Module Project Workspace');
     set('progress-text', this.state.overallProgress + '%');
     setStyle('header-progress', 'width', this.state.overallProgress + '%');
   }

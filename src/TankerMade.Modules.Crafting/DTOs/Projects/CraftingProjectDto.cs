@@ -12,7 +12,7 @@ public class CraftingProjectDto
     public string ThemeName { get; set; } = string.Empty;
     public int Difficulty { get; set; }
     public string DifficultyLabel { get; set; } = string.Empty;
-    public decimal Progress { get; set; }
+    public int Progress { get; set; }
     public Guid UserId { get; set; }
     public string Username { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }

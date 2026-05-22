@@ -125,9 +125,6 @@ public class TankerMadeDbContext : DbContext
             entity.Property(e => e.Description)
                 .HasMaxLength(1000);
 
-            entity.Property(e => e.Progress)
-                .HasPrecision(5, 2);
-
             entity.Property(e => e.Difficulty)
                 .IsRequired();
 

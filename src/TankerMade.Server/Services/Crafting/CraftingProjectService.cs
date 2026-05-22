@@ -18,6 +18,8 @@ public class CraftingProjectService : ICraftingProjectService
 
     public async Task<CraftingProjectDto> CreateAsync(CreateCraftingProjectDto createDto, Guid userId)
     {
+        await EnsurePatternBelongsToUserAsync(createDto.PatternId, userId);
+
         var project = new CraftingProject(Guid.NewGuid(), createDto.Name, userId);
         project.Update(createDto.Name, createDto.Description, createDto.PatternId, createDto.ThemeId, createDto.Difficulty, createDto.Progress);
 
@@ -63,10 +65,13 @@ public class CraftingProjectService : ICraftingProjectService
             return null;
         }
 
+        var patternId = updateDto.ClearPatternId ? null : updateDto.PatternId ?? project.PatternId;
+        await EnsurePatternBelongsToUserAsync(patternId, userId);
+
         project.Update(
             UseIncomingValue(updateDto.Name, project.Name),
             UseIncomingValue(updateDto.Description, project.Description),
-            updateDto.PatternId ?? project.PatternId,
+            patternId,
             updateDto.ThemeId ?? project.ThemeId,
             updateDto.Difficulty ?? project.Difficulty,
             updateDto.Progress ?? project.Progress);
@@ -165,5 +170,21 @@ public class CraftingProjectService : ICraftingProjectService
         return string.IsNullOrWhiteSpace(incomingValue)
             ? currentValue
             : incomingValue.Trim();
+    }
+
+    private async Task EnsurePatternBelongsToUserAsync(Guid? patternId, Guid userId)
+    {
+        if (patternId == null)
+        {
+            return;
+        }
+
+        var exists = await _context.CraftingPatterns
+            .AnyAsync(pattern => pattern.Id == patternId && pattern.UserId == userId);
+
+        if (!exists)
+        {
+            throw new InvalidOperationException("The selected pattern is not available for this project.");
+        }
     }
 }

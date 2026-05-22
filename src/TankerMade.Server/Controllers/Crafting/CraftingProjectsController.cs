@@ -56,8 +56,19 @@ public class CraftingProjectsController : ControllerBase
             return Forbid();
         }
 
-        var project = await _projectService.CreateAsync(request, userId.Value);
-        return CreatedAtAction(nameof(GetById), new { id = project.Id }, project);
+        try
+        {
+            var project = await _projectService.CreateAsync(request, userId.Value);
+            return CreatedAtAction(nameof(GetById), new { id = project.Id }, project);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPut("{id:guid}")]
@@ -69,9 +80,20 @@ public class CraftingProjectsController : ControllerBase
             return Forbid();
         }
 
-        request.Id = id;
-        var project = await _projectService.UpdateAsync(request, userId.Value);
-        return project == null ? NotFound() : Ok(project);
+        try
+        {
+            request.Id = id;
+            var project = await _projectService.UpdateAsync(request, userId.Value);
+            return project == null ? NotFound() : Ok(project);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpDelete("{id:guid}")]

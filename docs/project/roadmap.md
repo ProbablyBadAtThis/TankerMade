@@ -4,9 +4,9 @@ Last reviewed: 2026-05-22
 
 ---
 
-## Current Phase: B — Crafting Module V2
+## Current Phase: C — Module Project Workspace
 
-Phase A is behavior-complete as of the May 22, 2026 smoke test. The base app now acts as a module host, the first bundled Crafting module is active behind module gating, and the reference module has working pattern/project CRUD.
+Phase A is behavior-complete as of the May 22, 2026 smoke test. Phase B is complete after expanding the reference Crafting module with pattern pieces, steps, readiness validation, and project workspace screens. Phase C now deepens module-owned project behavior with step progress, timers, completion rules, piece selection, archive flow, and non-destructive editing.
 
 ## Phase A — Hardening, Module Host & Reference Module
 
@@ -55,7 +55,7 @@ Phase B continues to treat `TankerMade.Modules.Crafting` as a reference/template
 - [x] Pattern detail page in module UI
 - [x] Step range display where relevant to the module
 - [x] Progress aggregation and validation where relevant to the module
-- [ ] Expand module-owned project workspace screens beyond the Phase A reference baseline
+- [x] Expand module-owned project workspace screens beyond the Phase A reference baseline
 
 ---
 

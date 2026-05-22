@@ -8,16 +8,16 @@ class DevTrackerSection {
         this.sectionId = 'dev-tracker';
         this.data = {
             totalTasks: 65,
-            completedTasks: 30,
+            completedTasks: 31,
             totalPhases: 9,
-            completedPhases: 1,
+            completedPhases: 2,
             currentPhase: {
-                number: "B",
-                title: "Crafting Module V2",
-                description: "Module-owned pattern pieces, steps, detail UI, progress behavior, and workspace expansion",
-                completed: 4,
-                total: 5,
-                color: "#60a5fa"
+                number: "C",
+                title: "Module Project Workspace",
+                description: "Step progress, timers, completion, pieces, archive, and editing",
+                completed: 0,
+                total: 6,
+                color: "#a78bfa"
             },
             phases: [
                 {
@@ -33,10 +33,10 @@ class DevTrackerSection {
                     number: "B",
                     title: "Crafting Module V2",
                     description: "Pattern pieces, steps, reordering, aggregation, validation, and expanded module UI.",
-                    completed: 4,
+                    completed: 5,
                     total: 5,
                     color: "#60a5fa",
-                    status: "active"
+                    status: "completed"
                 },
                 {
                     number: "C",
@@ -45,7 +45,7 @@ class DevTrackerSection {
                     completed: 0,
                     total: 6,
                     color: "#a78bfa",
-                    status: "upcoming"
+                    status: "active"
                 },
                 {
                     number: "D",
@@ -340,7 +340,7 @@ const ROADMAP_PHASE_TASKS = {
         { title: 'Pattern detail page in module UI', status: 'done', area: 'Client' },
         { title: 'Step range display where relevant to the module', status: 'done', area: 'UX' },
         { title: 'Progress aggregation and validation where relevant to the module', status: 'done', area: 'Domain' },
-        { title: 'Expand module-owned project workspace screens beyond the Phase A reference baseline', status: 'todo', area: 'Projects' }
+        { title: 'Expand module-owned project workspace screens beyond the Phase A reference baseline', status: 'done', area: 'Projects' }
     ],
     C: [
         { title: 'Step checklist with ProjectStepProgress tracking', status: 'todo', area: 'Projects' },

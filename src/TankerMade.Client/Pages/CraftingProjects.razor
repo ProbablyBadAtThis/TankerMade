@@ -1,0 +1,129 @@
+@page "/modules/crafting/projects"
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+
+<PageTitle>Projects</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>Projects</h1>
+    <p>Sign in to load Crafting projects.</p>
+    <a class="btn btn-primary" href="login">Sign in</a>
+}
+else if (!ModuleState.IsActive("crafting"))
+{
+    <h1>Projects</h1>
+    <p>Activate the Crafting module from Home to load its tools.</p>
+}
+else if (loading)
+{
+    <h1>Projects</h1>
+    <p>Loading...</p>
+}
+else
+{
+    <div class="page-heading">
+        <div>
+            <a class="pattern-back-link" href="modules/crafting">Crafting</a>
+            <h1>Projects</h1>
+            <p>Module-owned workspaces connected to saved reference patterns.</p>
+        </div>
+        <a class="btn btn-primary" href="modules/crafting/projects/new">New Project</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    @if (projects.Count == 0)
+    {
+        <div class="empty-state">
+            <h2>No Projects Yet</h2>
+            <p>Create a project workspace to connect a pattern, difficulty, and setup notes.</p>
+            <div class="auth-actions">
+                <a class="btn btn-primary" href="modules/crafting/projects/new">New Project</a>
+                <a class="btn btn-outline-secondary" href="modules/crafting/patterns">Patterns</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="project-card-grid">
+            @foreach (var project in projects)
+            {
+                <a class="project-card" href="@($"modules/crafting/projects/{project.Id}")">
+                    <div>
+                        <h2>@project.Name</h2>
+                        <p>@DisplayProjectMeta(project)</p>
+                    </div>
+                    <div class="project-progress-row" aria-label="@($"{project.Progress}% complete")">
+                        <span>@($"{project.Progress}%")</span>
+                        <div class="project-progress-track">
+                            <div style="@($"width: {ClampProgress(project.Progress)}%")"></div>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+}
+
+@code {
+    private readonly List<TankerMade.Client.Services.CraftingProjectSummary> projects = [];
+    private bool loading = true;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadProjectsAsync();
+    }
+
+    private async Task LoadProjectsAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive("crafting"))
+            {
+                return;
+            }
+
+            projects.Clear();
+            projects.AddRange(await ApiClient.GetCraftingProjectsAsync());
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private static string DisplayProjectMeta(TankerMade.Client.Services.CraftingProjectSummary project)
+    {
+        var parts = new[]
+        {
+            string.IsNullOrWhiteSpace(project.PatternName) ? "No pattern linked" : project.PatternName,
+            string.IsNullOrWhiteSpace(project.DifficultyLabel) ? "Difficulty unset" : project.DifficultyLabel
+        };
+
+        return string.Join(" - ", parts);
+    }
+
+    private static int ClampProgress(int progress)
+    {
+        return Math.Min(100, Math.Max(0, progress));
+    }
+}

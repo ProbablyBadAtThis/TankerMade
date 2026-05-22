@@ -192,7 +192,7 @@ partial class TankerMadeDbContextModelSnapshot : ModelSnapshot
             b.Property<int>("Difficulty").HasColumnType("INTEGER");
             b.Property<string>("Name").IsRequired().HasMaxLength(200).HasColumnType("TEXT");
             b.Property<Guid?>("PatternId").HasColumnType("TEXT");
-            b.Property<decimal>("Progress").HasPrecision(5, 2).HasColumnType("TEXT");
+            b.Property<int>("Progress").HasColumnType("INTEGER");
             b.Property<string>("Slug").IsRequired().HasMaxLength(220).HasColumnType("TEXT");
             b.Property<Guid?>("ThemeId").HasColumnType("TEXT");
             b.Property<DateTime>("UpdatedAt").HasColumnType("TEXT");

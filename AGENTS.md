@@ -102,13 +102,13 @@ http://localhost:5236/scalar/v1
 
 ## Current Roadmap Focus
 
-Use `docs/project/roadmap.md` as the source of truth. As of the current docs, Phase B focuses on Crafting Module V2:
+Use `docs/project/roadmap.md` as the source of truth. As of the current docs, Phase C focuses on module-owned project workspace behavior:
 
 - Keep `TankerMade.Modules.Crafting` as a reference/template module, not the eventual production catch-all for knitting, crochet, sewing, or another niche.
-- Add full CRUD and reorder behavior for module-owned pattern pieces and steps.
-- Add pattern detail UI and step range display where relevant.
-- Add progress aggregation and validation foundations where they fit the reference module.
-- Expand module-owned project workspace screens beyond the Phase A reference baseline.
+- Add module-owned step/checklist progress for project workspaces.
+- Add module-owned timers with play/pause.
+- Add module-specific completion percentage logic and piece/section selection.
+- Add archive flow and non-destructive editing behavior.
 
 ## UX Expectations
 

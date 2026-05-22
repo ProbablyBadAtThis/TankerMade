@@ -198,6 +198,12 @@ code {
     grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 }
 
+.project-card-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+}
+
 .pattern-card {
     border: 1px solid #d9dee7;
     border-radius: 8px;
@@ -208,7 +214,21 @@ code {
     text-decoration: none;
 }
 
+.project-card {
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    color: inherit;
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+    text-decoration: none;
+}
+
 .pattern-card:hover {
+    border-color: #1b6ec2;
+}
+
+.project-card:hover {
     border-color: #1b6ec2;
 }
 
@@ -217,9 +237,42 @@ code {
     margin: 0;
 }
 
+.project-card h2 {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
 .pattern-card p {
     color: #536173;
     margin: 0;
+}
+
+.project-card p {
+    color: #536173;
+    margin: 0.35rem 0 0;
+}
+
+.project-progress-row {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.project-progress-row span {
+    color: #384657;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.project-progress-track {
+    background: #eef2f6;
+    border-radius: 999px;
+    height: 0.5rem;
+    overflow: hidden;
+}
+
+.project-progress-track div {
+    background: #1b6ec2;
+    height: 100%;
 }
 
 .pattern-card-stats {
@@ -334,6 +387,82 @@ code {
     display: grid;
     gap: 1rem;
     grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr);
+}
+
+.project-workspace {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
+}
+
+.project-panel {
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+    padding: 1rem;
+}
+
+.project-panel h2 {
+    font-size: 1.15rem;
+    margin: 0;
+}
+
+.project-panel-header {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.project-edit-form {
+    display: grid;
+    gap: 1rem;
+}
+
+.project-edit-form label {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.project-edit-form label span {
+    font-weight: 600;
+}
+
+.linked-pattern-summary {
+    background: #f3f6f9;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.75rem;
+}
+
+.linked-pattern-summary span {
+    color: #536173;
+}
+
+.project-piece-preview {
+    display: grid;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.project-piece-preview li {
+    align-items: center;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    padding: 0.7rem 0.75rem;
+}
+
+.project-piece-preview span {
+    color: #536173;
+    font-size: 0.85rem;
 }
 
 .piece-list {
@@ -545,6 +674,10 @@ code {
     }
 
     .pattern-workspace {
+        grid-template-columns: 1fr;
+    }
+
+    .project-workspace {
         grid-template-columns: 1fr;
     }
 

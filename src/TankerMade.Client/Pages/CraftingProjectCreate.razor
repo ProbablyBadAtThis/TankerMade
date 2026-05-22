@@ -1,0 +1,185 @@
+@page "/modules/crafting/projects/new"
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>New Project</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>New Project</h1>
+    <p>Sign in to create Crafting projects.</p>
+    <a class="btn btn-primary" href="login">Sign in</a>
+}
+else if (!ModuleState.IsActive("crafting"))
+{
+    <h1>New Project</h1>
+    <p>Activate the Crafting module from Home to load its tools.</p>
+}
+else if (loading)
+{
+    <h1>New Project</h1>
+    <p>Loading...</p>
+}
+else
+{
+    <div class="page-heading">
+        <div>
+            <a class="pattern-back-link" href="modules/crafting/projects">Projects</a>
+            <h1>New Project</h1>
+            <p>Create a module-owned workspace and optionally connect a saved pattern.</p>
+        </div>
+    </div>
+
+    <EditForm Model="form" OnValidSubmit="SubmitAsync" class="pattern-form">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <label>
+            <span>Name</span>
+            <InputText class="form-control" @bind-Value="form.Name" />
+        </label>
+
+        <label>
+            <span>Description</span>
+            <InputTextArea class="form-control" @bind-Value="form.Description" />
+        </label>
+
+        <div class="form-grid">
+            <label>
+                <span>Pattern</span>
+                <InputSelect class="form-control" @bind-Value="form.PatternIdText">
+                    <option value="">No pattern linked</option>
+                    @foreach (var pattern in patterns)
+                    {
+                        <option value="@pattern.Id">@pattern.Name</option>
+                    }
+                </InputSelect>
+            </label>
+
+            <label>
+                <span>Difficulty</span>
+                <InputSelect class="form-control" @bind-Value="form.Difficulty">
+                    <option value="0">Unspecified</option>
+                    <option value="1">Beginner</option>
+                    <option value="2">Beginner+</option>
+                    <option value="3">Intermediate</option>
+                    <option value="4">Intermediate+</option>
+                    <option value="5">Advanced</option>
+                    <option value="6">Advanced+</option>
+                </InputSelect>
+            </label>
+
+            <label>
+                <span>Progress</span>
+                <InputNumber class="form-control" min="0" max="100" step="1" @bind-Value="form.Progress" />
+            </label>
+        </div>
+
+        <div class="auth-actions">
+            <button class="btn btn-primary" disabled="@busy" type="submit">Create Project</button>
+            <a class="btn btn-outline-secondary" href="modules/crafting/projects">Cancel</a>
+        </div>
+    </EditForm>
+}
+
+@code {
+    private readonly ProjectFormModel form = new();
+    private readonly List<TankerMade.Client.Services.CraftingPatternSummary> patterns = [];
+    private bool loading = true;
+    private bool busy;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadPatternsAsync();
+    }
+
+    private async Task LoadPatternsAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive("crafting"))
+            {
+                return;
+            }
+
+            patterns.Clear();
+            patterns.AddRange(await ApiClient.GetCraftingPatternsAsync());
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var project = await ApiClient.CreateCraftingProjectAsync(form.ToRequest());
+            Navigation.NavigateTo($"modules/crafting/projects/{project.Id}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private sealed class ProjectFormModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Name is required")]
+        [System.ComponentModel.DataAnnotations.StringLength(200, ErrorMessage = "Name cannot exceed 200 characters")]
+        public string Name { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
+        public string Description { get; set; } = string.Empty;
+
+        public string PatternIdText { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Range(0, 6, ErrorMessage = "Choose a valid difficulty")]
+        public int Difficulty { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Range(0, 100, ErrorMessage = "Progress must be between 0 and 100")]
+        public int Progress { get; set; }
+
+        public TankerMade.Client.Services.CraftingProjectFormRequest ToRequest()
+        {
+            return new()
+            {
+                Name = Name,
+                Description = Description,
+                PatternId = Guid.TryParse(PatternIdText, out var patternId) ? patternId : null,
+                ClearPatternId = string.IsNullOrWhiteSpace(PatternIdText),
+                Difficulty = Difficulty,
+                Progress = Progress
+            };
+        }
+    }
+}

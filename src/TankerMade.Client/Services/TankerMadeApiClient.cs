@@ -52,6 +52,44 @@ public class TankerMadeApiClient
         return await _http.GetFromJsonAsync<IReadOnlyList<CraftingPatternSummary>>("api/modules/crafting/patterns") ?? [];
     }
 
+    public async Task<IReadOnlyList<CraftingProjectSummary>> GetCraftingProjectsAsync()
+    {
+        return await _http.GetFromJsonAsync<IReadOnlyList<CraftingProjectSummary>>("api/modules/crafting/projects") ?? [];
+    }
+
+    public async Task<CraftingProjectSummary?> GetCraftingProjectAsync(Guid projectId)
+    {
+        var response = await _http.GetAsync($"api/modules/crafting/projects/{projectId}");
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>();
+    }
+
+    public async Task<CraftingProjectSummary> CreateCraftingProjectAsync(CraftingProjectFormRequest request)
+    {
+        var response = await _http.PostAsJsonAsync("api/modules/crafting/projects", request);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>()
+            ?? throw new InvalidOperationException("The server returned an empty project response.");
+    }
+
+    public async Task<CraftingProjectSummary?> UpdateCraftingProjectAsync(Guid projectId, CraftingProjectFormRequest request)
+    {
+        var response = await _http.PutAsJsonAsync($"api/modules/crafting/projects/{projectId}", request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>();
+    }
+
     public async Task<CraftingPatternDetail?> GetCraftingPatternAsync(Guid patternId)
     {
         var response = await _http.GetAsync($"api/modules/crafting/patterns/{patternId}");
@@ -224,6 +262,34 @@ public class CraftingPatternStepFormRequest
 public class ReorderCraftingPatternItemsRequest
 {
     public IReadOnlyList<Guid> OrderedIds { get; set; } = [];
+}
+
+public class CraftingProjectFormRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public Guid? PatternId { get; set; }
+    public bool ClearPatternId { get; set; }
+    public Guid? ThemeId { get; set; }
+    public int Difficulty { get; set; }
+    public int Progress { get; set; }
+}
+
+public class CraftingProjectSummary
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public Guid? PatternId { get; set; }
+    public string PatternName { get; set; } = string.Empty;
+    public Guid? ThemeId { get; set; }
+    public string ThemeName { get; set; } = string.Empty;
+    public int Difficulty { get; set; }
+    public string DifficultyLabel { get; set; } = string.Empty;
+    public int Progress { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }
 
 public class CraftingPatternSummary

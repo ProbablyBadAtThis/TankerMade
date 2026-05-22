@@ -7,5 +7,5 @@ public class CreateCraftingProjectDto
     public Guid? PatternId { get; set; }
     public Guid? ThemeId { get; set; }
     public int Difficulty { get; set; }
-    public decimal Progress { get; set; }
+    public int Progress { get; set; }
 }

@@ -9,7 +9,7 @@ public class CraftingProject
     public Guid? PatternId { get; set; }
     public Guid? ThemeId { get; set; }
     public int Difficulty { get; set; }
-    public decimal Progress { get; set; }
+    public int Progress { get; set; }
     public Guid UserId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -29,7 +29,7 @@ public class CraftingProject
         Slug = SlugGenerator.Generate(name);
     }
 
-    public void Update(string name, string description, Guid? patternId, Guid? themeId, int difficulty, decimal progress)
+    public void Update(string name, string description, Guid? patternId, Guid? themeId, int difficulty, int progress)
     {
         if (progress < 0 || progress > 100)
         {

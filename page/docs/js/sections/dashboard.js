@@ -8,13 +8,13 @@ class DashboardSection {
         this.sectionId = 'dashboard';
         this.data = {
             totalTasks: 65,
-            completedTasks: 30,
+            completedTasks: 31,
             currentPhase: {
-                number: "B",
-                title: "Crafting Module V2",
-                description: "Module-owned pattern pieces, steps, detail UI, progress behavior, and workspace expansion",
-                completed: 4,
-                total: 5
+                number: "C",
+                title: "Module Project Workspace",
+                description: "Step progress, timers, completion, pieces, archive, and editing",
+                completed: 0,
+                total: 6
             }
         };
     }
@@ -121,7 +121,7 @@ class DashboardSection {
                 ${isAuthenticated ? `
                 <div class="dashboard-section-title">
                     <h2>Current Focus</h2>
-                    <p>Open Phase B work split into scan-friendly panels.</p>
+                    <p>Open Phase C work split into scan-friendly panels.</p>
                 </div>
 
                 <div class="dashboard-focus-panels">
@@ -192,7 +192,7 @@ class DashboardSection {
                     <h2>Project Glimpse</h2>
                 </div>
                 <div class="card-body">
-                    <p class="text-secondary">TankerMade is a local-first modular maker workbench. Phase A is complete; Phase B is expanding the Crafting module.</p>
+                    <p class="text-secondary">TankerMade is a local-first modular maker workbench. Phase B is complete; Phase C is deepening module-owned project workspaces.</p>
                     <div class="mt-4">
                         <button class="btn btn-primary" onclick="window.TankerMadeAuth && window.TankerMadeAuth.login()">
                             Sign in with GitHub
@@ -209,7 +209,9 @@ class DashboardSection {
             { title: "Build pattern detail page", meta: "Phase B • Module UI", status: "done" },
             { title: "Add step range display", meta: "Phase B • UX", status: "done" },
             { title: "Add progress aggregation and validation", meta: "Phase B • Domain behavior", status: "done" },
-            { title: "Expand module-owned project workspace screens", meta: "Phase B • Projects", status: "active" }
+            { title: "Expand module-owned project workspace screens", meta: "Phase B • Projects", status: "done" },
+            { title: "Add module-owned step/checklist progress", meta: "Phase C • Projects", status: "active" },
+            { title: "Add module-owned timers", meta: "Phase C • Projects", status: "active" }
         ];
 
         return tasks.map(task => `
@@ -226,8 +228,8 @@ class DashboardSection {
     renderPhaseBreakdown() {
         const phases = [
             { number: "A", title: "Module Host & Reference Module", completed: 26, total: 26, active: false },
-            { number: "B", title: "Crafting Module V2", completed: 4, total: 5, active: true },
-            { number: "C", title: "Module Project Workspace", completed: 0, total: 6, active: false }
+            { number: "B", title: "Crafting Module V2", completed: 5, total: 5, active: false },
+            { number: "C", title: "Module Project Workspace", completed: 0, total: 6, active: true }
         ];
 
         return phases.map(phase => {
@@ -269,8 +271,8 @@ class DashboardSection {
 
     renderWeekSummary() {
         const stats = [
-            { value: "30", label: "Done" },
-            { value: "1", label: "Open in Phase B" },
+            { value: "31", label: "Done" },
+            { value: "6", label: "Open in Phase C" },
             { value: "9", label: "Roadmap Phases" }
         ];
 
@@ -284,9 +286,9 @@ class DashboardSection {
 
     renderNextTasks() {
         const tasks = [
-            { title: "Expand module-owned project workspace screens", phase: "Phase B" },
             { title: "Module-owned step/checklist progress", phase: "Phase C" },
-            { title: "Module-owned timers with play/pause", phase: "Phase C" }
+            { title: "Module-owned timers with play/pause", phase: "Phase C" },
+            { title: "Module-specific completion percentage logic", phase: "Phase C" }
         ];
 
         return tasks.map(task => `
