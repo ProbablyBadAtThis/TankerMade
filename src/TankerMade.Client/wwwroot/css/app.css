@@ -120,9 +120,17 @@ code {
 }
 
 .auth-actions {
+    align-items: center;
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
+}
+
+.archive-toggle {
+    align-items: center;
+    color: #536173;
+    display: flex;
+    gap: 0.4rem;
 }
 
 .page-heading {
@@ -250,6 +258,18 @@ code {
 .project-card p {
     color: #536173;
     margin: 0.35rem 0 0;
+}
+
+.archive-badge {
+    background: #f3f6f9;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    color: #536173;
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
+    padding: 0.25rem 0.45rem;
 }
 
 .project-progress-row {
@@ -411,6 +431,7 @@ code {
 
 .project-panel-header {
     align-items: center;
+    flex-wrap: wrap;
     display: flex;
     gap: 1rem;
     justify-content: space-between;
@@ -468,6 +489,49 @@ code {
     font-size: 0.85rem;
 }
 
+.project-piece-selector {
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: 1fr;
+    min-width: 0;
+    padding: 0.75rem;
+}
+
+.project-piece-selector label {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.project-piece-selector label span {
+    font-weight: 600;
+}
+
+.project-piece-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    justify-content: flex-start;
+    min-width: 0;
+}
+
+.project-piece-summary strong,
+.project-piece-summary span {
+    background: #f3f6f9;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    color: #536173;
+    font-size: 0.85rem;
+    padding: 0.45rem 0.6rem;
+    white-space: nowrap;
+}
+
+.project-piece-summary strong {
+    color: #111827;
+}
+
 .project-step-checklist {
     display: grid;
     gap: 0.5rem;
@@ -497,6 +561,99 @@ code {
 
 .project-step-check small {
     color: #536173;
+}
+
+.project-step-timer {
+    align-items: center;
+    border-top: 1px solid #eef2f6;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+}
+
+.project-step-timer span {
+    color: #536173;
+    flex: 1 1 4.5rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    min-width: 4.5rem;
+}
+
+.modal-backdrop-panel {
+    align-items: center;
+    background: rgba(15, 23, 42, 0.45);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: 1rem;
+    position: fixed;
+    z-index: 1050;
+}
+
+.timer-dialog {
+    background: #fff;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.18);
+    display: grid;
+    gap: 1rem;
+    max-width: 24rem;
+    padding: 1rem;
+    width: 100%;
+}
+
+.timer-dialog-header,
+.timer-dialog-actions,
+.timer-reset-confirmation {
+    align-items: center;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: space-between;
+}
+
+.timer-dialog-header h2 {
+    font-size: 1.15rem;
+    margin: 0;
+}
+
+.timer-dialog-fields {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.timer-dialog-fields label {
+    align-items: center;
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: minmax(0, 1fr) minmax(7rem, auto);
+}
+
+.timer-dialog-fields strong {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.timer-dialog-error {
+    color: #b42318;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.timer-reset-confirmation {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    flex-wrap: wrap;
+    padding: 0.75rem;
+}
+
+.timer-reset-confirmation p {
+    color: #9a3412;
+    flex-basis: 100%;
+    margin: 0;
 }
 
 .piece-list {
@@ -713,6 +870,14 @@ code {
 
     .project-workspace {
         grid-template-columns: 1fr;
+    }
+
+    .project-piece-selector {
+        grid-template-columns: 1fr;
+    }
+
+    .project-piece-summary {
+        justify-content: flex-start;
     }
 
     .pattern-stats {

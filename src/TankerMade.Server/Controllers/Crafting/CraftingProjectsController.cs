@@ -23,7 +23,7 @@ public class CraftingProjectsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<CraftingProjectDto>>> GetAll()
+    public async Task<ActionResult<IReadOnlyList<CraftingProjectDto>>> GetAll([FromQuery] bool includeArchived = false)
     {
         var userId = await GetActiveModuleUserIdAsync();
         if (userId == null)
@@ -31,7 +31,7 @@ public class CraftingProjectsController : ControllerBase
             return Forbid();
         }
 
-        return Ok(await _projectService.GetAllAsync(userId.Value));
+        return Ok(await _projectService.GetAllAsync(userId.Value, includeArchived));
     }
 
     [HttpGet("{id:guid}")]
@@ -96,6 +96,32 @@ public class CraftingProjectsController : ControllerBase
         }
     }
 
+    [HttpPut("{id:guid}/archive")]
+    public async Task<ActionResult<CraftingProjectDto>> Archive(Guid id)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        var project = await _projectService.ArchiveAsync(id, userId.Value);
+        return project == null ? NotFound() : Ok(project);
+    }
+
+    [HttpPut("{id:guid}/reopen")]
+    public async Task<ActionResult<CraftingProjectDto>> Reopen(Guid id)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        var project = await _projectService.ReopenAsync(id, userId.Value);
+        return project == null ? NotFound() : Ok(project);
+    }
+
     [HttpPut("{id:guid}/steps/{stepId:guid}/progress")]
     public async Task<ActionResult<CraftingProjectDto>> SetStepProgress(
         Guid id,
@@ -111,6 +137,90 @@ public class CraftingProjectsController : ControllerBase
         try
         {
             var project = await _projectService.SetStepProgressAsync(id, stepId, request, userId.Value);
+            return project == null ? NotFound() : Ok(project);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPut("{id:guid}/steps/{stepId:guid}/timer/start")]
+    public async Task<ActionResult<CraftingProjectDto>> StartTimer(Guid id, Guid stepId, UpdateCraftingProjectTimerDto request)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            var project = await _projectService.StartTimerAsync(id, stepId, request, userId.Value);
+            return project == null ? NotFound() : Ok(project);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPut("{id:guid}/steps/{stepId:guid}/timer/pause")]
+    public async Task<ActionResult<CraftingProjectDto>> PauseTimer(Guid id, Guid stepId, UpdateCraftingProjectTimerDto request)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            var project = await _projectService.PauseTimerAsync(id, stepId, request, userId.Value);
+            return project == null ? NotFound() : Ok(project);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPut("{id:guid}/steps/{stepId:guid}/timer")]
+    public async Task<ActionResult<CraftingProjectDto>> SetTimer(Guid id, Guid stepId, UpdateCraftingProjectTimerDto request)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            var project = await _projectService.SetTimerAsync(id, stepId, request, userId.Value);
+            return project == null ? NotFound() : Ok(project);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpDelete("{id:guid}/steps/{stepId:guid}/timer")]
+    public async Task<ActionResult<CraftingProjectDto>> ResetTimer(Guid id, Guid stepId)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            var project = await _projectService.ResetTimerAsync(id, stepId, userId.Value);
             return project == null ? NotFound() : Ok(project);
         }
         catch (InvalidOperationException ex)

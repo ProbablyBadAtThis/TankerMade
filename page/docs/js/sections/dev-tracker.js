@@ -8,16 +8,16 @@ class DevTrackerSection {
         this.sectionId = 'dev-tracker';
         this.data = {
             totalTasks: 65,
-            completedTasks: 32,
+            completedTasks: 37,
             totalPhases: 9,
-            completedPhases: 2,
+            completedPhases: 3,
             currentPhase: {
-                number: "C",
-                title: "Module Project Workspace",
-                description: "Step progress, timers, completion, pieces, archive, and editing",
-                completed: 1,
-                total: 6,
-                color: "#a78bfa"
+                number: "D",
+                title: "Inventory & Kits",
+                description: "Yarn, tools, notions, lots, purchases, linking, and kits.",
+                completed: 0,
+                total: 7,
+                color: "#f59e0b"
             },
             phases: [
                 {
@@ -42,10 +42,10 @@ class DevTrackerSection {
                     number: "C",
                     title: "Module Project Workspace",
                     description: "Step progress, timers, completion, pieces, archive, and editing.",
-                    completed: 1,
+                    completed: 6,
                     total: 6,
                     color: "#a78bfa",
-                    status: "active"
+                    status: "completed"
                 },
                 {
                     number: "D",
@@ -54,7 +54,7 @@ class DevTrackerSection {
                     completed: 0,
                     total: 7,
                     color: "#f59e0b",
-                    status: "upcoming"
+                    status: "active"
                 },
                 {
                     number: "E",
@@ -344,11 +344,11 @@ const ROADMAP_PHASE_TASKS = {
     ],
     C: [
         { title: 'Step checklist with ProjectStepProgress tracking', status: 'done', area: 'Projects' },
-        { title: 'Per-piece timers with play/pause', status: 'todo', area: 'Projects' },
-        { title: 'Completion percentage from checked steps and stitch counts', status: 'todo', area: 'Progress' },
-        { title: 'Piece selector on project detail', status: 'todo', area: 'Client' },
-        { title: 'Archive flag and archive flow', status: 'todo', area: 'Projects' },
-        { title: 'Non-destructive editing', status: 'todo', area: 'Safety' }
+        { title: 'Per-step timers with play/pause, manual adjustment, and reset', status: 'done', area: 'Projects' },
+        { title: 'Completion percentage from checked linked pattern steps', status: 'done', area: 'Progress' },
+        { title: 'Piece selector on project detail', status: 'done', area: 'Client' },
+        { title: 'Archive flag and archive flow', status: 'done', area: 'Projects' },
+        { title: 'Non-destructive editing', status: 'done', area: 'Safety' }
     ],
     D: [
         { title: 'Craft module inventory: yarn, tools, notions, lots, purchase history, and sale price handling', status: 'todo', area: 'Inventory' },

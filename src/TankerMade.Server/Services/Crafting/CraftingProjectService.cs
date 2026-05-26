@@ -24,6 +24,7 @@ public class CraftingProjectService : ICraftingProjectService
         project.Update(createDto.Name, createDto.Description, createDto.PatternId, createDto.ThemeId, createDto.Difficulty, createDto.Progress);
 
         _context.CraftingProjects.Add(project);
+        project.SetProgress(await CalculateStepCompletionPercentAsync(project));
         await _context.SaveChangesAsync();
 
         return await MapAsync(project);
@@ -45,10 +46,10 @@ public class CraftingProjectService : ICraftingProjectService
         return project == null ? null : await MapAsync(project);
     }
 
-    public async Task<IReadOnlyList<CraftingProjectDto>> GetAllAsync(Guid userId)
+    public async Task<IReadOnlyList<CraftingProjectDto>> GetAllAsync(Guid userId, bool includeArchived = false)
     {
         var projects = await _context.CraftingProjects
-            .Where(p => p.UserId == userId)
+            .Where(p => p.UserId == userId && (includeArchived || !p.IsArchived))
             .OrderBy(p => p.Name)
             .ToListAsync();
 
@@ -67,6 +68,10 @@ public class CraftingProjectService : ICraftingProjectService
 
         var patternId = updateDto.ClearPatternId ? null : updateDto.PatternId ?? project.PatternId;
         await EnsurePatternBelongsToUserAsync(patternId, userId);
+        if (patternId != project.PatternId && await HasWorkspaceStateAsync(project.Id))
+        {
+            throw new InvalidOperationException("This project already has progress or timer history. Reopen it without changing the linked pattern, or create a new project for a different pattern.");
+        }
 
         project.Update(
             UseIncomingValue(updateDto.Name, project.Name),
@@ -75,6 +80,39 @@ public class CraftingProjectService : ICraftingProjectService
             updateDto.ThemeId ?? project.ThemeId,
             updateDto.Difficulty ?? project.Difficulty,
             updateDto.Progress ?? project.Progress);
+        project.SetProgress(await CalculateStepCompletionPercentAsync(project));
+        await _context.SaveChangesAsync();
+
+        return await MapAsync(project);
+    }
+
+    public async Task<CraftingProjectDto?> ArchiveAsync(Guid id, Guid userId)
+    {
+        var project = await _context.CraftingProjects
+            .SingleOrDefaultAsync(p => p.Id == id && p.UserId == userId);
+
+        if (project == null)
+        {
+            return null;
+        }
+
+        project.Archive(DateTime.UtcNow);
+        await _context.SaveChangesAsync();
+
+        return await MapAsync(project);
+    }
+
+    public async Task<CraftingProjectDto?> ReopenAsync(Guid id, Guid userId)
+    {
+        var project = await _context.CraftingProjects
+            .SingleOrDefaultAsync(p => p.Id == id && p.UserId == userId);
+
+        if (project == null)
+        {
+            return null;
+        }
+
+        project.Reopen(DateTime.UtcNow);
         await _context.SaveChangesAsync();
 
         return await MapAsync(project);
@@ -99,7 +137,7 @@ public class CraftingProjectService : ICraftingProjectService
     {
         var normalized = searchTerm.Trim();
         var projects = await _context.CraftingProjects
-            .Where(p => p.UserId == userId && (p.Name.Contains(normalized) || p.Description.Contains(normalized)))
+            .Where(p => p.UserId == userId && !p.IsArchived && (p.Name.Contains(normalized) || p.Description.Contains(normalized)))
             .OrderBy(p => p.Name)
             .ToListAsync();
 
@@ -141,6 +179,119 @@ public class CraftingProjectService : ICraftingProjectService
             _context.CraftingProjectStepProgress.Remove(existing);
         }
 
+        project.SetProgress(await CalculateStepCompletionPercentAsync(project));
+        await _context.SaveChangesAsync();
+
+        return await MapAsync(project);
+    }
+
+    public async Task<CraftingProjectDto?> StartTimerAsync(
+        Guid projectId,
+        Guid patternStepId,
+        UpdateCraftingProjectTimerDto updateDto,
+        Guid userId)
+    {
+        var project = await _context.CraftingProjects
+            .SingleOrDefaultAsync(p => p.Id == projectId && p.UserId == userId);
+
+        if (project == null)
+        {
+            return null;
+        }
+
+        await EnsureStepBelongsToLinkedPatternAsync(project, patternStepId);
+
+        var now = DateTime.UtcNow;
+        var timers = await _context.CraftingProjectTimers
+            .Where(timer => timer.ProjectId == projectId)
+            .ToListAsync();
+
+        foreach (var runningTimer in timers.Where(timer => timer.IsRunning))
+        {
+            runningTimer.Pause(now);
+        }
+
+        var timer = timers.SingleOrDefault(existing => existing.PatternStepId == patternStepId);
+        if (timer == null)
+        {
+            timer = new CraftingProjectTimer(Guid.NewGuid(), projectId, patternStepId);
+            _context.CraftingProjectTimers.Add(timer);
+        }
+
+        timer.Start(now);
+        await _context.SaveChangesAsync();
+
+        return await MapAsync(project);
+    }
+
+    public async Task<CraftingProjectDto?> PauseTimerAsync(
+        Guid projectId,
+        Guid patternStepId,
+        UpdateCraftingProjectTimerDto updateDto,
+        Guid userId)
+    {
+        var project = await _context.CraftingProjects
+            .SingleOrDefaultAsync(p => p.Id == projectId && p.UserId == userId);
+
+        if (project == null)
+        {
+            return null;
+        }
+
+        await EnsureStepBelongsToLinkedPatternAsync(project, patternStepId);
+
+        var timer = await _context.CraftingProjectTimers
+            .SingleOrDefaultAsync(existing => existing.ProjectId == projectId && existing.PatternStepId == patternStepId);
+
+        if (timer != null)
+        {
+            timer.Pause(DateTime.UtcNow);
+            await _context.SaveChangesAsync();
+        }
+
+        return await MapAsync(project);
+    }
+
+    public async Task<CraftingProjectDto?> SetTimerAsync(
+        Guid projectId,
+        Guid patternStepId,
+        UpdateCraftingProjectTimerDto updateDto,
+        Guid userId)
+    {
+        var project = await _context.CraftingProjects
+            .SingleOrDefaultAsync(p => p.Id == projectId && p.UserId == userId);
+
+        if (project == null)
+        {
+            return null;
+        }
+
+        if (updateDto.ElapsedSeconds.HasValue && updateDto.ElapsedSeconds.Value < 0)
+        {
+            throw new ArgumentException("Elapsed time cannot be negative.", nameof(updateDto));
+        }
+
+        await EnsureStepBelongsToLinkedPatternAsync(project, patternStepId);
+        var timer = await GetOrCreateTimerAsync(projectId, patternStepId);
+        timer.SetElapsedSeconds(updateDto.ElapsedSeconds ?? 0, DateTime.UtcNow);
+        await _context.SaveChangesAsync();
+
+        return await MapAsync(project);
+    }
+
+    public async Task<CraftingProjectDto?> ResetTimerAsync(Guid projectId, Guid patternStepId, Guid userId)
+    {
+        var project = await _context.CraftingProjects
+            .SingleOrDefaultAsync(p => p.Id == projectId && p.UserId == userId);
+
+        if (project == null)
+        {
+            return null;
+        }
+
+        await EnsureStepBelongsToLinkedPatternAsync(project, patternStepId);
+        var timer = await GetOrCreateTimerAsync(projectId, patternStepId);
+        timer.Reset(DateTime.UtcNow);
         await _context.SaveChangesAsync();
 
         return await MapAsync(project);
@@ -189,6 +340,26 @@ public class CraftingProjectService : ICraftingProjectService
                 .ToList();
         }
 
+        var now = DateTime.UtcNow;
+        var timers = await _context.CraftingProjectTimers
+            .Where(timer => timer.ProjectId == project.Id)
+            .OrderBy(timer => timer.CreatedAt)
+            .ToListAsync();
+
+        var timerDtos = timers
+            .Select(timer => new CraftingProjectTimerDto
+            {
+                Id = timer.Id,
+                ProjectId = timer.ProjectId,
+                PatternStepId = timer.PatternStepId,
+                ElapsedSeconds = timer.ElapsedSeconds,
+                IsRunning = timer.IsRunning,
+                StartedAt = timer.StartedAt,
+                CreatedAt = timer.CreatedAt,
+                UpdatedAt = timer.UpdatedAt
+            })
+            .ToList();
+
         return new CraftingProjectDto
         {
             Id = project.Id,
@@ -201,10 +372,18 @@ public class CraftingProjectService : ICraftingProjectService
             ThemeName = themeName,
             Difficulty = project.Difficulty,
             DifficultyLabel = GetDifficultyLabel(project.Difficulty),
-            Progress = project.Progress,
+            Progress = patternStepIds.Count == 0
+                ? project.Progress
+                : CalculateCompletionPercent(stepProgress.Count, patternStepIds.Count),
+            IsArchived = project.IsArchived,
+            ArchivedAt = project.ArchivedAt,
             CompletedStepCount = stepProgress.Count,
             TotalStepCount = patternStepIds.Count,
+            TotalTrackedSeconds = timers.Sum(timer => timer.GetElapsedSeconds(now)),
+            TimerRunning = timerDtos.Any(timer => timer.IsRunning),
+            TimerStartedAt = timerDtos.FirstOrDefault(timer => timer.IsRunning)?.StartedAt,
             StepProgress = stepProgress,
+            Timers = timerDtos,
             UserId = project.UserId,
             Username = userName,
             CreatedAt = project.CreatedAt,
@@ -230,11 +409,58 @@ public class CraftingProjectService : ICraftingProjectService
             : string.Empty;
     }
 
+    private async Task<int> CalculateStepCompletionPercentAsync(CraftingProject project)
+    {
+        var patternStepIds = await GetLinkedPatternStepIdsAsync(project);
+        if (patternStepIds.Count == 0)
+        {
+            return project.Progress;
+        }
+
+        var completedCount = await _context.CraftingProjectStepProgress
+            .Where(progress => progress.ProjectId == project.Id && progress.IsComplete)
+            .CountAsync(progress => patternStepIds.Contains(progress.PatternStepId));
+
+        return CalculateCompletionPercent(completedCount, patternStepIds.Count);
+    }
+
+    private static int CalculateCompletionPercent(int completedCount, int totalCount)
+    {
+        if (totalCount <= 0)
+        {
+            return 0;
+        }
+
+        var clampedCompleted = Math.Min(totalCount, Math.Max(0, completedCount));
+        return (int)Math.Round(clampedCompleted * 100.0 / totalCount, MidpointRounding.AwayFromZero);
+    }
+
     private static string UseIncomingValue(string? incomingValue, string currentValue)
     {
         return string.IsNullOrWhiteSpace(incomingValue)
             ? currentValue
             : incomingValue.Trim();
+    }
+
+    private async Task<CraftingProjectTimer> GetOrCreateTimerAsync(Guid projectId, Guid patternStepId)
+    {
+        var timer = await _context.CraftingProjectTimers
+            .SingleOrDefaultAsync(existing => existing.ProjectId == projectId && existing.PatternStepId == patternStepId);
+
+        if (timer != null)
+        {
+            return timer;
+        }
+
+        timer = new CraftingProjectTimer(Guid.NewGuid(), projectId, patternStepId);
+        _context.CraftingProjectTimers.Add(timer);
+        return timer;
+    }
+
+    private async Task<bool> HasWorkspaceStateAsync(Guid projectId)
+    {
+        return await _context.CraftingProjectStepProgress.AnyAsync(progress => progress.ProjectId == projectId)
+            || await _context.CraftingProjectTimers.AnyAsync(timer => timer.ProjectId == projectId);
     }
 
     private async Task EnsurePatternBelongsToUserAsync(Guid? patternId, Guid userId)

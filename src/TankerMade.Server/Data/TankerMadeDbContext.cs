@@ -22,6 +22,7 @@ public class TankerMadeDbContext : DbContext
     // Reference crafting module entities
     public DbSet<CraftingProject> CraftingProjects { get; set; }
     public DbSet<CraftingProjectStepProgress> CraftingProjectStepProgress { get; set; }
+    public DbSet<CraftingProjectTimer> CraftingProjectTimers { get; set; }
     public DbSet<CraftingPattern> CraftingPatterns { get; set; }
     public DbSet<CraftingPatternPiece> CraftingPatternPieces { get; set; }
     public DbSet<CraftingPatternStep> CraftingPatternSteps { get; set; }
@@ -40,6 +41,7 @@ public class TankerMadeDbContext : DbContext
         ConfigureModules(modelBuilder);
         ConfigureCraftingProject(modelBuilder);
         ConfigureCraftingProjectStepProgress(modelBuilder);
+        ConfigureCraftingProjectTimer(modelBuilder);
         ConfigureCraftingPattern(modelBuilder);
         ConfigureCraftingPatternPiece(modelBuilder);
         ConfigureCraftingPatternStep(modelBuilder);
@@ -130,6 +132,9 @@ public class TankerMadeDbContext : DbContext
             entity.Property(e => e.Difficulty)
                 .IsRequired();
 
+            entity.Property(e => e.IsArchived)
+                .IsRequired();
+
             // Relationships
             entity.HasOne<User>()
                 .WithMany()
@@ -147,6 +152,7 @@ public class TankerMadeDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.IsArchived);
             entity.HasIndex(e => e.Slug);
         });
     }
@@ -159,6 +165,36 @@ public class TankerMadeDbContext : DbContext
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.IsComplete)
+                .IsRequired();
+
+            entity.HasOne<CraftingProject>()
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<CraftingPatternStep>()
+                .WithMany()
+                .HasForeignKey(e => e.PatternStepId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.PatternStepId);
+            entity.HasIndex(e => new { e.ProjectId, e.PatternStepId })
+                .IsUnique();
+        });
+    }
+
+    private void ConfigureCraftingProjectTimer(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CraftingProjectTimer>(entity =>
+        {
+            entity.ToTable("CraftingProjectTimers");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.ElapsedSeconds)
+                .IsRequired();
+
+            entity.Property(e => e.IsRunning)
                 .IsRequired();
 
             entity.HasOne<CraftingProject>()

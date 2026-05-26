@@ -188,8 +188,10 @@ partial class TankerMadeDbContextModelSnapshot : ModelSnapshot
         {
             b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("TEXT");
             b.Property<DateTime>("CreatedAt").HasColumnType("TEXT");
+            b.Property<DateTime?>("ArchivedAt").HasColumnType("TEXT");
             b.Property<string>("Description").IsRequired().HasMaxLength(1000).HasColumnType("TEXT");
             b.Property<int>("Difficulty").HasColumnType("INTEGER");
+            b.Property<bool>("IsArchived").HasColumnType("INTEGER");
             b.Property<string>("Name").IsRequired().HasMaxLength(200).HasColumnType("TEXT");
             b.Property<Guid?>("PatternId").HasColumnType("TEXT");
             b.Property<int>("Progress").HasColumnType("INTEGER");
@@ -198,6 +200,7 @@ partial class TankerMadeDbContextModelSnapshot : ModelSnapshot
             b.Property<DateTime>("UpdatedAt").HasColumnType("TEXT");
             b.Property<Guid>("UserId").HasColumnType("TEXT");
             b.HasKey("Id");
+            b.HasIndex("IsArchived");
             b.HasIndex("PatternId");
             b.HasIndex("Slug");
             b.HasIndex("ThemeId");
@@ -219,6 +222,23 @@ partial class TankerMadeDbContextModelSnapshot : ModelSnapshot
             b.HasIndex("ProjectId");
             b.HasIndex("ProjectId", "PatternStepId").IsUnique();
             b.ToTable("CraftingProjectStepProgress");
+        });
+
+        modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectTimer", b =>
+        {
+            b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("TEXT");
+            b.Property<DateTime>("CreatedAt").HasColumnType("TEXT");
+            b.Property<long>("ElapsedSeconds").HasColumnType("INTEGER");
+            b.Property<bool>("IsRunning").HasColumnType("INTEGER");
+            b.Property<Guid>("PatternStepId").HasColumnType("TEXT");
+            b.Property<Guid>("ProjectId").HasColumnType("TEXT");
+            b.Property<DateTime?>("StartedAt").HasColumnType("TEXT");
+            b.Property<DateTime>("UpdatedAt").HasColumnType("TEXT");
+            b.HasKey("Id");
+            b.HasIndex("PatternStepId");
+            b.HasIndex("ProjectId");
+            b.HasIndex("ProjectId", "PatternStepId").IsUnique();
+            b.ToTable("CraftingProjectTimers");
         });
 
         modelBuilder.Entity("TankerMade.Core.Entities.UserModuleActivation", b =>
@@ -293,6 +313,21 @@ partial class TankerMadeDbContextModelSnapshot : ModelSnapshot
         });
 
         modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectStepProgress", b =>
+        {
+            b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPatternStep", null)
+                .WithMany()
+                .HasForeignKey("PatternStepId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+
+            b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingProject", null)
+                .WithMany()
+                .HasForeignKey("ProjectId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectTimer", b =>
         {
             b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPatternStep", null)
                 .WithMany()

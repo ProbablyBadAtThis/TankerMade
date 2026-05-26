@@ -38,12 +38,13 @@ function loadArchitectureVisualizer() {
                 <div id="visualization-container" class="architecture-canvas">
                     <div>
                         <h3>Entity Relationship Map</h3>
-                        <p>Current model: Users, module definitions, user module activations, Crafting projects/patterns, project step progress, Themes, Colors, Sources, and Brands. Planned model details are tracked in Phase C-D.</p>
+                        <p>Current model: Users, module definitions, user module activations, Crafting projects/patterns, pieces, steps, project step progress, step timers, Themes, Colors, Sources, and Brands. Planned inventory and kit details are tracked in Phase D.</p>
                         <div class="architecture-mini-map" aria-label="Current entity overview">
                             <span>User</span>
                             <span>Module</span>
                             <span>Crafting Project</span>
                             <span>Step Progress</span>
+                            <span>Step Timer</span>
                             <span>Crafting Pattern</span>
                             <span>Theme</span>
                             <span>Source</span>
@@ -85,11 +86,13 @@ function showEntityDiagram() {
         container.innerHTML = `
             <div>
                 <h3>Entity Relationship Map</h3>
-                <p>Current persisted model: Users, module definitions, module activations, Crafting projects/patterns, and shared reference data. Piece, step, timer, inventory, kit, and asset entities are still roadmap work.</p>
+                <p>Current persisted model: Users, module definitions, module activations, Crafting projects/patterns, pieces, steps, project step progress, step timers, and shared reference data. Inventory, kit, and asset entities are still roadmap work.</p>
                 <div class="architecture-mini-map" aria-label="Current entity overview">
                     <span>User</span>
                     <span>Module</span>
                     <span>Crafting Project</span>
+                    <span>Step Progress</span>
+                    <span>Step Timer</span>
                     <span>Crafting Pattern</span>
                     <span>Theme</span>
                     <span>Source</span>

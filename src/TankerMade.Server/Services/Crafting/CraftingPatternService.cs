@@ -105,6 +105,7 @@ public class CraftingPatternService : ICraftingPatternService
             return false;
         }
 
+        await EnsurePatternHasNoProjectsAsync(id, userId, "delete this pattern");
         _context.CraftingPatterns.Remove(pattern);
         await _context.SaveChangesAsync();
         return true;
@@ -167,6 +168,7 @@ public class CraftingPatternService : ICraftingPatternService
             return false;
         }
 
+        await EnsurePatternHasNoProjectsAsync(patternId, userId, "delete pattern pieces");
         _context.CraftingPatternPieces.Remove(piece);
         await TouchPatternAsync(patternId);
         await _context.SaveChangesAsync();
@@ -273,6 +275,7 @@ public class CraftingPatternService : ICraftingPatternService
             return false;
         }
 
+        await EnsurePatternHasNoProjectsAsync(patternId, userId, "delete pattern steps");
         _context.CraftingPatternSteps.Remove(step);
         await TouchPatternAsync(patternId);
         await _context.SaveChangesAsync();
@@ -394,6 +397,17 @@ public class CraftingPatternService : ICraftingPatternService
     {
         var pattern = await _context.CraftingPatterns.SingleAsync(p => p.Id == patternId);
         pattern.UpdatedAt = DateTime.UtcNow;
+    }
+
+    private async Task EnsurePatternHasNoProjectsAsync(Guid patternId, Guid userId, string action)
+    {
+        var isUsed = await _context.CraftingProjects
+            .AnyAsync(project => project.PatternId == patternId && project.UserId == userId);
+
+        if (isUsed)
+        {
+            throw new InvalidOperationException($"Cannot {action} while one or more projects are linked to this pattern. Edit names, instructions, or ordering instead, or create a new pattern version.");
+        }
     }
 
     private async Task NormalizePieceOrderAsync(Guid patternId)

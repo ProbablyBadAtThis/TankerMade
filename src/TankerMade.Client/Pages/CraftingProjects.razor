@@ -29,7 +29,13 @@ else
             <h1>Projects</h1>
             <p>Module-owned workspaces connected to saved reference patterns.</p>
         </div>
-        <a class="btn btn-primary" href="modules/crafting/projects/new">New Project</a>
+        <div class="auth-actions">
+            <label class="archive-toggle">
+                <input type="checkbox" checked="@showArchived" @onchange="ToggleArchivedAsync" />
+                <span>Show archived</span>
+            </label>
+            <a class="btn btn-primary" href="modules/crafting/projects/new">New Project</a>
+        </div>
     </div>
 
     @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -57,6 +63,10 @@ else
                     <div>
                         <h2>@project.Name</h2>
                         <p>@DisplayProjectMeta(project)</p>
+                        @if (project.IsArchived)
+                        {
+                            <span class="archive-badge">Archived</span>
+                        }
                     </div>
                     <div class="project-progress-row" aria-label="@($"{project.Progress}% complete")">
                         <span>@($"{project.Progress}%")</span>
@@ -73,6 +83,7 @@ else
 @code {
     private readonly List<TankerMade.Client.Services.CraftingProjectSummary> projects = [];
     private bool loading = true;
+    private bool showArchived;
     private string errorMessage = string.Empty;
 
     protected override async Task OnInitializedAsync()
@@ -99,7 +110,7 @@ else
             }
 
             projects.Clear();
-            projects.AddRange(await ApiClient.GetCraftingProjectsAsync());
+            projects.AddRange(await ApiClient.GetCraftingProjectsAsync(showArchived));
         }
         catch (Exception ex)
         {
@@ -109,6 +120,12 @@ else
         {
             loading = false;
         }
+    }
+
+    private async Task ToggleArchivedAsync(ChangeEventArgs args)
+    {
+        showArchived = args.Value is bool isChecked && isChecked;
+        await LoadProjectsAsync();
     }
 
     private static string DisplayProjectMeta(TankerMade.Client.Services.CraftingProjectSummary project)

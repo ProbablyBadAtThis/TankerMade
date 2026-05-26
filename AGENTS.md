@@ -103,13 +103,13 @@ http://localhost:5236/scalar/v1
 
 ## Current Roadmap Focus
 
-Use `docs/project/roadmap.md` as the source of truth. As of the current docs, Phase C focuses on module-owned project workspace behavior:
+Use `docs/project/roadmap.md` as the source of truth. As of the current docs, Phase D focuses on module-owned inventory and kit behavior:
 
 - Keep `TankerMade.Modules.Crafting` as a reference/template module, not the eventual production catch-all for knitting, crochet, sewing, or another niche.
-- Module-owned step/checklist progress for project workspaces is complete.
-- Add module-owned timers with play/pause.
-- Add module-specific completion percentage logic and piece/section selection.
-- Add archive flow and non-destructive editing behavior.
+- Phase C module-owned project workspace behavior is complete: step progress, per-step timers, completion rules, piece selection, archive flow, and non-destructive editing.
+- Add craft module inventory for yarn, tools, notions, lots, purchase history, and sale price handling.
+- Add 3D printing module inventory for materials, spools, printer/tooling needs, and module-specific purchase history.
+- Add module-owned project/inventory linking, kit/grouping behavior, and kit/grouping to project flows.
 
 ## UX Expectations
 

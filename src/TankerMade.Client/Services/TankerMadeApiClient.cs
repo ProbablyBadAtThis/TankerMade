@@ -52,9 +52,13 @@ public class TankerMadeApiClient
         return await _http.GetFromJsonAsync<IReadOnlyList<CraftingPatternSummary>>("api/modules/crafting/patterns") ?? [];
     }
 
-    public async Task<IReadOnlyList<CraftingProjectSummary>> GetCraftingProjectsAsync()
+    public async Task<IReadOnlyList<CraftingProjectSummary>> GetCraftingProjectsAsync(bool includeArchived = false)
     {
-        return await _http.GetFromJsonAsync<IReadOnlyList<CraftingProjectSummary>>("api/modules/crafting/projects") ?? [];
+        var url = includeArchived
+            ? "api/modules/crafting/projects?includeArchived=true"
+            : "api/modules/crafting/projects";
+
+        return await _http.GetFromJsonAsync<IReadOnlyList<CraftingProjectSummary>>(url) ?? [];
     }
 
     public async Task<CraftingProjectSummary?> GetCraftingProjectAsync(Guid projectId)
@@ -65,7 +69,7 @@ public class TankerMadeApiClient
             return null;
         }
 
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response);
         return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>();
     }
 
@@ -86,6 +90,30 @@ public class TankerMadeApiClient
             return null;
         }
 
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>();
+    }
+
+    public async Task<CraftingProjectSummary?> ArchiveCraftingProjectAsync(Guid projectId)
+    {
+        var response = await _http.PutAsJsonAsync($"api/modules/crafting/projects/{projectId}/archive", new { });
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>();
+    }
+
+    public async Task<CraftingProjectSummary?> ReopenCraftingProjectAsync(Guid projectId)
+    {
+        var response = await _http.PutAsJsonAsync($"api/modules/crafting/projects/{projectId}/reopen", new { });
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>();
     }
@@ -99,6 +127,63 @@ public class TankerMadeApiClient
             $"api/modules/crafting/projects/{projectId}/steps/{patternStepId}/progress",
             new CraftingProjectStepProgressRequest { IsComplete = isComplete });
 
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>();
+    }
+
+    public async Task<CraftingProjectSummary?> StartCraftingProjectTimerAsync(Guid projectId, Guid patternStepId)
+    {
+        var response = await _http.PutAsJsonAsync(
+            $"api/modules/crafting/projects/{projectId}/steps/{patternStepId}/timer/start",
+            new CraftingProjectTimerRequest());
+
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>();
+    }
+
+    public async Task<CraftingProjectSummary?> PauseCraftingProjectTimerAsync(Guid projectId, Guid patternStepId)
+    {
+        var response = await _http.PutAsJsonAsync(
+            $"api/modules/crafting/projects/{projectId}/steps/{patternStepId}/timer/pause",
+            new CraftingProjectTimerRequest());
+
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>();
+    }
+
+    public async Task<CraftingProjectSummary?> SetCraftingProjectTimerAsync(Guid projectId, Guid patternStepId, long elapsedSeconds)
+    {
+        var response = await _http.PutAsJsonAsync(
+            $"api/modules/crafting/projects/{projectId}/steps/{patternStepId}/timer",
+            new CraftingProjectTimerRequest { ElapsedSeconds = elapsedSeconds });
+
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>();
+    }
+
+    public async Task<CraftingProjectSummary?> ResetCraftingProjectTimerAsync(Guid projectId, Guid patternStepId)
+    {
+        var response = await _http.DeleteAsync($"api/modules/crafting/projects/{projectId}/steps/{patternStepId}/timer");
         if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
         {
             return null;
@@ -176,7 +261,7 @@ public class TankerMadeApiClient
             return false;
         }
 
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response);
         return true;
     }
 
@@ -191,7 +276,7 @@ public class TankerMadeApiClient
             return false;
         }
 
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response);
         return true;
     }
 
@@ -234,7 +319,7 @@ public class TankerMadeApiClient
             return false;
         }
 
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response);
         return true;
     }
 
@@ -251,6 +336,22 @@ public class TankerMadeApiClient
 
         response.EnsureSuccessStatusCode();
         return true;
+    }
+
+    private static async Task EnsureSuccessAsync(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        var message = await response.Content.ReadAsStringAsync();
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            response.EnsureSuccessStatusCode();
+        }
+
+        throw new InvalidOperationException(message);
     }
 }
 
@@ -290,12 +391,17 @@ public class CraftingProjectFormRequest
     public bool ClearPatternId { get; set; }
     public Guid? ThemeId { get; set; }
     public int Difficulty { get; set; }
-    public int Progress { get; set; }
+    public int? Progress { get; set; }
 }
 
 public class CraftingProjectStepProgressRequest
 {
     public bool IsComplete { get; set; }
+}
+
+public class CraftingProjectTimerRequest
+{
+    public long? ElapsedSeconds { get; set; }
 }
 
 public class CraftingProjectSummary
@@ -311,9 +417,15 @@ public class CraftingProjectSummary
     public int Difficulty { get; set; }
     public string DifficultyLabel { get; set; } = string.Empty;
     public int Progress { get; set; }
+    public bool IsArchived { get; set; }
+    public DateTime? ArchivedAt { get; set; }
     public int CompletedStepCount { get; set; }
     public int TotalStepCount { get; set; }
+    public long TotalTrackedSeconds { get; set; }
+    public bool TimerRunning { get; set; }
+    public DateTime? TimerStartedAt { get; set; }
     public IReadOnlyList<CraftingProjectStepProgressDetail> StepProgress { get; set; } = [];
+    public IReadOnlyList<CraftingProjectTimerDetail> Timers { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
@@ -324,6 +436,18 @@ public class CraftingProjectStepProgressDetail
     public Guid PatternStepId { get; set; }
     public bool IsComplete { get; set; }
     public DateTime CompletedAt { get; set; }
+}
+
+public class CraftingProjectTimerDetail
+{
+    public Guid Id { get; set; }
+    public Guid ProjectId { get; set; }
+    public Guid PatternStepId { get; set; }
+    public long ElapsedSeconds { get; set; }
+    public bool IsRunning { get; set; }
+    public DateTime? StartedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }
 
 public class CraftingPatternSummary

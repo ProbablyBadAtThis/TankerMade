@@ -8,13 +8,13 @@ class DashboardSection {
         this.sectionId = 'dashboard';
         this.data = {
             totalTasks: 65,
-            completedTasks: 32,
+            completedTasks: 37,
             currentPhase: {
-                number: "C",
-                title: "Module Project Workspace",
-                description: "Step progress, timers, completion, pieces, archive, and editing",
-                completed: 1,
-                total: 6
+                number: "D",
+                title: "Inventory & Kits",
+                description: "Yarn, tools, notions, lots, purchases, linking, and kits.",
+                completed: 0,
+                total: 7
             }
         };
     }
@@ -121,7 +121,7 @@ class DashboardSection {
                 ${isAuthenticated ? `
                 <div class="dashboard-section-title">
                     <h2>Current Focus</h2>
-                    <p>Open Phase C work split into scan-friendly panels.</p>
+                    <p>Open Phase D work split into scan-friendly panels.</p>
                 </div>
 
                 <div class="dashboard-focus-panels">
@@ -192,7 +192,7 @@ class DashboardSection {
                     <h2>Project Glimpse</h2>
                 </div>
                 <div class="card-body">
-                    <p class="text-secondary">TankerMade is a local-first modular maker workbench. Phase B is complete; Phase C is deepening module-owned project workspaces.</p>
+                    <p class="text-secondary">TankerMade is a local-first modular maker workbench. Phase C is complete; Phase D begins module-owned inventory and kit behavior.</p>
                     <div class="mt-4">
                         <button class="btn btn-primary" onclick="window.TankerMadeAuth && window.TankerMadeAuth.login()">
                             Sign in with GitHub
@@ -211,7 +211,8 @@ class DashboardSection {
             { title: "Add progress aggregation and validation", meta: "Phase B • Domain behavior", status: "done" },
             { title: "Expand module-owned project workspace screens", meta: "Phase B • Projects", status: "done" },
             { title: "Add module-owned step/checklist progress", meta: "Phase C • Projects", status: "done" },
-            { title: "Add module-owned timers", meta: "Phase C • Projects", status: "active" }
+            { title: "Add per-step timers, completion, piece selection, archive, and safe edits", meta: "Phase C • Projects", status: "done" },
+            { title: "Add craft module inventory", meta: "Phase D • Inventory", status: "active" }
         ];
 
         return tasks.map(task => `
@@ -229,7 +230,8 @@ class DashboardSection {
         const phases = [
             { number: "A", title: "Module Host & Reference Module", completed: 26, total: 26, active: false },
             { number: "B", title: "Crafting Module V2", completed: 5, total: 5, active: false },
-            { number: "C", title: "Module Project Workspace", completed: 1, total: 6, active: true }
+            { number: "C", title: "Module Project Workspace", completed: 6, total: 6, active: false },
+            { number: "D", title: "Inventory & Kits", completed: 0, total: 7, active: true }
         ];
 
         return phases.map(phase => {
@@ -271,8 +273,8 @@ class DashboardSection {
 
     renderWeekSummary() {
         const stats = [
-            { value: "32", label: "Done" },
-            { value: "5", label: "Open in Phase C" },
+            { value: "37", label: "Done" },
+            { value: "7", label: "Open in Phase D" },
             { value: "9", label: "Roadmap Phases" }
         ];
 
@@ -286,9 +288,9 @@ class DashboardSection {
 
     renderNextTasks() {
         const tasks = [
-            { title: "Module-owned timers with play/pause", phase: "Phase C" },
-            { title: "Module-specific completion percentage logic", phase: "Phase C" },
-            { title: "Module-specific piece/section selector", phase: "Phase C" }
+            { title: "Craft module inventory: yarn, tools, notions, lots, purchases, and sale prices", phase: "Phase D" },
+            { title: "3D printing module inventory: materials, spools, printer/tooling needs, and purchases", phase: "Phase D" },
+            { title: "Module-owned project/inventory linking", phase: "Phase D" }
         ];
 
         return tasks.map(task => `
@@ -306,7 +308,7 @@ class DashboardSection {
             { icon: "", title: "Pattern and project CRUD verified", time: "Today" },
             { icon: "", title: "Cross-user ownership check passed", time: "Today" },
             { icon: "", title: "Module migration metadata repaired", time: "Today" },
-            { icon: "", title: "Partial update behavior patched", time: "Today" }
+            { icon: "", title: "Phase C project workspace behavior completed", time: "Today" }
         ];
 
         return activities.map(activity => `

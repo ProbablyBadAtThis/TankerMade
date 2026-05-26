@@ -4,27 +4,39 @@ Last updated: 2026-05-26
 
 ## Current State
 
-- Current roadmap phase: Phase C — Module Project Workspace.
+- Current roadmap phase: Phase D — Module Inventory & Kits.
 - Phase A is complete.
 - Phase B is complete.
-- Phase C is 1 of 6 complete.
-- Latest verified slice: module-owned project step/checklist progress.
-- Latest pushed commit at handoff: `52f3020 Add project step checklist progress`.
+- Phase C is complete.
+- Phase D is ready to start.
+- Latest verified slice: Phase C completion, including non-destructive editing cleanup.
+- Latest pushed commit before current uncommitted Phase C work: `52f3020 Add project step checklist progress`.
 
 ## Completed Recently
 
 - Crafting project detail can display linked pattern pieces and steps as a checklist.
 - Step completion is persisted per project through `CraftingProjectStepProgress`.
-- Project API responses include completed step count, total step count, and completed step records.
+- Per-step timers support play, pause, manual adjustment, and reset; project elapsed time is the sum of step timers.
+- Project completion is derived from checked linked pattern steps when linked steps exist.
+- Project detail has a piece selector, per-piece completion, and per-piece time.
+- Crafting projects can be archived and reopened without deleting project data.
+- Linked pattern edits are non-destructive: rename/edit/reorder remain available, while destructive deletes and project pattern changes are blocked once project work exists.
+- Client error delivery was cleaned up for blocked project updates and linked pattern delete attempts.
 - Crafting remains the reference/template module, not the final production catch-all for knitting, crochet, sewing, or other niches.
 
-## Next Phase C Work
+## Next Phase D Work
 
-- Module-owned timers with play/pause.
-- Module-specific completion percentage logic.
-- Module-specific piece/section selector.
-- Module-owned archive flow.
-- Non-destructive editing.
+- Craft module inventory: yarn, tools, notions, lots, purchase history, and sale price handling.
+- 3D printing module inventory: materials, spools, printer/tooling needs, and module-specific purchase history.
+- Module-owned filtering and reference data.
+- Purchase history per source; sale price handling.
+- Module-owned project/inventory linking.
+- Module-owned kit/grouping behavior.
+- Module-owned kit/grouping to project flows.
+
+## Product Input Backlog
+
+- `Scratch/TankerInput.md` contains ignored scratch notes for future non-technical product discussion, including pattern-version migration and possible UI theme feedback.
 
 ## Working Rules
 
@@ -38,6 +50,5 @@ Last updated: 2026-05-26
 The user reported:
 
 - Build passed.
-- Server run passed.
-- Client run passed.
-- Smoke test passed for project checklist progress.
+- Smoke test passed.
+- Phase C slices were verified locally by the user rather than through Codex sandbox builds.

@@ -13,9 +13,15 @@ public class CraftingProjectDto
     public int Difficulty { get; set; }
     public string DifficultyLabel { get; set; } = string.Empty;
     public int Progress { get; set; }
+    public bool IsArchived { get; set; }
+    public DateTime? ArchivedAt { get; set; }
     public int CompletedStepCount { get; set; }
     public int TotalStepCount { get; set; }
+    public long TotalTrackedSeconds { get; set; }
+    public bool TimerRunning { get; set; }
+    public DateTime? TimerStartedAt { get; set; }
     public IReadOnlyList<CraftingProjectStepProgressDto> StepProgress { get; set; } = [];
+    public IReadOnlyList<CraftingProjectTimerDto> Timers { get; set; } = [];
     public Guid UserId { get; set; }
     public string Username { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }

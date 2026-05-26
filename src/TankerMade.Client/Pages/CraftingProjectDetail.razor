@@ -1,4 +1,5 @@
 @page "/modules/crafting/projects/{ProjectId:guid}"
+@implements IDisposable
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
@@ -40,6 +41,10 @@ else
                 <a class="pattern-back-link" href="modules/crafting/projects">Projects</a>
                 <h1>@project.Name</h1>
                 <p>@ProjectMeta</p>
+                @if (project.IsArchived)
+                {
+                    <span class="archive-badge">Archived</span>
+                }
             </div>
             <div class="pattern-stats" aria-label="Project summary">
                 <div>
@@ -57,6 +62,10 @@ else
                 <div>
                     <strong>@ChecklistText</strong>
                     <span>Done</span>
+                </div>
+                <div>
+                    <strong>@TrackedTimeText</strong>
+                    <span>Time</span>
                 </div>
             </div>
         </div>
@@ -81,13 +90,17 @@ else
                     <div class="form-grid">
                         <label>
                             <span>Pattern</span>
-                            <InputSelect class="form-control" @bind-Value="form.PatternIdText">
+                            <InputSelect class="form-control" disabled="@PatternSelectionLocked" @bind-Value="form.PatternIdText">
                                 <option value="">No pattern linked</option>
                                 @foreach (var pattern in patterns)
                                 {
                                     <option value="@pattern.Id">@pattern.Name</option>
                                 }
                             </InputSelect>
+                            @if (PatternSelectionLocked)
+                            {
+                                <small class="muted-copy">Locked after progress or timer history exists.</small>
+                            }
                         </label>
 
                         <label>
@@ -102,14 +115,17 @@ else
                                 <option value="6">Advanced+</option>
                             </InputSelect>
                         </label>
-
-                        <label>
-                            <span>Progress</span>
-                            <InputNumber class="form-control" min="0" max="100" step="1" @bind-Value="form.Progress" />
-                        </label>
                     </div>
 
                     <button class="btn btn-primary" disabled="@busy" type="submit">Save Project</button>
+                    @if (project.IsArchived)
+                    {
+                        <button class="btn btn-outline-secondary" disabled="@busy" type="button" @onclick="ReopenProjectAsync">Reopen Project</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-danger" disabled="@busy" type="button" @onclick="ArchiveProjectAsync">Archive Project</button>
+                    }
                 </EditForm>
             </section>
 
@@ -139,45 +155,129 @@ else
                     }
                     else
                     {
-                        <ol class="project-piece-checklist">
-                            @foreach (var piece in linkedPattern.Pieces)
-                            {
-                                <li>
-                                    <div class="project-piece-checklist-header">
-                                        <strong>@piece.Name</strong>
-                                        <span>@piece.Steps.Count steps</span>
-                                    </div>
+                        <div class="project-piece-selector">
+                            <label>
+                                <span>Piece</span>
+                                <select class="form-control" value="@SelectedPieceIdText" @onchange="SelectPiece">
+                                    @foreach (var piece in linkedPattern.Pieces)
+                                    {
+                                        <option value="@piece.Id">@piece.Name</option>
+                                    }
+                                </select>
+                            </label>
 
-                                    @if (piece.Steps.Count == 0)
-                                    {
-                                        <p class="muted-copy">No steps yet.</p>
-                                    }
-                                    else
-                                    {
-                                        <ol class="project-step-checklist">
-                                            @foreach (var step in piece.Steps)
+                            <div class="project-piece-summary">
+                                <strong>@SelectedPiecePositionText</strong>
+                                <span>@SelectedPieceCompletionText</span>
+                                <span>@FormatDuration(GetSelectedPieceTrackedSeconds())</span>
+                            </div>
+                        </div>
+
+                        @if (SelectedPiece == null)
+                        {
+                            <p class="muted-copy">Select a piece to view its steps.</p>
+                        }
+                        else if (SelectedPiece.Steps.Count == 0)
+                        {
+                            <p class="muted-copy">No steps yet.</p>
+                        }
+                        else
+                        {
+                            <ol class="project-step-checklist">
+                                @foreach (var step in SelectedPiece.Steps)
+                                {
+                                    <li>
+                                        <label class="project-step-check">
+                                            <input type="checkbox"
+                                                   checked="@IsStepComplete(step.Id)"
+                                                   disabled="@busy"
+                                                   @onchange="async args => await SetStepProgressAsync(step.Id, args)" />
+                                            <span>
+                                                <strong>@StepLabel(step)</strong>
+                                                <small>@step.Instructions</small>
+                                            </span>
+                                        </label>
+                                        <div class="project-step-timer">
+                                            <span>@FormatDuration(GetStepTrackedSeconds(step.Id))</span>
+                                            @if (IsStepTimerRunning(step.Id))
                                             {
-                                                <li>
-                                                    <label class="project-step-check">
-                                                        <input type="checkbox"
-                                                               checked="@IsStepComplete(step.Id)"
-                                                               disabled="@busy"
-                                                               @onchange="async args => await SetStepProgressAsync(step.Id, args)" />
-                                                        <span>
-                                                            <strong>@StepLabel(step)</strong>
-                                                            <small>@step.Instructions</small>
-                                                        </span>
-                                                    </label>
-                                                </li>
+                                                <button class="btn btn-outline-secondary btn-sm"
+                                                        disabled="@busy"
+                                                        @onclick="() => PauseTimerAsync(step.Id)">
+                                                    Pause
+                                                </button>
                                             }
-                                        </ol>
-                                    }
-                                </li>
-                            }
-                        </ol>
+                                            else
+                                            {
+                                                <button class="btn btn-primary btn-sm"
+                                                        disabled="@busy"
+                                                        @onclick="() => StartTimerAsync(step.Id)">
+                                                    Play
+                                                </button>
+                                            }
+                                            <button class="btn btn-outline-secondary btn-sm"
+                                                    disabled="@busy"
+                                                    @onclick="() => OpenTimerDialog(step)">
+                                                Edit
+                                            </button>
+                                        </div>
+                                    </li>
+                                }
+                            </ol>
+                        }
                     }
                 }
             </section>
+        </div>
+    </div>
+}
+
+@if (timerDialogStep != null)
+{
+    <div class="modal-backdrop-panel" role="presentation">
+        <div class="timer-dialog" role="dialog" aria-modal="true" aria-labelledby="timer-dialog-title">
+            <div class="timer-dialog-header">
+                <h2 id="timer-dialog-title">Edit Time</h2>
+                <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="CloseTimerDialog">Close</button>
+            </div>
+
+            <div class="timer-dialog-fields">
+                <label>
+                    <span>Current Time for Step:</span>
+                    <strong>@FormatDuration(GetStepTrackedSeconds(timerDialogStep.Id))</strong>
+                </label>
+                <label>
+                    <span>Adjusted Time for Step:</span>
+                    <input class="form-control"
+                           aria-invalid="@(!IsTimerDialogValueValid)"
+                           inputmode="numeric"
+                           pattern="^(\d+:[0-5]\d|[0-5]?\d)$"
+                           type="text"
+                           value="@timerDialogValue"
+                           @onchange="UpdateDialogTimerValue" />
+                </label>
+            </div>
+
+            @if (!IsTimerDialogValueValid)
+            {
+                <p class="timer-dialog-error">Use minutes or mm:ss, with seconds from 00 to 59.</p>
+            }
+
+            @if (confirmingTimerReset)
+            {
+                <div class="timer-reset-confirmation">
+                    <p>This will reset the step time to 0.</p>
+                    <button class="btn btn-outline-danger" disabled="@busy" @onclick="ConfirmResetTimerAsync">Yes</button>
+                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="CancelResetTimer">No</button>
+                </div>
+            }
+            else
+            {
+                <div class="timer-dialog-actions">
+                    <button class="btn btn-primary" disabled="@(busy || !IsTimerDialogValueValid)" @onclick="SaveDialogTimerAsync">Save</button>
+                    <button class="btn btn-outline-danger" disabled="@busy" @onclick="AskResetTimer">Reset</button>
+                </div>
+            }
         </div>
     </div>
 }
@@ -190,9 +290,14 @@ else
     private TankerMade.Client.Services.CraftingPatternDetail? linkedPattern;
     private readonly List<TankerMade.Client.Services.CraftingPatternSummary> patterns = [];
     private readonly ProjectFormModel form = new();
+    private TankerMade.Client.Services.CraftingPatternStepDetail? timerDialogStep;
+    private string timerDialogValue = "00:00";
+    private Guid? selectedPieceId;
+    private bool confirmingTimerReset;
     private bool loading = true;
     private bool busy;
     private string errorMessage = string.Empty;
+    private readonly System.Timers.Timer clock = new(1000);
 
     private string ProjectMeta
     {
@@ -220,8 +325,58 @@ else
         ? "0/0"
         : $"{project.CompletedStepCount}/{project.TotalStepCount}";
 
+    private string TrackedTimeText => FormatDuration(GetTrackedSeconds());
+
+    private bool IsTimerDialogValueValid => TryParseDurationSeconds(timerDialogValue, out _);
+
+    private bool PatternSelectionLocked =>
+        project?.StepProgress.Count > 0 == true
+        || project?.Timers.Count > 0 == true;
+
+    private TankerMade.Client.Services.CraftingPatternPieceDetail? SelectedPiece =>
+        linkedPattern?.Pieces.FirstOrDefault(piece => piece.Id == selectedPieceId)
+        ?? linkedPattern?.Pieces.FirstOrDefault();
+
+    private string SelectedPieceIdText => SelectedPiece?.Id.ToString() ?? string.Empty;
+
+    private string SelectedPiecePositionText
+    {
+        get
+        {
+            if (linkedPattern == null || SelectedPiece == null)
+            {
+                return "0/0";
+            }
+
+            var selectedIndex = linkedPattern.Pieces.ToList().FindIndex(piece => piece.Id == SelectedPiece.Id);
+            return $"{selectedIndex + 1}/{linkedPattern.Pieces.Count}";
+        }
+    }
+
+    private string SelectedPieceCompletionText
+    {
+        get
+        {
+            var piece = SelectedPiece;
+            if (piece == null)
+            {
+                return "0%";
+            }
+
+            var completedCount = piece.Steps.Count(step => IsStepComplete(step.Id));
+            var percent = piece.Steps.Count == 0
+                ? 0
+                : (int)Math.Round(completedCount * 100.0 / piece.Steps.Count, MidpointRounding.AwayFromZero);
+
+            return $"{percent}% complete";
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        clock.Elapsed += (_, _) => InvokeAsync(StateHasChanged);
+        clock.Start();
+
         await AuthSession.InitializeAsync();
         if (AuthSession.IsSignedIn)
         {
@@ -264,6 +419,11 @@ else
         }
     }
 
+    public void Dispose()
+    {
+        clock.Dispose();
+    }
+
     private async Task SaveAsync()
     {
         busy = true;
@@ -276,6 +436,54 @@ else
             {
                 form.Load(project);
                 await LoadLinkedPatternAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task ArchiveProjectAsync()
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var updated = await ApiClient.ArchiveCraftingProjectAsync(ProjectId);
+            if (updated != null)
+            {
+                project = updated;
+                form.Load(project);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task ReopenProjectAsync()
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var updated = await ApiClient.ReopenCraftingProjectAsync(ProjectId);
+            if (updated != null)
+            {
+                project = updated;
+                form.Load(project);
             }
         }
         catch (Exception ex)
@@ -312,16 +520,180 @@ else
         }
     }
 
+    private async Task StartTimerAsync(Guid patternStepId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var updated = await ApiClient.StartCraftingProjectTimerAsync(ProjectId, patternStepId);
+            if (updated != null)
+            {
+                project = updated;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task PauseTimerAsync(Guid patternStepId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var updated = await ApiClient.PauseCraftingProjectTimerAsync(ProjectId, patternStepId);
+            if (updated != null)
+            {
+                project = updated;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task SaveDialogTimerAsync()
+    {
+        if (timerDialogStep == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var updated = await ApiClient.SetCraftingProjectTimerAsync(
+                ProjectId,
+                timerDialogStep.Id,
+                ParseDurationSeconds(timerDialogValue));
+
+            if (updated != null)
+            {
+                project = updated;
+                CloseTimerDialog();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task ConfirmResetTimerAsync()
+    {
+        if (timerDialogStep == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var updated = await ApiClient.ResetCraftingProjectTimerAsync(ProjectId, timerDialogStep.Id);
+            if (updated != null)
+            {
+                project = updated;
+                CloseTimerDialog();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void OpenTimerDialog(TankerMade.Client.Services.CraftingPatternStepDetail step)
+    {
+        timerDialogStep = step;
+        timerDialogValue = FormatDuration(GetStepTrackedSeconds(step.Id));
+        confirmingTimerReset = false;
+    }
+
+    private void CloseTimerDialog()
+    {
+        timerDialogStep = null;
+        confirmingTimerReset = false;
+    }
+
+    private void UpdateDialogTimerValue(ChangeEventArgs args)
+    {
+        timerDialogValue = args.Value?.ToString() ?? "00:00";
+    }
+
+    private void AskResetTimer()
+    {
+        confirmingTimerReset = true;
+    }
+
+    private void CancelResetTimer()
+    {
+        confirmingTimerReset = false;
+    }
+
     private async Task LoadLinkedPatternAsync()
     {
         linkedPattern = project?.PatternId == null
             ? null
             : await ApiClient.GetCraftingPatternAsync(project.PatternId.Value);
+        EnsureSelectedPiece();
+    }
+
+    private void SelectPiece(ChangeEventArgs args)
+    {
+        if (Guid.TryParse(args.Value?.ToString(), out var pieceId))
+        {
+            selectedPieceId = pieceId;
+        }
+    }
+
+    private void EnsureSelectedPiece()
+    {
+        if (linkedPattern == null || linkedPattern.Pieces.Count == 0)
+        {
+            selectedPieceId = null;
+            return;
+        }
+
+        if (selectedPieceId == null || linkedPattern.Pieces.All(piece => piece.Id != selectedPieceId))
+        {
+            selectedPieceId = linkedPattern.Pieces.First().Id;
+        }
     }
 
     private bool IsStepComplete(Guid patternStepId)
     {
         return project?.StepProgress.Any(progress => progress.PatternStepId == patternStepId && progress.IsComplete) == true;
+    }
+
+    private bool IsStepTimerRunning(Guid patternStepId)
+    {
+        return project?.Timers.Any(timer => timer.PatternStepId == patternStepId && timer.IsRunning) == true;
     }
 
     private static string StepLabel(TankerMade.Client.Services.CraftingPatternStepDetail step)
@@ -330,6 +702,97 @@ else
         return string.IsNullOrWhiteSpace(step.DisplayRange)
             ? label
             : $"{step.DisplayRange}: {label}";
+    }
+
+    private long GetTrackedSeconds()
+    {
+        if (project == null)
+        {
+            return 0;
+        }
+
+        if (project.Timers.Count == 0)
+        {
+            return project.TotalTrackedSeconds;
+        }
+
+        var total = 0L;
+        var now = DateTime.UtcNow;
+        foreach (var timer in project.Timers)
+        {
+            total += timer.ElapsedSeconds;
+            if (timer.IsRunning && timer.StartedAt != null)
+            {
+                total += Math.Max(0, (long)(now - timer.StartedAt.Value).TotalSeconds);
+            }
+        }
+
+        return total;
+    }
+
+    private long GetStepTrackedSeconds(Guid patternStepId)
+    {
+        var timer = project?.Timers.FirstOrDefault(timer => timer.PatternStepId == patternStepId);
+        if (timer == null)
+        {
+            return 0;
+        }
+
+        var total = timer.ElapsedSeconds;
+        if (timer.IsRunning && timer.StartedAt != null)
+        {
+            total += Math.Max(0, (long)(DateTime.UtcNow - timer.StartedAt.Value).TotalSeconds);
+        }
+
+        return total;
+    }
+
+    private long GetSelectedPieceTrackedSeconds()
+    {
+        return SelectedPiece?.Steps.Sum(step => GetStepTrackedSeconds(step.Id)) ?? 0;
+    }
+
+    private static bool TryParseDurationSeconds(string value, out long seconds)
+    {
+        seconds = 0;
+        var parts = value
+            .Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToArray();
+
+        if (parts.Length is < 1 or > 2 || parts.Any(part => !long.TryParse(part, out _)))
+        {
+            return false;
+        }
+
+        var minutes = long.Parse(parts[0]);
+        var remainingSeconds = 0L;
+
+        if (parts.Length == 2)
+        {
+            remainingSeconds = long.Parse(parts[1]);
+            if (parts[1].Length != 2 || remainingSeconds > 59)
+            {
+                return false;
+            }
+        }
+
+        seconds = (minutes * 60) + remainingSeconds;
+        return true;
+    }
+
+    private static long ParseDurationSeconds(string value)
+    {
+        return TryParseDurationSeconds(value, out var seconds)
+            ? seconds
+            : 0;
+    }
+
+    private static string FormatDuration(long totalSeconds)
+    {
+        var duration = TimeSpan.FromSeconds(Math.Max(0, totalSeconds));
+        return duration.TotalHours >= 1
+            ? $"{(int)duration.TotalHours}:{duration.Minutes:00}:{duration.Seconds:00}"
+            : $"{duration.Minutes:00}:{duration.Seconds:00}";
     }
 
     private sealed class ProjectFormModel
@@ -346,16 +809,12 @@ else
         [System.ComponentModel.DataAnnotations.Range(0, 6, ErrorMessage = "Choose a valid difficulty")]
         public int Difficulty { get; set; }
 
-        [System.ComponentModel.DataAnnotations.Range(0, 100, ErrorMessage = "Progress must be between 0 and 100")]
-        public int Progress { get; set; }
-
         public void Load(TankerMade.Client.Services.CraftingProjectSummary project)
         {
             Name = project.Name;
             Description = project.Description;
             PatternIdText = project.PatternId?.ToString() ?? string.Empty;
             Difficulty = project.Difficulty;
-            Progress = project.Progress;
         }
 
         public TankerMade.Client.Services.CraftingProjectFormRequest ToRequest()
@@ -366,8 +825,7 @@ else
                 Description = Description,
                 PatternId = Guid.TryParse(PatternIdText, out var patternId) ? patternId : null,
                 ClearPatternId = string.IsNullOrWhiteSpace(PatternIdText),
-                Difficulty = Difficulty,
-                Progress = Progress
+                Difficulty = Difficulty
             };
         }
     }

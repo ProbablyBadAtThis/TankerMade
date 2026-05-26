@@ -83,8 +83,15 @@ public class CraftingPatternsController : ControllerBase
             return Forbid();
         }
 
-        var deleted = await _patternService.DeleteAsync(id, userId.Value);
-        return deleted ? NoContent() : NotFound();
+        try
+        {
+            var deleted = await _patternService.DeleteAsync(id, userId.Value);
+            return deleted ? NoContent() : NotFound();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPost("{patternId:guid}/pieces")]
@@ -128,8 +135,15 @@ public class CraftingPatternsController : ControllerBase
             return Forbid();
         }
 
-        var deleted = await _patternService.DeletePieceAsync(patternId, pieceId, userId.Value);
-        return deleted ? NoContent() : NotFound();
+        try
+        {
+            var deleted = await _patternService.DeletePieceAsync(patternId, pieceId, userId.Value);
+            return deleted ? NoContent() : NotFound();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPut("{patternId:guid}/pieces/reorder")]
@@ -190,8 +204,15 @@ public class CraftingPatternsController : ControllerBase
             return Forbid();
         }
 
-        var deleted = await _patternService.DeleteStepAsync(patternId, pieceId, stepId, userId.Value);
-        return deleted ? NoContent() : NotFound();
+        try
+        {
+            var deleted = await _patternService.DeleteStepAsync(patternId, pieceId, stepId, userId.Value);
+            return deleted ? NoContent() : NotFound();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPut("{patternId:guid}/pieces/{pieceId:guid}/steps/reorder")]

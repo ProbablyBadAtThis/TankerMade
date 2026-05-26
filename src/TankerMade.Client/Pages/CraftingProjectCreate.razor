@@ -75,11 +75,6 @@ else
                     <option value="6">Advanced+</option>
                 </InputSelect>
             </label>
-
-            <label>
-                <span>Progress</span>
-                <InputNumber class="form-control" min="0" max="100" step="1" @bind-Value="form.Progress" />
-            </label>
         </div>
 
         <div class="auth-actions">
@@ -166,9 +161,6 @@ else
         [System.ComponentModel.DataAnnotations.Range(0, 6, ErrorMessage = "Choose a valid difficulty")]
         public int Difficulty { get; set; }
 
-        [System.ComponentModel.DataAnnotations.Range(0, 100, ErrorMessage = "Progress must be between 0 and 100")]
-        public int Progress { get; set; }
-
         public TankerMade.Client.Services.CraftingProjectFormRequest ToRequest()
         {
             return new()
@@ -178,7 +170,7 @@ else
                 PatternId = Guid.TryParse(PatternIdText, out var patternId) ? patternId : null,
                 ClearPatternId = string.IsNullOrWhiteSpace(PatternIdText),
                 Difficulty = Difficulty,
-                Progress = Progress
+                Progress = 0
             };
         }
     }

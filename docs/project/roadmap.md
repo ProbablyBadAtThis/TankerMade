@@ -4,9 +4,9 @@ Last reviewed: 2026-05-26
 
 ---
 
-## Current Phase: C — Module Project Workspace
+## Current Phase: D — Module Inventory & Kits
 
-Phase A is behavior-complete as of the May 22, 2026 smoke test. Phase B is complete after expanding the reference Crafting module with pattern pieces, steps, readiness validation, and project workspace screens. Phase C now deepens module-owned project behavior with step progress, timers, completion rules, piece selection, archive flow, and non-destructive editing.
+Phase A is behavior-complete as of the May 22, 2026 smoke test. Phase B is complete after expanding the reference Crafting module with pattern pieces, steps, readiness validation, and project workspace screens. Phase C is complete after adding module-owned project workspace behavior: step progress, per-step timers, completion rules, piece selection, archive flow, and non-destructive editing. Phase D begins module-owned inventory and kit behavior.
 
 ## Phase A — Hardening, Module Host & Reference Module
 
@@ -62,11 +62,11 @@ Phase B continues to treat `TankerMade.Modules.Crafting` as a reference/template
 ## Phase C — Module Project Workspace
 
 - [x] Module-owned step/checklist progress
-- [ ] Module-owned timers with play/pause
-- [ ] Module-specific completion percentage logic
-- [ ] Module-specific piece/section selector
-- [ ] Module-owned archive flow
-- [ ] Non-destructive editing
+- [x] Module-owned timers with play/pause
+- [x] Module-specific completion percentage logic
+- [x] Module-specific piece/section selector
+- [x] Module-owned archive flow
+- [x] Non-destructive editing
 
 ---
 
