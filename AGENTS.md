@@ -6,6 +6,7 @@ This file is the short operational guide for AI assistants working in this repo.
 
 - Project charter: `docs/project/charter.md`
 - Roadmap and current phase: `docs/project/roadmap.md`
+- Current handoff: `docs/project/handoff.md`
 - UX reference: `docs/product/ux-reference.md`
 - Original UI idea deck: `docs/product/ui-feature-ideas.pptx`
 
@@ -105,7 +106,7 @@ http://localhost:5236/scalar/v1
 Use `docs/project/roadmap.md` as the source of truth. As of the current docs, Phase C focuses on module-owned project workspace behavior:
 
 - Keep `TankerMade.Modules.Crafting` as a reference/template module, not the eventual production catch-all for knitting, crochet, sewing, or another niche.
-- Add module-owned step/checklist progress for project workspaces.
+- Module-owned step/checklist progress for project workspaces is complete.
 - Add module-owned timers with play/pause.
 - Add module-specific completion percentage logic and piece/section selection.
 - Add archive flow and non-destructive editing behavior.

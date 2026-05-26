@@ -38,11 +38,12 @@ function loadArchitectureVisualizer() {
                 <div id="visualization-container" class="architecture-canvas">
                     <div>
                         <h3>Entity Relationship Map</h3>
-                        <p>Current model: Users, module definitions, user module activations, Crafting projects/patterns, Themes, Colors, Sources, and Brands. Planned model details are tracked in Phase B-D.</p>
+                        <p>Current model: Users, module definitions, user module activations, Crafting projects/patterns, project step progress, Themes, Colors, Sources, and Brands. Planned model details are tracked in Phase C-D.</p>
                         <div class="architecture-mini-map" aria-label="Current entity overview">
                             <span>User</span>
                             <span>Module</span>
                             <span>Crafting Project</span>
+                            <span>Step Progress</span>
                             <span>Crafting Pattern</span>
                             <span>Theme</span>
                             <span>Source</span>
