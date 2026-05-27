@@ -25,6 +25,27 @@ public class MigrationTests
         Assert.Contains(
             "20260522170000_CraftingProjectStepProgress",
             context.Database.GetMigrations());
+        Assert.Contains(
+            "20260526143000_CraftingYarnInventory",
+            context.Database.GetMigrations());
+        Assert.Contains(
+            "20260526150000_Printing3DInventory",
+            context.Database.GetMigrations());
+        Assert.Contains(
+            "20260526153000_CraftingToolAndNotionInventory",
+            context.Database.GetMigrations());
+        Assert.Contains(
+            "20260527100000_ModuleInventoryReferenceData",
+            context.Database.GetMigrations());
+        Assert.Contains(
+            "20260527103000_CraftingProjectInventoryLinks",
+            context.Database.GetMigrations());
+        Assert.Contains(
+            "20260527110000_CraftingKits",
+            context.Database.GetMigrations());
+        Assert.Contains(
+            "20260527113000_CraftingKitProjectLinks",
+            context.Database.GetMigrations());
     }
 
     [Fact]
@@ -62,6 +83,22 @@ public class MigrationTests
             Assert.Contains("CraftingPatternPieces", tables);
             Assert.Contains("CraftingPatternSteps", tables);
             Assert.Contains("CraftingProjectStepProgress", tables);
+            Assert.Contains("CraftingYarnInventoryItems", tables);
+            Assert.Contains("CraftingYarnLots", tables);
+            Assert.Contains("CraftingInventoryPurchases", tables);
+            Assert.Contains("PrintingMaterialInventoryItems", tables);
+            Assert.Contains("PrintingSpools", tables);
+            Assert.Contains("PrintingInventoryPurchases", tables);
+            Assert.Contains("CraftingToolInventoryItems", tables);
+            Assert.Contains("CraftingToolPurchases", tables);
+            Assert.Contains("CraftingNotionInventoryItems", tables);
+            Assert.Contains("CraftingNotionPurchases", tables);
+            Assert.Contains("CraftingInventoryReferenceItems", tables);
+            Assert.Contains("PrintingInventoryReferenceItems", tables);
+            Assert.Contains("CraftingProjectInventoryLinks", tables);
+            Assert.Contains("CraftingKits", tables);
+            Assert.Contains("CraftingKitPieces", tables);
+            Assert.Contains("CraftingKitSupplies", tables);
         }
         finally
         {

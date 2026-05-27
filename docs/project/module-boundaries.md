@@ -1,10 +1,12 @@
 # TankerMade Module Boundaries
 
-Last reviewed: 2026-05-22
+Last reviewed: 2026-05-26
 
 TankerMade is a modular maker workbench. The base application provides the shared workbench shell and stable extension points; individual maker domains are supplied by modules.
 
 The base program should not expose craft workflows by itself. On a fresh install, a user can sign in, manage core settings, and choose which modules to load, but they cannot create a knitting project, crochet pattern, 3D print job, or any other craft-specific workflow until a module supplies that functionality.
+
+Core must remain useful and internally coherent without any particular domain module installed or active. Removing a module should not break authentication, settings, module management, the shell, neutral platform services, or unrelated active modules. Module records may become unavailable or orphaned according to future uninstall/export rules, but Core should not require a domain assembly, domain enum, or domain service to boot and operate.
 
 ## Startup Model
 
@@ -29,6 +31,8 @@ The base app owns platform concepts that apply before any maker module is select
 
 Base entities should avoid hard-coded craft taxonomies. When a value varies by maker domain, store it as module-defined data or configurable reference data rather than a Core enum.
 
+Core APIs should be foundational rather than domain-shaped. They may expose authenticated user context, module activation checks, shared persistence hooks, shell/navigation extension points, neutral reference-data extension points, and future asset/export primitives. They should not expose yarn, tools, notions, filament, spools, printers, slicer settings, or any other domain-specific concept as a Core contract.
+
 ## Modules
 
 Modules own domain-specific language, validation, workflow, and UI:
@@ -39,6 +43,19 @@ Modules own domain-specific language, validation, workflow, and UI:
 - Any future craft or maker domain that needs specialized fields or screens
 
 Modules may extend the shell, but should not require base Core to reference module assemblies or craft-specific enum values.
+
+Modules should be able to shape their own sections by using Core extension points rather than changing Core for each niche. A future woodworking, electronics, painting, leatherwork, model-building, or other maker module should be able to define its own inventory, project, kit/grouping, reference data, and workflows without inheriting assumptions from knitting/crochet or 3D printing.
+
+## Phase D Boundary Target
+
+Phase D should prove module-owned domain behavior while keeping physical packaging and external distribution for later. In practical terms, Phase D should make modules architecturally real:
+
+- Module-owned inventory entities, services, endpoints, DTOs, UI routes, filters, and reference data.
+- Module-owned project/inventory links and kit/grouping workflows.
+- Activation gating around module-owned APIs and UI.
+- At least one second-domain pressure test, such as a thin 3D printing inventory slice, so the shared pattern does not accidentally become craft-shaped.
+
+Phase D should not attempt to solve the future module store, licensing, installable package distribution, or full external module loading model. Those concerns belong to Phase F or later, after the module-owned domain shape has been proven.
 
 ## Phase A Checkpoint
 
@@ -60,6 +77,8 @@ Production golive modules should be specific maker domains, for example knitting
 
 - Keep `TankerMade.Core` dependency-light and craft-agnostic.
 - Build the core program as a module host first, not as a built-in crafting app.
+- Core should boot and remain usable if any individual domain module is deleted, disabled, or absent.
+- Do not add Core references to module assemblies, module-specific services, or module-specific enums.
 - Include the first crafting module in Phase A as a reference implementation so the module host is proven against a real module.
 - Extract existing project/pattern foundation into that crafting module rather than continuing it in the base host.
 - Keep the Crafting module copyable as a module template; avoid knitting, crochet, sewing, or other niche-specific behavior unless it is intentionally neutral sample behavior.

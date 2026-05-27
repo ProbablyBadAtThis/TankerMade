@@ -7,17 +7,17 @@ class DevTrackerSection {
     constructor() {
         this.sectionId = 'dev-tracker';
         this.data = {
-            totalTasks: 65,
-            completedTasks: 37,
+            totalTasks: 67,
+            completedTasks: 45,
             totalPhases: 9,
-            completedPhases: 3,
+            completedPhases: 4,
             currentPhase: {
-                number: "D",
-                title: "Inventory & Kits",
-                description: "Yarn, tools, notions, lots, purchases, linking, and kits.",
+                number: "E",
+                title: "Reference Data Integration",
+                description: "Settings/reference data extension points and module-provided option flows.",
                 completed: 0,
-                total: 7,
-                color: "#f59e0b"
+                total: 3,
+                color: "#34d399"
             },
             phases: [
                 {
@@ -51,10 +51,10 @@ class DevTrackerSection {
                     number: "D",
                     title: "Inventory & Kits",
                     description: "Yarn, tools, notions, lot tracking, purchases, linking, and kits.",
-                    completed: 0,
-                    total: 7,
+                    completed: 8,
+                    total: 8,
                     color: "#f59e0b",
-                    status: "active"
+                    status: "completed"
                 },
                 {
                     number: "E",
@@ -63,14 +63,14 @@ class DevTrackerSection {
                     completed: 0,
                     total: 3,
                     color: "#34d399",
-                    status: "upcoming"
+                    status: "active"
                 },
                 {
                     number: "F",
                     title: "Module Platform V1",
                     description: "Module contracts, discovery, UI extension points, and examples.",
                     completed: 0,
-                    total: 5,
+                    total: 6,
                     color: "#fb7185",
                     status: "upcoming"
                 },
@@ -351,13 +351,14 @@ const ROADMAP_PHASE_TASKS = {
         { title: 'Non-destructive editing', status: 'done', area: 'Safety' }
     ],
     D: [
-        { title: 'Craft module inventory: yarn, tools, notions, lots, purchase history, and sale price handling', status: 'todo', area: 'Inventory' },
-        { title: '3D printing module inventory: materials, spools, printer/tooling needs, and purchase history', status: 'todo', area: 'Inventory' },
-        { title: 'Module-owned filtering and reference data', status: 'todo', area: 'Filters' },
-        { title: 'Purchase history per source and sale price handling', status: 'todo', area: 'Purchases' },
-        { title: 'Module-owned project/inventory linking', status: 'todo', area: 'Relations' },
-        { title: 'Module-owned kit/grouping behavior', status: 'todo', area: 'Kits' },
-        { title: 'Module-owned kit/grouping to project flows', status: 'todo', area: 'Kits' }
+        { title: 'Define and document module-owned inventory pattern', status: 'done', area: 'Architecture' },
+        { title: 'Craft module inventory: yarn, tools, notions, lots, purchase history, and sale price handling', status: 'done', area: 'Inventory' },
+        { title: '3D printing module inventory: materials, spools, printer/tooling needs, and purchase history', status: 'done', area: 'Inventory' },
+        { title: 'Module-owned filtering and reference data', status: 'done', area: 'Filters' },
+        { title: 'Purchase history per source and sale price handling', status: 'done', area: 'Purchases' },
+        { title: 'Module-owned project/inventory linking', status: 'done', area: 'Relations' },
+        { title: 'Module-owned kit/grouping behavior', status: 'done', area: 'Kits' },
+        { title: 'Module-owned kit/grouping to project flows', status: 'done', area: 'Kits' }
     ],
     E: [
         { title: 'Wire Settings / ReferenceItem categories into forms', status: 'todo', area: 'Settings' },
@@ -368,6 +369,7 @@ const ROADMAP_PHASE_TASKS = {
         { title: 'Define IModule contract and registration', status: 'todo', area: 'Modules' },
         { title: 'Module discovery from directory', status: 'todo', area: 'Modules' },
         { title: 'UI extension points via DynamicComponent', status: 'todo', area: 'Client' },
+        { title: 'Build/refine module-provided kit UI after module UI hardening', status: 'todo', area: 'Client' },
         { title: 'Crafting module extracted as first example', status: 'todo', area: 'Modules' },
         { title: '3D printing module scaffold', status: 'todo', area: 'Modules' }
     ],

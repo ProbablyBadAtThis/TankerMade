@@ -94,6 +94,32 @@ public class TankerMadeApiClient
         return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>();
     }
 
+    public async Task<CraftingProjectSummary?> AddCraftingProjectInventoryLinkAsync(
+        Guid projectId,
+        CraftingProjectInventoryLinkFormRequest request)
+    {
+        var response = await _http.PostAsJsonAsync($"api/modules/crafting/projects/{projectId}/inventory-links", request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>();
+    }
+
+    public async Task<bool> RemoveCraftingProjectInventoryLinkAsync(Guid projectId, Guid linkId)
+    {
+        var response = await _http.DeleteAsync($"api/modules/crafting/projects/{projectId}/inventory-links/{linkId}");
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return false;
+        }
+
+        await EnsureSuccessAsync(response);
+        return true;
+    }
+
     public async Task<CraftingProjectSummary?> ArchiveCraftingProjectAsync(Guid projectId)
     {
         var response = await _http.PutAsJsonAsync($"api/modules/crafting/projects/{projectId}/archive", new { });
@@ -338,6 +364,76 @@ public class TankerMadeApiClient
         return true;
     }
 
+    public async Task<IReadOnlyList<CraftingYarnInventoryItemSummary>> GetCraftingYarnsAsync(string search = "")
+    {
+        var url = BuildUrl("api/modules/crafting/inventory/yarns", ("search", search));
+        return await _http.GetFromJsonAsync<IReadOnlyList<CraftingYarnInventoryItemSummary>>(url) ?? [];
+    }
+
+    public async Task<CraftingYarnInventoryItemSummary> CreateCraftingYarnAsync(CraftingYarnFormRequest request)
+    {
+        var response = await _http.PostAsJsonAsync("api/modules/crafting/inventory/yarns", request);
+        await EnsureSuccessAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<CraftingYarnInventoryItemSummary>()
+            ?? throw new InvalidOperationException("The server returned an empty yarn response.");
+    }
+
+    public async Task<IReadOnlyList<CraftingToolInventoryItemSummary>> GetCraftingToolsAsync(string search = "")
+    {
+        var url = BuildUrl("api/modules/crafting/inventory/tools", ("search", search));
+        return await _http.GetFromJsonAsync<IReadOnlyList<CraftingToolInventoryItemSummary>>(url) ?? [];
+    }
+
+    public async Task<CraftingToolInventoryItemSummary> CreateCraftingToolAsync(CraftingToolFormRequest request)
+    {
+        var response = await _http.PostAsJsonAsync("api/modules/crafting/inventory/tools", request);
+        await EnsureSuccessAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<CraftingToolInventoryItemSummary>()
+            ?? throw new InvalidOperationException("The server returned an empty tool response.");
+    }
+
+    public async Task<IReadOnlyList<CraftingNotionInventoryItemSummary>> GetCraftingNotionsAsync(string search = "")
+    {
+        var url = BuildUrl("api/modules/crafting/inventory/notions", ("search", search));
+        return await _http.GetFromJsonAsync<IReadOnlyList<CraftingNotionInventoryItemSummary>>(url) ?? [];
+    }
+
+    public async Task<CraftingNotionInventoryItemSummary> CreateCraftingNotionAsync(CraftingNotionFormRequest request)
+    {
+        var response = await _http.PostAsJsonAsync("api/modules/crafting/inventory/notions", request);
+        await EnsureSuccessAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<CraftingNotionInventoryItemSummary>()
+            ?? throw new InvalidOperationException("The server returned an empty notion response.");
+    }
+
+    public async Task<IReadOnlyList<PrintingMaterialInventoryItemSummary>> GetPrintingMaterialsAsync(string search = "")
+    {
+        var url = BuildUrl("api/modules/printing-3d/inventory/materials", ("search", search));
+        return await _http.GetFromJsonAsync<IReadOnlyList<PrintingMaterialInventoryItemSummary>>(url) ?? [];
+    }
+
+    public async Task<PrintingMaterialInventoryItemSummary> CreatePrintingMaterialAsync(PrintingMaterialFormRequest request)
+    {
+        var response = await _http.PostAsJsonAsync("api/modules/printing-3d/inventory/materials", request);
+        await EnsureSuccessAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<PrintingMaterialInventoryItemSummary>()
+            ?? throw new InvalidOperationException("The server returned an empty material response.");
+    }
+
+    private static string BuildUrl(string path, params (string Name, string Value)[] parameters)
+    {
+        var query = parameters
+            .Where(parameter => !string.IsNullOrWhiteSpace(parameter.Value))
+            .Select(parameter => $"{Uri.EscapeDataString(parameter.Name)}={Uri.EscapeDataString(parameter.Value.Trim())}");
+
+        var queryString = string.Join("&", query);
+        return string.IsNullOrWhiteSpace(queryString) ? path : $"{path}?{queryString}";
+    }
+
     private static async Task EnsureSuccessAsync(HttpResponseMessage response)
     {
         if (response.IsSuccessStatusCode)
@@ -394,6 +490,14 @@ public class CraftingProjectFormRequest
     public int? Progress { get; set; }
 }
 
+public class CraftingProjectInventoryLinkFormRequest
+{
+    public string InventoryItemType { get; set; } = string.Empty;
+    public Guid InventoryItemId { get; set; }
+    public decimal? QuantityPlanned { get; set; }
+    public string Notes { get; set; } = string.Empty;
+}
+
 public class CraftingProjectStepProgressRequest
 {
     public bool IsComplete { get; set; }
@@ -402,6 +506,142 @@ public class CraftingProjectStepProgressRequest
 public class CraftingProjectTimerRequest
 {
     public long? ElapsedSeconds { get; set; }
+}
+
+public class CraftingYarnFormRequest
+{
+    public string BrandName { get; set; } = string.Empty;
+    public string ColorName { get; set; } = string.Empty;
+    public string MainColor { get; set; } = string.Empty;
+    public string WeightName { get; set; } = string.Empty;
+    public string FiberContent { get; set; } = string.Empty;
+    public string FiberTag { get; set; } = string.Empty;
+    public decimal Skeins { get; set; } = 1;
+    public decimal? EstimatedLength { get; set; }
+    public string LengthUnit { get; set; } = "yd";
+    public string LotNumber { get; set; } = string.Empty;
+    public string SourceName { get; set; } = string.Empty;
+    public decimal? Price { get; set; }
+    public bool IsSalePrice { get; set; }
+}
+
+public class CraftingToolFormRequest
+{
+    public string BrandName { get; set; } = string.Empty;
+    public string TypeName { get; set; } = string.Empty;
+    public string Size { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int Quantity { get; set; } = 1;
+    public string SourceName { get; set; } = string.Empty;
+    public decimal? Price { get; set; }
+    public bool IsSalePrice { get; set; }
+}
+
+public class CraftingNotionFormRequest
+{
+    public string BrandName { get; set; } = string.Empty;
+    public string TypeName { get; set; } = string.Empty;
+    public string Size { get; set; } = string.Empty;
+    public string ColorName { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int Quantity { get; set; } = 1;
+    public string SourceName { get; set; } = string.Empty;
+    public decimal? Price { get; set; }
+    public bool IsSalePrice { get; set; }
+}
+
+public class PrintingMaterialFormRequest
+{
+    public string MaterialType { get; set; } = string.Empty;
+    public string BrandName { get; set; } = string.Empty;
+    public string ColorName { get; set; } = string.Empty;
+    public decimal SpoolWeightGrams { get; set; } = 1000;
+    public decimal? RemainingWeightGrams { get; set; }
+    public string Diameter { get; set; } = string.Empty;
+    public string StorageLocation { get; set; } = string.Empty;
+    public string SpoolCode { get; set; } = string.Empty;
+    public string PrinterCompatibility { get; set; } = string.Empty;
+    public string SourceName { get; set; } = string.Empty;
+    public decimal? Price { get; set; }
+    public bool IsSalePrice { get; set; }
+}
+
+public class InventoryPurchaseSummary
+{
+    public string SourceName { get; set; } = string.Empty;
+    public decimal? Price { get; set; }
+    public bool IsSalePrice { get; set; }
+}
+
+public class CraftingYarnLotSummary
+{
+    public string LotNumber { get; set; } = string.Empty;
+    public decimal Skeins { get; set; }
+    public decimal? RemainingLength { get; set; }
+}
+
+public class CraftingYarnInventoryItemSummary
+{
+    public Guid Id { get; set; }
+    public string BrandName { get; set; } = string.Empty;
+    public string ColorName { get; set; } = string.Empty;
+    public string MainColor { get; set; } = string.Empty;
+    public string WeightName { get; set; } = string.Empty;
+    public string FiberTag { get; set; } = string.Empty;
+    public decimal TotalSkeins { get; set; }
+    public decimal? EstimatedRemainingLength { get; set; }
+    public string LengthUnit { get; set; } = string.Empty;
+    public decimal? RegularPrice { get; set; }
+    public IReadOnlyList<CraftingYarnLotSummary> Lots { get; set; } = [];
+    public IReadOnlyList<InventoryPurchaseSummary> Purchases { get; set; } = [];
+}
+
+public class CraftingToolInventoryItemSummary
+{
+    public Guid Id { get; set; }
+    public string BrandName { get; set; } = string.Empty;
+    public string TypeName { get; set; } = string.Empty;
+    public string Size { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int Quantity { get; set; }
+    public decimal? RegularPrice { get; set; }
+    public IReadOnlyList<InventoryPurchaseSummary> Purchases { get; set; } = [];
+}
+
+public class CraftingNotionInventoryItemSummary
+{
+    public Guid Id { get; set; }
+    public string BrandName { get; set; } = string.Empty;
+    public string TypeName { get; set; } = string.Empty;
+    public string Size { get; set; } = string.Empty;
+    public string ColorName { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int Quantity { get; set; }
+    public decimal? RegularPrice { get; set; }
+    public IReadOnlyList<InventoryPurchaseSummary> Purchases { get; set; } = [];
+}
+
+public class PrintingSpoolSummary
+{
+    public string SpoolCode { get; set; } = string.Empty;
+    public decimal StartingWeightGrams { get; set; }
+    public decimal? RemainingWeightGrams { get; set; }
+    public string PrinterCompatibility { get; set; } = string.Empty;
+}
+
+public class PrintingMaterialInventoryItemSummary
+{
+    public Guid Id { get; set; }
+    public string MaterialType { get; set; } = string.Empty;
+    public string BrandName { get; set; } = string.Empty;
+    public string ColorName { get; set; } = string.Empty;
+    public decimal TotalSpoolWeightGrams { get; set; }
+    public decimal? RemainingWeightGrams { get; set; }
+    public string Diameter { get; set; } = string.Empty;
+    public string StorageLocation { get; set; } = string.Empty;
+    public decimal? RegularPrice { get; set; }
+    public IReadOnlyList<PrintingSpoolSummary> Spools { get; set; } = [];
+    public IReadOnlyList<InventoryPurchaseSummary> Purchases { get; set; } = [];
 }
 
 public class CraftingProjectSummary
@@ -426,8 +666,20 @@ public class CraftingProjectSummary
     public DateTime? TimerStartedAt { get; set; }
     public IReadOnlyList<CraftingProjectStepProgressDetail> StepProgress { get; set; } = [];
     public IReadOnlyList<CraftingProjectTimerDetail> Timers { get; set; } = [];
+    public IReadOnlyList<CraftingProjectInventoryLinkDetail> InventoryLinks { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+}
+
+public class CraftingProjectInventoryLinkDetail
+{
+    public Guid Id { get; set; }
+    public Guid ProjectId { get; set; }
+    public string InventoryItemType { get; set; } = string.Empty;
+    public Guid InventoryItemId { get; set; }
+    public string InventoryItemName { get; set; } = string.Empty;
+    public decimal? QuantityPlanned { get; set; }
+    public string Notes { get; set; } = string.Empty;
 }
 
 public class CraftingProjectStepProgressDetail

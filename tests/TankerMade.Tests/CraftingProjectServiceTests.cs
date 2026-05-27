@@ -1,4 +1,5 @@
 using TankerMade.Core.Entities;
+using TankerMade.Modules.Crafting.DTOs.Inventory;
 using TankerMade.Modules.Crafting.DTOs.Patterns;
 using TankerMade.Modules.Crafting.DTOs.Projects;
 using TankerMade.Server.Services.Crafting;
@@ -255,5 +256,158 @@ public class CraftingProjectServiceTests
                 user.Id));
 
         Assert.Equal("The selected step is not available for this project.", rejected.Message);
+    }
+
+    [Fact]
+    public async Task AddInventoryLinkAsync_links_owned_inventory_to_project()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+        var user = new User(Guid.NewGuid(), "maker", "maker@example.test", "hash");
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var projectService = new CraftingProjectService(context);
+        var inventoryService = new CraftingInventoryService(context);
+        var project = await projectService.CreateAsync(new CreateCraftingProjectDto
+        {
+            Name = "Supply Project"
+        }, user.Id);
+        var yarn = await inventoryService.CreateOrMergeYarnAsync(new CreateCraftingYarnInventoryItemDto
+        {
+            BrandName = "Acme Yarn",
+            ColorName = "Blue",
+            Skeins = 2
+        }, user.Id);
+
+        var linked = await projectService.AddInventoryLinkAsync(project.Id, new CreateCraftingProjectInventoryLinkDto
+        {
+            InventoryItemType = "yarn",
+            InventoryItemId = yarn.Id,
+            QuantityPlanned = 1.5m,
+            Notes = "Main body"
+        }, user.Id);
+
+        Assert.NotNull(linked);
+        Assert.Single(linked.InventoryLinks);
+        Assert.Equal("yarn", linked.InventoryLinks[0].InventoryItemType);
+        Assert.Equal(yarn.Id, linked.InventoryLinks[0].InventoryItemId);
+        Assert.Equal("Acme Yarn - Blue", linked.InventoryLinks[0].InventoryItemName);
+        Assert.Equal(1.5m, linked.InventoryLinks[0].QuantityPlanned);
+    }
+
+    [Fact]
+    public async Task AddInventoryLinkAsync_updates_existing_link_for_same_project_item()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+        var user = new User(Guid.NewGuid(), "maker", "maker@example.test", "hash");
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var projectService = new CraftingProjectService(context);
+        var inventoryService = new CraftingInventoryService(context);
+        var project = await projectService.CreateAsync(new CreateCraftingProjectDto
+        {
+            Name = "Supply Project"
+        }, user.Id);
+        var tool = await inventoryService.CreateOrMergeToolAsync(new CreateCraftingToolInventoryItemDto
+        {
+            BrandName = "Acme",
+            TypeName = "Hook",
+            Quantity = 1
+        }, user.Id);
+
+        await projectService.AddInventoryLinkAsync(project.Id, new CreateCraftingProjectInventoryLinkDto
+        {
+            InventoryItemType = "tool",
+            InventoryItemId = tool.Id,
+            QuantityPlanned = 1,
+            Notes = "Original"
+        }, user.Id);
+        var updated = await projectService.AddInventoryLinkAsync(project.Id, new CreateCraftingProjectInventoryLinkDto
+        {
+            InventoryItemType = "tool",
+            InventoryItemId = tool.Id,
+            QuantityPlanned = 2,
+            Notes = "Updated"
+        }, user.Id);
+
+        Assert.NotNull(updated);
+        Assert.Single(updated.InventoryLinks);
+        Assert.Equal(2, updated.InventoryLinks[0].QuantityPlanned);
+        Assert.Equal("Updated", updated.InventoryLinks[0].Notes);
+    }
+
+    [Fact]
+    public async Task AddInventoryLinkAsync_rejects_cross_user_inventory()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+        var owner = new User(Guid.NewGuid(), "owner", "owner@example.test", "hash");
+        var otherUser = new User(Guid.NewGuid(), "other", "other@example.test", "hash");
+        context.Users.AddRange(owner, otherUser);
+        await context.SaveChangesAsync();
+
+        var projectService = new CraftingProjectService(context);
+        var inventoryService = new CraftingInventoryService(context);
+        var project = await projectService.CreateAsync(new CreateCraftingProjectDto
+        {
+            Name = "Supply Project"
+        }, owner.Id);
+        var otherNotion = await inventoryService.CreateOrMergeNotionAsync(new CreateCraftingNotionInventoryItemDto
+        {
+            BrandName = "Other",
+            TypeName = "Marker",
+            Quantity = 1
+        }, otherUser.Id);
+
+        var rejected = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            projectService.AddInventoryLinkAsync(project.Id, new CreateCraftingProjectInventoryLinkDto
+            {
+                InventoryItemType = "notion",
+                InventoryItemId = otherNotion.Id,
+                QuantityPlanned = 1
+            }, owner.Id));
+
+        Assert.Equal("The selected inventory item is not available for this project.", rejected.Message);
+    }
+
+    [Fact]
+    public async Task RemoveInventoryLinkAsync_removes_owned_project_link()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+        var user = new User(Guid.NewGuid(), "maker", "maker@example.test", "hash");
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var projectService = new CraftingProjectService(context);
+        var inventoryService = new CraftingInventoryService(context);
+        var project = await projectService.CreateAsync(new CreateCraftingProjectDto
+        {
+            Name = "Supply Project"
+        }, user.Id);
+        var yarn = await inventoryService.CreateOrMergeYarnAsync(new CreateCraftingYarnInventoryItemDto
+        {
+            BrandName = "Acme Yarn",
+            ColorName = "Blue",
+            Skeins = 2
+        }, user.Id);
+        var linked = await projectService.AddInventoryLinkAsync(project.Id, new CreateCraftingProjectInventoryLinkDto
+        {
+            InventoryItemType = "yarn",
+            InventoryItemId = yarn.Id,
+            QuantityPlanned = 1
+        }, user.Id);
+
+        Assert.NotNull(linked);
+
+        var removed = await projectService.RemoveInventoryLinkAsync(project.Id, linked.InventoryLinks[0].Id, user.Id);
+        var reloaded = await projectService.GetByIdAsync(project.Id, user.Id);
+
+        Assert.True(removed);
+        Assert.NotNull(reloaded);
+        Assert.Empty(reloaded.InventoryLinks);
     }
 }

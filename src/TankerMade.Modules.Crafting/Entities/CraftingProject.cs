@@ -8,6 +8,8 @@ public class CraftingProject
     public string Description { get; set; } = string.Empty;
     public Guid? PatternId { get; set; }
     public Guid? ThemeId { get; set; }
+    public Guid? KitId { get; set; }
+    public Guid? KitPieceId { get; set; }
     public int Difficulty { get; set; }
     public int Progress { get; set; }
     public bool IsArchived { get; set; }
@@ -66,5 +68,12 @@ public class CraftingProject
         IsArchived = false;
         ArchivedAt = null;
         UpdatedAt = reopenedAt;
+    }
+
+    public void LinkToKitPiece(Guid kitId, Guid kitPieceId)
+    {
+        KitId = kitId;
+        KitPieceId = kitPieceId;
+        UpdatedAt = DateTime.UtcNow;
     }
 }

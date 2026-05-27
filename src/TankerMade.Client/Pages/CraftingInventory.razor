@@ -1,0 +1,323 @@
+@page "/modules/crafting/inventory"
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+
+<PageTitle>Crafting Inventory</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>Crafting Inventory</h1>
+    <p>Sign in to load Crafting inventory.</p>
+    <a class="btn btn-primary" href="login">Sign in</a>
+}
+else if (!ModuleState.IsActive("crafting"))
+{
+    <h1>Crafting Inventory</h1>
+    <p>Activate the Crafting module from Home to load its inventory.</p>
+}
+else if (loading)
+{
+    <h1>Crafting Inventory</h1>
+    <p>Loading...</p>
+}
+else
+{
+    <div class="page-heading">
+        <div>
+            <a class="pattern-back-link" href="modules/crafting">Crafting</a>
+            <h1>Inventory</h1>
+            <p>Module-owned yarn, tools, and notions.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <div class="d-flex gap-2 flex-wrap mb-3">
+        <button class="@TabButtonClass("yarn")" @onclick='() => SetTab("yarn")'>Yarn</button>
+        <button class="@TabButtonClass("tools")" @onclick='() => SetTab("tools")'>Tools</button>
+        <button class="@TabButtonClass("notions")" @onclick='() => SetTab("notions")'>Notions</button>
+    </div>
+
+    <div class="input-group mb-3">
+        <input class="form-control" placeholder="Search inventory" @bind="search" @bind:event="oninput" />
+        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="LoadInventoryAsync">Search</button>
+    </div>
+
+    @if (activeTab == "yarn")
+    {
+        <div class="row g-3">
+            <div class="col-lg-4">
+                <div class="crafting-panel">
+                    <h2>Add Yarn</h2>
+                    <label class="form-label">Brand</label>
+                    <input class="form-control mb-2" @bind="yarnForm.BrandName" />
+                    <label class="form-label">Color name</label>
+                    <input class="form-control mb-2" @bind="yarnForm.ColorName" />
+                    <label class="form-label">Main color</label>
+                    <input class="form-control mb-2" @bind="yarnForm.MainColor" />
+                    <label class="form-label">Weight</label>
+                    <input class="form-control mb-2" @bind="yarnForm.WeightName" />
+                    <label class="form-label">Fiber tag</label>
+                    <input class="form-control mb-2" @bind="yarnForm.FiberTag" />
+                    <label class="form-label">Skeins</label>
+                    <input class="form-control mb-2" type="number" step="0.01" @bind="yarnForm.Skeins" />
+                    <label class="form-label">Lot number</label>
+                    <input class="form-control mb-2" @bind="yarnForm.LotNumber" />
+                    <label class="form-label">Source</label>
+                    <input class="form-control mb-2" @bind="yarnForm.SourceName" />
+                    <label class="form-label">Price</label>
+                    <input class="form-control mb-2" type="number" step="0.01" @bind="yarnForm.Price" />
+                    <label class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" @bind="yarnForm.IsSalePrice" />
+                        <span class="form-check-label">Sale price</span>
+                    </label>
+                    <button class="btn btn-primary" disabled="@busy" @onclick="SaveYarnAsync">Add / Merge</button>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="pattern-card-grid">
+                    @foreach (var yarn in yarns)
+                    {
+                        <div class="pattern-card">
+                            <h2>@yarn.BrandName</h2>
+                            <p>@yarn.ColorName</p>
+                            <div class="pattern-card-stats">
+                                <span>@yarn.TotalSkeins skeins</span>
+                                <span>@yarn.WeightName</span>
+                                <span>@yarn.FiberTag</span>
+                            </div>
+                            <p>@PurchaseSummary(yarn.Purchases)</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else if (activeTab == "tools")
+    {
+        <div class="row g-3">
+            <div class="col-lg-4">
+                <div class="crafting-panel">
+                    <h2>Add Tool</h2>
+                    <label class="form-label">Brand</label>
+                    <input class="form-control mb-2" @bind="toolForm.BrandName" />
+                    <label class="form-label">Type</label>
+                    <input class="form-control mb-2" @bind="toolForm.TypeName" />
+                    <label class="form-label">Size</label>
+                    <input class="form-control mb-2" @bind="toolForm.Size" />
+                    <label class="form-label">Quantity</label>
+                    <input class="form-control mb-2" type="number" @bind="toolForm.Quantity" />
+                    <label class="form-label">Source</label>
+                    <input class="form-control mb-2" @bind="toolForm.SourceName" />
+                    <label class="form-label">Price</label>
+                    <input class="form-control mb-2" type="number" step="0.01" @bind="toolForm.Price" />
+                    <label class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" @bind="toolForm.IsSalePrice" />
+                        <span class="form-check-label">Sale price</span>
+                    </label>
+                    <button class="btn btn-primary" disabled="@busy" @onclick="SaveToolAsync">Add / Merge</button>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="pattern-card-grid">
+                    @foreach (var tool in tools)
+                    {
+                        <div class="pattern-card">
+                            <h2>@tool.TypeName</h2>
+                            <p>@tool.BrandName</p>
+                            <div class="pattern-card-stats">
+                                <span>@tool.Quantity owned</span>
+                                <span>@tool.Size</span>
+                            </div>
+                            <p>@PurchaseSummary(tool.Purchases)</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            <div class="col-lg-4">
+                <div class="crafting-panel">
+                    <h2>Add Notion</h2>
+                    <label class="form-label">Brand</label>
+                    <input class="form-control mb-2" @bind="notionForm.BrandName" />
+                    <label class="form-label">Type</label>
+                    <input class="form-control mb-2" @bind="notionForm.TypeName" />
+                    <label class="form-label">Size</label>
+                    <input class="form-control mb-2" @bind="notionForm.Size" />
+                    <label class="form-label">Color</label>
+                    <input class="form-control mb-2" @bind="notionForm.ColorName" />
+                    <label class="form-label">Quantity</label>
+                    <input class="form-control mb-2" type="number" @bind="notionForm.Quantity" />
+                    <label class="form-label">Source</label>
+                    <input class="form-control mb-2" @bind="notionForm.SourceName" />
+                    <label class="form-label">Price</label>
+                    <input class="form-control mb-2" type="number" step="0.01" @bind="notionForm.Price" />
+                    <label class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" @bind="notionForm.IsSalePrice" />
+                        <span class="form-check-label">Sale price</span>
+                    </label>
+                    <button class="btn btn-primary" disabled="@busy" @onclick="SaveNotionAsync">Add / Merge</button>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="pattern-card-grid">
+                    @foreach (var notion in notions)
+                    {
+                        <div class="pattern-card">
+                            <h2>@notion.TypeName</h2>
+                            <p>@notion.BrandName</p>
+                            <div class="pattern-card-stats">
+                                <span>@notion.Quantity owned</span>
+                                <span>@notion.Size</span>
+                                <span>@notion.ColorName</span>
+                            </div>
+                            <p>@PurchaseSummary(notion.Purchases)</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private readonly List<TankerMade.Client.Services.CraftingYarnInventoryItemSummary> yarns = [];
+    private readonly List<TankerMade.Client.Services.CraftingToolInventoryItemSummary> tools = [];
+    private readonly List<TankerMade.Client.Services.CraftingNotionInventoryItemSummary> notions = [];
+    private TankerMade.Client.Services.CraftingYarnFormRequest yarnForm = new();
+    private TankerMade.Client.Services.CraftingToolFormRequest toolForm = new();
+    private TankerMade.Client.Services.CraftingNotionFormRequest notionForm = new();
+    private string activeTab = "yarn";
+    private string search = string.Empty;
+    private string errorMessage = string.Empty;
+    private bool loading = true;
+    private bool busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadInventoryAsync();
+    }
+
+    private async Task SetTab(string tab)
+    {
+        activeTab = tab;
+        await LoadInventoryAsync();
+    }
+
+    private async Task LoadInventoryAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive("crafting"))
+            {
+                return;
+            }
+
+            if (activeTab == "yarn")
+            {
+                yarns.Clear();
+                yarns.AddRange(await ApiClient.GetCraftingYarnsAsync(search));
+            }
+            else if (activeTab == "tools")
+            {
+                tools.Clear();
+                tools.AddRange(await ApiClient.GetCraftingToolsAsync(search));
+            }
+            else
+            {
+                notions.Clear();
+                notions.AddRange(await ApiClient.GetCraftingNotionsAsync(search));
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task SaveYarnAsync()
+    {
+        await RunSaveAsync(async () =>
+        {
+            await ApiClient.CreateCraftingYarnAsync(yarnForm);
+            yarnForm = new();
+        });
+    }
+
+    private async Task SaveToolAsync()
+    {
+        await RunSaveAsync(async () =>
+        {
+            await ApiClient.CreateCraftingToolAsync(toolForm);
+            toolForm = new();
+        });
+    }
+
+    private async Task SaveNotionAsync()
+    {
+        await RunSaveAsync(async () =>
+        {
+            await ApiClient.CreateCraftingNotionAsync(notionForm);
+            notionForm = new();
+        });
+    }
+
+    private async Task RunSaveAsync(Func<Task> save)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await save();
+            await LoadInventoryAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private string TabButtonClass(string tab)
+    {
+        return activeTab == tab ? "btn btn-primary" : "btn btn-outline-secondary";
+    }
+
+    private static string PurchaseSummary(IReadOnlyList<TankerMade.Client.Services.InventoryPurchaseSummary> purchases)
+    {
+        if (purchases.Count == 0)
+        {
+            return "No purchase history.";
+        }
+
+        var latest = purchases[0];
+        var price = latest.Price.HasValue ? $" {latest.Price:C}" : string.Empty;
+        var sale = latest.IsSalePrice ? " sale" : string.Empty;
+        return $"Latest: {latest.SourceName}{price}{sale}";
+    }
+}

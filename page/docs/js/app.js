@@ -7,12 +7,12 @@
 class TankerMadeApp {
   constructor() {
     this.state = {
-      currentPhase:    4,
-      currentPhaseLabel: 'D',
+      currentPhase:    5,
+      currentPhaseLabel: 'E',
       totalPhases:     9,
       overallProgress: 0,   // always derived, never hardcoded
-      completedTasks:  37,
-      totalTasks:      65,
+      completedTasks:  45,
+      totalTasks:      67,
       openIncidents:   0,
     };
 
@@ -193,7 +193,7 @@ class TankerMadeApp {
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     const setStyle = (id, prop, val) => { const el = document.getElementById(id); if (el) el.style[prop] = val; };
 
-    set('current-phase', 'Phase ' + this.state.currentPhaseLabel + ': Inventory & Kits');
+    set('current-phase', 'Phase ' + this.state.currentPhaseLabel + ': Reference Data Integration');
     set('progress-text', this.state.overallProgress + '%');
     setStyle('header-progress', 'width', this.state.overallProgress + '%');
   }

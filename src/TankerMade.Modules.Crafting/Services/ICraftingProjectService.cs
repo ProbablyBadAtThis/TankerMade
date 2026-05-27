@@ -18,4 +18,6 @@ public interface ICraftingProjectService
     Task<CraftingProjectDto?> PauseTimerAsync(Guid projectId, Guid patternStepId, UpdateCraftingProjectTimerDto updateDto, Guid userId);
     Task<CraftingProjectDto?> SetTimerAsync(Guid projectId, Guid patternStepId, UpdateCraftingProjectTimerDto updateDto, Guid userId);
     Task<CraftingProjectDto?> ResetTimerAsync(Guid projectId, Guid patternStepId, Guid userId);
+    Task<CraftingProjectDto?> AddInventoryLinkAsync(Guid projectId, CreateCraftingProjectInventoryLinkDto createDto, Guid userId);
+    Task<bool> RemoveInventoryLinkAsync(Guid projectId, Guid linkId, Guid userId);
 }

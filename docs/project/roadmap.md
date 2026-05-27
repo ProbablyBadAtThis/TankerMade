@@ -4,9 +4,11 @@ Last reviewed: 2026-05-26
 
 ---
 
-## Current Phase: D — Module Inventory & Kits
+## Current Phase: E — Reference Data Integration
 
-Phase A is behavior-complete as of the May 22, 2026 smoke test. Phase B is complete after expanding the reference Crafting module with pattern pieces, steps, readiness validation, and project workspace screens. Phase C is complete after adding module-owned project workspace behavior: step progress, per-step timers, completion rules, piece selection, archive flow, and non-destructive editing. Phase D begins module-owned inventory and kit behavior.
+Phase A is behavior-complete as of the May 22, 2026 smoke test. Phase B is complete after expanding the reference Crafting module with pattern pieces, steps, readiness validation, and project workspace screens. Phase C is complete after adding module-owned project workspace behavior: step progress, per-step timers, completion rules, piece selection, archive flow, and non-destructive editing. Phase D is complete after proving module-owned inventory, reference data, project/inventory links, kit/grouping behavior, and kit-to-project backend flows.
+
+Phase D should make modules architecturally real, not distribution-real. The goal is to prove that domain modules own their inventory, kit, filtering, reference data, and project-linking behavior while Core remains an independent host. Packaging, external module directories, installable artifacts, module-store concepts, and licensing remain later concerns for Phase F or beyond.
 
 ## Phase A — Hardening, Module Host & Reference Module
 
@@ -72,13 +74,23 @@ Phase B continues to treat `TankerMade.Modules.Crafting` as a reference/template
 
 ## Phase D — Module Inventory & Kits
 
-- [ ] Craft module inventory: yarn, tools, notions, lots, purchase history, and sale price handling
-- [ ] 3D printing module inventory: materials, spools, printer/tooling needs, and module-specific purchase history
-- [ ] Module-owned filtering and reference data
-- [ ] Purchase history per source; sale price handling
-- [ ] Module-owned project/inventory linking
-- [ ] Module-owned kit/grouping behavior
-- [ ] Module-owned kit/grouping to project flows
+- [x] Define and document the module-owned inventory pattern before adding niche behavior: module entities, services, endpoints, DTOs, UI routes, filtering, reference data, project links, and activation gating
+- [x] Craft module inventory: yarn, tools, notions, lots, purchase history, and sale price handling
+- [x] Add a thin 3D printing inventory proof so the module pattern is not accidentally craft-shaped: materials, spools, printer/tooling needs, and module-specific purchase history
+- [x] Module-owned filtering and reference data
+- [x] Purchase history per source; sale price handling
+- [x] Module-owned project/inventory linking
+- [x] Module-owned kit/grouping behavior
+- [x] Module-owned kit/grouping to project flows
+
+Phase D ordering preference:
+
+1. Establish the reusable module inventory shape.
+2. Implement Crafting inventory as the reference implementation.
+3. Add a thin 3D printing inventory slice to pressure-test the boundary against a second domain.
+4. Build richer project/inventory linking and kit flows after the boundary is proven by more than one module shape.
+
+Phase D intentionally stops at backend/API proof for kits. Polished kit UI should wait until Phase F, when module UI extension points and module-provided surfaces are being hardened.
 
 ---
 
@@ -95,6 +107,7 @@ Phase B continues to treat `TankerMade.Modules.Crafting` as a reference/template
 - [ ] Harden IModule contract and registration after the first module proves the shape
 - [ ] Support external module discovery from a configurable module directory
 - [ ] Expand UI extension points via DynamicComponent
+- [ ] Build/refine module-provided kit UI after the module UI extension model is clearer
 - [ ] Package first craft module as an installable/loadable module artifact
 - [ ] 3D printing module scaffold
 
@@ -134,7 +147,8 @@ Phase B continues to treat `TankerMade.Modules.Crafting` as a reference/template
 |---|---|---|
 | Mobile | Deferred | PWA first; Capacitor wrapper or dedicated Flutter/React Native client later |
 | Offline WASM SQLite | Planned | Microsoft.Data.Sqlite compiled to WASM, or sqlite-wasm package |
-| Module data strategy | Partially decided | Phase A reference Crafting module uses relational module-owned tables; revisit packaging/external-module storage in Phase F |
+| Module data strategy | Partially decided | Phase A reference Crafting module uses relational module-owned tables. Phase D should prove module-owned domain behavior while Core remains independently useful. Revisit packaging, external module storage, and install/uninstall mechanics in Phase F |
 | Production DB provider | Open | SQLite default; Postgres/SQL Server as optional future provider |
 | Image storage | Open | Local disk to start; pluggable provider interface for cloud later |
 | Repository pattern | Skipped | Direct DbContext injection for now; revisit if complexity warrants |
+| Module store/licensing | Future | Out of scope for Phase D. Keep the architecture compatible with future module distribution and licensing, but do not design those systems yet |

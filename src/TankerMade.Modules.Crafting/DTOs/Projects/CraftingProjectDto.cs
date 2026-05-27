@@ -10,6 +10,10 @@ public class CraftingProjectDto
     public string PatternName { get; set; } = string.Empty;
     public Guid? ThemeId { get; set; }
     public string ThemeName { get; set; } = string.Empty;
+    public Guid? KitId { get; set; }
+    public string KitName { get; set; } = string.Empty;
+    public Guid? KitPieceId { get; set; }
+    public string KitPieceName { get; set; } = string.Empty;
     public int Difficulty { get; set; }
     public string DifficultyLabel { get; set; } = string.Empty;
     public int Progress { get; set; }
@@ -22,6 +26,7 @@ public class CraftingProjectDto
     public DateTime? TimerStartedAt { get; set; }
     public IReadOnlyList<CraftingProjectStepProgressDto> StepProgress { get; set; } = [];
     public IReadOnlyList<CraftingProjectTimerDto> Timers { get; set; } = [];
+    public IReadOnlyList<CraftingProjectInventoryLinkDto> InventoryLinks { get; set; } = [];
     public Guid UserId { get; set; }
     public string Username { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }

@@ -7,14 +7,14 @@ class DashboardSection {
     constructor() {
         this.sectionId = 'dashboard';
         this.data = {
-            totalTasks: 65,
-            completedTasks: 37,
+            totalTasks: 67,
+            completedTasks: 45,
             currentPhase: {
-                number: "D",
-                title: "Inventory & Kits",
-                description: "Yarn, tools, notions, lots, purchases, linking, and kits.",
+                number: "E",
+                title: "Reference Data Integration",
+                description: "Settings/reference data extension points and module-provided option flows.",
                 completed: 0,
-                total: 7
+                total: 3
             }
         };
     }
@@ -121,7 +121,7 @@ class DashboardSection {
                 ${isAuthenticated ? `
                 <div class="dashboard-section-title">
                     <h2>Current Focus</h2>
-                    <p>Open Phase D work split into scan-friendly panels.</p>
+                    <p>Open Phase E work split into scan-friendly panels.</p>
                 </div>
 
                 <div class="dashboard-focus-panels">
@@ -192,7 +192,7 @@ class DashboardSection {
                     <h2>Project Glimpse</h2>
                 </div>
                 <div class="card-body">
-                    <p class="text-secondary">TankerMade is a local-first modular maker workbench. Phase C is complete; Phase D begins module-owned inventory and kit behavior.</p>
+                    <p class="text-secondary">TankerMade is a local-first modular maker workbench. Phase D is complete; Phase E begins reference data integration.</p>
                     <div class="mt-4">
                         <button class="btn btn-primary" onclick="window.TankerMadeAuth && window.TankerMadeAuth.login()">
                             Sign in with GitHub
@@ -212,7 +212,8 @@ class DashboardSection {
             { title: "Expand module-owned project workspace screens", meta: "Phase B • Projects", status: "done" },
             { title: "Add module-owned step/checklist progress", meta: "Phase C • Projects", status: "done" },
             { title: "Add per-step timers, completion, piece selection, archive, and safe edits", meta: "Phase C • Projects", status: "done" },
-            { title: "Add craft module inventory", meta: "Phase D • Inventory", status: "active" }
+            { title: "Complete module-owned inventory and kit backend flows", meta: "Phase D • Modules", status: "done" },
+            { title: "Wire settings/reference categories into module extension points", meta: "Phase E • Reference data", status: "active" }
         ];
 
         return tasks.map(task => `
@@ -231,7 +232,8 @@ class DashboardSection {
             { number: "A", title: "Module Host & Reference Module", completed: 26, total: 26, active: false },
             { number: "B", title: "Crafting Module V2", completed: 5, total: 5, active: false },
             { number: "C", title: "Module Project Workspace", completed: 6, total: 6, active: false },
-            { number: "D", title: "Inventory & Kits", completed: 0, total: 7, active: true }
+            { number: "D", title: "Inventory & Kits", completed: 8, total: 8, active: false },
+            { number: "E", title: "Reference Data Integration", completed: 0, total: 3, active: true }
         ];
 
         return phases.map(phase => {
@@ -273,8 +275,8 @@ class DashboardSection {
 
     renderWeekSummary() {
         const stats = [
-            { value: "37", label: "Done" },
-            { value: "7", label: "Open in Phase D" },
+            { value: "45", label: "Done" },
+            { value: "3", label: "Open in Phase E" },
             { value: "9", label: "Roadmap Phases" }
         ];
 
@@ -288,9 +290,9 @@ class DashboardSection {
 
     renderNextTasks() {
         const tasks = [
-            { title: "Craft module inventory: yarn, tools, notions, lots, purchases, and sale prices", phase: "Phase D" },
-            { title: "3D printing module inventory: materials, spools, printer/tooling needs, and purchases", phase: "Phase D" },
-            { title: "Module-owned project/inventory linking", phase: "Phase D" }
+            { title: "Wire core Settings / ReferenceItem categories into module extension points", phase: "Phase E" },
+            { title: "Keep module-specific reference data owned by the module that needs it", phase: "Phase E" },
+            { title: "Support module-provided add/new option flows", phase: "Phase E" }
         ];
 
         return tasks.map(task => `

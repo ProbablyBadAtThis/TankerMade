@@ -131,6 +131,88 @@ else
 
             <section class="project-panel">
                 <div class="project-panel-header">
+                    <h2>Project Supplies</h2>
+                    <a class="btn btn-outline-secondary btn-sm" href="modules/crafting/inventory">Inventory</a>
+                </div>
+
+                @if (project.InventoryLinks.Count == 0)
+                {
+                    <p class="muted-copy">No supplies linked yet.</p>
+                }
+                else
+                {
+                    <ul class="project-supply-list">
+                        @foreach (var link in project.InventoryLinks)
+                        {
+                            <li>
+                                <div>
+                                    <strong>@link.InventoryItemName</strong>
+                                    <span>@SupplyLinkMeta(link)</span>
+                                    @if (!string.IsNullOrWhiteSpace(link.Notes))
+                                    {
+                                        <small>@link.Notes</small>
+                                    }
+                                </div>
+                                <button class="btn btn-outline-danger btn-sm"
+                                        disabled="@busy"
+                                        type="button"
+                                        @onclick="() => RemoveSupplyLinkAsync(link.Id)">
+                                    Remove
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                <EditForm Model="supplyForm" OnValidSubmit="AddSupplyLinkAsync" class="project-edit-form">
+                    <DataAnnotationsValidator />
+
+                    <div class="form-grid">
+                        <label>
+                            <span>Type</span>
+                            <select class="form-control" value="@supplyForm.InventoryItemType" @onchange="SelectSupplyType">
+                                <option value="yarn">Yarn</option>
+                                <option value="tool">Tool</option>
+                                <option value="notion">Notion</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Item</span>
+                            <select class="form-control"
+                                    disabled="@(!CurrentSupplyOptions.Any())"
+                                    value="@supplyForm.InventoryItemIdText"
+                                    @onchange="SelectSupplyItem">
+                                @foreach (var option in CurrentSupplyOptions)
+                                {
+                                    <option value="@option.Id">@option.Name</option>
+                                }
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="form-grid">
+                        <label>
+                            <span>Planned Quantity</span>
+                            <InputNumber class="form-control" @bind-Value="supplyForm.QuantityPlanned" />
+                        </label>
+
+                        <label>
+                            <span>Notes</span>
+                            <InputText class="form-control" @bind-Value="supplyForm.Notes" />
+                        </label>
+                    </div>
+
+                    <button class="btn btn-primary" disabled="@(busy || !CanAddSupplyLink)" type="submit">Link Supply</button>
+                    @if (!CurrentSupplyOptions.Any())
+                    {
+                        <small class="muted-copy">Add @SupplyTypeLabelLower(supplyForm.InventoryItemType) inventory before linking it here.</small>
+                    }
+                </EditForm>
+            </section>
+
+            <section class="project-panel">
+                <div class="project-panel-header">
                     <h2>Pattern Context</h2>
                     @if (linkedPattern != null)
                     {
@@ -289,7 +371,11 @@ else
     private TankerMade.Client.Services.CraftingProjectSummary? project;
     private TankerMade.Client.Services.CraftingPatternDetail? linkedPattern;
     private readonly List<TankerMade.Client.Services.CraftingPatternSummary> patterns = [];
+    private readonly List<SupplyOption> yarnOptions = [];
+    private readonly List<SupplyOption> toolOptions = [];
+    private readonly List<SupplyOption> notionOptions = [];
     private readonly ProjectFormModel form = new();
+    private readonly SupplyLinkFormModel supplyForm = new();
     private TankerMade.Client.Services.CraftingPatternStepDetail? timerDialogStep;
     private string timerDialogValue = "00:00";
     private Guid? selectedPieceId;
@@ -328,6 +414,17 @@ else
     private string TrackedTimeText => FormatDuration(GetTrackedSeconds());
 
     private bool IsTimerDialogValueValid => TryParseDurationSeconds(timerDialogValue, out _);
+
+    private IReadOnlyList<SupplyOption> CurrentSupplyOptions => supplyForm.InventoryItemType switch
+    {
+        "tool" => toolOptions,
+        "notion" => notionOptions,
+        _ => yarnOptions
+    };
+
+    private bool CanAddSupplyLink =>
+        CurrentSupplyOptions.Any()
+        && Guid.TryParse(supplyForm.InventoryItemIdText, out _);
 
     private bool PatternSelectionLocked =>
         project?.StepProgress.Count > 0 == true
@@ -400,6 +497,7 @@ else
 
             patterns.Clear();
             patterns.AddRange(await ApiClient.GetCraftingPatternsAsync());
+            await LoadSupplyOptionsAsync();
             project = await ApiClient.GetCraftingProjectAsync(ProjectId);
             if (project == null)
             {
@@ -407,6 +505,7 @@ else
             }
 
             form.Load(project);
+            EnsureSelectedSupply();
             await LoadLinkedPatternAsync();
         }
         catch (Exception ex)
@@ -493,6 +592,108 @@ else
         finally
         {
             busy = false;
+        }
+    }
+
+    private async Task LoadSupplyOptionsAsync()
+    {
+        yarnOptions.Clear();
+        toolOptions.Clear();
+        notionOptions.Clear();
+
+        var yarns = await ApiClient.GetCraftingYarnsAsync();
+        yarnOptions.AddRange(yarns.Select(yarn => new SupplyOption(
+            yarn.Id,
+            DisplayParts(yarn.BrandName, yarn.ColorName, yarn.WeightName, yarn.FiberTag))));
+
+        var tools = await ApiClient.GetCraftingToolsAsync();
+        toolOptions.AddRange(tools.Select(tool => new SupplyOption(
+            tool.Id,
+            DisplayParts(tool.BrandName, tool.TypeName, tool.Size))));
+
+        var notions = await ApiClient.GetCraftingNotionsAsync();
+        notionOptions.AddRange(notions.Select(notion => new SupplyOption(
+            notion.Id,
+            DisplayParts(notion.BrandName, notion.TypeName, notion.Size, notion.ColorName))));
+
+        EnsureSelectedSupply();
+    }
+
+    private async Task AddSupplyLinkAsync()
+    {
+        if (!CanAddSupplyLink)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var updated = await ApiClient.AddCraftingProjectInventoryLinkAsync(ProjectId, supplyForm.ToRequest());
+            if (updated != null)
+            {
+                project = updated;
+                supplyForm.QuantityPlanned = null;
+                supplyForm.Notes = string.Empty;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task RemoveSupplyLinkAsync(Guid linkId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (await ApiClient.RemoveCraftingProjectInventoryLinkAsync(ProjectId, linkId))
+            {
+                project = await ApiClient.GetCraftingProjectAsync(ProjectId);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void SelectSupplyType(ChangeEventArgs args)
+    {
+        supplyForm.InventoryItemType = NormalizeSupplyType(args.Value?.ToString());
+        EnsureSelectedSupply();
+    }
+
+    private void SelectSupplyItem(ChangeEventArgs args)
+    {
+        supplyForm.InventoryItemIdText = args.Value?.ToString() ?? string.Empty;
+    }
+
+    private void EnsureSelectedSupply()
+    {
+        if (!CurrentSupplyOptions.Any())
+        {
+            supplyForm.InventoryItemIdText = string.Empty;
+            return;
+        }
+
+        if (!Guid.TryParse(supplyForm.InventoryItemIdText, out var selectedId)
+            || CurrentSupplyOptions.All(option => option.Id != selectedId))
+        {
+            supplyForm.InventoryItemIdText = CurrentSupplyOptions[0].Id.ToString();
         }
     }
 
@@ -704,6 +905,48 @@ else
             : $"{step.DisplayRange}: {label}";
     }
 
+    private static string SupplyLinkMeta(TankerMade.Client.Services.CraftingProjectInventoryLinkDetail link)
+    {
+        var parts = new List<string> { SupplyTypeLabel(link.InventoryItemType) };
+        if (link.QuantityPlanned is > 0)
+        {
+            parts.Add($"Qty {link.QuantityPlanned:g}");
+        }
+
+        return string.Join(" - ", parts);
+    }
+
+    private static string SupplyTypeLabel(string itemType)
+    {
+        return NormalizeSupplyType(itemType) switch
+        {
+            "tool" => "Tool",
+            "notion" => "Notion",
+            _ => "Yarn"
+        };
+    }
+
+    private static string SupplyTypeLabelLower(string itemType)
+    {
+        return SupplyTypeLabel(itemType).ToLowerInvariant();
+    }
+
+    private static string NormalizeSupplyType(string? itemType)
+    {
+        return itemType?.Trim().ToLowerInvariant() switch
+        {
+            "tool" => "tool",
+            "notion" => "notion",
+            _ => "yarn"
+        };
+    }
+
+    private static string DisplayParts(params string[] parts)
+    {
+        var display = string.Join(" - ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
+        return string.IsNullOrWhiteSpace(display) ? "Unnamed item" : display;
+    }
+
     private long GetTrackedSeconds()
     {
         if (project == null)
@@ -829,4 +1072,30 @@ else
             };
         }
     }
+
+    private sealed class SupplyLinkFormModel
+    {
+        public string InventoryItemType { get; set; } = "yarn";
+
+        public string InventoryItemIdText { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0.01", "999999", ErrorMessage = "Quantity must be greater than 0")]
+        public decimal? QuantityPlanned { get; set; }
+
+        [System.ComponentModel.DataAnnotations.StringLength(1000, ErrorMessage = "Notes cannot exceed 1000 characters")]
+        public string Notes { get; set; } = string.Empty;
+
+        public TankerMade.Client.Services.CraftingProjectInventoryLinkFormRequest ToRequest()
+        {
+            return new()
+            {
+                InventoryItemType = InventoryItemType,
+                InventoryItemId = Guid.Parse(InventoryItemIdText),
+                QuantityPlanned = QuantityPlanned,
+                Notes = Notes
+            };
+        }
+    }
+
+    private sealed record SupplyOption(Guid Id, string Name);
 }

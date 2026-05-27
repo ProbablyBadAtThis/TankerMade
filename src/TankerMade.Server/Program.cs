@@ -7,9 +7,11 @@ using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using TankerMade.Contracts.Services;
 using TankerMade.Modules.Crafting.Services;
+using TankerMade.Modules.Printing3D.Services;
 using TankerMade.Server.Data;
 using TankerMade.Server.Services;
 using TankerMade.Server.Services.Crafting;
+using TankerMade.Server.Services.Printing3D;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,6 +76,9 @@ builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IModuleService, ModuleService>();
 builder.Services.AddScoped<ICraftingProjectService, CraftingProjectService>();
 builder.Services.AddScoped<ICraftingPatternService, CraftingPatternService>();
+builder.Services.AddScoped<ICraftingInventoryService, CraftingInventoryService>();
+builder.Services.AddScoped<ICraftingKitService, CraftingKitService>();
+builder.Services.AddScoped<IPrintingInventoryService, PrintingInventoryService>();
 
 // Add controllers and OpenAPI
 builder.Services.AddControllers();

@@ -1,0 +1,183 @@
+@page "/modules/printing-3d/inventory"
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+
+<PageTitle>3D Printing Inventory</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>3D Printing Inventory</h1>
+    <p>Sign in to load 3D Printing inventory.</p>
+    <a class="btn btn-primary" href="login">Sign in</a>
+}
+else if (!ModuleState.IsActive("printing-3d"))
+{
+    <h1>3D Printing Inventory</h1>
+    <p>Activate the 3D Printing module from Home to load its inventory.</p>
+}
+else if (loading)
+{
+    <h1>3D Printing Inventory</h1>
+    <p>Loading...</p>
+}
+else
+{
+    <div class="page-heading">
+        <div>
+            <h1>3D Printing Inventory</h1>
+            <p>Module-owned material and spool proof workspace.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <div class="input-group mb-3">
+        <input class="form-control" placeholder="Search materials" @bind="search" @bind:event="oninput" />
+        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="LoadMaterialsAsync">Search</button>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="crafting-panel">
+                <h2>Add Material</h2>
+                <label class="form-label">Material type</label>
+                <input class="form-control mb-2" @bind="form.MaterialType" />
+                <label class="form-label">Brand</label>
+                <input class="form-control mb-2" @bind="form.BrandName" />
+                <label class="form-label">Color</label>
+                <input class="form-control mb-2" @bind="form.ColorName" />
+                <label class="form-label">Spool weight grams</label>
+                <input class="form-control mb-2" type="number" step="0.01" @bind="form.SpoolWeightGrams" />
+                <label class="form-label">Remaining grams</label>
+                <input class="form-control mb-2" type="number" step="0.01" @bind="form.RemainingWeightGrams" />
+                <label class="form-label">Diameter</label>
+                <input class="form-control mb-2" @bind="form.Diameter" />
+                <label class="form-label">Spool code</label>
+                <input class="form-control mb-2" @bind="form.SpoolCode" />
+                <label class="form-label">Printer compatibility</label>
+                <input class="form-control mb-2" @bind="form.PrinterCompatibility" />
+                <label class="form-label">Source</label>
+                <input class="form-control mb-2" @bind="form.SourceName" />
+                <label class="form-label">Price</label>
+                <input class="form-control mb-2" type="number" step="0.01" @bind="form.Price" />
+                <label class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" @bind="form.IsSalePrice" />
+                    <span class="form-check-label">Sale price</span>
+                </label>
+                <button class="btn btn-primary" disabled="@busy" @onclick="SaveMaterialAsync">Add / Merge</button>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="pattern-card-grid">
+                @foreach (var material in materials)
+                {
+                    <div class="pattern-card">
+                        <h2>@material.MaterialType</h2>
+                        <p>@material.BrandName - @material.ColorName</p>
+                        <div class="pattern-card-stats">
+                            <span>@material.TotalSpoolWeightGrams g</span>
+                            <span>@material.Diameter</span>
+                            <span>@material.StorageLocation</span>
+                        </div>
+                        <p>@SpoolSummary(material.Spools)</p>
+                        <p>@PurchaseSummary(material.Purchases)</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private readonly List<TankerMade.Client.Services.PrintingMaterialInventoryItemSummary> materials = [];
+    private TankerMade.Client.Services.PrintingMaterialFormRequest form = new();
+    private string search = string.Empty;
+    private string errorMessage = string.Empty;
+    private bool loading = true;
+    private bool busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadMaterialsAsync();
+    }
+
+    private async Task LoadMaterialsAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive("printing-3d"))
+            {
+                return;
+            }
+
+            materials.Clear();
+            materials.AddRange(await ApiClient.GetPrintingMaterialsAsync(search));
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task SaveMaterialAsync()
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.CreatePrintingMaterialAsync(form);
+            form = new();
+            await LoadMaterialsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private static string SpoolSummary(IReadOnlyList<TankerMade.Client.Services.PrintingSpoolSummary> spools)
+    {
+        if (spools.Count == 0)
+        {
+            return "No spool details.";
+        }
+
+        var first = spools[0];
+        return $"Spool {first.SpoolCode}: {first.StartingWeightGrams} g";
+    }
+
+    private static string PurchaseSummary(IReadOnlyList<TankerMade.Client.Services.InventoryPurchaseSummary> purchases)
+    {
+        if (purchases.Count == 0)
+        {
+            return "No purchase history.";
+        }
+
+        var latest = purchases[0];
+        var price = latest.Price.HasValue ? $" {latest.Price:C}" : string.Empty;
+        var sale = latest.IsSalePrice ? " sale" : string.Empty;
+        return $"Latest: {latest.SourceName}{price}{sale}";
+    }
+}

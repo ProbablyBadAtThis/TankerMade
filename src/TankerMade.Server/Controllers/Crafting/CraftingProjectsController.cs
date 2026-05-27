@@ -229,6 +229,45 @@ public class CraftingProjectsController : ControllerBase
         }
     }
 
+    [HttpPost("{id:guid}/inventory-links")]
+    public async Task<ActionResult<CraftingProjectDto>> AddInventoryLink(
+        Guid id,
+        CreateCraftingProjectInventoryLinkDto request)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            var project = await _projectService.AddInventoryLinkAsync(id, request, userId.Value);
+            return project == null ? NotFound() : Ok(project);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpDelete("{id:guid}/inventory-links/{linkId:guid}")]
+    public async Task<ActionResult> RemoveInventoryLink(Guid id, Guid linkId)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        var deleted = await _projectService.RemoveInventoryLinkAsync(id, linkId, userId.Value);
+        return deleted ? NoContent() : NotFound();
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult> Delete(Guid id)
     {

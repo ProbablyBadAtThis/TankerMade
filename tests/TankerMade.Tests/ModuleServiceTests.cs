@@ -1,5 +1,6 @@
 using TankerMade.Core.Entities;
 using TankerMade.Modules.Crafting;
+using TankerMade.Modules.Printing3D;
 using TankerMade.Server.Services;
 using Xunit;
 
@@ -24,5 +25,24 @@ public class ModuleServiceTests
         Assert.NotNull(activated);
         Assert.True(activated.IsActive);
         Assert.Contains(activeModules, module => module.ModuleKey == CraftingModule.ModuleKey);
+    }
+
+    [Fact]
+    public async Task ActivateAsync_marks_bundled_printing_3d_module_active_for_user()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+        var user = new User(Guid.NewGuid(), "maker", "maker@example.test", "hash");
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var service = new ModuleService(context);
+
+        var activated = await service.ActivateAsync(Printing3DModule.ModuleKey, user.Id);
+        var activeModules = await service.GetActiveModulesAsync(user.Id);
+
+        Assert.NotNull(activated);
+        Assert.True(activated.IsActive);
+        Assert.Contains(activeModules, module => module.ModuleKey == Printing3DModule.ModuleKey);
     }
 }

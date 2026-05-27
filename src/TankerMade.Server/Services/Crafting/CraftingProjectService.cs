@@ -9,6 +9,9 @@ namespace TankerMade.Server.Services.Crafting;
 
 public class CraftingProjectService : ICraftingProjectService
 {
+    private const string YarnInventoryType = "yarn";
+    private const string ToolInventoryType = "tool";
+    private const string NotionInventoryType = "notion";
     private readonly TankerMadeDbContext _context;
 
     public CraftingProjectService(TankerMadeDbContext context)
@@ -297,6 +300,69 @@ public class CraftingProjectService : ICraftingProjectService
         return await MapAsync(project);
     }
 
+    public async Task<CraftingProjectDto?> AddInventoryLinkAsync(
+        Guid projectId,
+        CreateCraftingProjectInventoryLinkDto createDto,
+        Guid userId)
+    {
+        var project = await _context.CraftingProjects
+            .SingleOrDefaultAsync(p => p.Id == projectId && p.UserId == userId);
+
+        if (project == null)
+        {
+            return null;
+        }
+
+        var itemType = NormalizeInventoryItemType(createDto.InventoryItemType);
+        await EnsureInventoryItemBelongsToUserAsync(itemType, createDto.InventoryItemId, userId);
+
+        var existing = await _context.CraftingProjectInventoryLinks
+            .SingleOrDefaultAsync(link => link.ProjectId == projectId
+                && link.InventoryItemType == itemType
+                && link.InventoryItemId == createDto.InventoryItemId);
+
+        if (existing == null)
+        {
+            _context.CraftingProjectInventoryLinks.Add(new CraftingProjectInventoryLink(
+                Guid.NewGuid(),
+                projectId,
+                itemType,
+                createDto.InventoryItemId,
+                createDto.QuantityPlanned,
+                createDto.Notes));
+        }
+        else
+        {
+            existing.Update(createDto.QuantityPlanned, createDto.Notes);
+        }
+
+        await _context.SaveChangesAsync();
+        return await MapAsync(project);
+    }
+
+    public async Task<bool> RemoveInventoryLinkAsync(Guid projectId, Guid linkId, Guid userId)
+    {
+        var projectExists = await _context.CraftingProjects
+            .AnyAsync(p => p.Id == projectId && p.UserId == userId);
+
+        if (!projectExists)
+        {
+            return false;
+        }
+
+        var link = await _context.CraftingProjectInventoryLinks
+            .SingleOrDefaultAsync(existing => existing.Id == linkId && existing.ProjectId == projectId);
+
+        if (link == null)
+        {
+            return false;
+        }
+
+        _context.CraftingProjectInventoryLinks.Remove(link);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     private async Task<CraftingProjectDto> MapAsync(CraftingProject project)
     {
         var userName = await _context.Users
@@ -316,6 +382,20 @@ public class CraftingProjectService : ICraftingProjectService
             : await _context.Themes
                 .Where(t => t.Id == project.ThemeId)
                 .Select(t => t.Name)
+                .SingleOrDefaultAsync() ?? string.Empty;
+
+        var kitName = project.KitId == null
+            ? string.Empty
+            : await _context.CraftingKits
+                .Where(kit => kit.Id == project.KitId.Value)
+                .Select(kit => kit.Name)
+                .SingleOrDefaultAsync() ?? string.Empty;
+
+        var kitPieceName = project.KitPieceId == null
+            ? string.Empty
+            : await _context.CraftingKitPieces
+                .Where(piece => piece.Id == project.KitPieceId.Value)
+                .Select(piece => piece.Name)
                 .SingleOrDefaultAsync() ?? string.Empty;
 
         var patternStepIds = await GetLinkedPatternStepIdsAsync(project);
@@ -360,6 +440,8 @@ public class CraftingProjectService : ICraftingProjectService
             })
             .ToList();
 
+        var inventoryLinks = await MapInventoryLinksAsync(project.Id);
+
         return new CraftingProjectDto
         {
             Id = project.Id,
@@ -370,6 +452,10 @@ public class CraftingProjectService : ICraftingProjectService
             PatternName = patternName,
             ThemeId = project.ThemeId,
             ThemeName = themeName,
+            KitId = project.KitId,
+            KitName = kitName,
+            KitPieceId = project.KitPieceId,
+            KitPieceName = kitPieceName,
             Difficulty = project.Difficulty,
             DifficultyLabel = GetDifficultyLabel(project.Difficulty),
             Progress = patternStepIds.Count == 0
@@ -384,6 +470,7 @@ public class CraftingProjectService : ICraftingProjectService
             TimerStartedAt = timerDtos.FirstOrDefault(timer => timer.IsRunning)?.StartedAt,
             StepProgress = stepProgress,
             Timers = timerDtos,
+            InventoryLinks = inventoryLinks,
             UserId = project.UserId,
             Username = userName,
             CreatedAt = project.CreatedAt,
@@ -461,6 +548,85 @@ public class CraftingProjectService : ICraftingProjectService
     {
         return await _context.CraftingProjectStepProgress.AnyAsync(progress => progress.ProjectId == projectId)
             || await _context.CraftingProjectTimers.AnyAsync(timer => timer.ProjectId == projectId);
+    }
+
+    private async Task<IReadOnlyList<CraftingProjectInventoryLinkDto>> MapInventoryLinksAsync(Guid projectId)
+    {
+        var links = await _context.CraftingProjectInventoryLinks
+            .Where(link => link.ProjectId == projectId)
+            .OrderBy(link => link.InventoryItemType)
+            .ThenBy(link => link.CreatedAt)
+            .ToListAsync();
+
+        var results = new List<CraftingProjectInventoryLinkDto>(links.Count);
+        foreach (var link in links)
+        {
+            results.Add(new CraftingProjectInventoryLinkDto
+            {
+                Id = link.Id,
+                ProjectId = link.ProjectId,
+                InventoryItemType = link.InventoryItemType,
+                InventoryItemId = link.InventoryItemId,
+                InventoryItemName = await GetInventoryItemNameAsync(link.InventoryItemType, link.InventoryItemId),
+                QuantityPlanned = link.QuantityPlanned,
+                Notes = link.Notes,
+                CreatedAt = link.CreatedAt,
+                UpdatedAt = link.UpdatedAt
+            });
+        }
+
+        return results;
+    }
+
+    private async Task<string> GetInventoryItemNameAsync(string itemType, Guid itemId)
+    {
+        return itemType switch
+        {
+            YarnInventoryType => await _context.CraftingYarnInventoryItems
+                .Where(item => item.Id == itemId)
+                .Select(item => item.BrandName + " - " + item.ColorName)
+                .SingleOrDefaultAsync() ?? string.Empty,
+            ToolInventoryType => await _context.CraftingToolInventoryItems
+                .Where(item => item.Id == itemId)
+                .Select(item => item.BrandName + " - " + item.TypeName)
+                .SingleOrDefaultAsync() ?? string.Empty,
+            NotionInventoryType => await _context.CraftingNotionInventoryItems
+                .Where(item => item.Id == itemId)
+                .Select(item => item.BrandName + " - " + item.TypeName)
+                .SingleOrDefaultAsync() ?? string.Empty,
+            _ => string.Empty
+        };
+    }
+
+    private async Task EnsureInventoryItemBelongsToUserAsync(string itemType, Guid itemId, Guid userId)
+    {
+        var exists = itemType switch
+        {
+            YarnInventoryType => await _context.CraftingYarnInventoryItems
+                .AnyAsync(item => item.Id == itemId && item.UserId == userId),
+            ToolInventoryType => await _context.CraftingToolInventoryItems
+                .AnyAsync(item => item.Id == itemId && item.UserId == userId),
+            NotionInventoryType => await _context.CraftingNotionInventoryItems
+                .AnyAsync(item => item.Id == itemId && item.UserId == userId),
+            _ => false
+        };
+
+        if (!exists)
+        {
+            throw new InvalidOperationException("The selected inventory item is not available for this project.");
+        }
+    }
+
+    private static string NormalizeInventoryItemType(string itemType)
+    {
+        var normalized = itemType.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            YarnInventoryType => YarnInventoryType,
+            ToolInventoryType => ToolInventoryType,
+            NotionInventoryType => NotionInventoryType,
+            _ => throw new ArgumentException("Inventory item type must be yarn, tool, or notion.", nameof(itemType))
+        };
     }
 
     private async Task EnsurePatternBelongsToUserAsync(Guid? patternId, Guid userId)

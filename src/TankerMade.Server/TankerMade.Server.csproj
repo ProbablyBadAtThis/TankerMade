@@ -28,6 +28,7 @@
     <ProjectReference Include="..\TankerMade.Contracts\TankerMade.Contracts.csproj" />
     <ProjectReference Include="..\TankerMade.Core\TankerMade.Core.csproj" />
     <ProjectReference Include="..\TankerMade.Modules.Crafting\TankerMade.Modules.Crafting.csproj" />
+    <ProjectReference Include="..\TankerMade.Modules.Printing3D\TankerMade.Modules.Printing3D.csproj" />
   </ItemGroup>
 
 </Project>

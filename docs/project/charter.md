@@ -1,6 +1,6 @@
 # TankerMade — Project Charter
 Source: project-artifact.md (original project brief, preserved content)
-Last reviewed: 2026-05-22 — Phase A module-host checkpoint completed; vision/goals/principles retained verbatim.
+Last reviewed: 2026-05-26 — Phase D module-boundary direction clarified; vision/goals/principles retained.
 
 ---
 
@@ -9,6 +9,8 @@ Last reviewed: 2026-05-22 — Phase A module-host checkpoint completed; vision/g
 The core host for a local-first modular maker workbench. The primary program is a shell for authentication, settings, module discovery/loading, storage, and extension points. Maker workflows such as projects, patterns, pieces/steps, timers, inventory, kits, print jobs, and gamification are supplied by loaded modules.
 
 Built on .NET 10 Blazor WASM (client) + ASP.NET Core (local server) + EF Core (SQLite). Designed around a module system that adds domain-specific fields, flows, data, API behavior, and UI. Knitting/crochet-style crafting is expected to be delivered as a module, and 3D printing is planned as another module.
+
+Core must remain independent of any specific maker domain. If a module is absent, disabled, or eventually uninstalled, the host should still boot and provide authentication, settings, module management, the shell, and unrelated active modules. Core supplies foundational APIs and extension points; modules use those foundations to shape their own sections.
 
 ---
 
@@ -68,6 +70,8 @@ Built on .NET 10 Blazor WASM (client) + ASP.NET Core (local server) + EF Core (S
 - Write clean, minimal code; avoid over-engineering.
 - Core is craft-agnostic; all craft-specific logic and workflows live in modules.
 - The base program is not a usable craft app by itself; it becomes useful for a maker domain only after one or more modules are loaded.
+- Core should not define or depend on module-specific inventory, kit, project, print, yarn, spool, tool, or reference-data concepts.
+- Phase D should prove module-owned domain behavior; installable packaging, module-store behavior, and licensing remain later concerns.
 - Module boundary details are tracked in `docs/project/module-boundaries.md`.
 
 ---
