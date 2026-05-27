@@ -82,6 +82,27 @@ public class PrintingInventoryController : ControllerBase
         return Ok(await _inventoryService.GetReferenceItemsAsync(category));
     }
 
+    [HttpPost("reference/{category}")]
+    public async Task<ActionResult<PrintingInventoryReferenceItemDto>> CreateReferenceItem(
+        string category,
+        CreatePrintingInventoryReferenceItemDto request)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            return Ok(await _inventoryService.CreateReferenceItemAsync(category, request));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     private async Task<Guid?> GetActiveModuleUserIdAsync()
     {
         var userId = User.GetUserId();

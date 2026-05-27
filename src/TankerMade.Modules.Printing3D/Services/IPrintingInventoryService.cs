@@ -13,4 +13,5 @@ public interface IPrintingInventoryService
         Guid userId,
         PrintingMaterialInventoryFilterDto? filter = null);
     Task<IReadOnlyList<PrintingInventoryReferenceItemDto>> GetReferenceItemsAsync(string category);
+    Task<PrintingInventoryReferenceItemDto> CreateReferenceItemAsync(string category, CreatePrintingInventoryReferenceItemDto request);
 }

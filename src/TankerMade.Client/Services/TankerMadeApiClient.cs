@@ -409,6 +409,25 @@ public class TankerMadeApiClient
             ?? throw new InvalidOperationException("The server returned an empty notion response.");
     }
 
+    public async Task<IReadOnlyList<InventoryReferenceItemSummary>> GetCraftingReferenceItemsAsync(string category)
+    {
+        return await _http.GetFromJsonAsync<IReadOnlyList<InventoryReferenceItemSummary>>(
+            $"api/modules/crafting/inventory/reference/{Uri.EscapeDataString(category)}") ?? [];
+    }
+
+    public async Task<InventoryReferenceItemSummary> CreateCraftingReferenceItemAsync(
+        string category,
+        string name)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"api/modules/crafting/inventory/reference/{Uri.EscapeDataString(category)}",
+            new { name });
+        await EnsureSuccessAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<InventoryReferenceItemSummary>()
+            ?? throw new InvalidOperationException("The server returned an empty reference response.");
+    }
+
     public async Task<IReadOnlyList<PrintingMaterialInventoryItemSummary>> GetPrintingMaterialsAsync(string search = "")
     {
         var url = BuildUrl("api/modules/printing-3d/inventory/materials", ("search", search));
@@ -422,6 +441,25 @@ public class TankerMadeApiClient
 
         return await response.Content.ReadFromJsonAsync<PrintingMaterialInventoryItemSummary>()
             ?? throw new InvalidOperationException("The server returned an empty material response.");
+    }
+
+    public async Task<IReadOnlyList<InventoryReferenceItemSummary>> GetPrintingReferenceItemsAsync(string category)
+    {
+        return await _http.GetFromJsonAsync<IReadOnlyList<InventoryReferenceItemSummary>>(
+            $"api/modules/printing-3d/inventory/reference/{Uri.EscapeDataString(category)}") ?? [];
+    }
+
+    public async Task<InventoryReferenceItemSummary> CreatePrintingReferenceItemAsync(
+        string category,
+        string name)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"api/modules/printing-3d/inventory/reference/{Uri.EscapeDataString(category)}",
+            new { name });
+        await EnsureSuccessAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<InventoryReferenceItemSummary>()
+            ?? throw new InvalidOperationException("The server returned an empty reference response.");
     }
 
     private static string BuildUrl(string path, params (string Name, string Value)[] parameters)
@@ -571,6 +609,15 @@ public class InventoryPurchaseSummary
     public string SourceName { get; set; } = string.Empty;
     public decimal? Price { get; set; }
     public bool IsSalePrice { get; set; }
+}
+
+public class InventoryReferenceItemSummary
+{
+    public Guid Id { get; set; }
+    public string Category { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty;
+    public int SortOrder { get; set; }
 }
 
 public class CraftingYarnLotSummary

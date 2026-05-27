@@ -189,4 +189,70 @@ public class PrintingInventoryServiceTests
         Assert.Contains(tooling, item => item.Name == "Nozzle");
         Assert.Empty(unknown);
     }
+
+    [Fact]
+    public async Task GetReferenceItemsAsync_returns_core_reference_categories_for_module_extension_points()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+
+        var service = new PrintingInventoryService(context);
+
+        var colors = await service.GetReferenceItemsAsync("colors");
+        var themes = await service.GetReferenceItemsAsync("theme");
+
+        Assert.NotEmpty(colors);
+        Assert.Contains(colors, item => item.Category == "color" && item.Name == "Black");
+        Assert.NotEmpty(themes);
+        Assert.Contains(themes, item => item.Category == "theme" && item.Name == "Home Decor");
+    }
+
+    [Fact]
+    public async Task GetReferenceItemsAsync_does_not_treat_other_module_categories_as_printing_owned()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+
+        var service = new PrintingInventoryService(context);
+
+        var craftingCategory = await service.GetReferenceItemsAsync("fiber-tag");
+
+        Assert.Empty(craftingCategory);
+    }
+
+    [Fact]
+    public async Task CreateReferenceItemAsync_creates_and_reuses_module_owned_values()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+
+        var service = new PrintingInventoryService(context);
+
+        var created = await service.CreateReferenceItemAsync("material-type", new CreatePrintingInventoryReferenceItemDto
+        {
+            Name = "ASA"
+        });
+        var duplicate = await service.CreateReferenceItemAsync("material-type", new CreatePrintingInventoryReferenceItemDto
+        {
+            Name = " asa "
+        });
+
+        Assert.Equal(created.Id, duplicate.Id);
+        var items = await service.GetReferenceItemsAsync("material-type");
+        Assert.Contains(items, item => item.Name == "ASA");
+    }
+
+    [Fact]
+    public async Task CreateReferenceItemAsync_rejects_non_module_owned_categories()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+
+        var service = new PrintingInventoryService(context);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => service.CreateReferenceItemAsync("color", new CreatePrintingInventoryReferenceItemDto
+        {
+            Name = "Carbon"
+        }));
+    }
 }

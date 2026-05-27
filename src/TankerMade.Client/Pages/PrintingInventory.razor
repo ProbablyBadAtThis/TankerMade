@@ -1,4 +1,5 @@
 @page "/modules/printing-3d/inventory"
+@using System.Linq
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
@@ -45,7 +46,17 @@ else
             <div class="crafting-panel">
                 <h2>Add Material</h2>
                 <label class="form-label">Material type</label>
-                <input class="form-control mb-2" @bind="form.MaterialType" />
+                <select class="form-select mb-2" @bind="form.MaterialType">
+                    <option value="">Select material type</option>
+                    @foreach (var option in materialTypeOptions)
+                    {
+                        <option value="@option">@option</option>
+                    }
+                </select>
+                <div class="input-group mb-2">
+                    <input class="form-control" placeholder="Add new material type" @bind="newMaterialTypeName" />
+                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddMaterialTypeOptionAsync">Add</button>
+                </div>
                 <label class="form-label">Brand</label>
                 <input class="form-control mb-2" @bind="form.BrandName" />
                 <label class="form-label">Color</label>
@@ -55,7 +66,17 @@ else
                 <label class="form-label">Remaining grams</label>
                 <input class="form-control mb-2" type="number" step="0.01" @bind="form.RemainingWeightGrams" />
                 <label class="form-label">Diameter</label>
-                <input class="form-control mb-2" @bind="form.Diameter" />
+                <select class="form-select mb-2" @bind="form.Diameter">
+                    <option value="">Select diameter</option>
+                    @foreach (var option in diameterOptions)
+                    {
+                        <option value="@option">@option</option>
+                    }
+                </select>
+                <div class="input-group mb-2">
+                    <input class="form-control" placeholder="Add new diameter" @bind="newDiameterName" />
+                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddDiameterOptionAsync">Add</button>
+                </div>
                 <label class="form-label">Spool code</label>
                 <input class="form-control mb-2" @bind="form.SpoolCode" />
                 <label class="form-label">Printer compatibility</label>
@@ -97,6 +118,10 @@ else
     private TankerMade.Client.Services.PrintingMaterialFormRequest form = new();
     private string search = string.Empty;
     private string errorMessage = string.Empty;
+    private readonly List<string> materialTypeOptions = [];
+    private readonly List<string> diameterOptions = [];
+    private string newMaterialTypeName = string.Empty;
+    private string newDiameterName = string.Empty;
     private bool loading = true;
     private bool busy;
 
@@ -106,6 +131,7 @@ else
         if (AuthSession.IsSignedIn)
         {
             await ModuleState.RefreshAsync();
+            await LoadReferenceOptionsAsync();
         }
 
         await LoadMaterialsAsync();
@@ -146,6 +172,63 @@ else
             await ApiClient.CreatePrintingMaterialAsync(form);
             form = new();
             await LoadMaterialsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task LoadReferenceOptionsAsync()
+    {
+        materialTypeOptions.Clear();
+        diameterOptions.Clear();
+
+        materialTypeOptions.AddRange((await ApiClient.GetPrintingReferenceItemsAsync("material-type")).Select(i => i.Name));
+        diameterOptions.AddRange((await ApiClient.GetPrintingReferenceItemsAsync("diameter")).Select(i => i.Name));
+    }
+
+    private async Task AddMaterialTypeOptionAsync()
+    {
+        await AddReferenceOptionAsync("material-type", newMaterialTypeName, () => newMaterialTypeName = string.Empty, materialTypeOptions, value => form.MaterialType = value);
+    }
+
+    private async Task AddDiameterOptionAsync()
+    {
+        await AddReferenceOptionAsync("diameter", newDiameterName, () => newDiameterName = string.Empty, diameterOptions, value => form.Diameter = value);
+    }
+
+    private async Task AddReferenceOptionAsync(
+        string category,
+        string rawName,
+        Action clearInput,
+        List<string> options,
+        Action<string> assignSelection)
+    {
+        var name = rawName.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var created = await ApiClient.CreatePrintingReferenceItemAsync(category, name);
+            if (!options.Contains(created.Name))
+            {
+                options.Add(created.Name);
+                options.Sort(StringComparer.OrdinalIgnoreCase);
+            }
+
+            assignSelection(created.Name);
+            clearInput();
         }
         catch (Exception ex)
         {

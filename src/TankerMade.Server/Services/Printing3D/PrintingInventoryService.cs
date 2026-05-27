@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using TankerMade.Modules.Printing3D.DTOs.Inventory;
 using TankerMade.Modules.Printing3D.Entities;
+using TankerMade.Modules.Printing3D.ReferenceData;
 using TankerMade.Modules.Printing3D.Services;
 using TankerMade.Server.Data;
+using TankerMade.Server.Services.ReferenceData;
 
 namespace TankerMade.Server.Services.Printing3D;
 
@@ -95,6 +97,26 @@ public class PrintingInventoryService : IPrintingInventoryService
 
     public async Task<IReadOnlyList<PrintingInventoryReferenceItemDto>> GetReferenceItemsAsync(string category)
     {
+        var coreReferenceItems = await CoreReferenceLookup.TryGetItemsAsync(_context, category);
+        if (coreReferenceItems != null)
+        {
+            return coreReferenceItems
+                .Select((item, index) => new PrintingInventoryReferenceItemDto
+                {
+                    Id = item.Id,
+                    Category = item.Category,
+                    Name = item.Name,
+                    Slug = item.Slug,
+                    SortOrder = index + 1
+                })
+                .ToList();
+        }
+
+        if (!PrintingReferenceCategories.IsModuleOwned(category))
+        {
+            return [];
+        }
+
         var normalizedCategory = category.Trim();
 
         return await _context.PrintingInventoryReferenceItems
@@ -110,6 +132,62 @@ public class PrintingInventoryService : IPrintingInventoryService
                 SortOrder = i.SortOrder
             })
             .ToListAsync();
+    }
+
+    public async Task<PrintingInventoryReferenceItemDto> CreateReferenceItemAsync(
+        string category,
+        CreatePrintingInventoryReferenceItemDto request)
+    {
+        if (!PrintingReferenceCategories.IsModuleOwned(category))
+        {
+            throw new ArgumentException("This category is not module-owned.", nameof(category));
+        }
+
+        var name = request.Name?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Reference item name is required.", nameof(request));
+        }
+
+        var normalizedCategory = category.Trim();
+        var slug = ToSlug(name);
+        var existing = await _context.PrintingInventoryReferenceItems
+            .SingleOrDefaultAsync(i => i.Category == normalizedCategory && i.Slug == slug);
+
+        if (existing != null)
+        {
+            return new PrintingInventoryReferenceItemDto
+            {
+                Id = existing.Id,
+                Category = existing.Category,
+                Name = existing.Name,
+                Slug = existing.Slug,
+                SortOrder = existing.SortOrder
+            };
+        }
+
+        var maxSortOrder = await _context.PrintingInventoryReferenceItems
+            .Where(i => i.Category == normalizedCategory)
+            .Select(i => (int?)i.SortOrder)
+            .MaxAsync() ?? 0;
+
+        var created = new PrintingInventoryReferenceItem(
+            Guid.NewGuid(),
+            normalizedCategory,
+            name,
+            maxSortOrder + 1);
+
+        _context.PrintingInventoryReferenceItems.Add(created);
+        await _context.SaveChangesAsync();
+
+        return new PrintingInventoryReferenceItemDto
+        {
+            Id = created.Id,
+            Category = created.Category,
+            Name = created.Name,
+            Slug = created.Slug,
+            SortOrder = created.SortOrder
+        };
     }
 
     private IQueryable<PrintingMaterialInventoryItem> ApplyMaterialFilters(
@@ -241,6 +319,15 @@ public class PrintingInventoryService : IPrintingInventoryService
         {
             throw new ArgumentException("Spool weight must be greater than zero.", nameof(createDto));
         }
+    }
+
+    private static string ToSlug(string value)
+    {
+        return value.Trim().ToLowerInvariant()
+            .Replace(" ", "-")
+            .Replace(".", "-")
+            .Replace("/", "-")
+            .Replace("'", string.Empty);
     }
 
     private async Task<PrintingMaterialInventoryItemDto?> MapMaterialAsync(Guid id)

@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using TankerMade.Modules.Crafting.DTOs.Inventory;
 using TankerMade.Modules.Crafting.Entities;
+using TankerMade.Modules.Crafting.ReferenceData;
 using TankerMade.Modules.Crafting.Services;
 using TankerMade.Server.Data;
+using TankerMade.Server.Services.ReferenceData;
 
 namespace TankerMade.Server.Services.Crafting;
 
@@ -243,6 +245,26 @@ public class CraftingInventoryService : ICraftingInventoryService
 
     public async Task<IReadOnlyList<CraftingInventoryReferenceItemDto>> GetReferenceItemsAsync(string category)
     {
+        var coreReferenceItems = await CoreReferenceLookup.TryGetItemsAsync(_context, category);
+        if (coreReferenceItems != null)
+        {
+            return coreReferenceItems
+                .Select((item, index) => new CraftingInventoryReferenceItemDto
+                {
+                    Id = item.Id,
+                    Category = item.Category,
+                    Name = item.Name,
+                    Slug = item.Slug,
+                    SortOrder = index + 1
+                })
+                .ToList();
+        }
+
+        if (!CraftingReferenceCategories.IsModuleOwned(category))
+        {
+            return [];
+        }
+
         var normalizedCategory = category.Trim();
 
         return await _context.CraftingInventoryReferenceItems
@@ -258,6 +280,62 @@ public class CraftingInventoryService : ICraftingInventoryService
                 SortOrder = i.SortOrder
             })
             .ToListAsync();
+    }
+
+    public async Task<CraftingInventoryReferenceItemDto> CreateReferenceItemAsync(
+        string category,
+        CreateCraftingInventoryReferenceItemDto request)
+    {
+        if (!CraftingReferenceCategories.IsModuleOwned(category))
+        {
+            throw new ArgumentException("This category is not module-owned.", nameof(category));
+        }
+
+        var name = request.Name?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Reference item name is required.", nameof(request));
+        }
+
+        var normalizedCategory = category.Trim();
+        var slug = ToSlug(name);
+        var existing = await _context.CraftingInventoryReferenceItems
+            .SingleOrDefaultAsync(i => i.Category == normalizedCategory && i.Slug == slug);
+
+        if (existing != null)
+        {
+            return new CraftingInventoryReferenceItemDto
+            {
+                Id = existing.Id,
+                Category = existing.Category,
+                Name = existing.Name,
+                Slug = existing.Slug,
+                SortOrder = existing.SortOrder
+            };
+        }
+
+        var maxSortOrder = await _context.CraftingInventoryReferenceItems
+            .Where(i => i.Category == normalizedCategory)
+            .Select(i => (int?)i.SortOrder)
+            .MaxAsync() ?? 0;
+
+        var created = new CraftingInventoryReferenceItem(
+            Guid.NewGuid(),
+            normalizedCategory,
+            name,
+            maxSortOrder + 1);
+
+        _context.CraftingInventoryReferenceItems.Add(created);
+        await _context.SaveChangesAsync();
+
+        return new CraftingInventoryReferenceItemDto
+        {
+            Id = created.Id,
+            Category = created.Category,
+            Name = created.Name,
+            Slug = created.Slug,
+            SortOrder = created.SortOrder
+        };
     }
 
     private IQueryable<CraftingYarnInventoryItem> ApplyYarnFilters(
@@ -554,6 +632,13 @@ public class CraftingInventoryService : ICraftingInventoryService
         {
             throw new ArgumentException("Quantity must be greater than zero.", nameof(createDto));
         }
+    }
+
+    private static string ToSlug(string value)
+    {
+        return value.ToLowerInvariant()
+            .Replace(" ", "-")
+            .Replace("'", string.Empty);
     }
 
     private async Task<CraftingYarnInventoryItemDto?> MapYarnAsync(Guid id)

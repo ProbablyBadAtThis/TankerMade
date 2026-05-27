@@ -402,4 +402,70 @@ public class CraftingInventoryServiceTests
         Assert.Contains(fiberTags, item => item.Name == "Natural");
         Assert.Empty(unknown);
     }
+
+    [Fact]
+    public async Task GetReferenceItemsAsync_returns_core_reference_categories_for_module_extension_points()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+
+        var service = new CraftingInventoryService(context);
+
+        var themes = await service.GetReferenceItemsAsync("themes");
+        var sources = await service.GetReferenceItemsAsync("source");
+
+        Assert.NotEmpty(themes);
+        Assert.Contains(themes, item => item.Category == "theme" && item.Name == "Animals");
+        Assert.NotEmpty(sources);
+        Assert.Contains(sources, item => item.Category == "source" && item.Name == "Website");
+    }
+
+    [Fact]
+    public async Task GetReferenceItemsAsync_does_not_treat_other_module_categories_as_crafting_owned()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+
+        var service = new CraftingInventoryService(context);
+
+        var printingCategory = await service.GetReferenceItemsAsync("material-type");
+
+        Assert.Empty(printingCategory);
+    }
+
+    [Fact]
+    public async Task CreateReferenceItemAsync_creates_and_reuses_module_owned_values()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+
+        var service = new CraftingInventoryService(context);
+
+        var created = await service.CreateReferenceItemAsync("tool-type", new CreateCraftingInventoryReferenceItemDto
+        {
+            Name = "Cable Needle"
+        });
+        var duplicate = await service.CreateReferenceItemAsync("tool-type", new CreateCraftingInventoryReferenceItemDto
+        {
+            Name = " cable needle "
+        });
+
+        Assert.Equal(created.Id, duplicate.Id);
+        var items = await service.GetReferenceItemsAsync("tool-type");
+        Assert.Contains(items, item => item.Name == "Cable Needle");
+    }
+
+    [Fact]
+    public async Task CreateReferenceItemAsync_rejects_non_module_owned_categories()
+    {
+        using var factory = new DbContextTestFactory();
+        await using var context = factory.CreateContext();
+
+        var service = new CraftingInventoryService(context);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => service.CreateReferenceItemAsync("theme", new CreateCraftingInventoryReferenceItemDto
+        {
+            Name = "Ocean"
+        }));
+    }
 }

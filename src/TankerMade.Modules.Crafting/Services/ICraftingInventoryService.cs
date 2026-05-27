@@ -14,4 +14,5 @@ public interface ICraftingInventoryService
     Task<CraftingNotionInventoryItemDto?> GetNotionByIdAsync(Guid id, Guid userId);
     Task<IReadOnlyList<CraftingNotionInventoryItemDto>> GetNotionsAsync(Guid userId, CraftingNotionInventoryFilterDto? filter = null);
     Task<IReadOnlyList<CraftingInventoryReferenceItemDto>> GetReferenceItemsAsync(string category);
+    Task<CraftingInventoryReferenceItemDto> CreateReferenceItemAsync(string category, CreateCraftingInventoryReferenceItemDto request);
 }
