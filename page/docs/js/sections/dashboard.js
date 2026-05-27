@@ -8,11 +8,11 @@ class DashboardSection {
         this.sectionId = 'dashboard';
         this.data = {
             totalTasks: 67,
-            completedTasks: 45,
+            completedTasks: 54,
             currentPhase: {
-                number: "E",
-                title: "Reference Data Integration",
-                description: "Settings/reference data extension points and module-provided option flows.",
+                number: "G",
+                title: "Images & Assets",
+                description: "File storage, thumbnail generation, and module asset picker extension points.",
                 completed: 0,
                 total: 3
             }
@@ -121,7 +121,7 @@ class DashboardSection {
                 ${isAuthenticated ? `
                 <div class="dashboard-section-title">
                     <h2>Current Focus</h2>
-                    <p>Open Phase E work split into scan-friendly panels.</p>
+                    <p>Open Phase G work split into scan-friendly panels.</p>
                 </div>
 
                 <div class="dashboard-focus-panels">
@@ -192,7 +192,7 @@ class DashboardSection {
                     <h2>Project Glimpse</h2>
                 </div>
                 <div class="card-body">
-                    <p class="text-secondary">TankerMade is a local-first modular maker workbench. Phase D is complete; Phase E begins reference data integration.</p>
+                    <p class="text-secondary">TankerMade is a local-first modular maker workbench. Phase F is complete; Phase G begins image and asset foundations.</p>
                     <div class="mt-4">
                         <button class="btn btn-primary" onclick="window.TankerMadeAuth && window.TankerMadeAuth.login()">
                             Sign in with GitHub
@@ -213,7 +213,8 @@ class DashboardSection {
             { title: "Add module-owned step/checklist progress", meta: "Phase C • Projects", status: "done" },
             { title: "Add per-step timers, completion, piece selection, archive, and safe edits", meta: "Phase C • Projects", status: "done" },
             { title: "Complete module-owned inventory and kit backend flows", meta: "Phase D • Modules", status: "done" },
-            { title: "Wire settings/reference categories into module extension points", meta: "Phase E • Reference data", status: "active" }
+            { title: "Complete Phase F module platform hardening", meta: "Phase F • Platform", status: "done" },
+            { title: "Start local file storage for module-owned assets", meta: "Phase G • Assets", status: "active" }
         ];
 
         return tasks.map(task => `
@@ -233,7 +234,9 @@ class DashboardSection {
             { number: "B", title: "Crafting Module V2", completed: 5, total: 5, active: false },
             { number: "C", title: "Module Project Workspace", completed: 6, total: 6, active: false },
             { number: "D", title: "Inventory & Kits", completed: 8, total: 8, active: false },
-            { number: "E", title: "Reference Data Integration", completed: 0, total: 3, active: true }
+            { number: "E", title: "Reference Data Integration", completed: 3, total: 3, active: false },
+            { number: "F", title: "Module Platform V1", completed: 6, total: 6, active: false },
+            { number: "G", title: "Images & Assets", completed: 0, total: 3, active: true }
         ];
 
         return phases.map(phase => {
@@ -275,8 +278,8 @@ class DashboardSection {
 
     renderWeekSummary() {
         const stats = [
-            { value: "45", label: "Done" },
-            { value: "3", label: "Open in Phase E" },
+            { value: "54", label: "Done" },
+            { value: "3", label: "Open in Phase G" },
             { value: "9", label: "Roadmap Phases" }
         ];
 
@@ -290,9 +293,9 @@ class DashboardSection {
 
     renderNextTasks() {
         const tasks = [
-            { title: "Wire core Settings / ReferenceItem categories into module extension points", phase: "Phase E" },
-            { title: "Keep module-specific reference data owned by the module that needs it", phase: "Phase E" },
-            { title: "Support module-provided add/new option flows", phase: "Phase E" }
+            { title: "Add local disk file storage for module-owned assets", phase: "Phase G" },
+            { title: "Generate and store thumbnails", phase: "Phase G" },
+            { title: "Expose core asset picker extension points for modules", phase: "Phase G" }
         ];
 
         return tasks.map(task => `

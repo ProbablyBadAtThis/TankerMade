@@ -7,11 +7,11 @@
 class TankerMadeApp {
   constructor() {
     this.state = {
-      currentPhase:    5,
-      currentPhaseLabel: 'E',
+      currentPhase:    7,
+      currentPhaseLabel: 'G',
       totalPhases:     9,
       overallProgress: 0,   // always derived, never hardcoded
-      completedTasks:  45,
+      completedTasks:  54,
       totalTasks:      67,
       openIncidents:   0,
     };
@@ -155,8 +155,8 @@ class TankerMadeApp {
       let completedTasks = 0;
       let totalTasks     = 0;
 
-      const phaseCounts = [26, 5, 6, 7, 3, 5, 3, 4, 6];
-      const baselineCompleted = [26, 5, 6, 0, 0, 0, 0, 0, 0];
+      const phaseCounts = [26, 5, 6, 8, 3, 6, 3, 4, 6];
+      const baselineCompleted = [26, 5, 6, 8, 3, 6, 0, 0, 0];
 
       if (this.isAuthenticated && window.TankerMadeData) {
         const phases = await window.TankerMadeData.getAllPhaseProgress();
@@ -193,7 +193,7 @@ class TankerMadeApp {
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     const setStyle = (id, prop, val) => { const el = document.getElementById(id); if (el) el.style[prop] = val; };
 
-    set('current-phase', 'Phase ' + this.state.currentPhaseLabel + ': Reference Data Integration');
+    set('current-phase', 'Phase ' + this.state.currentPhaseLabel + ': Images & Assets');
     set('progress-text', this.state.overallProgress + '%');
     setStyle('header-progress', 'width', this.state.overallProgress + '%');
   }
