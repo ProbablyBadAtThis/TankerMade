@@ -1,12 +1,13 @@
 # TankerMade — Roadmap
 Source: Distilled from original artifact.md phases A-I, updated to reflect current stack and progress.
-Last reviewed: 2026-05-26
+Last reviewed: 2026-05-27
 
 ---
 
-## Current Phase: E — Reference Data Integration
+## Current Phase: F — Module Platform V1
 
 Phase A is behavior-complete as of the May 22, 2026 smoke test. Phase B is complete after expanding the reference Crafting module with pattern pieces, steps, readiness validation, and project workspace screens. Phase C is complete after adding module-owned project workspace behavior: step progress, per-step timers, completion rules, piece selection, archive flow, and non-destructive editing. Phase D is complete after proving module-owned inventory, reference data, project/inventory links, kit/grouping behavior, and kit-to-project backend flows.
+Phase E is complete after wiring neutral Core reference categories through module extension points, enforcing module-owned category boundaries, and supporting module-provided add/new option flows in inventory surfaces.
 
 Phase D should make modules architecturally real, not distribution-real. The goal is to prove that domain modules own their inventory, kit, filtering, reference data, and project-linking behavior while Core remains an independent host. Packaging, external module directories, installable artifacts, module-store concepts, and licensing remain later concerns for Phase F or beyond.
 
@@ -96,9 +97,9 @@ Phase D intentionally stops at backend/API proof for kits. Polished kit UI shoul
 
 ## Phase E — Reference Data Integration
 
-- [ ] Wire core Settings / ReferenceItem categories into module extension points
-- [ ] Keep module-specific reference data, such as fiber type, owned by the module that needs it
-- [ ] Support module-provided add/new option flows where modules expose dropdowns/tagging
+- [x] Wire core Settings / ReferenceItem categories into module extension points
+- [x] Keep module-specific reference data, such as fiber type, owned by the module that needs it
+- [x] Support module-provided add/new option flows where modules expose dropdowns/tagging
 
 ---
 

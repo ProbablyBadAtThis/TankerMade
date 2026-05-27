@@ -8,16 +8,16 @@ class DevTrackerSection {
         this.sectionId = 'dev-tracker';
         this.data = {
             totalTasks: 67,
-            completedTasks: 45,
+            completedTasks: 48,
             totalPhases: 9,
-            completedPhases: 4,
+            completedPhases: 5,
             currentPhase: {
-                number: "E",
-                title: "Reference Data Integration",
-                description: "Settings/reference data extension points and module-provided option flows.",
+                number: "F",
+                title: "Module Platform V1",
+                description: "Module contracts, discovery, and extension-point hardening.",
                 completed: 0,
-                total: 3,
-                color: "#34d399"
+                total: 6,
+                color: "#fb7185"
             },
             phases: [
                 {
@@ -59,11 +59,11 @@ class DevTrackerSection {
                 {
                     number: "E",
                     title: "Reference Data Integration",
-                    description: "Settings-backed reference data in forms and inline creation.",
-                    completed: 0,
+                    description: "Neutral Core reference extension points, module ownership boundaries, and inline add/new flows.",
+                    completed: 3,
                     total: 3,
                     color: "#34d399",
-                    status: "active"
+                    status: "completed"
                 },
                 {
                     number: "F",
@@ -72,7 +72,7 @@ class DevTrackerSection {
                     completed: 0,
                     total: 6,
                     color: "#fb7185",
-                    status: "upcoming"
+                    status: "active"
                 },
                 {
                     number: "G",
@@ -361,9 +361,9 @@ const ROADMAP_PHASE_TASKS = {
         { title: 'Module-owned kit/grouping to project flows', status: 'done', area: 'Kits' }
     ],
     E: [
-        { title: 'Wire Settings / ReferenceItem categories into forms', status: 'todo', area: 'Settings' },
-        { title: 'Theme, Color, Source, Brand, FiberType selectable in UI', status: 'todo', area: 'Forms' },
-        { title: 'Add/new option inline in dropdowns', status: 'todo', area: 'UX' }
+        { title: 'Wire core Settings / ReferenceItem categories into module extension points', status: 'done', area: 'Settings' },
+        { title: 'Keep module-specific reference data owned by each module', status: 'done', area: 'Ownership' },
+        { title: 'Support module-provided add/new option flows for dropdowns/tagging', status: 'done', area: 'UX' }
     ],
     F: [
         { title: 'Define IModule contract and registration', status: 'todo', area: 'Modules' },

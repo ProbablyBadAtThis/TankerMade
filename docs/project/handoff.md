@@ -4,13 +4,13 @@ Last updated: 2026-05-27
 
 ## Current State
 
-- Current roadmap phase: Phase E — Reference Data Integration.
+- Current roadmap phase: Phase F — Module Platform V1.
 - Phase A is complete.
 - Phase B is complete.
 - Phase C is complete.
 - Phase D is complete: module-owned inventory, reference data, project/inventory linking, kit/grouping backend, and kit-to-project backend flows are verified.
-- Latest verified slice: Crafting kit/grouping to project backend.
-- Latest pushed commit before current uncommitted Phase C work: `52f3020 Add project step checklist progress`.
+- Latest verified slice: Phase E module-owned add/new option reference flows.
+- Latest pushed commit: `b5041e7 Implement Phase E reference data extension points and module option flows`.
 - Latest unverified slice: none.
 
 ## Completed Recently
@@ -29,20 +29,24 @@ Last updated: 2026-05-27
 - Crafting kit pieces can create one linked project each through Crafting-owned backend/API flows.
 - Kit-created projects carry optional `KitId` and `KitPieceId` backlinks; service code clears those links if a kit or kit piece is deleted.
 - Crafting remains the reference/template module, not the final production catch-all for knitting, crochet, sewing, or other niches.
+- Core neutral reference categories are now available through module extension-point lookup flows (theme/color/source/brand).
+- Module-owned reference category boundaries are now explicitly enforced in module services.
+- Crafting inventory now supports module-provided add/new option flows for yarn weight, fiber tag, tool type, and notion type.
+- 3D printing inventory now supports module-provided add/new option flows for material type and diameter.
 
 ## Next Work
 
-- Start Phase E reference data integration.
+- Start Phase F module platform hardening.
 - Defer polished kit UI to Phase F, when module UI extension points and module-provided surfaces are hardened.
 
-## Phase D Direction
+## Phase F Direction
 
-- Phase D should make modules architecturally real, not distribution-real.
+- Phase F should harden the module platform after Phases A-E proved the baseline shape.
 - Core must remain an independent host. If a domain module is removed, Core authentication, settings, module management, shell behavior, and other active modules should keep functioning.
 - Domain modules should own their own language, workflows, persistence, services, endpoints, validation, UI surfaces, filtering, and reference data.
-- Crafting inventory should prove the reference implementation, but should not turn Core into a craft app or turn `TankerMade.Modules.Crafting` into the final catch-all for knitting/crochet/sewing/etc.
-- A thin 3D printing inventory slice should pressure-test the same host pattern against a different domain before richer kit/project flows are built.
-- Module store, licensing, external packaging, and install/uninstall mechanics are future concerns, not Phase D implementation targets.
+- Crafting inventory remains the reference implementation, not the production catch-all for knitting/crochet/sewing/etc.
+- 3D printing remains the secondary boundary pressure-test for non-craft-shaped assumptions.
+- Packaging, external module directories, installable artifacts, module-store concepts, and licensing should be addressed as Phase F+ concerns while avoiding premature coupling.
 
 ## Product Input Backlog
 
@@ -62,8 +66,8 @@ The user reported:
 
 - Build passed.
 - Test passed.
-- Crafting kit/grouping to project backend was verified locally by the user rather than through Codex sandbox builds.
+- Phase E reference data integration slices were verified locally by the user rather than through Codex sandbox builds.
 
 ## Verification Needed Next
 
-No Phase D verification is currently pending.
+No Phase E verification is currently pending.
