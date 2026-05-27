@@ -2,44 +2,46 @@ using Microsoft.EntityFrameworkCore;
 using TankerMade.Contracts.DTOs.Modules;
 using TankerMade.Contracts.Services;
 using TankerMade.Core.Entities;
+using TankerMade.Core.Modules;
 using TankerMade.Server.Data;
+using TankerMade.Server.Modules;
 
 namespace TankerMade.Server.Services;
 
 public class ModuleService : IModuleService
 {
     private readonly TankerMadeDbContext _context;
+    private readonly IReadOnlyList<IModuleDiscoveryProvider> _discoveryProviders;
 
-    public ModuleService(TankerMadeDbContext context)
+    public ModuleService(
+        TankerMadeDbContext context,
+        IEnumerable<IModuleDiscoveryProvider> discoveryProviders)
     {
         _context = context;
+        _discoveryProviders = discoveryProviders.ToList();
     }
 
     public async Task<IReadOnlyList<ModuleDto>> GetAvailableModulesAsync(Guid userId)
     {
+        var discoveredByKey = await DiscoverByModuleKeyAsync();
         var activeModuleIds = await _context.UserModuleActivations
             .Where(a => a.UserId == userId && a.IsActive)
             .Select(a => a.ModuleDefinitionId)
             .ToListAsync();
 
-        return await _context.ModuleDefinitions
+        var modules = await _context.ModuleDefinitions
             .OrderBy(m => m.Name)
-            .Select(m => new ModuleDto
-            {
-                Id = m.Id,
-                ModuleKey = m.ModuleKey,
-                Name = m.Name,
-                Description = m.Description,
-                Version = m.Version,
-                IsBundled = m.IsBundled,
-                IsActive = activeModuleIds.Contains(m.Id)
-            })
             .ToListAsync();
+
+        return modules
+            .Select(m => ToDto(m, activeModuleIds.Contains(m.Id), discoveredByKey))
+            .ToList();
     }
 
     public async Task<IReadOnlyList<ModuleDto>> GetActiveModulesAsync(Guid userId)
     {
-        return await _context.UserModuleActivations
+        var discoveredByKey = await DiscoverByModuleKeyAsync();
+        var active = await _context.UserModuleActivations
             .Where(a => a.UserId == userId && a.IsActive)
             .Join(
                 _context.ModuleDefinitions,
@@ -53,10 +55,28 @@ public class ModuleService : IModuleService
                     Description = module.Description,
                     Version = module.Version,
                     IsBundled = module.IsBundled,
-                    IsActive = activation.IsActive
+                    IsActive = activation.IsActive,
+                    NavigationLabel = string.Empty,
+                    NavigationRoute = string.Empty,
+                    NavigationOrder = 0
                 })
-            .OrderBy(m => m.Name)
             .ToListAsync();
+
+        return active
+            .Select(dto =>
+            {
+                if (discoveredByKey.TryGetValue(dto.ModuleKey, out var discovered)
+                    && discovered is IModuleNavigation navigation)
+                {
+                    dto.NavigationLabel = navigation.NavigationLabel;
+                    dto.NavigationRoute = navigation.NavigationRoute;
+                    dto.NavigationOrder = navigation.NavigationOrder;
+                }
+
+                return dto;
+            })
+            .OrderBy(m => m.Name)
+            .ToList();
     }
 
     public async Task<ModuleDto?> ActivateAsync(string moduleKey, Guid userId)
@@ -84,7 +104,8 @@ public class ModuleService : IModuleService
 
         await _context.SaveChangesAsync();
 
-        return ToDto(module, activation.IsActive);
+        var discoveredByKey = await DiscoverByModuleKeyAsync();
+        return ToDto(module, activation.IsActive, discoveredByKey);
     }
 
     public async Task<bool> DeactivateAsync(string moduleKey, Guid userId)
@@ -118,8 +139,22 @@ public class ModuleService : IModuleService
             .AnyAsync(a => a.UserId == userId && a.IsActive);
     }
 
-    private static ModuleDto ToDto(ModuleDefinition module, bool isActive)
+    private static ModuleDto ToDto(
+        ModuleDefinition module,
+        bool isActive,
+        IReadOnlyDictionary<string, IModule> discoveredByKey)
     {
+        var navigationLabel = string.Empty;
+        var navigationRoute = string.Empty;
+        var navigationOrder = 0;
+        if (discoveredByKey.TryGetValue(module.ModuleKey, out var discovered)
+            && discovered is IModuleNavigation navigation)
+        {
+            navigationLabel = navigation.NavigationLabel;
+            navigationRoute = navigation.NavigationRoute;
+            navigationOrder = navigation.NavigationOrder;
+        }
+
         return new ModuleDto
         {
             Id = module.Id,
@@ -128,7 +163,26 @@ public class ModuleService : IModuleService
             Description = module.Description,
             Version = module.Version,
             IsBundled = module.IsBundled,
-            IsActive = isActive
+            IsActive = isActive,
+            NavigationLabel = navigationLabel,
+            NavigationRoute = navigationRoute,
+            NavigationOrder = navigationOrder
         };
+    }
+
+    private async Task<IReadOnlyDictionary<string, IModule>> DiscoverByModuleKeyAsync()
+    {
+        var map = new Dictionary<string, IModule>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var provider in _discoveryProviders)
+        {
+            var discovered = await provider.DiscoverAsync();
+            foreach (var registration in discovered)
+            {
+                map[registration.Module.ModuleKey] = registration.Module;
+            }
+        }
+
+        return map;
     }
 }

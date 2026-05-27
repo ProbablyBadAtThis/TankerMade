@@ -6,7 +6,7 @@ public class ClientModuleState
     private readonly HashSet<string> _activeModuleKeys = [];
     private readonly List<ClientModuleSummary> _availableModules =
     [
-        new("crafting", "Crafting", "Pattern-based maker workflows supplied by the reference module.", false)
+        new("crafting", "Crafting", "Pattern-based maker workflows supplied by the reference module.", false, "Crafting", "modules/crafting", 100)
     ];
 
     public ClientModuleState(TankerMadeApiClient apiClient)
@@ -30,7 +30,10 @@ public class ClientModuleState
                 module.ModuleKey,
                 module.Name,
                 module.Description,
-                module.IsActive));
+                module.IsActive,
+                module.NavigationLabel,
+                module.NavigationRoute,
+                module.NavigationOrder));
 
             if (module.IsActive)
             {
@@ -69,7 +72,7 @@ public class ClientModuleState
     {
         _activeModuleKeys.Clear();
         _availableModules.Clear();
-        _availableModules.Add(new("crafting", "Crafting", "Pattern-based maker workflows supplied by the reference module.", false));
+        _availableModules.Add(new("crafting", "Crafting", "Pattern-based maker workflows supplied by the reference module.", false, "Crafting", "modules/crafting", 100));
         Changed?.Invoke();
     }
 
@@ -93,4 +96,11 @@ public class ClientModuleState
     }
 }
 
-public record ClientModuleSummary(string ModuleKey, string Name, string Description, bool IsActive);
+public record ClientModuleSummary(
+    string ModuleKey,
+    string Name,
+    string Description,
+    bool IsActive,
+    string NavigationLabel,
+    string NavigationRoute,
+    int NavigationOrder);

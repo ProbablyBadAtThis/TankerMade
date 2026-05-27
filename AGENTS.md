@@ -105,14 +105,14 @@ http://localhost:5236/scalar/v1
 
 ## Current Roadmap Focus
 
-Use `docs/project/roadmap.md` as the source of truth. As of the current docs, Phase F focuses on module platform hardening:
+Use `docs/project/roadmap.md` as the source of truth. As of the current docs, Phase G focuses on images and assets:
 
 - Keep `TankerMade.Modules.Crafting` as a reference/template module, not the eventual production catch-all for knitting, crochet, sewing, or another niche.
 - Phase C module-owned project workspace behavior is complete: step progress, per-step timers, completion rules, piece selection, archive flow, and non-destructive editing.
 - Phase D is complete: module-owned inventory, reference data, project/inventory linking, kit/grouping backend, and kit-to-project backend flows are verified.
 - Phase E is complete: Core neutral reference categories are wired into module extension points, module-owned category boundaries are enforced, and module add/new option flows are in place.
-- Phase F should harden module platform seams: `IModule` contract/registration, extension surfaces, and module-provided UI boundaries.
-- Polished kit UI remains a Phase F concern while module UI extension points and module-provided surfaces are hardened.
+- Phase F is complete: module contracts, registration/discovery seams, module-owned navigation metadata, packaging compatibility validation, and external manifest discovery spike are in place.
+- Phase G should add file storage, thumbnail generation, and core asset-picker extension points that modules can plug into.
 
 ## UX Expectations
 

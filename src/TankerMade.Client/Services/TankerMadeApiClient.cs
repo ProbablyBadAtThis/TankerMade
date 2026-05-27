@@ -443,6 +443,75 @@ public class TankerMadeApiClient
             ?? throw new InvalidOperationException("The server returned an empty material response.");
     }
 
+    public async Task<IReadOnlyList<CraftingKitSummary>> GetCraftingKitsAsync(bool includeArchived = false)
+    {
+        var url = includeArchived
+            ? "api/modules/crafting/kits?includeArchived=true"
+            : "api/modules/crafting/kits";
+
+        return await _http.GetFromJsonAsync<IReadOnlyList<CraftingKitSummary>>(url) ?? [];
+    }
+
+    public async Task<CraftingKitSummary?> GetCraftingKitAsync(Guid kitId)
+    {
+        var response = await _http.GetAsync($"api/modules/crafting/kits/{kitId}");
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<CraftingKitSummary>();
+    }
+
+    public async Task<CraftingKitSummary> CreateCraftingKitAsync(CraftingKitFormRequest request)
+    {
+        var response = await _http.PostAsJsonAsync("api/modules/crafting/kits", request);
+        await EnsureSuccessAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<CraftingKitSummary>()
+            ?? throw new InvalidOperationException("The server returned an empty kit response.");
+    }
+
+    public async Task<CraftingKitPieceSummary?> AddCraftingKitPieceAsync(Guid kitId, CraftingKitPieceFormRequest request)
+    {
+        var response = await _http.PostAsJsonAsync($"api/modules/crafting/kits/{kitId}/pieces", request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<CraftingKitPieceSummary>();
+    }
+
+    public async Task<CraftingKitSupplySummary?> AddCraftingKitSupplyAsync(Guid kitId, CraftingKitSupplyFormRequest request)
+    {
+        var response = await _http.PostAsJsonAsync($"api/modules/crafting/kits/{kitId}/supplies", request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<CraftingKitSupplySummary>();
+    }
+
+    public async Task<CraftingProjectSummary?> CreateCraftingProjectFromKitPieceAsync(
+        Guid kitId,
+        Guid pieceId,
+        CraftingKitProjectFormRequest request)
+    {
+        var response = await _http.PostAsJsonAsync($"api/modules/crafting/kits/{kitId}/pieces/{pieceId}/project", request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>();
+    }
+
     public async Task<IReadOnlyList<InventoryReferenceItemSummary>> GetPrintingReferenceItemsAsync(string category)
     {
         return await _http.GetFromJsonAsync<IReadOnlyList<InventoryReferenceItemSummary>>(
@@ -604,6 +673,40 @@ public class PrintingMaterialFormRequest
     public bool IsSalePrice { get; set; }
 }
 
+public class CraftingKitFormRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public Guid? ThemeId { get; set; }
+    public int Difficulty { get; set; }
+    public int Progress { get; set; }
+}
+
+public class CraftingKitPieceFormRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public Guid? PatternId { get; set; }
+    public string Notes { get; set; } = string.Empty;
+}
+
+public class CraftingKitSupplyFormRequest
+{
+    public string SupplyType { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public decimal? Quantity { get; set; }
+    public string Notes { get; set; } = string.Empty;
+}
+
+public class CraftingKitProjectFormRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public Guid? PatternId { get; set; }
+    public Guid? ThemeId { get; set; }
+    public int? Difficulty { get; set; }
+}
+
 public class InventoryPurchaseSummary
 {
     public string SourceName { get; set; } = string.Empty;
@@ -689,6 +792,46 @@ public class PrintingMaterialInventoryItemSummary
     public decimal? RegularPrice { get; set; }
     public IReadOnlyList<PrintingSpoolSummary> Spools { get; set; } = [];
     public IReadOnlyList<InventoryPurchaseSummary> Purchases { get; set; } = [];
+}
+
+public class CraftingKitSummary
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public Guid? ThemeId { get; set; }
+    public string ThemeName { get; set; } = string.Empty;
+    public int Difficulty { get; set; }
+    public string DifficultyLabel { get; set; } = string.Empty;
+    public int Progress { get; set; }
+    public bool IsArchived { get; set; }
+    public DateTime? ArchivedAt { get; set; }
+    public IReadOnlyList<CraftingKitPieceSummary> Pieces { get; set; } = [];
+    public IReadOnlyList<CraftingKitSupplySummary> Supplies { get; set; } = [];
+}
+
+public class CraftingKitPieceSummary
+{
+    public Guid Id { get; set; }
+    public Guid KitId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public Guid? PatternId { get; set; }
+    public string PatternName { get; set; } = string.Empty;
+    public string Notes { get; set; } = string.Empty;
+    public int SortOrder { get; set; }
+}
+
+public class CraftingKitSupplySummary
+{
+    public Guid Id { get; set; }
+    public Guid KitId { get; set; }
+    public string SupplyType { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public decimal? Quantity { get; set; }
+    public string Notes { get; set; } = string.Empty;
+    public int SortOrder { get; set; }
 }
 
 public class CraftingProjectSummary

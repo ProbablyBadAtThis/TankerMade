@@ -9,4 +9,7 @@ public class ModuleDto
     public string Version { get; set; } = string.Empty;
     public bool IsBundled { get; set; }
     public bool IsActive { get; set; }
+    public string NavigationLabel { get; set; } = string.Empty;
+    public string NavigationRoute { get; set; } = string.Empty;
+    public int NavigationOrder { get; set; }
 }

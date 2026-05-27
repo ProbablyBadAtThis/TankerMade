@@ -1,9 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using TankerMade.Core.Entities;
-using TankerMade.Modules.Crafting;
 using TankerMade.Modules.Crafting.Entities;
-using TankerMade.Modules.Printing3D;
 using TankerMade.Modules.Printing3D.Entities;
+using TankerMade.Server.Modules;
 
 namespace TankerMade.Server.Data;
 
@@ -747,28 +746,20 @@ public class TankerMadeDbContext : DbContext
     {
         var now = new DateTime(2025, 10, 18, 0, 0, 0, DateTimeKind.Utc);
 
-        modelBuilder.Entity<ModuleDefinition>().HasData(
-            new
+        var bundledModules = BundledModuleCatalog.Registrations
+            .Select(registration => new
             {
-                Id = Guid.Parse("55555555-5555-5555-5555-555555555551"),
-                ModuleKey = CraftingModule.ModuleKey,
-                Name = CraftingModule.Name,
-                Description = CraftingModule.Description,
-                Version = CraftingModule.Version,
-                IsBundled = true,
+                Id = registration.Id,
+                ModuleKey = registration.Module.ModuleKey,
+                Name = registration.Module.Name,
+                Description = registration.Module.Description,
+                Version = registration.Module.Version,
+                IsBundled = registration.Module.IsBundled,
                 CreatedAt = now
-            },
-            new
-            {
-                Id = Guid.Parse("55555555-5555-5555-5555-555555555552"),
-                ModuleKey = Printing3DModule.ModuleKey,
-                Name = Printing3DModule.Name,
-                Description = Printing3DModule.Description,
-                Version = Printing3DModule.Version,
-                IsBundled = true,
-                CreatedAt = now
-            }
-        );
+            })
+            .ToArray();
+
+        modelBuilder.Entity<ModuleDefinition>().HasData(bundledModules);
 
         modelBuilder.Entity<CraftingInventoryReferenceItem>().HasData(
             new { Id = Guid.Parse("66666666-6666-6666-6666-666666666601"), Category = "yarn-weight", Name = "Lace", Slug = "lace", SortOrder = 1, CreatedAt = now },

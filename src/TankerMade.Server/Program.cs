@@ -9,11 +9,18 @@ using TankerMade.Contracts.Services;
 using TankerMade.Modules.Crafting.Services;
 using TankerMade.Modules.Printing3D.Services;
 using TankerMade.Server.Data;
+using TankerMade.Server.Modules;
 using TankerMade.Server.Services;
 using TankerMade.Server.Services.Crafting;
 using TankerMade.Server.Services.Printing3D;
 
 var builder = WebApplication.CreateBuilder(args);
+
+BundledModuleCatalog.Validate();
+
+var moduleDiscoveryOptions = builder.Configuration
+    .GetSection("ModuleDiscovery")
+    .Get<ModuleDiscoveryOptions>() ?? new ModuleDiscoveryOptions();
 
 // Add DbContext
 var dataDir = Path.Combine(builder.Environment.ContentRootPath, "App_Data");
@@ -74,6 +81,10 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IModuleService, ModuleService>();
+builder.Services.AddScoped<IModuleRegistrationService, ModuleRegistrationService>();
+builder.Services.AddScoped<IModuleDiscoveryProvider, BundledModuleDiscoveryProvider>();
+builder.Services.AddSingleton(moduleDiscoveryOptions);
+builder.Services.AddScoped<IModuleDiscoveryProvider, ExternalManifestModuleDiscoveryProvider>();
 builder.Services.AddScoped<ICraftingProjectService, CraftingProjectService>();
 builder.Services.AddScoped<ICraftingPatternService, CraftingPatternService>();
 builder.Services.AddScoped<ICraftingInventoryService, CraftingInventoryService>();
@@ -113,6 +124,9 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<TankerMadeDbContext>();
     db.Database.Migrate();
+
+    var moduleRegistration = scope.ServiceProvider.GetRequiredService<IModuleRegistrationService>();
+    await moduleRegistration.SyncDiscoveredModulesAsync();
 }
 
 // Configure the HTTP request pipeline

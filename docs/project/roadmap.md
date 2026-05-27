@@ -4,7 +4,7 @@ Last reviewed: 2026-05-27
 
 ---
 
-## Current Phase: F — Module Platform V1
+## Current Phase: G — Images & Assets
 
 Phase A is behavior-complete as of the May 22, 2026 smoke test. Phase B is complete after expanding the reference Crafting module with pattern pieces, steps, readiness validation, and project workspace screens. Phase C is complete after adding module-owned project workspace behavior: step progress, per-step timers, completion rules, piece selection, archive flow, and non-destructive editing. Phase D is complete after proving module-owned inventory, reference data, project/inventory links, kit/grouping behavior, and kit-to-project backend flows.
 Phase E is complete after wiring neutral Core reference categories through module extension points, enforcing module-owned category boundaries, and supporting module-provided add/new option flows in inventory surfaces.
@@ -105,12 +105,12 @@ Phase D intentionally stops at backend/API proof for kits. Polished kit UI shoul
 
 ## Phase F — Module Platform V1
 
-- [ ] Harden IModule contract and registration after the first module proves the shape
-- [ ] Support external module discovery from a configurable module directory
-- [ ] Expand UI extension points via DynamicComponent
-- [ ] Build/refine module-provided kit UI after the module UI extension model is clearer
-- [ ] Package first craft module as an installable/loadable module artifact
-- [ ] 3D printing module scaffold
+- [x] Harden IModule contract and registration after the first module proves the shape
+- [x] Support external module discovery from a configurable module directory
+- [x] Expand UI extension points via DynamicComponent
+- [x] Build/refine module-provided kit UI after the module UI extension model is clearer
+- [x] Package first craft module as an installable/loadable module artifact
+- [x] 3D printing module scaffold
 
 ---
 

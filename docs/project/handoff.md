@@ -4,12 +4,12 @@ Last updated: 2026-05-27
 
 ## Current State
 
-- Current roadmap phase: Phase F — Module Platform V1.
+- Current roadmap phase: Phase G — Images & Assets.
 - Phase A is complete.
 - Phase B is complete.
 - Phase C is complete.
 - Phase D is complete: module-owned inventory, reference data, project/inventory linking, kit/grouping backend, and kit-to-project backend flows are verified.
-- Latest verified slice: Phase E module-owned add/new option reference flows.
+- Latest verified slice: Phase F module platform hardening completion.
 - Latest pushed commit: `b5041e7 Implement Phase E reference data extension points and module option flows`.
 - Latest unverified slice: none.
 
@@ -33,20 +33,23 @@ Last updated: 2026-05-27
 - Module-owned reference category boundaries are now explicitly enforced in module services.
 - Crafting inventory now supports module-provided add/new option flows for yarn weight, fiber tag, tool type, and notion type.
 - 3D printing inventory now supports module-provided add/new option flows for material type and diameter.
+- Core module contracts are hardened with `IModule`, `IModuleNavigation`, and `IModulePackaging` seams.
+- Bundled modules now register through a shared registration pipeline with startup sync.
+- Module discovery now supports both bundled providers and configurable external manifest discovery.
+- Active module navigation is now module-owned metadata rendered through host extension points.
+- Crafting module kit UI now includes dedicated module-owned kits surface and flows.
+- Registration now validates packaging compatibility against host runtime and manifest rules.
 
 ## Next Work
 
-- Start Phase F module platform hardening.
-- Defer polished kit UI to Phase F, when module UI extension points and module-provided surfaces are hardened.
+- Start Phase G image and asset foundations: storage, thumbnail generation, and module-usable picker seams.
 
-## Phase F Direction
+## Phase G Direction
 
-- Phase F should harden the module platform after Phases A-E proved the baseline shape.
+- Phase G should establish module-friendly image and asset primitives after Phase F hardened module seams.
 - Core must remain an independent host. If a domain module is removed, Core authentication, settings, module management, shell behavior, and other active modules should keep functioning.
-- Domain modules should own their own language, workflows, persistence, services, endpoints, validation, UI surfaces, filtering, and reference data.
-- Crafting inventory remains the reference implementation, not the production catch-all for knitting/crochet/sewing/etc.
-- 3D printing remains the secondary boundary pressure-test for non-craft-shaped assumptions.
-- Packaging, external module directories, installable artifacts, module-store concepts, and licensing should be addressed as Phase F+ concerns while avoiding premature coupling.
+- Domain modules should continue owning their own language, workflows, persistence, services, endpoints, validation, UI surfaces, filtering, and reference data.
+- Asset primitives should be neutral and extensible so modules can attach media without Core becoming craft-specific.
 
 ## Product Input Backlog
 
@@ -66,8 +69,8 @@ The user reported:
 
 - Build passed.
 - Test passed.
-- Phase E reference data integration slices were verified locally by the user rather than through Codex sandbox builds.
+- Phase F module platform hardening slices were verified locally by the user rather than through Codex sandbox builds.
 
 ## Verification Needed Next
 
-No Phase E verification is currently pending.
+No Phase F verification is currently pending.

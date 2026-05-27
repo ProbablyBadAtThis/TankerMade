@@ -1,6 +1,7 @@
 using TankerMade.Core.Entities;
 using TankerMade.Modules.Crafting;
 using TankerMade.Modules.Printing3D;
+using TankerMade.Server.Modules;
 using TankerMade.Server.Services;
 using Xunit;
 
@@ -17,7 +18,7 @@ public class ModuleServiceTests
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
-        var service = new ModuleService(context);
+        var service = new ModuleService(context, [new BundledModuleDiscoveryProvider()]);
 
         var activated = await service.ActivateAsync(CraftingModule.ModuleKey, user.Id);
         var activeModules = await service.GetActiveModulesAsync(user.Id);
@@ -36,7 +37,7 @@ public class ModuleServiceTests
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
-        var service = new ModuleService(context);
+        var service = new ModuleService(context, [new BundledModuleDiscoveryProvider()]);
 
         var activated = await service.ActivateAsync(Printing3DModule.ModuleKey, user.Id);
         var activeModules = await service.GetActiveModulesAsync(user.Id);
@@ -44,5 +45,19 @@ public class ModuleServiceTests
         Assert.NotNull(activated);
         Assert.True(activated.IsActive);
         Assert.Contains(activeModules, module => module.ModuleKey == Printing3DModule.ModuleKey);
+    }
+
+    [Fact]
+    public void BundledModuleCatalog_validate_accepts_current_module_contracts()
+    {
+        BundledModuleCatalog.Validate();
+
+        var moduleKeys = BundledModuleCatalog.Registrations
+            .Select(registration => registration.Module.ModuleKey)
+            .ToList();
+
+        Assert.Contains(CraftingModule.ModuleKey, moduleKeys);
+        Assert.Contains(Printing3DModule.ModuleKey, moduleKeys);
+        Assert.Equal(moduleKeys.Count, moduleKeys.Distinct(StringComparer.OrdinalIgnoreCase).Count());
     }
 }

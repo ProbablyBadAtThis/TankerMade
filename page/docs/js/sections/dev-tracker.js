@@ -8,16 +8,16 @@ class DevTrackerSection {
         this.sectionId = 'dev-tracker';
         this.data = {
             totalTasks: 67,
-            completedTasks: 48,
+            completedTasks: 54,
             totalPhases: 9,
-            completedPhases: 5,
+            completedPhases: 6,
             currentPhase: {
-                number: "F",
-                title: "Module Platform V1",
-                description: "Module contracts, discovery, and extension-point hardening.",
+                number: "G",
+                title: "Images & Assets",
+                description: "File storage, thumbnail generation, and module asset picker extension points.",
                 completed: 0,
-                total: 6,
-                color: "#fb7185"
+                total: 3,
+                color: "#38bdf8"
             },
             phases: [
                 {
@@ -68,11 +68,11 @@ class DevTrackerSection {
                 {
                     number: "F",
                     title: "Module Platform V1",
-                    description: "Module contracts, discovery, UI extension points, and examples.",
-                    completed: 0,
+                    description: "Module contracts, discovery, UI extension points, and packaging readiness.",
+                    completed: 6,
                     total: 6,
                     color: "#fb7185",
-                    status: "active"
+                    status: "completed"
                 },
                 {
                     number: "G",
@@ -81,7 +81,7 @@ class DevTrackerSection {
                     completed: 0,
                     total: 3,
                     color: "#38bdf8",
-                    status: "upcoming"
+                    status: "active"
                 },
                 {
                     number: "H",
@@ -366,12 +366,12 @@ const ROADMAP_PHASE_TASKS = {
         { title: 'Support module-provided add/new option flows for dropdowns/tagging', status: 'done', area: 'UX' }
     ],
     F: [
-        { title: 'Define IModule contract and registration', status: 'todo', area: 'Modules' },
-        { title: 'Module discovery from directory', status: 'todo', area: 'Modules' },
-        { title: 'UI extension points via DynamicComponent', status: 'todo', area: 'Client' },
-        { title: 'Build/refine module-provided kit UI after module UI hardening', status: 'todo', area: 'Client' },
-        { title: 'Crafting module extracted as first example', status: 'todo', area: 'Modules' },
-        { title: '3D printing module scaffold', status: 'todo', area: 'Modules' }
+        { title: 'Harden IModule contract and registration', status: 'done', area: 'Modules' },
+        { title: 'Support external module discovery from configurable directory', status: 'done', area: 'Modules' },
+        { title: 'Expand UI extension points via DynamicComponent', status: 'done', area: 'Client' },
+        { title: 'Build/refine module-provided kit UI after module UI hardening', status: 'done', area: 'Client' },
+        { title: 'Package first craft module as installable/loadable artifact shape', status: 'done', area: 'Modules' },
+        { title: '3D printing module scaffold', status: 'done', area: 'Modules' }
     ],
     G: [
         { title: 'Local disk file storage', status: 'todo', area: 'Assets' },
