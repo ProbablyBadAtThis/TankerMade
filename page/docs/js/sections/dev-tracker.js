@@ -8,16 +8,16 @@ class DevTrackerSection {
         this.sectionId = 'dev-tracker';
         this.data = {
             totalTasks: 67,
-            completedTasks: 54,
+            completedTasks: 57,
             totalPhases: 9,
-            completedPhases: 6,
+            completedPhases: 7,
             currentPhase: {
-                number: "G",
-                title: "Images & Assets",
-                description: "File storage, thumbnail generation, and module asset picker extension points.",
+                number: "H",
+                title: "Performance & Search",
+                description: "Indexes, server-side filtering/paging, search, and targeted caching.",
                 completed: 0,
-                total: 3,
-                color: "#38bdf8"
+                total: 4,
+                color: "#818cf8"
             },
             phases: [
                 {
@@ -78,10 +78,10 @@ class DevTrackerSection {
                     number: "G",
                     title: "Images & Assets",
                     description: "Local file storage, thumbnails, and image pickers.",
-                    completed: 0,
+                    completed: 3,
                     total: 3,
                     color: "#38bdf8",
-                    status: "active"
+                    status: "completed"
                 },
                 {
                     number: "H",
@@ -90,7 +90,7 @@ class DevTrackerSection {
                     completed: 0,
                     total: 4,
                     color: "#818cf8",
-                    status: "upcoming"
+                    status: "active"
                 },
                 {
                     number: "I",
@@ -374,9 +374,9 @@ const ROADMAP_PHASE_TASKS = {
         { title: '3D printing module scaffold', status: 'done', area: 'Modules' }
     ],
     G: [
-        { title: 'Local disk file storage', status: 'todo', area: 'Assets' },
-        { title: 'Thumbnail generation', status: 'todo', area: 'Assets' },
-        { title: 'Image pickers on Projects, Patterns, Inventory items', status: 'todo', area: 'Client' }
+        { title: 'Local disk file storage', status: 'done', area: 'Assets' },
+        { title: 'Thumbnail generation', status: 'done', area: 'Assets' },
+        { title: 'Core asset picker extension points for module-owned records', status: 'done', area: 'Client' }
     ],
     H: [
         { title: 'DB indexes on commonly filtered columns', status: 'todo', area: 'Performance' },

@@ -1,15 +1,15 @@
 # TankerMade Handoff
 
-Last updated: 2026-05-27
+Last updated: 2026-05-28
 
 ## Current State
 
-- Current roadmap phase: Phase G — Images & Assets.
+- Current roadmap phase: Phase H — Performance & Search.
 - Phase A is complete.
 - Phase B is complete.
 - Phase C is complete.
 - Phase D is complete: module-owned inventory, reference data, project/inventory linking, kit/grouping backend, and kit-to-project backend flows are verified.
-- Latest verified slice: Phase F module platform hardening completion.
+- Latest verified slice: Phase G slice 7 ops/cleanup verification plus module UI asset hook polish.
 - Latest pushed commit: `b5041e7 Implement Phase E reference data extension points and module option flows`.
 - Latest unverified slice: none.
 
@@ -42,7 +42,7 @@ Last updated: 2026-05-27
 
 ## Next Work
 
-- Start Phase G image and asset foundations: storage, thumbnail generation, and module-usable picker seams.
+- Start Phase H performance and search slices: index review, list endpoint paging/filtering hardening, and search strategy.
 
 ## Phase G Direction
 
@@ -54,6 +54,8 @@ Last updated: 2026-05-27
 ## Product Input Backlog
 
 - `Scratch/TankerInput.md` contains ignored scratch notes for future non-technical product discussion, including pattern-version migration and possible UI theme feedback.
+- `Scratch/TankerMade Documentation/Pattern Examples/` contains real-world downloaded pattern examples kept only as guidance/reference material for feature design and workflow validation.
+- Reference pattern files under `Scratch/TankerMade Documentation/Pattern Examples/` are explicitly out of product scope and must not be included, referenced, seeded, packaged, published, or redistributed as project content.
 
 ## Working Rules
 
@@ -62,6 +64,7 @@ Last updated: 2026-05-27
 - Do not run full solution/server builds in the Codex sandbox. They can silently hang and fail after several minutes with no useful diagnostics.
 - The user will manually run builds and tests as needed. When verification is required, provide the exact local command(s), usually `dotnet build TankerMade.sln`, and ask for the results.
 - Do not commit local databases, Finder metadata, build outputs, or `Scratch/` content.
+- Pattern example files in `Scratch/TankerMade Documentation/Pattern Examples/` are reference-only and must never be wired into app code, tests, docs, demos, or shipped artifacts.
 
 ## Verification From Last Slice
 
@@ -73,4 +76,4 @@ The user reported:
 
 ## Verification Needed Next
 
-No Phase F verification is currently pending.
+No Phase G verification is currently pending.

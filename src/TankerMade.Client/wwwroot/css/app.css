@@ -488,9 +488,28 @@ code {
     min-width: 0;
 }
 
+.project-supply-list strong {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.3;
+}
+
+.project-supply-list li .btn {
+    justify-self: end;
+}
+
 .project-supply-list span,
 .project-supply-list small {
     color: #536173;
+}
+
+.asset-upload-shell {
+    background: #f8fafc;
+    border: 1px dashed #c8d2e1;
+    border-radius: 8px;
+    display: grid;
+    gap: 0.55rem;
+    padding: 0.75rem;
 }
 
 .project-piece-checklist {
@@ -884,6 +903,109 @@ code {
     margin: 0.25rem 0 0;
 }
 
+.printing-search-row {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin-bottom: 1rem;
+}
+
+.printing-layout {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+}
+
+.printing-panel {
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    display: grid;
+    gap: 0.9rem;
+    min-width: 0;
+    padding: 1rem;
+    background: #ffffff;
+}
+
+.printing-panel h2 {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.printing-form-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.printing-form-grid label {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.printing-form-grid label span {
+    font-weight: 600;
+}
+
+.printing-add-row {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.printing-inline-add {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.printing-card-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+.printing-material-card {
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    display: grid;
+    gap: 0.5rem;
+    min-width: 0;
+    padding: 0.85rem;
+    transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+
+.printing-material-card header h3 {
+    font-size: 1rem;
+    margin: 0;
+}
+
+.printing-material-card header p {
+    color: #536173;
+    margin: 0.2rem 0 0;
+}
+
+.printing-material-card p {
+    color: #536173;
+    margin: 0;
+}
+
+.printing-material-card-active {
+    border-color: #1b6ec2;
+    box-shadow: 0 0 0 2px rgba(27, 110, 194, 0.14);
+    transform: translateY(-1px);
+}
+
+.printing-assets-panel {
+    margin-top: 1rem;
+}
+
+.printing-assets-panel h2::after {
+    content: " (selected material)";
+    color: #536173;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
 @media (max-width: 760px) {
     .crafting-panel,
     .page-heading,
@@ -901,6 +1023,14 @@ code {
         grid-template-columns: 1fr;
     }
 
+    .printing-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .printing-form-grid {
+        grid-template-columns: 1fr;
+    }
+
     .project-piece-selector {
         grid-template-columns: 1fr;
     }
@@ -915,6 +1045,18 @@ code {
 
     .pattern-stats div {
         flex: 1;
+    }
+
+    .printing-search-row {
+        grid-template-columns: 1fr;
+    }
+
+    .project-supply-list li {
+        grid-template-columns: 1fr;
+    }
+
+    .project-supply-list li .btn {
+        justify-self: start;
     }
 }
 

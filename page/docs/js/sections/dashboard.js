@@ -8,13 +8,13 @@ class DashboardSection {
         this.sectionId = 'dashboard';
         this.data = {
             totalTasks: 67,
-            completedTasks: 54,
+            completedTasks: 57,
             currentPhase: {
-                number: "G",
-                title: "Images & Assets",
-                description: "File storage, thumbnail generation, and module asset picker extension points.",
+                number: "H",
+                title: "Performance & Search",
+                description: "Indexes, server-side filtering/paging, search, and targeted caching.",
                 completed: 0,
-                total: 3
+                total: 4
             }
         };
     }
@@ -121,7 +121,7 @@ class DashboardSection {
                 ${isAuthenticated ? `
                 <div class="dashboard-section-title">
                     <h2>Current Focus</h2>
-                    <p>Open Phase G work split into scan-friendly panels.</p>
+                    <p>Open Phase H work split into scan-friendly panels.</p>
                 </div>
 
                 <div class="dashboard-focus-panels">
@@ -192,7 +192,7 @@ class DashboardSection {
                     <h2>Project Glimpse</h2>
                 </div>
                 <div class="card-body">
-                    <p class="text-secondary">TankerMade is a local-first modular maker workbench. Phase F is complete; Phase G begins image and asset foundations.</p>
+                    <p class="text-secondary">TankerMade is a local-first modular maker workbench. Phase G is complete; Phase H now targets performance and search foundations.</p>
                     <div class="mt-4">
                         <button class="btn btn-primary" onclick="window.TankerMadeAuth && window.TankerMadeAuth.login()">
                             Sign in with GitHub
@@ -214,7 +214,8 @@ class DashboardSection {
             { title: "Add per-step timers, completion, piece selection, archive, and safe edits", meta: "Phase C • Projects", status: "done" },
             { title: "Complete module-owned inventory and kit backend flows", meta: "Phase D • Modules", status: "done" },
             { title: "Complete Phase F module platform hardening", meta: "Phase F • Platform", status: "done" },
-            { title: "Start local file storage for module-owned assets", meta: "Phase G • Assets", status: "active" }
+            { title: "Complete Phase G images and assets implementation", meta: "Phase G • Assets", status: "done" },
+            { title: "Plan index additions for high-traffic list queries", meta: "Phase H • Performance", status: "active" }
         ];
 
         return tasks.map(task => `
@@ -236,7 +237,8 @@ class DashboardSection {
             { number: "D", title: "Inventory & Kits", completed: 8, total: 8, active: false },
             { number: "E", title: "Reference Data Integration", completed: 3, total: 3, active: false },
             { number: "F", title: "Module Platform V1", completed: 6, total: 6, active: false },
-            { number: "G", title: "Images & Assets", completed: 0, total: 3, active: true }
+            { number: "G", title: "Images & Assets", completed: 3, total: 3, active: false },
+            { number: "H", title: "Performance & Search", completed: 0, total: 4, active: true }
         ];
 
         return phases.map(phase => {
@@ -278,8 +280,8 @@ class DashboardSection {
 
     renderWeekSummary() {
         const stats = [
-            { value: "54", label: "Done" },
-            { value: "3", label: "Open in Phase G" },
+            { value: "57", label: "Done" },
+            { value: "4", label: "Open in Phase H" },
             { value: "9", label: "Roadmap Phases" }
         ];
 
@@ -293,9 +295,9 @@ class DashboardSection {
 
     renderNextTasks() {
         const tasks = [
-            { title: "Add local disk file storage for module-owned assets", phase: "Phase G" },
-            { title: "Generate and store thumbnails", phase: "Phase G" },
-            { title: "Expose core asset picker extension points for modules", phase: "Phase G" }
+            { title: "Add DB indexes for frequently filtered inventory and project lists", phase: "Phase H" },
+            { title: "Harden server-side filtering and pagination coverage", phase: "Phase H" },
+            { title: "Define and implement search baseline (SQLite FTS if warranted)", phase: "Phase H" }
         ];
 
         return tasks.map(task => `

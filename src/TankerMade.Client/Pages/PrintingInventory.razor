@@ -36,81 +36,165 @@ else
         <div class="alert alert-danger">@errorMessage</div>
     }
 
-    <div class="input-group mb-3">
+    <div class="printing-search-row">
         <input class="form-control" placeholder="Search materials" @bind="search" @bind:event="oninput" />
         <button class="btn btn-outline-secondary" disabled="@busy" @onclick="LoadMaterialsAsync">Search</button>
     </div>
 
-    <div class="row g-3">
-        <div class="col-lg-4">
-            <div class="crafting-panel">
-                <h2>Add Material</h2>
-                <label class="form-label">Material type</label>
-                <select class="form-select mb-2" @bind="form.MaterialType">
-                    <option value="">Select material type</option>
-                    @foreach (var option in materialTypeOptions)
-                    {
-                        <option value="@option">@option</option>
-                    }
-                </select>
-                <div class="input-group mb-2">
-                    <input class="form-control" placeholder="Add new material type" @bind="newMaterialTypeName" />
-                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddMaterialTypeOptionAsync">Add</button>
-                </div>
-                <label class="form-label">Brand</label>
-                <input class="form-control mb-2" @bind="form.BrandName" />
-                <label class="form-label">Color</label>
-                <input class="form-control mb-2" @bind="form.ColorName" />
-                <label class="form-label">Spool weight grams</label>
-                <input class="form-control mb-2" type="number" step="0.01" @bind="form.SpoolWeightGrams" />
-                <label class="form-label">Remaining grams</label>
-                <input class="form-control mb-2" type="number" step="0.01" @bind="form.RemainingWeightGrams" />
-                <label class="form-label">Diameter</label>
-                <select class="form-select mb-2" @bind="form.Diameter">
-                    <option value="">Select diameter</option>
-                    @foreach (var option in diameterOptions)
-                    {
-                        <option value="@option">@option</option>
-                    }
-                </select>
-                <div class="input-group mb-2">
-                    <input class="form-control" placeholder="Add new diameter" @bind="newDiameterName" />
-                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddDiameterOptionAsync">Add</button>
-                </div>
-                <label class="form-label">Spool code</label>
-                <input class="form-control mb-2" @bind="form.SpoolCode" />
-                <label class="form-label">Printer compatibility</label>
-                <input class="form-control mb-2" @bind="form.PrinterCompatibility" />
-                <label class="form-label">Source</label>
-                <input class="form-control mb-2" @bind="form.SourceName" />
-                <label class="form-label">Price</label>
-                <input class="form-control mb-2" type="number" step="0.01" @bind="form.Price" />
-                <label class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" @bind="form.IsSalePrice" />
-                    <span class="form-check-label">Sale price</span>
+    <div class="printing-layout">
+        <section class="printing-panel">
+            <h2>Add Material</h2>
+
+            <div class="printing-form-grid">
+                <label>
+                    <span>Material type</span>
+                    <select class="form-select" @bind="form.MaterialType">
+                        <option value="">Select material type</option>
+                        @foreach (var option in materialTypeOptions)
+                        {
+                            <option value="@option">@option</option>
+                        }
+                    </select>
                 </label>
-                <button class="btn btn-primary" disabled="@busy" @onclick="SaveMaterialAsync">Add / Merge</button>
+                <label>
+                    <span>Brand</span>
+                    <input class="form-control" @bind="form.BrandName" />
+                </label>
+                <label>
+                    <span>Color</span>
+                    <input class="form-control" @bind="form.ColorName" />
+                </label>
+                <label>
+                    <span>Spool weight grams</span>
+                    <input class="form-control" type="number" step="0.01" @bind="form.SpoolWeightGrams" />
+                </label>
+                <label>
+                    <span>Remaining grams</span>
+                    <input class="form-control" type="number" step="0.01" @bind="form.RemainingWeightGrams" />
+                </label>
+                <label>
+                    <span>Diameter</span>
+                    <select class="form-select" @bind="form.Diameter">
+                        <option value="">Select diameter</option>
+                        @foreach (var option in diameterOptions)
+                        {
+                            <option value="@option">@option</option>
+                        }
+                    </select>
+                </label>
+                <label>
+                    <span>Spool code</span>
+                    <input class="form-control" @bind="form.SpoolCode" />
+                </label>
+                <label>
+                    <span>Printer compatibility</span>
+                    <input class="form-control" @bind="form.PrinterCompatibility" />
+                </label>
+                <label>
+                    <span>Source</span>
+                    <input class="form-control" @bind="form.SourceName" />
+                </label>
+                <label>
+                    <span>Price</span>
+                    <input class="form-control" type="number" step="0.01" @bind="form.Price" />
+                </label>
             </div>
-        </div>
-        <div class="col-lg-8">
-            <div class="pattern-card-grid">
-                @foreach (var material in materials)
-                {
-                    <div class="pattern-card">
-                        <h2>@material.MaterialType</h2>
-                        <p>@material.BrandName - @material.ColorName</p>
-                        <div class="pattern-card-stats">
-                            <span>@material.TotalSpoolWeightGrams g</span>
-                            <span>@material.Diameter</span>
-                            <span>@material.StorageLocation</span>
-                        </div>
-                        <p>@SpoolSummary(material.Spools)</p>
-                        <p>@PurchaseSummary(material.Purchases)</p>
-                    </div>
-                }
+
+            <div class="printing-add-row">
+                <div class="printing-inline-add">
+                    <input class="form-control" placeholder="Add new material type" @bind="newMaterialTypeName" />
+                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddMaterialTypeOptionAsync">Add Type</button>
+                </div>
+                <div class="printing-inline-add">
+                    <input class="form-control" placeholder="Add new diameter" @bind="newDiameterName" />
+                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddDiameterOptionAsync">Add Diameter</button>
+                </div>
             </div>
-        </div>
+
+            <label class="form-check">
+                <input class="form-check-input" type="checkbox" @bind="form.IsSalePrice" />
+                <span class="form-check-label">Sale price</span>
+            </label>
+
+            <button class="btn btn-primary" disabled="@busy" @onclick="SaveMaterialAsync">Add / Merge</button>
+        </section>
+
+        <section class="printing-panel">
+            <h2>Materials</h2>
+            @if (materials.Count == 0)
+            {
+                <p class="muted-copy">No materials yet.</p>
+            }
+            else
+            {
+                <div class="printing-card-grid">
+                    @foreach (var material in materials)
+                    {
+                        <article class="printing-material-card @(selectedMaterialId == material.Id ? "printing-material-card-active" : string.Empty)">
+                            <header>
+                                <h3>@material.MaterialType</h3>
+                                <p>@material.BrandName - @material.ColorName</p>
+                            </header>
+                            <div class="pattern-card-stats">
+                                <span>@material.TotalSpoolWeightGrams g</span>
+                                <span>@(string.IsNullOrWhiteSpace(material.Diameter) ? "No diameter" : material.Diameter)</span>
+                                <span>@(string.IsNullOrWhiteSpace(material.StorageLocation) ? "No storage location" : material.StorageLocation)</span>
+                            </div>
+                            <p>@SpoolSummary(material.Spools)</p>
+                            <p>@PurchaseSummary(material.Purchases)</p>
+                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => SelectMaterialForAssetsAsync(material.Id)">
+                                Manage Assets
+                            </button>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
     </div>
+
+    @if (selectedMaterialId.HasValue)
+    {
+        <section class="printing-panel printing-assets-panel">
+            <h2>Material Assets</h2>
+            <InputFile OnChange="UploadMaterialAssetAsync" disabled="@busy" />
+            <p class="muted-copy">Upload stores the file in 3D Printing assets. Attach to the selected material with one click.</p>
+
+            @if (selectedMaterialAssets.Count == 0)
+            {
+                <p class="muted-copy">No assets found for the selected material yet.</p>
+            }
+            else
+            {
+                <ul class="project-supply-list">
+                    @foreach (var asset in selectedMaterialAssets)
+                    {
+                        <li>
+                            <div>
+                                <strong>@asset.OriginalFileName</strong>
+                                <span>@AssetMeta(asset)</span>
+                            </div>
+                            @if (asset.RecordId == selectedMaterialId)
+                            {
+                                <button class="btn btn-outline-danger btn-sm"
+                                        disabled="@busy"
+                                        @onclick="() => UnassignMaterialAssetAsync(asset.Id)">
+                                    Unlink
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-primary btn-sm"
+                                        disabled="@busy"
+                                        @onclick="() => AssignMaterialAssetAsync(asset.Id)">
+                                    Attach
+                                </button>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+    }
 }
 
 @code {
@@ -122,6 +206,8 @@ else
     private readonly List<string> diameterOptions = [];
     private string newMaterialTypeName = string.Empty;
     private string newDiameterName = string.Empty;
+    private Guid? selectedMaterialId;
+    private readonly List<TankerMade.Contracts.DTOs.Assets.AssetRecordDto> selectedMaterialAssets = [];
     private bool loading = true;
     private bool busy;
 
@@ -172,6 +258,8 @@ else
             await ApiClient.CreatePrintingMaterialAsync(form);
             form = new();
             await LoadMaterialsAsync();
+            selectedMaterialId = null;
+            selectedMaterialAssets.Clear();
         }
         catch (Exception ex)
         {
@@ -262,5 +350,102 @@ else
         var price = latest.Price.HasValue ? $" {latest.Price:C}" : string.Empty;
         var sale = latest.IsSalePrice ? " sale" : string.Empty;
         return $"Latest: {latest.SourceName}{price}{sale}";
+    }
+
+    private async Task SelectMaterialForAssetsAsync(Guid materialId)
+    {
+        selectedMaterialId = materialId;
+        await LoadSelectedMaterialAssetsAsync();
+    }
+
+    private async Task LoadSelectedMaterialAssetsAsync()
+    {
+        if (!selectedMaterialId.HasValue)
+        {
+            selectedMaterialAssets.Clear();
+            return;
+        }
+
+        selectedMaterialAssets.Clear();
+        selectedMaterialAssets.AddRange(await ApiClient.GetPrintingMaterialAssetsAsync(selectedMaterialId.Value, includeUnassigned: true));
+    }
+
+    private async Task UploadMaterialAssetAsync(InputFileChangeEventArgs args)
+    {
+        if (!selectedMaterialId.HasValue || args.FileCount == 0)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+        try
+        {
+            await ApiClient.UploadAssetAsync("printing-3d", args.File);
+            await LoadSelectedMaterialAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task AssignMaterialAssetAsync(Guid assetId)
+    {
+        if (!selectedMaterialId.HasValue)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+        try
+        {
+            await ApiClient.AssignPrintingMaterialAssetAsync(selectedMaterialId.Value, assetId);
+            await LoadSelectedMaterialAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task UnassignMaterialAssetAsync(Guid assetId)
+    {
+        if (!selectedMaterialId.HasValue)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+        try
+        {
+            await ApiClient.UnassignPrintingMaterialAssetAsync(selectedMaterialId.Value, assetId);
+            await LoadSelectedMaterialAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private static string AssetMeta(TankerMade.Contracts.DTOs.Assets.AssetRecordDto asset)
+    {
+        var assignment = asset.RecordId.HasValue ? "Attached" : "Unassigned";
+        var sizeMb = asset.FileSizeBytes / 1024d / 1024d;
+        return $"{assignment} - {asset.ContentType} - {sizeMb:0.##} MB";
     }
 }

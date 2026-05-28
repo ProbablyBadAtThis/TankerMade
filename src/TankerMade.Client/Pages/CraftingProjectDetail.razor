@@ -213,6 +213,54 @@ else
 
             <section class="project-panel">
                 <div class="project-panel-header">
+                    <h2>Project Assets</h2>
+                </div>
+
+                <div class="asset-upload-shell">
+                    <InputFile OnChange="UploadProjectAssetAsync" disabled="@busy" />
+                    <p class="muted-copy">Upload attaches directly to this project. Unassigned Crafting assets can also be attached below.</p>
+                </div>
+
+                @if (projectAssets.Count == 0)
+                {
+                    <p class="muted-copy">No assets found for this project yet.</p>
+                }
+                else
+                {
+                    <ul class="project-supply-list">
+                        @foreach (var asset in projectAssets)
+                        {
+                            <li>
+                                <div>
+                                    <strong>@asset.OriginalFileName</strong>
+                                    <span>@AssetMeta(asset)</span>
+                                </div>
+                                @if (asset.RecordId == ProjectId)
+                                {
+                                    <button class="btn btn-outline-danger btn-sm"
+                                            disabled="@busy"
+                                            type="button"
+                                            @onclick="() => UnassignProjectAssetAsync(asset.Id)">
+                                        Unlink
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-outline-primary btn-sm"
+                                            disabled="@busy"
+                                            type="button"
+                                            @onclick="() => AssignProjectAssetAsync(asset.Id)">
+                                        Attach
+                                    </button>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+
+            <section class="project-panel">
+                <div class="project-panel-header">
                     <h2>Pattern Context</h2>
                     @if (linkedPattern != null)
                     {
@@ -374,6 +422,7 @@ else
     private readonly List<SupplyOption> yarnOptions = [];
     private readonly List<SupplyOption> toolOptions = [];
     private readonly List<SupplyOption> notionOptions = [];
+    private readonly List<TankerMade.Contracts.DTOs.Assets.AssetRecordDto> projectAssets = [];
     private readonly ProjectFormModel form = new();
     private readonly SupplyLinkFormModel supplyForm = new();
     private TankerMade.Client.Services.CraftingPatternStepDetail? timerDialogStep;
@@ -507,6 +556,7 @@ else
             form.Load(project);
             EnsureSelectedSupply();
             await LoadLinkedPatternAsync();
+            await LoadProjectAssetsAsync();
         }
         catch (Exception ex)
         {
@@ -660,6 +710,74 @@ else
             {
                 project = await ApiClient.GetCraftingProjectAsync(ProjectId);
             }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task LoadProjectAssetsAsync()
+    {
+        projectAssets.Clear();
+        projectAssets.AddRange(await ApiClient.GetCraftingProjectAssetsAsync(ProjectId, includeUnassigned: true));
+    }
+
+    private async Task UploadProjectAssetAsync(InputFileChangeEventArgs args)
+    {
+        if (args.FileCount == 0)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+        try
+        {
+            await ApiClient.UploadAssetAsync("crafting", args.File, "project", ProjectId);
+            await LoadProjectAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task AssignProjectAssetAsync(Guid assetId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+        try
+        {
+            await ApiClient.AssignCraftingProjectAssetAsync(ProjectId, assetId);
+            await LoadProjectAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task UnassignProjectAssetAsync(Guid assetId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+        try
+        {
+            await ApiClient.UnassignCraftingProjectAssetAsync(ProjectId, assetId);
+            await LoadProjectAssetsAsync();
         }
         catch (Exception ex)
         {
@@ -945,6 +1063,13 @@ else
     {
         var display = string.Join(" - ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
         return string.IsNullOrWhiteSpace(display) ? "Unnamed item" : display;
+    }
+
+    private static string AssetMeta(TankerMade.Contracts.DTOs.Assets.AssetRecordDto asset)
+    {
+        var assignment = asset.RecordId.HasValue ? "Attached" : "Unassigned";
+        var sizeMb = asset.FileSizeBytes / 1024d / 1024d;
+        return $"{assignment} - {asset.ContentType} - {sizeMb:0.##} MB";
     }
 
     private long GetTrackedSeconds()

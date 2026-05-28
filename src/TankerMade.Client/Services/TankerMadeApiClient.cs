@@ -1,5 +1,8 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Components.Forms;
+using TankerMade.Contracts.DTOs.Assets;
 using TankerMade.Contracts.DTOs.Modules;
 
 namespace TankerMade.Client.Services;
@@ -16,6 +19,151 @@ public class TankerMadeApiClient
     public async Task<IReadOnlyList<ModuleDto>> GetModulesAsync()
     {
         return await _http.GetFromJsonAsync<IReadOnlyList<ModuleDto>>("api/modules") ?? [];
+    }
+
+    public async Task<AssetRecordDto> UploadAssetAsync(
+        string moduleKey,
+        IBrowserFile file,
+        string? recordType = null,
+        Guid? recordId = null)
+    {
+        using var content = new MultipartFormDataContent();
+        content.Add(new StringContent(moduleKey), "ModuleKey");
+        if (!string.IsNullOrWhiteSpace(recordType))
+        {
+            content.Add(new StringContent(recordType.Trim()), "RecordType");
+        }
+
+        if (recordId.HasValue)
+        {
+            content.Add(new StringContent(recordId.Value.ToString()), "RecordId");
+        }
+
+        var stream = file.OpenReadStream(25 * 1024 * 1024);
+        var fileContent = new StreamContent(stream);
+        if (!string.IsNullOrWhiteSpace(file.ContentType))
+        {
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+        }
+
+        content.Add(fileContent, "File", file.Name);
+
+        var response = await _http.PostAsync("api/assets/upload", content);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<AssetRecordDto>()
+            ?? throw new InvalidOperationException("The server returned an empty asset response.");
+    }
+
+    public async Task<IReadOnlyList<AssetRecordDto>> GetCraftingProjectAssetsAsync(
+        Guid projectId,
+        bool includeUnassigned = true)
+    {
+        var url = BuildUrl(
+            $"api/modules/crafting/projects/{projectId}/assets",
+            ("includeUnassigned", includeUnassigned.ToString().ToLowerInvariant()));
+
+        return await _http.GetFromJsonAsync<IReadOnlyList<AssetRecordDto>>(url) ?? [];
+    }
+
+    public async Task<AssetRecordDto?> AssignCraftingProjectAssetAsync(Guid projectId, Guid assetId)
+    {
+        var response = await _http.PutAsJsonAsync($"api/modules/crafting/projects/{projectId}/assets/{assetId}", new { });
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<AssetRecordDto>();
+    }
+
+    public async Task<AssetRecordDto?> UnassignCraftingProjectAssetAsync(Guid projectId, Guid assetId)
+    {
+        var response = await _http.DeleteAsync($"api/modules/crafting/projects/{projectId}/assets/{assetId}");
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<AssetRecordDto>();
+    }
+
+    public async Task<IReadOnlyList<AssetRecordDto>> GetPrintingMaterialAssetsAsync(
+        Guid materialId,
+        bool includeUnassigned = true)
+    {
+        var url = BuildUrl(
+            $"api/modules/printing-3d/inventory/materials/{materialId}/assets",
+            ("includeUnassigned", includeUnassigned.ToString().ToLowerInvariant()));
+
+        return await _http.GetFromJsonAsync<IReadOnlyList<AssetRecordDto>>(url) ?? [];
+    }
+
+    public async Task<AssetRecordDto?> AssignPrintingMaterialAssetAsync(Guid materialId, Guid assetId)
+    {
+        var response = await _http.PutAsJsonAsync($"api/modules/printing-3d/inventory/materials/{materialId}/assets/{assetId}", new { });
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<AssetRecordDto>();
+    }
+
+    public async Task<AssetRecordDto?> UnassignPrintingMaterialAssetAsync(Guid materialId, Guid assetId)
+    {
+        var response = await _http.DeleteAsync($"api/modules/printing-3d/inventory/materials/{materialId}/assets/{assetId}");
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<AssetRecordDto>();
+    }
+
+    public async Task<IReadOnlyList<AssetRecordDto>> GetAssetsForPickerAsync(
+        string moduleKey,
+        string recordType,
+        Guid? recordId,
+        bool includeUnassigned = true)
+    {
+        var url = BuildUrl(
+            "api/assets/picker",
+            ("moduleKey", moduleKey),
+            ("recordType", recordType),
+            ("recordId", recordId?.ToString() ?? string.Empty),
+            ("includeUnassigned", includeUnassigned.ToString().ToLowerInvariant()));
+
+        return await _http.GetFromJsonAsync<IReadOnlyList<AssetRecordDto>>(url) ?? [];
+    }
+
+    public async Task<AssetRecordDto?> AssignAssetAsync(
+        Guid assetId,
+        AssetAssignmentRequest request)
+    {
+        var response = await _http.PutAsJsonAsync($"api/assets/{assetId}/assignment", request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<AssetRecordDto>();
+    }
+
+    public async Task<AssetRecordDto?> UnassignAssetAsync(Guid assetId)
+    {
+        var response = await _http.DeleteAsync($"api/assets/{assetId}/assignment");
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<AssetRecordDto>();
     }
 
     public async Task<ModuleDto?> ActivateModuleAsync(string moduleKey)

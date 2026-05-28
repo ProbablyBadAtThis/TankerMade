@@ -19,6 +19,8 @@ public class TankerMadeDbContext : DbContext
     // Module host entities
     public DbSet<ModuleDefinition> ModuleDefinitions { get; set; }
     public DbSet<UserModuleActivation> UserModuleActivations { get; set; }
+    public DbSet<AssetRecord> AssetRecords { get; set; }
+    public DbSet<AssetThumbnail> AssetThumbnails { get; set; }
 
     // Reference crafting module entities
     public DbSet<CraftingProject> CraftingProjects { get; set; }
@@ -58,6 +60,8 @@ public class TankerMadeDbContext : DbContext
 
         ConfigureUser(modelBuilder);
         ConfigureModules(modelBuilder);
+        ConfigureAssetRecord(modelBuilder);
+        ConfigureAssetThumbnail(modelBuilder);
         ConfigureCraftingProject(modelBuilder);
         ConfigureCraftingProjectStepProgress(modelBuilder);
         ConfigureCraftingProjectTimer(modelBuilder);
@@ -142,6 +146,63 @@ public class TankerMadeDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => new { e.UserId, e.ModuleDefinitionId })
+                .IsUnique();
+        });
+    }
+
+    private void ConfigureAssetRecord(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssetRecord>(entity =>
+        {
+            entity.ToTable("CoreAssetRecords");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.ModuleKey).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.RecordType).HasMaxLength(100);
+            entity.Property(e => e.OriginalFileName).IsRequired().HasMaxLength(260);
+            entity.Property(e => e.ContentType).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.StorageProvider).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.StoragePath).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.FileSizeBytes).IsRequired();
+            entity.Property(e => e.IsDeleted).IsRequired();
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.ModuleKey);
+            entity.HasIndex(e => new { e.ModuleKey, e.RecordType, e.RecordId });
+            entity.HasIndex(e => e.StoragePath)
+                .IsUnique();
+        });
+    }
+
+    private void ConfigureAssetThumbnail(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssetThumbnail>(entity =>
+        {
+            entity.ToTable("CoreAssetThumbnails");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.SizeKey).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.ContentType).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.StorageProvider).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.StoragePath).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Width).IsRequired();
+            entity.Property(e => e.Height).IsRequired();
+            entity.Property(e => e.FileSizeBytes).IsRequired();
+
+            entity.HasOne<AssetRecord>()
+                .WithMany()
+                .HasForeignKey(e => e.AssetRecordId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.AssetRecordId);
+            entity.HasIndex(e => new { e.AssetRecordId, e.SizeKey })
+                .IsUnique();
+            entity.HasIndex(e => e.StoragePath)
                 .IsUnique();
         });
     }

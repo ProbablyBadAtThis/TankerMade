@@ -11,6 +11,7 @@ using TankerMade.Modules.Printing3D.Services;
 using TankerMade.Server.Data;
 using TankerMade.Server.Modules;
 using TankerMade.Server.Services;
+using TankerMade.Server.Services.Assets;
 using TankerMade.Server.Services.Crafting;
 using TankerMade.Server.Services.Printing3D;
 
@@ -21,6 +22,17 @@ BundledModuleCatalog.Validate();
 var moduleDiscoveryOptions = builder.Configuration
     .GetSection("ModuleDiscovery")
     .Get<ModuleDiscoveryOptions>() ?? new ModuleDiscoveryOptions();
+var assetStorageOptions = builder.Configuration
+    .GetSection("AssetStorage")
+    .Get<AssetStorageOptions>() ?? new AssetStorageOptions();
+
+var configuredAssetRoot = string.IsNullOrWhiteSpace(assetStorageOptions.RootDirectory)
+    ? "App_Data/assets"
+    : assetStorageOptions.RootDirectory.Trim();
+var assetRootPath = Path.IsPathRooted(configuredAssetRoot)
+    ? configuredAssetRoot
+    : Path.Combine(builder.Environment.ContentRootPath, configuredAssetRoot);
+Directory.CreateDirectory(assetRootPath);
 
 // Add DbContext
 var dataDir = Path.Combine(builder.Environment.ContentRootPath, "App_Data");
@@ -84,7 +96,10 @@ builder.Services.AddScoped<IModuleService, ModuleService>();
 builder.Services.AddScoped<IModuleRegistrationService, ModuleRegistrationService>();
 builder.Services.AddScoped<IModuleDiscoveryProvider, BundledModuleDiscoveryProvider>();
 builder.Services.AddSingleton(moduleDiscoveryOptions);
+builder.Services.AddSingleton(assetStorageOptions);
 builder.Services.AddScoped<IModuleDiscoveryProvider, ExternalManifestModuleDiscoveryProvider>();
+builder.Services.AddSingleton<IAssetStorageService, LocalDiskAssetStorageService>();
+builder.Services.AddScoped<IAssetThumbnailService, AssetThumbnailService>();
 builder.Services.AddScoped<ICraftingProjectService, CraftingProjectService>();
 builder.Services.AddScoped<ICraftingPatternService, CraftingPatternService>();
 builder.Services.AddScoped<ICraftingInventoryService, CraftingInventoryService>();

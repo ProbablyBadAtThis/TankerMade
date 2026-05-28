@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TankerMade.Server.Data;
 
@@ -10,9 +11,11 @@ using TankerMade.Server.Data;
 namespace TankerMade.Server.Migrations
 {
     [DbContext(typeof(TankerMadeDbContext))]
-    partial class TankerMadeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260528165529_PhaseG_CoreAssetRecords")]
+    partial class PhaseG_CoreAssetRecords
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
@@ -83,60 +86,6 @@ namespace TankerMade.Server.Migrations
                     b.HasIndex("ModuleKey", "RecordType", "RecordId");
 
                     b.ToTable("CoreAssetRecords", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Core.Entities.AssetThumbnail", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("AssetRecordId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("FileSizeBytes")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Height")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("SizeKey")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("StoragePath")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("StorageProvider")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Width")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssetRecordId");
-
-                    b.HasIndex("StoragePath")
-                        .IsUnique();
-
-                    b.HasIndex("AssetRecordId", "SizeKey")
-                        .IsUnique();
-
-                    b.ToTable("CoreAssetThumbnails", (string)null);
                 });
 
             modelBuilder.Entity("TankerMade.Core.Entities.Brand", b =>
@@ -1787,15 +1736,6 @@ namespace TankerMade.Server.Migrations
                     b.HasOne("TankerMade.Core.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Core.Entities.AssetThumbnail", b =>
-                {
-                    b.HasOne("TankerMade.Core.Entities.AssetRecord", null)
-                        .WithMany()
-                        .HasForeignKey("AssetRecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

@@ -193,7 +193,13 @@ class TankerMadeApp {
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     const setStyle = (id, prop, val) => { const el = document.getElementById(id); if (el) el.style[prop] = val; };
 
-    set('current-phase', 'Phase ' + this.state.currentPhaseLabel + ': Images & Assets');
+    const phaseTitles = {
+      G: 'Images & Assets',
+      H: 'Performance & Search',
+      I: 'Security, Ops & Cleanup'
+    };
+    const title = phaseTitles[this.state.currentPhaseLabel] || 'Roadmap';
+    set('current-phase', 'Phase ' + this.state.currentPhaseLabel + ': ' + title);
     set('progress-text', this.state.overallProgress + '%');
     setStyle('header-progress', 'width', this.state.overallProgress + '%');
   }

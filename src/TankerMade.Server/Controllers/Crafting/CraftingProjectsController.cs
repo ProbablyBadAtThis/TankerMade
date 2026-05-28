@@ -1,10 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TankerMade.Contracts.DTOs.Assets;
 using TankerMade.Contracts.Services;
+using TankerMade.Core.Entities;
 using TankerMade.Modules.Crafting;
 using TankerMade.Modules.Crafting.DTOs.Projects;
 using TankerMade.Modules.Crafting.Services;
 using TankerMade.Server.Controllers;
+using TankerMade.Server.Data;
 
 namespace TankerMade.Server.Controllers.Crafting;
 
@@ -13,13 +17,19 @@ namespace TankerMade.Server.Controllers.Crafting;
 [Route("api/modules/crafting/projects")]
 public class CraftingProjectsController : ControllerBase
 {
+    private const string ProjectRecordType = "project";
     private readonly ICraftingProjectService _projectService;
     private readonly IModuleService _moduleService;
+    private readonly TankerMadeDbContext _context;
 
-    public CraftingProjectsController(ICraftingProjectService projectService, IModuleService moduleService)
+    public CraftingProjectsController(
+        ICraftingProjectService projectService,
+        IModuleService moduleService,
+        TankerMadeDbContext context)
     {
         _projectService = projectService;
         _moduleService = moduleService;
+        _context = context;
     }
 
     [HttpGet]
@@ -281,6 +291,137 @@ public class CraftingProjectsController : ControllerBase
         return deleted ? NoContent() : NotFound();
     }
 
+    [HttpGet("{id:guid}/assets")]
+    public async Task<ActionResult<IReadOnlyList<AssetRecordDto>>> GetAssets(
+        Guid id,
+        [FromQuery] bool includeUnassigned = true,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        var exists = await _context.CraftingProjects
+            .AnyAsync(project => project.Id == id && project.UserId == userId.Value, cancellationToken);
+        if (!exists)
+        {
+            return NotFound();
+        }
+
+        var query = _context.AssetRecords
+            .AsNoTracking()
+            .Where(a => a.UserId == userId.Value
+                && a.ModuleKey == CraftingModule.ModuleKey
+                && !a.IsDeleted);
+
+        query = includeUnassigned
+            ? query.Where(a =>
+                (a.RecordType == ProjectRecordType && a.RecordId == id)
+                || (a.RecordType == string.Empty && a.RecordId == null))
+            : query.Where(a => a.RecordType == ProjectRecordType && a.RecordId == id);
+
+        var assets = await query
+            .OrderByDescending(a => a.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        var assetIds = assets.Select(a => a.Id).ToList();
+        var thumbnails = await _context.AssetThumbnails
+            .AsNoTracking()
+            .Where(t => assetIds.Contains(t.AssetRecordId))
+            .OrderBy(t => t.SizeKey)
+            .ToListAsync(cancellationToken);
+
+        return Ok(assets
+            .Select(asset => ToDto(asset, thumbnails.Where(t => t.AssetRecordId == asset.Id)))
+            .ToList());
+    }
+
+    [HttpPut("{id:guid}/assets/{assetId:guid}")]
+    public async Task<ActionResult<AssetRecordDto>> AssignAsset(
+        Guid id,
+        Guid assetId,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        var projectExists = await _context.CraftingProjects
+            .AnyAsync(project => project.Id == id && project.UserId == userId.Value, cancellationToken);
+        if (!projectExists)
+        {
+            return NotFound();
+        }
+
+        var asset = await _context.AssetRecords
+            .SingleOrDefaultAsync(a => a.Id == assetId
+                && a.UserId == userId.Value
+                && a.ModuleKey == CraftingModule.ModuleKey
+                && !a.IsDeleted, cancellationToken);
+        if (asset == null)
+        {
+            return NotFound();
+        }
+
+        asset.Reassign(ProjectRecordType, id);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var thumbnails = await _context.AssetThumbnails
+            .AsNoTracking()
+            .Where(t => t.AssetRecordId == asset.Id)
+            .OrderBy(t => t.SizeKey)
+            .ToListAsync(cancellationToken);
+
+        return Ok(ToDto(asset, thumbnails));
+    }
+
+    [HttpDelete("{id:guid}/assets/{assetId:guid}")]
+    public async Task<ActionResult<AssetRecordDto>> UnassignAsset(
+        Guid id,
+        Guid assetId,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        var projectExists = await _context.CraftingProjects
+            .AnyAsync(project => project.Id == id && project.UserId == userId.Value, cancellationToken);
+        if (!projectExists)
+        {
+            return NotFound();
+        }
+
+        var asset = await _context.AssetRecords
+            .SingleOrDefaultAsync(a => a.Id == assetId
+                && a.UserId == userId.Value
+                && a.ModuleKey == CraftingModule.ModuleKey
+                && !a.IsDeleted
+                && a.RecordType == ProjectRecordType
+                && a.RecordId == id, cancellationToken);
+        if (asset == null)
+        {
+            return NotFound();
+        }
+
+        asset.Reassign(null, null);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var thumbnails = await _context.AssetThumbnails
+            .AsNoTracking()
+            .Where(t => t.AssetRecordId == asset.Id)
+            .OrderBy(t => t.SizeKey)
+            .ToListAsync(cancellationToken);
+
+        return Ok(ToDto(asset, thumbnails));
+    }
+
     private async Task<Guid?> GetActiveModuleUserIdAsync()
     {
         var userId = User.GetUserId();
@@ -292,5 +433,40 @@ public class CraftingProjectsController : ControllerBase
         return await _moduleService.IsActiveAsync(CraftingModule.ModuleKey, userId.Value)
             ? userId
             : null;
+    }
+
+    private static AssetRecordDto ToDto(AssetRecord asset, IEnumerable<AssetThumbnail> thumbnails)
+    {
+        return new AssetRecordDto
+        {
+            Id = asset.Id,
+            UserId = asset.UserId,
+            ModuleKey = asset.ModuleKey,
+            RecordType = asset.RecordType,
+            RecordId = asset.RecordId,
+            OriginalFileName = asset.OriginalFileName,
+            ContentType = asset.ContentType,
+            FileSizeBytes = asset.FileSizeBytes,
+            StorageProvider = asset.StorageProvider,
+            StoragePath = asset.StoragePath,
+            IsDeleted = asset.IsDeleted,
+            CreatedAt = asset.CreatedAt,
+            UpdatedAt = asset.UpdatedAt,
+            Thumbnails = thumbnails
+                .Select(t => new AssetThumbnailDto
+                {
+                    Id = t.Id,
+                    AssetRecordId = t.AssetRecordId,
+                    SizeKey = t.SizeKey,
+                    ContentType = t.ContentType,
+                    Width = t.Width,
+                    Height = t.Height,
+                    StorageProvider = t.StorageProvider,
+                    StoragePath = t.StoragePath,
+                    FileSizeBytes = t.FileSizeBytes,
+                    CreatedAt = t.CreatedAt
+                })
+                .ToList()
+        };
     }
 }

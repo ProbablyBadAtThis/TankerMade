@@ -1,10 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TankerMade.Contracts.DTOs.Assets;
 using TankerMade.Contracts.Services;
+using TankerMade.Core.Entities;
 using TankerMade.Modules.Printing3D;
 using TankerMade.Modules.Printing3D.DTOs.Inventory;
 using TankerMade.Modules.Printing3D.Services;
 using TankerMade.Server.Controllers;
+using TankerMade.Server.Data;
 
 namespace TankerMade.Server.Controllers.Printing3D;
 
@@ -13,13 +17,19 @@ namespace TankerMade.Server.Controllers.Printing3D;
 [Route("api/modules/printing-3d/inventory")]
 public class PrintingInventoryController : ControllerBase
 {
+    private const string MaterialRecordType = "material";
     private readonly IPrintingInventoryService _inventoryService;
     private readonly IModuleService _moduleService;
+    private readonly TankerMadeDbContext _context;
 
-    public PrintingInventoryController(IPrintingInventoryService inventoryService, IModuleService moduleService)
+    public PrintingInventoryController(
+        IPrintingInventoryService inventoryService,
+        IModuleService moduleService,
+        TankerMadeDbContext context)
     {
         _inventoryService = inventoryService;
         _moduleService = moduleService;
+        _context = context;
     }
 
     [HttpGet("materials")]
@@ -103,6 +113,137 @@ public class PrintingInventoryController : ControllerBase
         }
     }
 
+    [HttpGet("materials/{id:guid}/assets")]
+    public async Task<ActionResult<IReadOnlyList<AssetRecordDto>>> GetMaterialAssets(
+        Guid id,
+        [FromQuery] bool includeUnassigned = true,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        var exists = await _context.PrintingMaterialInventoryItems
+            .AnyAsync(item => item.Id == id && item.UserId == userId.Value, cancellationToken);
+        if (!exists)
+        {
+            return NotFound();
+        }
+
+        var query = _context.AssetRecords
+            .AsNoTracking()
+            .Where(a => a.UserId == userId.Value
+                && a.ModuleKey == Printing3DModule.ModuleKey
+                && !a.IsDeleted);
+
+        query = includeUnassigned
+            ? query.Where(a =>
+                (a.RecordType == MaterialRecordType && a.RecordId == id)
+                || (a.RecordType == string.Empty && a.RecordId == null))
+            : query.Where(a => a.RecordType == MaterialRecordType && a.RecordId == id);
+
+        var assets = await query
+            .OrderByDescending(a => a.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        var assetIds = assets.Select(a => a.Id).ToList();
+        var thumbnails = await _context.AssetThumbnails
+            .AsNoTracking()
+            .Where(t => assetIds.Contains(t.AssetRecordId))
+            .OrderBy(t => t.SizeKey)
+            .ToListAsync(cancellationToken);
+
+        return Ok(assets
+            .Select(asset => ToDto(asset, thumbnails.Where(t => t.AssetRecordId == asset.Id)))
+            .ToList());
+    }
+
+    [HttpPut("materials/{id:guid}/assets/{assetId:guid}")]
+    public async Task<ActionResult<AssetRecordDto>> AssignMaterialAsset(
+        Guid id,
+        Guid assetId,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        var materialExists = await _context.PrintingMaterialInventoryItems
+            .AnyAsync(item => item.Id == id && item.UserId == userId.Value, cancellationToken);
+        if (!materialExists)
+        {
+            return NotFound();
+        }
+
+        var asset = await _context.AssetRecords
+            .SingleOrDefaultAsync(a => a.Id == assetId
+                && a.UserId == userId.Value
+                && a.ModuleKey == Printing3DModule.ModuleKey
+                && !a.IsDeleted, cancellationToken);
+        if (asset == null)
+        {
+            return NotFound();
+        }
+
+        asset.Reassign(MaterialRecordType, id);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var thumbnails = await _context.AssetThumbnails
+            .AsNoTracking()
+            .Where(t => t.AssetRecordId == asset.Id)
+            .OrderBy(t => t.SizeKey)
+            .ToListAsync(cancellationToken);
+
+        return Ok(ToDto(asset, thumbnails));
+    }
+
+    [HttpDelete("materials/{id:guid}/assets/{assetId:guid}")]
+    public async Task<ActionResult<AssetRecordDto>> UnassignMaterialAsset(
+        Guid id,
+        Guid assetId,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        var materialExists = await _context.PrintingMaterialInventoryItems
+            .AnyAsync(item => item.Id == id && item.UserId == userId.Value, cancellationToken);
+        if (!materialExists)
+        {
+            return NotFound();
+        }
+
+        var asset = await _context.AssetRecords
+            .SingleOrDefaultAsync(a => a.Id == assetId
+                && a.UserId == userId.Value
+                && a.ModuleKey == Printing3DModule.ModuleKey
+                && !a.IsDeleted
+                && a.RecordType == MaterialRecordType
+                && a.RecordId == id, cancellationToken);
+        if (asset == null)
+        {
+            return NotFound();
+        }
+
+        asset.Reassign(null, null);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var thumbnails = await _context.AssetThumbnails
+            .AsNoTracking()
+            .Where(t => t.AssetRecordId == asset.Id)
+            .OrderBy(t => t.SizeKey)
+            .ToListAsync(cancellationToken);
+
+        return Ok(ToDto(asset, thumbnails));
+    }
+
     private async Task<Guid?> GetActiveModuleUserIdAsync()
     {
         var userId = User.GetUserId();
@@ -114,5 +255,40 @@ public class PrintingInventoryController : ControllerBase
         return await _moduleService.IsActiveAsync(Printing3DModule.ModuleKey, userId.Value)
             ? userId
             : null;
+    }
+
+    private static AssetRecordDto ToDto(AssetRecord asset, IEnumerable<AssetThumbnail> thumbnails)
+    {
+        return new AssetRecordDto
+        {
+            Id = asset.Id,
+            UserId = asset.UserId,
+            ModuleKey = asset.ModuleKey,
+            RecordType = asset.RecordType,
+            RecordId = asset.RecordId,
+            OriginalFileName = asset.OriginalFileName,
+            ContentType = asset.ContentType,
+            FileSizeBytes = asset.FileSizeBytes,
+            StorageProvider = asset.StorageProvider,
+            StoragePath = asset.StoragePath,
+            IsDeleted = asset.IsDeleted,
+            CreatedAt = asset.CreatedAt,
+            UpdatedAt = asset.UpdatedAt,
+            Thumbnails = thumbnails
+                .Select(t => new AssetThumbnailDto
+                {
+                    Id = t.Id,
+                    AssetRecordId = t.AssetRecordId,
+                    SizeKey = t.SizeKey,
+                    ContentType = t.ContentType,
+                    Width = t.Width,
+                    Height = t.Height,
+                    StorageProvider = t.StorageProvider,
+                    StoragePath = t.StoragePath,
+                    FileSizeBytes = t.FileSizeBytes,
+                    CreatedAt = t.CreatedAt
+                })
+                .ToList()
+        };
     }
 }
