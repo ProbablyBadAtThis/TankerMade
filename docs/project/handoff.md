@@ -9,7 +9,7 @@ Last updated: 2026-05-28
 - Phase B is complete.
 - Phase C is complete.
 - Phase D is complete: module-owned inventory, reference data, project/inventory linking, kit/grouping backend, and kit-to-project backend flows are verified.
-- Latest verified slice: Phase H slice 4 targeted caching (module list/discovery + core reference lookups) with compatibility fixes.
+- Latest verified slice: Phase I slice 6 deployment guidance documented (`docs/project/deployment-guidance.md`).
 - Latest pushed commit: `b5041e7 Implement Phase E reference data extension points and module option flows`.
 - Latest unverified slice: none.
 
@@ -42,7 +42,7 @@ Last updated: 2026-05-28
 
 ## Next Work
 
-- Start Phase I security/ops slices: JWT secret handling hardening, production HTTPS enforcement, and Data Protection key persistence.
+- Prepare Phase I closeout pass and confirm transition target for the next roadmap phase.
 
 ## Phase G Direction
 
@@ -76,4 +76,4 @@ The user reported:
 
 ## Verification Needed Next
 
-No Phase H verification is currently pending.
+No additional Phase I slice 6 verification is pending.

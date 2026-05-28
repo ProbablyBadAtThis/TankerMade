@@ -133,12 +133,12 @@ Phase D intentionally stops at backend/API proof for kits. Polished kit UI shoul
 
 ## Phase I — Security, Ops & Cleanup
 
-- [ ] JWT secret properly managed (user-secrets / env vars)
-- [ ] HTTPS enforced in production
-- [ ] Data Protection key persistence
-- [ ] Export/import round-trip tested and documented
-- [ ] Legacy code removal (any remaining stubs/scaffolds)
-- [ ] Deployment guidance (self-hosted, single binary, optional Docker)
+- [x] JWT secret properly managed (user-secrets / env vars)
+- [x] HTTPS enforced in production
+- [x] Data Protection key persistence
+- [x] Export/import round-trip tested and documented (`docs/project/export-import-roundtrip.md`)
+- [x] Legacy code removal (any remaining stubs/scaffolds)
+- [x] Deployment guidance (self-hosted, single binary, optional Docker) (`docs/project/deployment-guidance.md`)
 
 ---
 

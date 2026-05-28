@@ -8,14 +8,14 @@ class DevTrackerSection {
         this.sectionId = 'dev-tracker';
         this.data = {
             totalTasks: 67,
-            completedTasks: 61,
+            completedTasks: 67,
             totalPhases: 9,
-            completedPhases: 8,
+            completedPhases: 9,
             currentPhase: {
                 number: "I",
                 title: "Security, Ops & Cleanup",
                 description: "Secrets, HTTPS, data protection keys, export/import verification, cleanup, and deployment guidance.",
-                completed: 0,
+                completed: 6,
                 total: 6,
                 color: "#f472b6"
             },
@@ -96,10 +96,10 @@ class DevTrackerSection {
                     number: "I",
                     title: "Security, Ops & Cleanup",
                     description: "Secrets, HTTPS, keys, export/import, cleanup, and deployment guidance.",
-                    completed: 0,
+                    completed: 6,
                     total: 6,
                     color: "#f472b6",
-                    status: "active"
+                    status: "completed"
                 }
             ]
         };
@@ -379,18 +379,18 @@ const ROADMAP_PHASE_TASKS = {
         { title: 'Core asset picker extension points for module-owned records', status: 'done', area: 'Client' }
     ],
     H: [
-        { title: 'DB indexes on commonly filtered columns', status: 'todo', area: 'Performance' },
-        { title: 'Server-side filters and pagination on all list endpoints', status: 'todo', area: 'API' },
-        { title: 'Full-text search with SQLite FTS if needed', status: 'todo', area: 'Search' },
-        { title: 'Caching where beneficial', status: 'todo', area: 'Performance' }
+        { title: 'DB indexes on commonly filtered columns', status: 'done', area: 'Performance' },
+        { title: 'Server-side filters and pagination on all list endpoints', status: 'done', area: 'API' },
+        { title: 'Full-text search with SQLite FTS if needed', status: 'done', area: 'Search' },
+        { title: 'Caching where beneficial', status: 'done', area: 'Performance' }
     ],
     I: [
-        { title: 'JWT secret properly managed', status: 'todo', area: 'Security' },
-        { title: 'HTTPS enforced in production', status: 'todo', area: 'Ops' },
-        { title: 'Data Protection key persistence', status: 'todo', area: 'Ops' },
-        { title: 'Export/import round-trip tested and documented', status: 'todo', area: 'Admin' },
-        { title: 'Legacy code removal', status: 'todo', area: 'Cleanup' },
-        { title: 'Deployment guidance', status: 'todo', area: 'Docs' }
+        { title: 'JWT secret properly managed', status: 'done', area: 'Security' },
+        { title: 'HTTPS enforced in production', status: 'done', area: 'Ops' },
+        { title: 'Data Protection key persistence', status: 'done', area: 'Ops' },
+        { title: 'Export/import round-trip tested and documented', status: 'done', area: 'Admin' },
+        { title: 'Legacy code removal', status: 'done', area: 'Cleanup' },
+        { title: 'Deployment guidance', status: 'done', area: 'Docs' }
     ]
 };
 
