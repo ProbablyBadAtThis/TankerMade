@@ -8,12 +8,12 @@ class DashboardSection {
         this.sectionId = 'dashboard';
         this.data = {
             totalTasks: 67,
-            completedTasks: 61,
+            completedTasks: 67,
             currentPhase: {
                 number: "I",
                 title: "Security, Ops & Cleanup",
                 description: "Secrets, HTTPS, data protection key persistence, export/import verification, and deployment hardening.",
-                completed: 0,
+                completed: 6,
                 total: 6
             }
         };
@@ -48,7 +48,7 @@ class DashboardSection {
                                     </span>
                                     <span class="progress-stat">
                                         <span class="stat-value" id="current-week">Phase ${this.data.currentPhase.number}</span>
-                                        <span class="stat-label">current</span>
+                                        <span class="stat-label">latest complete</span>
                                     </span>
                                 </div>
 
@@ -64,7 +64,7 @@ class DashboardSection {
 
                     <div class="card dashboard-card phase-card">
                         <div class="card-header">
-                            <h2>Current Phase</h2>
+                            <h2>Latest Completed Phase</h2>
                         </div>
                         <div class="card-body">
                             <div class="current-phase-info">
@@ -121,7 +121,7 @@ class DashboardSection {
                 ${isAuthenticated ? `
                 <div class="dashboard-section-title">
                     <h2>Current Focus</h2>
-                    <p>Open Phase I work split into scan-friendly panels.</p>
+                    <p>Recent completion highlights and next transition planning.</p>
                 </div>
 
                 <div class="dashboard-focus-panels">
@@ -192,7 +192,7 @@ class DashboardSection {
                     <h2>Project Glimpse</h2>
                 </div>
                 <div class="card-body">
-                    <p class="text-secondary">TankerMade is a local-first modular maker workbench. Phase H is complete; Phase I now targets security, operations, and cleanup.</p>
+                    <p class="text-secondary">TankerMade is a local-first modular maker workbench. Phases A through I are complete, including security and deployment hardening.</p>
                     <div class="mt-4">
                         <button class="btn btn-primary" onclick="window.TankerMadeAuth && window.TankerMadeAuth.login()">
                             Sign in with GitHub
@@ -215,7 +215,7 @@ class DashboardSection {
             { title: "Complete module-owned inventory and kit backend flows", meta: "Phase D • Modules", status: "done" },
             { title: "Complete Phase F module platform hardening", meta: "Phase F • Platform", status: "done" },
             { title: "Complete Phase G images and assets implementation", meta: "Phase G • Assets", status: "done" },
-            { title: "Move JWT secret handling to user-secrets/env-only production path", meta: "Phase I • Security", status: "active" }
+            { title: "Complete Phase I security, ops, and deployment guidance", meta: "Phase I • Closeout", status: "done" }
         ];
 
         return tasks.map(task => `
@@ -239,7 +239,7 @@ class DashboardSection {
             { number: "F", title: "Module Platform V1", completed: 6, total: 6, active: false },
             { number: "G", title: "Images & Assets", completed: 3, total: 3, active: false },
             { number: "H", title: "Performance & Search", completed: 4, total: 4, active: false },
-            { number: "I", title: "Security, Ops & Cleanup", completed: 0, total: 6, active: true }
+            { number: "I", title: "Security, Ops & Cleanup", completed: 6, total: 6, active: false }
         ];
 
         return phases.map(phase => {
@@ -281,8 +281,8 @@ class DashboardSection {
 
     renderWeekSummary() {
         const stats = [
-            { value: "61", label: "Done" },
-            { value: "6", label: "Open in Phase I" },
+            { value: "67", label: "Done" },
+            { value: "0", label: "Open in Phase I" },
             { value: "9", label: "Roadmap Phases" }
         ];
 
@@ -296,9 +296,9 @@ class DashboardSection {
 
     renderNextTasks() {
         const tasks = [
-            { title: "JWT secret fully externalized and production-safe", phase: "Phase I" },
-            { title: "Enforce HTTPS and configure Data Protection key persistence", phase: "Phase I" },
-            { title: "Document deployment options and run export/import round-trip checks", phase: "Phase I" }
+            { title: "Confirm post-Phase-I transition target in roadmap/handoff", phase: "Phase Planning" },
+            { title: "Review deployment runbook against hosting target", phase: "Operations" },
+            { title: "Capture follow-up backlog items from Phase I retro", phase: "Product" }
         ];
 
         return tasks.map(task => `
