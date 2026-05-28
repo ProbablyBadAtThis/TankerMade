@@ -14,6 +14,8 @@ namespace TankerMade.Server.Controllers;
 public class AssetsController : ControllerBase
 {
     private const long MaxUploadBytes = 25 * 1024 * 1024; // 25 MB for initial local-first foundation
+    private const int DefaultPageSize = 50;
+    private const int MaxPageSize = 200;
     private readonly TankerMadeDbContext _context;
     private readonly IAssetStorageService _assetStorageService;
     private readonly IAssetThumbnailService _assetThumbnailService;
@@ -64,6 +66,8 @@ public class AssetsController : ControllerBase
         [FromQuery] string? recordType = null,
         [FromQuery] Guid? recordId = null,
         [FromQuery] bool includeDeleted = false,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = DefaultPageSize,
         CancellationToken cancellationToken = default)
     {
         var userId = User.GetUserId();
@@ -97,8 +101,11 @@ public class AssetsController : ControllerBase
             query = query.Where(a => a.RecordId == recordId.Value);
         }
 
+        var (skip, take) = ResolvePaging(page, pageSize);
         var assets = await query
             .OrderByDescending(a => a.CreatedAt)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync(cancellationToken);
 
         var assetIds = assets.Select(a => a.Id).ToList();
@@ -119,6 +126,8 @@ public class AssetsController : ControllerBase
         [FromQuery] string recordType,
         [FromQuery] Guid? recordId,
         [FromQuery] bool includeUnassigned = true,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = DefaultPageSize,
         CancellationToken cancellationToken = default)
     {
         var userId = User.GetUserId();
@@ -157,8 +166,11 @@ public class AssetsController : ControllerBase
                 || (a.RecordType == string.Empty && a.RecordId == null))
             : query.Where(a => a.RecordType == normalizedRecordType && a.RecordId == recordId);
 
+        var (skip, take) = ResolvePaging(page, pageSize);
         var assets = await query
             .OrderByDescending(a => a.CreatedAt)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync(cancellationToken);
 
         var assetIds = assets.Select(a => a.Id).ToList();
@@ -319,6 +331,8 @@ public class AssetsController : ControllerBase
 
     [HttpGet("maintenance/orphans")]
     public async Task<ActionResult<IReadOnlyList<AssetOrphanAuditItemDto>>> GetOrphans(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = DefaultPageSize,
         CancellationToken cancellationToken = default)
     {
         var userId = User.GetUserId();
@@ -327,10 +341,13 @@ public class AssetsController : ControllerBase
             return Unauthorized();
         }
 
+        var (skip, take) = ResolvePaging(page, pageSize);
         var assets = await _context.AssetRecords
             .AsNoTracking()
             .Where(a => a.UserId == userId.Value && !a.IsDeleted)
             .OrderByDescending(a => a.CreatedAt)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync(cancellationToken);
 
         var assetIds = assets.Select(a => a.Id).ToList();
@@ -558,6 +575,13 @@ public class AssetsController : ControllerBase
                 })
                 .ToList()
         };
+    }
+
+    private static (int Skip, int Take) ResolvePaging(int page, int pageSize)
+    {
+        var safePage = page < 1 ? 1 : page;
+        var safePageSize = pageSize < 1 ? DefaultPageSize : Math.Min(pageSize, MaxPageSize);
+        return ((safePage - 1) * safePageSize, safePageSize);
     }
 
     public sealed class UploadAssetForm

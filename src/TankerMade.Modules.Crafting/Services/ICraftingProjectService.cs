@@ -7,12 +7,12 @@ public interface ICraftingProjectService
     Task<CraftingProjectDto> CreateAsync(CreateCraftingProjectDto createDto, Guid userId);
     Task<CraftingProjectDto?> GetByIdAsync(Guid id, Guid userId);
     Task<CraftingProjectDto?> GetBySlugAsync(string slug, Guid userId);
-    Task<IReadOnlyList<CraftingProjectDto>> GetAllAsync(Guid userId, bool includeArchived = false);
+    Task<IReadOnlyList<CraftingProjectDto>> GetAllAsync(Guid userId, bool includeArchived = false, int page = 1, int pageSize = 50);
     Task<CraftingProjectDto?> UpdateAsync(UpdateCraftingProjectDto updateDto, Guid userId);
     Task<CraftingProjectDto?> ArchiveAsync(Guid id, Guid userId);
     Task<CraftingProjectDto?> ReopenAsync(Guid id, Guid userId);
     Task<bool> DeleteAsync(Guid id, Guid userId);
-    Task<IReadOnlyList<CraftingProjectDto>> SearchAsync(string searchTerm, Guid userId);
+    Task<IReadOnlyList<CraftingProjectDto>> SearchAsync(string searchTerm, Guid userId, int page = 1, int pageSize = 50);
     Task<CraftingProjectDto?> SetStepProgressAsync(Guid projectId, Guid patternStepId, UpdateCraftingProjectStepProgressDto updateDto, Guid userId);
     Task<CraftingProjectDto?> StartTimerAsync(Guid projectId, Guid patternStepId, UpdateCraftingProjectTimerDto updateDto, Guid userId);
     Task<CraftingProjectDto?> PauseTimerAsync(Guid projectId, Guid patternStepId, UpdateCraftingProjectTimerDto updateDto, Guid userId);

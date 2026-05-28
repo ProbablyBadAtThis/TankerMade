@@ -13,6 +13,7 @@ namespace TankerMade.Server.Controllers.Crafting;
 [Route("api/modules/crafting/patterns")]
 public class CraftingPatternsController : ControllerBase
 {
+    private const int DefaultPageSize = 50;
     private readonly ICraftingPatternService _patternService;
     private readonly IModuleService _moduleService;
 
@@ -23,7 +24,7 @@ public class CraftingPatternsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<CraftingPatternDto>>> GetAll()
+    public async Task<ActionResult<IReadOnlyList<CraftingPatternDto>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         var userId = await GetActiveModuleUserIdAsync();
         if (userId == null)
@@ -31,7 +32,7 @@ public class CraftingPatternsController : ControllerBase
             return Forbid();
         }
 
-        return Ok(await _patternService.GetAllAsync(userId.Value));
+        return Ok(await _patternService.GetAllAsync(userId.Value, page, pageSize));
     }
 
     [HttpGet("{id:guid}")]
@@ -45,6 +46,26 @@ public class CraftingPatternsController : ControllerBase
 
         var pattern = await _patternService.GetByIdAsync(id, userId.Value);
         return pattern == null ? NotFound() : Ok(pattern);
+    }
+
+    [HttpGet("search")]
+    public async Task<ActionResult<IReadOnlyList<CraftingPatternDto>>> Search(
+        [FromQuery] string q,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = DefaultPageSize)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        if (string.IsNullOrWhiteSpace(q))
+        {
+            return Ok(Array.Empty<CraftingPatternDto>());
+        }
+
+        return Ok(await _patternService.SearchAsync(q, userId.Value, page, pageSize));
     }
 
     [HttpPost]

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using TankerMade.Contracts.DTOs.Modules;
 using TankerMade.Contracts.Services;
 using TankerMade.Core.Entities;
@@ -10,19 +11,38 @@ namespace TankerMade.Server.Services;
 
 public class ModuleService : IModuleService
 {
+    private static readonly TimeSpan ModuleDiscoveryCacheTtl = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan ModuleListCacheTtl = TimeSpan.FromMinutes(1);
+    private const string DiscoveryCacheKey = "modules:discovery";
     private readonly TankerMadeDbContext _context;
+    private readonly IMemoryCache _cache;
     private readonly IReadOnlyList<IModuleDiscoveryProvider> _discoveryProviders;
 
     public ModuleService(
         TankerMadeDbContext context,
+        IMemoryCache cache,
         IEnumerable<IModuleDiscoveryProvider> discoveryProviders)
     {
         _context = context;
+        _cache = cache;
         _discoveryProviders = discoveryProviders.ToList();
+    }
+
+    public ModuleService(
+        TankerMadeDbContext context,
+        IEnumerable<IModuleDiscoveryProvider> discoveryProviders)
+        : this(context, new MemoryCache(new MemoryCacheOptions()), discoveryProviders)
+    {
     }
 
     public async Task<IReadOnlyList<ModuleDto>> GetAvailableModulesAsync(Guid userId)
     {
+        var cacheKey = GetAvailableModulesCacheKey(userId);
+        if (_cache.TryGetValue<IReadOnlyList<ModuleDto>>(cacheKey, out var cached) && cached != null)
+        {
+            return cached;
+        }
+
         var discoveredByKey = await DiscoverByModuleKeyAsync();
         var activeModuleIds = await _context.UserModuleActivations
             .Where(a => a.UserId == userId && a.IsActive)
@@ -33,13 +53,21 @@ public class ModuleService : IModuleService
             .OrderBy(m => m.Name)
             .ToListAsync();
 
-        return modules
+        var result = modules
             .Select(m => ToDto(m, activeModuleIds.Contains(m.Id), discoveredByKey))
             .ToList();
+        _cache.Set(cacheKey, result, ModuleListCacheTtl);
+        return result;
     }
 
     public async Task<IReadOnlyList<ModuleDto>> GetActiveModulesAsync(Guid userId)
     {
+        var cacheKey = GetActiveModulesCacheKey(userId);
+        if (_cache.TryGetValue<IReadOnlyList<ModuleDto>>(cacheKey, out var cached) && cached != null)
+        {
+            return cached;
+        }
+
         var discoveredByKey = await DiscoverByModuleKeyAsync();
         var active = await _context.UserModuleActivations
             .Where(a => a.UserId == userId && a.IsActive)
@@ -62,7 +90,7 @@ public class ModuleService : IModuleService
                 })
             .ToListAsync();
 
-        return active
+        var result = active
             .Select(dto =>
             {
                 if (discoveredByKey.TryGetValue(dto.ModuleKey, out var discovered)
@@ -77,6 +105,8 @@ public class ModuleService : IModuleService
             })
             .OrderBy(m => m.Name)
             .ToList();
+        _cache.Set(cacheKey, result, ModuleListCacheTtl);
+        return result;
     }
 
     public async Task<ModuleDto?> ActivateAsync(string moduleKey, Guid userId)
@@ -103,6 +133,7 @@ public class ModuleService : IModuleService
         }
 
         await _context.SaveChangesAsync();
+        InvalidateUserModuleListCache(userId);
 
         var discoveredByKey = await DiscoverByModuleKeyAsync();
         return ToDto(module, activation.IsActive, discoveredByKey);
@@ -125,6 +156,7 @@ public class ModuleService : IModuleService
 
         activation.Deactivate();
         await _context.SaveChangesAsync();
+        InvalidateUserModuleListCache(userId);
         return true;
     }
 
@@ -172,6 +204,12 @@ public class ModuleService : IModuleService
 
     private async Task<IReadOnlyDictionary<string, IModule>> DiscoverByModuleKeyAsync()
     {
+        if (_cache.TryGetValue<IReadOnlyDictionary<string, IModule>>(DiscoveryCacheKey, out var cached)
+            && cached != null)
+        {
+            return cached;
+        }
+
         var map = new Dictionary<string, IModule>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var provider in _discoveryProviders)
@@ -183,6 +221,16 @@ public class ModuleService : IModuleService
             }
         }
 
+        _cache.Set(DiscoveryCacheKey, map, ModuleDiscoveryCacheTtl);
         return map;
+    }
+
+    private static string GetAvailableModulesCacheKey(Guid userId) => $"modules:available:{userId}";
+    private static string GetActiveModulesCacheKey(Guid userId) => $"modules:active:{userId}";
+
+    private void InvalidateUserModuleListCache(Guid userId)
+    {
+        _cache.Remove(GetAvailableModulesCacheKey(userId));
+        _cache.Remove(GetActiveModulesCacheKey(userId));
     }
 }

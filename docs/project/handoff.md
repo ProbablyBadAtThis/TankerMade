@@ -4,12 +4,12 @@ Last updated: 2026-05-28
 
 ## Current State
 
-- Current roadmap phase: Phase H — Performance & Search.
+- Current roadmap phase: Phase I — Security, Ops & Cleanup.
 - Phase A is complete.
 - Phase B is complete.
 - Phase C is complete.
 - Phase D is complete: module-owned inventory, reference data, project/inventory linking, kit/grouping backend, and kit-to-project backend flows are verified.
-- Latest verified slice: Phase G slice 7 ops/cleanup verification plus module UI asset hook polish.
+- Latest verified slice: Phase H slice 4 targeted caching (module list/discovery + core reference lookups) with compatibility fixes.
 - Latest pushed commit: `b5041e7 Implement Phase E reference data extension points and module option flows`.
 - Latest unverified slice: none.
 
@@ -42,7 +42,7 @@ Last updated: 2026-05-28
 
 ## Next Work
 
-- Start Phase H performance and search slices: index review, list endpoint paging/filtering hardening, and search strategy.
+- Start Phase I security/ops slices: JWT secret handling hardening, production HTTPS enforcement, and Data Protection key persistence.
 
 ## Phase G Direction
 
@@ -76,4 +76,4 @@ The user reported:
 
 ## Verification Needed Next
 
-No Phase G verification is currently pending.
+No Phase H verification is currently pending.

@@ -4,7 +4,7 @@ Last reviewed: 2026-05-28
 
 ---
 
-## Current Phase: H — Performance & Search
+## Current Phase: I — Security, Ops & Cleanup
 
 Phase A is behavior-complete as of the May 22, 2026 smoke test. Phase B is complete after expanding the reference Crafting module with pattern pieces, steps, readiness validation, and project workspace screens. Phase C is complete after adding module-owned project workspace behavior: step progress, per-step timers, completion rules, piece selection, archive flow, and non-destructive editing. Phase D is complete after proving module-owned inventory, reference data, project/inventory links, kit/grouping behavior, and kit-to-project backend flows.
 Phase E is complete after wiring neutral Core reference categories through module extension points, enforcing module-owned category boundaries, and supporting module-provided add/new option flows in inventory surfaces.
@@ -124,10 +124,10 @@ Phase D intentionally stops at backend/API proof for kits. Polished kit UI shoul
 
 ## Phase H — Performance & Search
 
-- [ ] DB indexes on commonly filtered columns
-- [ ] Server-side filters and pagination on all list endpoints
-- [ ] Full-text search (SQLite FTS if needed)
-- [ ] Caching where beneficial
+- [x] DB indexes on commonly filtered columns
+- [x] Server-side filters and pagination on all list endpoints
+- [x] Full-text search (SQLite FTS if needed)
+- [x] Caching where beneficial
 
 ---
 

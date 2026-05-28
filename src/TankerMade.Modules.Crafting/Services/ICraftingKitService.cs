@@ -7,7 +7,7 @@ public interface ICraftingKitService
 {
     Task<CraftingKitDto> CreateAsync(CreateCraftingKitDto createDto, Guid userId);
     Task<CraftingKitDto?> GetByIdAsync(Guid id, Guid userId);
-    Task<IReadOnlyList<CraftingKitDto>> GetAllAsync(Guid userId, bool includeArchived = false);
+    Task<IReadOnlyList<CraftingKitDto>> GetAllAsync(Guid userId, bool includeArchived = false, int page = 1, int pageSize = 50);
     Task<CraftingKitDto?> UpdateAsync(UpdateCraftingKitDto updateDto, Guid userId);
     Task<CraftingKitDto?> ArchiveAsync(Guid id, Guid userId);
     Task<CraftingKitDto?> ReopenAsync(Guid id, Guid userId);

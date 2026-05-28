@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using TankerMade.Modules.Crafting.DTOs.Inventory;
 using TankerMade.Modules.Crafting.Entities;
 using TankerMade.Modules.Crafting.ReferenceData;
@@ -10,11 +11,21 @@ namespace TankerMade.Server.Services.Crafting;
 
 public class CraftingInventoryService : ICraftingInventoryService
 {
+    private const int DefaultPageSize = 50;
+    private const int MaxPageSize = 200;
+    private static readonly TimeSpan CoreReferenceCacheTtl = TimeSpan.FromMinutes(10);
     private readonly TankerMadeDbContext _context;
+    private readonly IMemoryCache _cache;
 
-    public CraftingInventoryService(TankerMadeDbContext context)
+    public CraftingInventoryService(TankerMadeDbContext context, IMemoryCache cache)
     {
         _context = context;
+        _cache = cache;
+    }
+
+    public CraftingInventoryService(TankerMadeDbContext context)
+        : this(context, new MemoryCache(new MemoryCacheOptions()))
+    {
     }
 
     public async Task<CraftingYarnInventoryItemDto> CreateOrMergeYarnAsync(
@@ -76,10 +87,13 @@ public class CraftingInventoryService : ICraftingInventoryService
         var query = ApplyYarnFilters(
             _context.CraftingYarnInventoryItems.Where(y => y.UserId == userId),
             filter);
+        var (skip, take) = ResolvePaging(filter?.Page ?? 1, filter?.PageSize ?? DefaultPageSize);
 
         var yarns = await query
             .OrderBy(y => y.BrandName)
             .ThenBy(y => y.ColorName)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync();
 
         var result = new List<CraftingYarnInventoryItemDto>();
@@ -148,11 +162,14 @@ public class CraftingInventoryService : ICraftingInventoryService
         var query = ApplyToolFilters(
             _context.CraftingToolInventoryItems.Where(t => t.UserId == userId),
             filter);
+        var (skip, take) = ResolvePaging(filter?.Page ?? 1, filter?.PageSize ?? DefaultPageSize);
 
         var tools = await query
             .OrderBy(t => t.TypeName)
             .ThenBy(t => t.BrandName)
             .ThenBy(t => t.Size)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync();
 
         var result = new List<CraftingToolInventoryItemDto>();
@@ -222,12 +239,15 @@ public class CraftingInventoryService : ICraftingInventoryService
         var query = ApplyNotionFilters(
             _context.CraftingNotionInventoryItems.Where(n => n.UserId == userId),
             filter);
+        var (skip, take) = ResolvePaging(filter?.Page ?? 1, filter?.PageSize ?? DefaultPageSize);
 
         var notions = await query
             .OrderBy(n => n.TypeName)
             .ThenBy(n => n.BrandName)
             .ThenBy(n => n.Size)
             .ThenBy(n => n.ColorName)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync();
 
         var result = new List<CraftingNotionInventoryItemDto>();
@@ -248,16 +268,26 @@ public class CraftingInventoryService : ICraftingInventoryService
         var coreReferenceItems = await CoreReferenceLookup.TryGetItemsAsync(_context, category);
         if (coreReferenceItems != null)
         {
-            return coreReferenceItems
-                .Select((item, index) => new CraftingInventoryReferenceItemDto
-                {
-                    Id = item.Id,
-                    Category = item.Category,
-                    Name = item.Name,
-                    Slug = item.Slug,
-                    SortOrder = index + 1
-                })
-                .ToList();
+            var cacheKey = $"core-reference:crafting:{category.Trim().ToLowerInvariant()}";
+            if (_cache.TryGetValue<IReadOnlyList<CraftingInventoryReferenceItemDto>>(cacheKey, out var cached)
+                && cached != null)
+            {
+                return cached;
+            }
+
+            var result = coreReferenceItems
+                    .Select((item, index) => new CraftingInventoryReferenceItemDto
+                    {
+                        Id = item.Id,
+                        Category = item.Category,
+                        Name = item.Name,
+                        Slug = item.Slug,
+                        SortOrder = index + 1
+                    })
+                    .ToList();
+
+            _cache.Set(cacheKey, result, CoreReferenceCacheTtl);
+            return result;
         }
 
         if (!CraftingReferenceCategories.IsModuleOwned(category))
@@ -785,5 +815,12 @@ public class CraftingInventoryService : ICraftingInventoryService
             CreatedAt = notion.CreatedAt,
             UpdatedAt = notion.UpdatedAt
         };
+    }
+
+    private static (int Skip, int Take) ResolvePaging(int page, int pageSize)
+    {
+        var safePage = page < 1 ? 1 : page;
+        var safePageSize = pageSize < 1 ? DefaultPageSize : Math.Min(pageSize, MaxPageSize);
+        return ((safePage - 1) * safePageSize, safePageSize);
     }
 }

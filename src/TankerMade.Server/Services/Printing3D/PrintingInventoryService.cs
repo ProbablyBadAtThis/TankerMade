@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using TankerMade.Modules.Printing3D.DTOs.Inventory;
 using TankerMade.Modules.Printing3D.Entities;
 using TankerMade.Modules.Printing3D.ReferenceData;
@@ -10,11 +11,21 @@ namespace TankerMade.Server.Services.Printing3D;
 
 public class PrintingInventoryService : IPrintingInventoryService
 {
+    private const int DefaultPageSize = 50;
+    private const int MaxPageSize = 200;
+    private static readonly TimeSpan CoreReferenceCacheTtl = TimeSpan.FromMinutes(10);
     private readonly TankerMadeDbContext _context;
+    private readonly IMemoryCache _cache;
 
-    public PrintingInventoryService(TankerMadeDbContext context)
+    public PrintingInventoryService(TankerMadeDbContext context, IMemoryCache cache)
     {
         _context = context;
+        _cache = cache;
+    }
+
+    public PrintingInventoryService(TankerMadeDbContext context)
+        : this(context, new MemoryCache(new MemoryCacheOptions()))
+    {
     }
 
     public async Task<PrintingMaterialInventoryItemDto> CreateOrMergeMaterialAsync(
@@ -75,11 +86,14 @@ public class PrintingInventoryService : IPrintingInventoryService
         var query = ApplyMaterialFilters(
             _context.PrintingMaterialInventoryItems.Where(m => m.UserId == userId),
             filter);
+        var (skip, take) = ResolvePaging(filter?.Page ?? 1, filter?.PageSize ?? DefaultPageSize);
 
         var materials = await query
             .OrderBy(m => m.MaterialType)
             .ThenBy(m => m.BrandName)
             .ThenBy(m => m.ColorName)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync();
 
         var result = new List<PrintingMaterialInventoryItemDto>();
@@ -100,16 +114,26 @@ public class PrintingInventoryService : IPrintingInventoryService
         var coreReferenceItems = await CoreReferenceLookup.TryGetItemsAsync(_context, category);
         if (coreReferenceItems != null)
         {
-            return coreReferenceItems
-                .Select((item, index) => new PrintingInventoryReferenceItemDto
-                {
-                    Id = item.Id,
-                    Category = item.Category,
-                    Name = item.Name,
-                    Slug = item.Slug,
-                    SortOrder = index + 1
-                })
-                .ToList();
+            var cacheKey = $"core-reference:printing:{category.Trim().ToLowerInvariant()}";
+            if (_cache.TryGetValue<IReadOnlyList<PrintingInventoryReferenceItemDto>>(cacheKey, out var cached)
+                && cached != null)
+            {
+                return cached;
+            }
+
+            var result = coreReferenceItems
+                    .Select((item, index) => new PrintingInventoryReferenceItemDto
+                    {
+                        Id = item.Id,
+                        Category = item.Category,
+                        Name = item.Name,
+                        Slug = item.Slug,
+                        SortOrder = index + 1
+                    })
+                    .ToList();
+
+            _cache.Set(cacheKey, result, CoreReferenceCacheTtl);
+            return result;
         }
 
         if (!PrintingReferenceCategories.IsModuleOwned(category))
@@ -388,5 +412,12 @@ public class PrintingInventoryService : IPrintingInventoryService
             CreatedAt = material.CreatedAt,
             UpdatedAt = material.UpdatedAt
         };
+    }
+
+    private static (int Skip, int Take) ResolvePaging(int page, int pageSize)
+    {
+        var safePage = page < 1 ? 1 : page;
+        var safePageSize = pageSize < 1 ? DefaultPageSize : Math.Min(pageSize, MaxPageSize);
+        return ((safePage - 1) * safePageSize, safePageSize);
     }
 }

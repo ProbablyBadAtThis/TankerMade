@@ -174,6 +174,7 @@ public class TankerMadeDbContext : DbContext
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.ModuleKey);
             entity.HasIndex(e => new { e.ModuleKey, e.RecordType, e.RecordId });
+            entity.HasIndex(e => new { e.UserId, e.ModuleKey, e.IsDeleted, e.CreatedAt });
             entity.HasIndex(e => e.StoragePath)
                 .IsUnique();
         });
@@ -261,6 +262,8 @@ public class TankerMadeDbContext : DbContext
             entity.HasIndex(e => e.IsArchived);
             entity.HasIndex(e => e.Slug);
             entity.HasIndex(e => e.KitId);
+            entity.HasIndex(e => new { e.UserId, e.IsArchived, e.Name });
+            entity.HasIndex(e => new { e.UserId, e.PatternId });
             entity.HasIndex(e => e.KitPieceId)
                 .IsUnique();
         });
@@ -365,6 +368,9 @@ public class TankerMadeDbContext : DbContext
 
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.Slug);
+            entity.HasIndex(e => e.ThemeId);
+            entity.HasIndex(e => e.SourceId);
+            entity.HasIndex(e => new { e.UserId, e.ThemeId, e.Name });
         });
     }
 
@@ -440,6 +446,7 @@ public class TankerMadeDbContext : DbContext
             entity.HasIndex(e => e.IsArchived);
             entity.HasIndex(e => e.Slug);
             entity.HasIndex(e => e.ThemeId);
+            entity.HasIndex(e => new { e.UserId, e.IsArchived, e.Name });
         });
     }
 
@@ -676,6 +683,7 @@ public class TankerMadeDbContext : DbContext
             entity.Property(e => e.Slug).IsRequired().HasMaxLength(170);
 
             entity.HasIndex(e => e.Category);
+            entity.HasIndex(e => new { e.Category, e.SortOrder });
             entity.HasIndex(e => new { e.Category, e.Slug })
                 .IsUnique();
         });
@@ -759,6 +767,7 @@ public class TankerMadeDbContext : DbContext
             entity.Property(e => e.Slug).IsRequired().HasMaxLength(170);
 
             entity.HasIndex(e => e.Category);
+            entity.HasIndex(e => new { e.Category, e.SortOrder });
             entity.HasIndex(e => new { e.Category, e.Slug })
                 .IsUnique();
         });

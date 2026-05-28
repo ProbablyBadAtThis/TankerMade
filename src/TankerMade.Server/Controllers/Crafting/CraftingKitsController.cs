@@ -24,7 +24,7 @@ public class CraftingKitsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<CraftingKitDto>>> GetAll([FromQuery] bool includeArchived = false)
+    public async Task<ActionResult<IReadOnlyList<CraftingKitDto>>> GetAll([FromQuery] bool includeArchived = false, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         var userId = await GetActiveModuleUserIdAsync();
         if (userId == null)
@@ -32,7 +32,7 @@ public class CraftingKitsController : ControllerBase
             return Forbid();
         }
 
-        return Ok(await _kitService.GetAllAsync(userId.Value, includeArchived));
+        return Ok(await _kitService.GetAllAsync(userId.Value, includeArchived, page, pageSize));
     }
 
     [HttpGet("{id:guid}")]

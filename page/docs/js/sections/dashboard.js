@@ -8,13 +8,13 @@ class DashboardSection {
         this.sectionId = 'dashboard';
         this.data = {
             totalTasks: 67,
-            completedTasks: 57,
+            completedTasks: 61,
             currentPhase: {
-                number: "H",
-                title: "Performance & Search",
-                description: "Indexes, server-side filtering/paging, search, and targeted caching.",
+                number: "I",
+                title: "Security, Ops & Cleanup",
+                description: "Secrets, HTTPS, data protection key persistence, export/import verification, and deployment hardening.",
                 completed: 0,
-                total: 4
+                total: 6
             }
         };
     }
@@ -121,7 +121,7 @@ class DashboardSection {
                 ${isAuthenticated ? `
                 <div class="dashboard-section-title">
                     <h2>Current Focus</h2>
-                    <p>Open Phase H work split into scan-friendly panels.</p>
+                    <p>Open Phase I work split into scan-friendly panels.</p>
                 </div>
 
                 <div class="dashboard-focus-panels">
@@ -192,7 +192,7 @@ class DashboardSection {
                     <h2>Project Glimpse</h2>
                 </div>
                 <div class="card-body">
-                    <p class="text-secondary">TankerMade is a local-first modular maker workbench. Phase G is complete; Phase H now targets performance and search foundations.</p>
+                    <p class="text-secondary">TankerMade is a local-first modular maker workbench. Phase H is complete; Phase I now targets security, operations, and cleanup.</p>
                     <div class="mt-4">
                         <button class="btn btn-primary" onclick="window.TankerMadeAuth && window.TankerMadeAuth.login()">
                             Sign in with GitHub
@@ -215,7 +215,7 @@ class DashboardSection {
             { title: "Complete module-owned inventory and kit backend flows", meta: "Phase D • Modules", status: "done" },
             { title: "Complete Phase F module platform hardening", meta: "Phase F • Platform", status: "done" },
             { title: "Complete Phase G images and assets implementation", meta: "Phase G • Assets", status: "done" },
-            { title: "Plan index additions for high-traffic list queries", meta: "Phase H • Performance", status: "active" }
+            { title: "Move JWT secret handling to user-secrets/env-only production path", meta: "Phase I • Security", status: "active" }
         ];
 
         return tasks.map(task => `
@@ -238,7 +238,8 @@ class DashboardSection {
             { number: "E", title: "Reference Data Integration", completed: 3, total: 3, active: false },
             { number: "F", title: "Module Platform V1", completed: 6, total: 6, active: false },
             { number: "G", title: "Images & Assets", completed: 3, total: 3, active: false },
-            { number: "H", title: "Performance & Search", completed: 0, total: 4, active: true }
+            { number: "H", title: "Performance & Search", completed: 4, total: 4, active: false },
+            { number: "I", title: "Security, Ops & Cleanup", completed: 0, total: 6, active: true }
         ];
 
         return phases.map(phase => {
@@ -280,8 +281,8 @@ class DashboardSection {
 
     renderWeekSummary() {
         const stats = [
-            { value: "57", label: "Done" },
-            { value: "4", label: "Open in Phase H" },
+            { value: "61", label: "Done" },
+            { value: "6", label: "Open in Phase I" },
             { value: "9", label: "Roadmap Phases" }
         ];
 
@@ -295,9 +296,9 @@ class DashboardSection {
 
     renderNextTasks() {
         const tasks = [
-            { title: "Add DB indexes for frequently filtered inventory and project lists", phase: "Phase H" },
-            { title: "Harden server-side filtering and pagination coverage", phase: "Phase H" },
-            { title: "Define and implement search baseline (SQLite FTS if warranted)", phase: "Phase H" }
+            { title: "JWT secret fully externalized and production-safe", phase: "Phase I" },
+            { title: "Enforce HTTPS and configure Data Protection key persistence", phase: "Phase I" },
+            { title: "Document deployment options and run export/import round-trip checks", phase: "Phase I" }
         ];
 
         return tasks.map(task => `

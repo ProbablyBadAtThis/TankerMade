@@ -8,6 +8,8 @@ namespace TankerMade.Server.Services.Crafting;
 
 public class CraftingPatternService : ICraftingPatternService
 {
+    private const int DefaultPageSize = 50;
+    private const int MaxPageSize = 200;
     private readonly TankerMadeDbContext _context;
 
     public CraftingPatternService(TankerMadeDbContext context)
@@ -42,11 +44,14 @@ public class CraftingPatternService : ICraftingPatternService
         return pattern == null ? null : await MapAsync(pattern);
     }
 
-    public async Task<IReadOnlyList<CraftingPatternDto>> GetAllAsync(Guid userId)
+    public async Task<IReadOnlyList<CraftingPatternDto>> GetAllAsync(Guid userId, int page = 1, int pageSize = DefaultPageSize)
     {
+        var (skip, take) = ResolvePaging(page, pageSize);
         var patterns = await _context.CraftingPatterns
             .Where(p => p.UserId == userId)
             .OrderBy(p => p.Name)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync();
 
         return await MapListAsync(patterns);
@@ -62,12 +67,37 @@ public class CraftingPatternService : ICraftingPatternService
         return await MapListAsync(patterns);
     }
 
-    public async Task<IReadOnlyList<CraftingPatternDto>> SearchAsync(string searchTerm, Guid userId)
+    public async Task<IReadOnlyList<CraftingPatternDto>> SearchAsync(
+        string searchTerm,
+        Guid userId,
+        int page = 1,
+        int pageSize = DefaultPageSize)
     {
-        var normalized = searchTerm.Trim();
-        var patterns = await _context.CraftingPatterns
-            .Where(p => p.UserId == userId && (p.Name.Contains(normalized) || p.Type.Contains(normalized)))
+        var terms = searchTerm
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(term => term.ToLowerInvariant())
+            .Distinct()
+            .ToList();
+        if (terms.Count == 0)
+        {
+            return [];
+        }
+
+        var query = _context.CraftingPatterns
+            .Where(p => p.UserId == userId);
+        foreach (var term in terms)
+        {
+            var like = $"%{term}%";
+            query = query.Where(p =>
+                EF.Functions.Like((p.Name ?? string.Empty).ToLower(), like)
+                || EF.Functions.Like((p.Type ?? string.Empty).ToLower(), like));
+        }
+
+        var (skip, take) = ResolvePaging(page, pageSize);
+        var patterns = await query
             .OrderBy(p => p.Name)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync();
 
         return await MapListAsync(patterns);
@@ -579,5 +609,12 @@ public class CraftingPatternService : ICraftingPatternService
         return currentSet.Count == orderedIds.Count
             && orderedSet.Count == orderedIds.Count
             && currentSet.SetEquals(orderedSet);
+    }
+
+    private static (int Skip, int Take) ResolvePaging(int page, int pageSize)
+    {
+        var safePage = page < 1 ? 1 : page;
+        var safePageSize = pageSize < 1 ? DefaultPageSize : Math.Min(pageSize, MaxPageSize);
+        return ((safePage - 1) * safePageSize, safePageSize);
     }
 }

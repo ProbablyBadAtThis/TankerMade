@@ -18,6 +18,8 @@ namespace TankerMade.Server.Controllers.Crafting;
 public class CraftingProjectsController : ControllerBase
 {
     private const string ProjectRecordType = "project";
+    private const int DefaultPageSize = 50;
+    private const int MaxPageSize = 200;
     private readonly ICraftingProjectService _projectService;
     private readonly IModuleService _moduleService;
     private readonly TankerMadeDbContext _context;
@@ -33,7 +35,7 @@ public class CraftingProjectsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<CraftingProjectDto>>> GetAll([FromQuery] bool includeArchived = false)
+    public async Task<ActionResult<IReadOnlyList<CraftingProjectDto>>> GetAll([FromQuery] bool includeArchived = false, [FromQuery] int page = 1, [FromQuery] int pageSize = DefaultPageSize)
     {
         var userId = await GetActiveModuleUserIdAsync();
         if (userId == null)
@@ -41,7 +43,7 @@ public class CraftingProjectsController : ControllerBase
             return Forbid();
         }
 
-        return Ok(await _projectService.GetAllAsync(userId.Value, includeArchived));
+        return Ok(await _projectService.GetAllAsync(userId.Value, includeArchived, page, pageSize));
     }
 
     [HttpGet("{id:guid}")]
@@ -55,6 +57,26 @@ public class CraftingProjectsController : ControllerBase
 
         var project = await _projectService.GetByIdAsync(id, userId.Value);
         return project == null ? NotFound() : Ok(project);
+    }
+
+    [HttpGet("search")]
+    public async Task<ActionResult<IReadOnlyList<CraftingProjectDto>>> Search(
+        [FromQuery] string q,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = DefaultPageSize)
+    {
+        var userId = await GetActiveModuleUserIdAsync();
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        if (string.IsNullOrWhiteSpace(q))
+        {
+            return Ok(Array.Empty<CraftingProjectDto>());
+        }
+
+        return Ok(await _projectService.SearchAsync(q, userId.Value, page, pageSize));
     }
 
     [HttpPost]
@@ -295,6 +317,8 @@ public class CraftingProjectsController : ControllerBase
     public async Task<ActionResult<IReadOnlyList<AssetRecordDto>>> GetAssets(
         Guid id,
         [FromQuery] bool includeUnassigned = true,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = DefaultPageSize,
         CancellationToken cancellationToken = default)
     {
         var userId = await GetActiveModuleUserIdAsync();
@@ -322,8 +346,11 @@ public class CraftingProjectsController : ControllerBase
                 || (a.RecordType == string.Empty && a.RecordId == null))
             : query.Where(a => a.RecordType == ProjectRecordType && a.RecordId == id);
 
+        var (skip, take) = ResolvePaging(page, pageSize);
         var assets = await query
             .OrderByDescending(a => a.CreatedAt)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync(cancellationToken);
 
         var assetIds = assets.Select(a => a.Id).ToList();
@@ -468,5 +495,12 @@ public class CraftingProjectsController : ControllerBase
                 })
                 .ToList()
         };
+    }
+
+    private static (int Skip, int Take) ResolvePaging(int page, int pageSize)
+    {
+        var safePage = page < 1 ? 1 : page;
+        var safePageSize = pageSize < 1 ? DefaultPageSize : Math.Min(pageSize, MaxPageSize);
+        return ((safePage - 1) * safePageSize, safePageSize);
     }
 }

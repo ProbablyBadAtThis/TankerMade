@@ -8,16 +8,16 @@ class DevTrackerSection {
         this.sectionId = 'dev-tracker';
         this.data = {
             totalTasks: 67,
-            completedTasks: 57,
+            completedTasks: 61,
             totalPhases: 9,
-            completedPhases: 7,
+            completedPhases: 8,
             currentPhase: {
-                number: "H",
-                title: "Performance & Search",
-                description: "Indexes, server-side filtering/paging, search, and targeted caching.",
+                number: "I",
+                title: "Security, Ops & Cleanup",
+                description: "Secrets, HTTPS, data protection keys, export/import verification, cleanup, and deployment guidance.",
                 completed: 0,
-                total: 4,
-                color: "#818cf8"
+                total: 6,
+                color: "#f472b6"
             },
             phases: [
                 {
@@ -87,10 +87,10 @@ class DevTrackerSection {
                     number: "H",
                     title: "Performance & Search",
                     description: "Indexes, filters, pagination, search, and caching.",
-                    completed: 0,
+                    completed: 4,
                     total: 4,
                     color: "#818cf8",
-                    status: "active"
+                    status: "completed"
                 },
                 {
                     number: "I",
@@ -99,7 +99,7 @@ class DevTrackerSection {
                     completed: 0,
                     total: 6,
                     color: "#f472b6",
-                    status: "upcoming"
+                    status: "active"
                 }
             ]
         };

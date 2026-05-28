@@ -10,6 +10,8 @@ namespace TankerMade.Server.Services.Crafting;
 
 public class CraftingKitService : ICraftingKitService
 {
+    private const int DefaultPageSize = 50;
+    private const int MaxPageSize = 200;
     private readonly TankerMadeDbContext _context;
 
     public CraftingKitService(TankerMadeDbContext context)
@@ -34,11 +36,18 @@ public class CraftingKitService : ICraftingKitService
         return kit == null ? null : await MapAsync(kit);
     }
 
-    public async Task<IReadOnlyList<CraftingKitDto>> GetAllAsync(Guid userId, bool includeArchived = false)
+    public async Task<IReadOnlyList<CraftingKitDto>> GetAllAsync(
+        Guid userId,
+        bool includeArchived = false,
+        int page = 1,
+        int pageSize = DefaultPageSize)
     {
+        var (skip, take) = ResolvePaging(page, pageSize);
         var kits = await _context.CraftingKits
             .Where(kit => kit.UserId == userId && (includeArchived || !kit.IsArchived))
             .OrderBy(kit => kit.Name)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync();
 
         return await MapListAsync(kits);
@@ -561,5 +570,12 @@ public class CraftingKitService : ICraftingKitService
         return currentSet.Count == orderedIds.Count
             && orderedSet.Count == orderedIds.Count
             && currentSet.SetEquals(orderedSet);
+    }
+
+    private static (int Skip, int Take) ResolvePaging(int page, int pageSize)
+    {
+        var safePage = page < 1 ? 1 : page;
+        var safePageSize = pageSize < 1 ? DefaultPageSize : Math.Min(pageSize, MaxPageSize);
+        return ((safePage - 1) * safePageSize, safePageSize);
     }
 }

@@ -18,6 +18,8 @@ namespace TankerMade.Server.Controllers.Printing3D;
 public class PrintingInventoryController : ControllerBase
 {
     private const string MaterialRecordType = "material";
+    private const int DefaultPageSize = 50;
+    private const int MaxPageSize = 200;
     private readonly IPrintingInventoryService _inventoryService;
     private readonly IModuleService _moduleService;
     private readonly TankerMadeDbContext _context;
@@ -117,6 +119,8 @@ public class PrintingInventoryController : ControllerBase
     public async Task<ActionResult<IReadOnlyList<AssetRecordDto>>> GetMaterialAssets(
         Guid id,
         [FromQuery] bool includeUnassigned = true,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = DefaultPageSize,
         CancellationToken cancellationToken = default)
     {
         var userId = await GetActiveModuleUserIdAsync();
@@ -144,8 +148,11 @@ public class PrintingInventoryController : ControllerBase
                 || (a.RecordType == string.Empty && a.RecordId == null))
             : query.Where(a => a.RecordType == MaterialRecordType && a.RecordId == id);
 
+        var (skip, take) = ResolvePaging(page, pageSize);
         var assets = await query
             .OrderByDescending(a => a.CreatedAt)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync(cancellationToken);
 
         var assetIds = assets.Select(a => a.Id).ToList();
@@ -290,5 +297,12 @@ public class PrintingInventoryController : ControllerBase
                 })
                 .ToList()
         };
+    }
+
+    private static (int Skip, int Take) ResolvePaging(int page, int pageSize)
+    {
+        var safePage = page < 1 ? 1 : page;
+        var safePageSize = pageSize < 1 ? DefaultPageSize : Math.Min(pageSize, MaxPageSize);
+        return ((safePage - 1) * safePageSize, safePageSize);
     }
 }

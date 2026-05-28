@@ -12,6 +12,8 @@ public class CraftingProjectService : ICraftingProjectService
     private const string YarnInventoryType = "yarn";
     private const string ToolInventoryType = "tool";
     private const string NotionInventoryType = "notion";
+    private const int DefaultPageSize = 50;
+    private const int MaxPageSize = 200;
     private readonly TankerMadeDbContext _context;
 
     public CraftingProjectService(TankerMadeDbContext context)
@@ -49,14 +51,28 @@ public class CraftingProjectService : ICraftingProjectService
         return project == null ? null : await MapAsync(project);
     }
 
-    public async Task<IReadOnlyList<CraftingProjectDto>> GetAllAsync(Guid userId, bool includeArchived = false)
+    public async Task<IReadOnlyList<CraftingProjectDto>> GetAllAsync(
+        Guid userId,
+        bool includeArchived = false,
+        int page = 1,
+        int pageSize = DefaultPageSize)
     {
+        var (skip, take) = ResolvePaging(page, pageSize);
         var projects = await _context.CraftingProjects
             .Where(p => p.UserId == userId && (includeArchived || !p.IsArchived))
             .OrderBy(p => p.Name)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync();
 
         return await MapListAsync(projects);
+    }
+
+    private static (int Skip, int Take) ResolvePaging(int page, int pageSize)
+    {
+        var safePage = page < 1 ? 1 : page;
+        var safePageSize = pageSize < 1 ? DefaultPageSize : Math.Min(pageSize, MaxPageSize);
+        return ((safePage - 1) * safePageSize, safePageSize);
     }
 
     public async Task<CraftingProjectDto?> UpdateAsync(UpdateCraftingProjectDto updateDto, Guid userId)
@@ -136,12 +152,37 @@ public class CraftingProjectService : ICraftingProjectService
         return true;
     }
 
-    public async Task<IReadOnlyList<CraftingProjectDto>> SearchAsync(string searchTerm, Guid userId)
+    public async Task<IReadOnlyList<CraftingProjectDto>> SearchAsync(
+        string searchTerm,
+        Guid userId,
+        int page = 1,
+        int pageSize = DefaultPageSize)
     {
-        var normalized = searchTerm.Trim();
-        var projects = await _context.CraftingProjects
-            .Where(p => p.UserId == userId && !p.IsArchived && (p.Name.Contains(normalized) || p.Description.Contains(normalized)))
+        var terms = searchTerm
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(term => term.ToLowerInvariant())
+            .Distinct()
+            .ToList();
+        if (terms.Count == 0)
+        {
+            return [];
+        }
+
+        var query = _context.CraftingProjects
+            .Where(p => p.UserId == userId && !p.IsArchived);
+        foreach (var term in terms)
+        {
+            var like = $"%{term}%";
+            query = query.Where(p =>
+                EF.Functions.Like((p.Name ?? string.Empty).ToLower(), like)
+                || EF.Functions.Like((p.Description ?? string.Empty).ToLower(), like));
+        }
+
+        var (skip, take) = ResolvePaging(page, pageSize);
+        var projects = await query
             .OrderBy(p => p.Name)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync();
 
         return await MapListAsync(projects);

@@ -73,6 +73,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddMemoryCache();
 
 // Configure CORS for Blazor client
 builder.Services.AddCors(options =>
