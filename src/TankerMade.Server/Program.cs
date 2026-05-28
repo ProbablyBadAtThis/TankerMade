@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -25,6 +26,9 @@ var moduleDiscoveryOptions = builder.Configuration
 var assetStorageOptions = builder.Configuration
     .GetSection("AssetStorage")
     .Get<AssetStorageOptions>() ?? new AssetStorageOptions();
+var jwtSettings = builder.Configuration
+    .GetSection(JwtSettingsOptions.SectionName)
+    .Get<JwtSettingsOptions>() ?? new JwtSettingsOptions();
 
 var configuredAssetRoot = string.IsNullOrWhiteSpace(assetStorageOptions.RootDirectory)
     ? "App_Data/assets"
@@ -37,6 +41,8 @@ Directory.CreateDirectory(assetRootPath);
 // Add DbContext
 var dataDir = Path.Combine(builder.Environment.ContentRootPath, "App_Data");
 Directory.CreateDirectory(dataDir);
+var dataProtectionKeyDir = Path.Combine(dataDir, "DataProtectionKeys");
+Directory.CreateDirectory(dataProtectionKeyDir);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -50,11 +56,13 @@ if (!Path.IsPathRooted(connectionBuilder.DataSource))
 
 builder.Services.AddDbContext<TankerMadeDbContext>(options =>
     options.UseSqlite(connectionString));
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeyDir))
+    .SetApplicationName("TankerMade");
 
-// Add JWT Authentication
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["SecretKey"]
-    ?? throw new InvalidOperationException("JWT Secret Key not configured");
+ValidateJwtSettings(jwtSettings);
+builder.Services.AddSingleton(jwtSettings);
+var secretKey = jwtSettings.SecretKey;
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -65,8 +73,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
+            ValidIssuer = jwtSettings.Issuer,
+            ValidAudience = jwtSettings.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
             ClockSkew = TimeSpan.Zero
         };
@@ -155,12 +163,45 @@ if (app.Environment.IsDevelopment())
         options.Theme = ScalarTheme.Mars;
     });
 }
+else
+{
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
 
-// HTTPS redirect disabled for local dev — run with --launch-profile https to enable
-// app.UseHttpsRedirection();
 app.UseCors("AllowBlazorClient");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+static void ValidateJwtSettings(JwtSettingsOptions settings)
+{
+    if (string.IsNullOrWhiteSpace(settings.SecretKey))
+    {
+        throw new InvalidOperationException(
+            $"Missing {JwtSettingsOptions.SectionName}:SecretKey. Configure it via user-secrets or an environment variable.");
+    }
+
+    if (settings.SecretKey.Length < JwtSettingsOptions.MinimumSecretLength)
+    {
+        throw new InvalidOperationException(
+            $"{JwtSettingsOptions.SectionName}:SecretKey must be at least {JwtSettingsOptions.MinimumSecretLength} characters.");
+    }
+
+    if (string.IsNullOrWhiteSpace(settings.Issuer))
+    {
+        throw new InvalidOperationException($"Missing {JwtSettingsOptions.SectionName}:Issuer.");
+    }
+
+    if (string.IsNullOrWhiteSpace(settings.Audience))
+    {
+        throw new InvalidOperationException($"Missing {JwtSettingsOptions.SectionName}:Audience.");
+    }
+
+    if (settings.ExpirationMinutes <= 0)
+    {
+        throw new InvalidOperationException($"{JwtSettingsOptions.SectionName}:ExpirationMinutes must be greater than 0.");
+    }
+}

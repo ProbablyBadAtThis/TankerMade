@@ -12,6 +12,7 @@ This file is the short operational guide for AI assistants working in this repo.
 - Original UI idea deck: `docs/product/ui-feature-ideas.pptx`
 
 Local, ignored scratch material may exist in `Scratch/`. Treat it as temporary or session-specific unless the user says otherwise.
+`Scratch/TankerMade Documentation/Pattern Examples/` contains real downloaded pattern files kept only as guidance/reference material; they must not be included, referenced, seeded, packaged, published, or redistributed as project content.
 
 ## Project Shape
 
@@ -105,14 +106,16 @@ http://localhost:5236/scalar/v1
 
 ## Current Roadmap Focus
 
-Use `docs/project/roadmap.md` as the source of truth. As of the current docs, Phase G focuses on images and assets:
+Use `docs/project/roadmap.md` as the source of truth. As of the current docs, Phase I is complete:
 
 - Keep `TankerMade.Modules.Crafting` as a reference/template module, not the eventual production catch-all for knitting, crochet, sewing, or another niche.
 - Phase C module-owned project workspace behavior is complete: step progress, per-step timers, completion rules, piece selection, archive flow, and non-destructive editing.
 - Phase D is complete: module-owned inventory, reference data, project/inventory linking, kit/grouping backend, and kit-to-project backend flows are verified.
 - Phase E is complete: Core neutral reference categories are wired into module extension points, module-owned category boundaries are enforced, and module add/new option flows are in place.
 - Phase F is complete: module contracts, registration/discovery seams, module-owned navigation metadata, packaging compatibility validation, and external manifest discovery spike are in place.
-- Phase G should add file storage, thumbnail generation, and core asset-picker extension points that modules can plug into.
+- Phase G is complete: file storage, thumbnail generation, and core asset-picker extension points are in place.
+- Phase H is complete: indexes, filtering/pagination, search, and targeted caching are in place.
+- Phase I is complete: JWT secret handling hardening, production HTTPS enforcement, Data Protection key persistence, export/import round-trip verification/docs, legacy scaffold cleanup, and deployment guidance.
 
 ## UX Expectations
 

@@ -14,15 +14,18 @@ public class AuthController : ControllerBase
     private readonly TankerMadeDbContext _context;
     private readonly IPasswordService _passwordService;
     private readonly IJwtService _jwtService;
+    private readonly JwtSettingsOptions _jwtSettings;
 
     public AuthController(
         TankerMadeDbContext context,
         IPasswordService passwordService,
-        IJwtService jwtService)
+        IJwtService jwtService,
+        JwtSettingsOptions jwtSettings)
     {
         _context = context;
         _passwordService = passwordService;
         _jwtService = jwtService;
+        _jwtSettings = jwtSettings;
     }
 
     [HttpPost("register")]
@@ -69,10 +72,6 @@ public class AuthController : ControllerBase
 
         // Generate JWT token
         var token = _jwtService.GenerateToken(user);
-        var expirationMinutes = int.Parse(
-            HttpContext.RequestServices
-                .GetRequiredService<IConfiguration>()["JwtSettings:ExpirationMinutes"] ?? "60"
-        );
 
         // Return auth response
         return Ok(new AuthResponse
@@ -81,7 +80,7 @@ public class AuthController : ControllerBase
             Username = user.Username,
             Email = user.Email,
             Role = user.Role,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes)
+            ExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes)
         });
     }
 
@@ -115,10 +114,6 @@ public class AuthController : ControllerBase
 
         // Generate JWT token
         var token = _jwtService.GenerateToken(user);
-        var expirationMinutes = int.Parse(
-            HttpContext.RequestServices
-                .GetRequiredService<IConfiguration>()["JwtSettings:ExpirationMinutes"] ?? "60"
-        );
 
         // Return auth response
         return Ok(new AuthResponse
@@ -127,7 +122,7 @@ public class AuthController : ControllerBase
             Username = user.Username,
             Email = user.Email,
             Role = user.Role,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes)
+            ExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes)
         });
     }
 }
