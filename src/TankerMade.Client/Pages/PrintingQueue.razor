@@ -4,16 +4,38 @@
 
 <PageTitle>3D Printing Queue</PageTitle>
 
-<h1>3D Printing Queue</h1>
-@if (!AuthSession.IsSignedIn)
-{
-    <p>Sign in to use this module section.</p>
-}
-else if (!ModuleState.IsActive("printing-3d"))
-{
-    <p>Activate 3D Printing from Home to continue.</p>
-}
-else
-{
-    <p>This live module section is scaffolded and ready for the UI/feature pass.</p>
-}
+<div class="module-shell module-shell-printing">
+    <header class="module-hero">
+        <h1>3D Printing Queue</h1>
+        <p>Prioritize prints, manage run order, and stage jobs.</p>
+    </header>
+
+    @if (!AuthSession.IsSignedIn)
+    {
+        <section class="module-card">
+            <p>Sign in to use this module section.</p>
+            <a class="btn btn-primary" href="/login">Sign in</a>
+        </section>
+    }
+    else if (!ModuleState.IsActive("printing-3d"))
+    {
+        <section class="module-card">
+            <p>Activate 3D Printing from Home to continue.</p>
+            <a class="btn btn-outline-primary" href="/">Go to Home</a>
+        </section>
+    }
+    else
+    {
+        <section class="module-grid">
+            <article class="module-card">
+                <h2>Queue Stages</h2>
+                <p>Backlog, ready, in-progress, paused, and completed checkpoints.</p>
+            </article>
+            <article class="module-card">
+                <h2>Batch View</h2>
+                <p>Group related runs to simplify setup and post-processing.</p>
+            </article>
+        </section>
+        <a class="btn btn-outline-secondary" href="/modules/printing-3d">Back to 3D Printing Home</a>
+    }
+</div>

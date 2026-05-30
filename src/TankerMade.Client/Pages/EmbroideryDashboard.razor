@@ -4,16 +4,57 @@
 
 <PageTitle>Embroidery</PageTitle>
 
-<h1>Embroidery</h1>
-@if (!AuthSession.IsSignedIn)
-{
-    <p>Sign in to open this module.</p>
-}
-else if (!ModuleState.IsActive("embroidery"))
-{
-    <p>Activate Embroidery from Home to continue.</p>
-}
-else
-{
-    <p>This live module shell is ready for the UI/feature pass.</p>
+<div class="module-shell module-shell-embroidery">
+    <header class="module-hero">
+        <h1>Embroidery</h1>
+        <p>Module home for embroidery design tracking, stitch planning, and materials.</p>
+    </header>
+
+    @if (!AuthSession.IsSignedIn)
+    {
+        <section class="module-card">
+            <h2>Sign In Required</h2>
+            <p>Sign in to open and test this module.</p>
+            <a class="btn btn-primary" href="login">Sign in</a>
+        </section>
+    }
+    else if (!ModuleState.IsActive("embroidery"))
+    {
+        <section class="module-card">
+            <h2>Module Not Active</h2>
+            <p>Activate Embroidery from Home to continue.</p>
+            <a class="btn btn-outline-primary" href="/">Go to Home</a>
+        </section>
+    }
+    else
+    {
+        <section class="module-grid">
+            <article class="module-card">
+                <h2>Active Hoops</h2>
+                <p>Track in-progress embroidery pieces and completion percentages.</p>
+                <span class="module-pill">Projects</span>
+            </article>
+            <article class="module-card">
+                <h2>Design Patterns</h2>
+                <p>Manage motifs, stitch maps, and finishing instructions.</p>
+                <span class="module-pill">Patterns</span>
+            </article>
+            <article class="module-card">
+                <h2>Thread & Tools</h2>
+                <p>Keep thread colors, needle types, and accessories organized.</p>
+                <span class="module-pill">Inventory</span>
+            </article>
+        </section>
+    }
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+    }
 }

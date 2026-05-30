@@ -1,5 +1,5 @@
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif;
 }
 
 h1:focus {
@@ -1006,6 +1006,93 @@ code {
     font-weight: 500;
 }
 
+.module-shell {
+    background: linear-gradient(145deg, #f4f8ff 0%, #fffdf8 65%);
+    border: 1px solid #dde6f4;
+    border-radius: 14px;
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.module-hero h1 {
+    font-size: 2rem;
+    margin: 0;
+}
+
+.module-hero p {
+    color: #3d4f67;
+    margin: 0.35rem 0 0;
+    max-width: 44rem;
+}
+
+.module-grid {
+    display: grid;
+    gap: 0.9rem;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+.module-card {
+    background: #ffffffd6;
+    border: 1px solid #d8e1ef;
+    border-radius: 12px;
+    display: grid;
+    gap: 0.65rem;
+    min-width: 0;
+    padding: 0.95rem;
+}
+
+.module-card h2 {
+    font-size: 1.08rem;
+    margin: 0;
+}
+
+.module-card p {
+    color: #4c5e75;
+    margin: 0;
+}
+
+.module-card-cta {
+    background: linear-gradient(155deg, #edf5ff 0%, #f8fffb 100%);
+    border-color: #c4d8ef;
+}
+
+.module-pill {
+    background: #f4f8fd;
+    border: 1px solid #d5e2f1;
+    border-radius: 999px;
+    color: #2d476a;
+    display: inline-block;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.25rem 0.55rem;
+    width: fit-content;
+}
+
+.module-shell-crochet {
+    background: linear-gradient(145deg, #f7fbff 0%, #fff8f0 65%);
+}
+
+.module-shell-embroidery {
+    background: linear-gradient(145deg, #fffaf4 0%, #f8fbff 65%);
+}
+
+.module-shell-knitting {
+    background: linear-gradient(145deg, #f9fbff 0%, #f7fff9 65%);
+}
+
+.module-shell-quilting {
+    background: linear-gradient(145deg, #fff9f3 0%, #f6fcff 65%);
+}
+
+.module-shell-sewing {
+    background: linear-gradient(145deg, #f8faff 0%, #fffaf6 65%);
+}
+
+.module-shell-printing {
+    background: linear-gradient(145deg, #f3f9ff 0%, #f7fffc 65%);
+}
+
 @media (max-width: 760px) {
     .crafting-panel,
     .page-heading,
@@ -1049,6 +1136,14 @@ code {
 
     .printing-search-row {
         grid-template-columns: 1fr;
+    }
+
+    .module-shell {
+        padding: 0.85rem;
+    }
+
+    .module-hero h1 {
+        font-size: 1.65rem;
     }
 
     .project-supply-list li {

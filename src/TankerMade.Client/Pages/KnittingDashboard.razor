@@ -4,16 +4,57 @@
 
 <PageTitle>Knitting</PageTitle>
 
-<h1>Knitting</h1>
-@if (!AuthSession.IsSignedIn)
-{
-    <p>Sign in to open this module.</p>
-}
-else if (!ModuleState.IsActive("knitting"))
-{
-    <p>Activate Knitting from Home to continue.</p>
-}
-else
-{
-    <p>This live module shell is ready for the UI/feature pass.</p>
+<div class="module-shell module-shell-knitting">
+    <header class="module-hero">
+        <h1>Knitting</h1>
+        <p>Module home for knitting projects, stitch flow, and yarn/tool management.</p>
+    </header>
+
+    @if (!AuthSession.IsSignedIn)
+    {
+        <section class="module-card">
+            <h2>Sign In Required</h2>
+            <p>Sign in to open and test this module.</p>
+            <a class="btn btn-primary" href="login">Sign in</a>
+        </section>
+    }
+    else if (!ModuleState.IsActive("knitting"))
+    {
+        <section class="module-card">
+            <h2>Module Not Active</h2>
+            <p>Activate Knitting from Home to continue.</p>
+            <a class="btn btn-outline-primary" href="/">Go to Home</a>
+        </section>
+    }
+    else
+    {
+        <section class="module-grid">
+            <article class="module-card">
+                <h2>Needles Up</h2>
+                <p>Monitor active knits with piece-level and step-level progress.</p>
+                <span class="module-pill">Projects</span>
+            </article>
+            <article class="module-card">
+                <h2>Pattern Queue</h2>
+                <p>Collect and structure pattern sets for repeatable knitting workflows.</p>
+                <span class="module-pill">Patterns</span>
+            </article>
+            <article class="module-card">
+                <h2>Yarn Stash</h2>
+                <p>Track yarn lots, gauges, and supply usage over time.</p>
+                <span class="module-pill">Inventory</span>
+            </article>
+        </section>
+    }
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+    }
 }

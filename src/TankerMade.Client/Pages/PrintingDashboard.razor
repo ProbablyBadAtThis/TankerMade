@@ -4,30 +4,59 @@
 
 <PageTitle>3D Printing</PageTitle>
 
-@if (!AuthSession.IsSignedIn)
-{
-    <h1>3D Printing</h1>
-    <p>Sign in to open the 3D Printing module.</p>
-    <a class="btn btn-primary" href="login">Sign in</a>
-}
-else if (!ModuleState.IsActive("printing-3d"))
-{
-    <h1>3D Printing</h1>
-    <p>Activate the 3D Printing module from Home to continue.</p>
-}
-else
-{
-    <h1>3D Printing</h1>
-    <p>Module home for active 3D printing work.</p>
+<div class="module-shell module-shell-printing">
+    <header class="module-hero">
+        <h1>3D Printing</h1>
+        <p>Module home for print planning, queue flow, and material management.</p>
+    </header>
 
-    <div class="d-flex flex-wrap gap-2 mt-3">
-        <a class="btn btn-primary" href="/modules/printing-3d/inventory">Inventory</a>
-        <a class="btn btn-outline-secondary" href="/modules/printing-3d/projects">Projects</a>
-        <a class="btn btn-outline-secondary" href="/modules/printing-3d/patterns">Patterns</a>
-        <a class="btn btn-outline-secondary" href="/modules/printing-3d/queue">Queue</a>
-        <a class="btn btn-outline-secondary" href="/modules/printing-3d/settings">Settings</a>
-    </div>
-}
+    @if (!AuthSession.IsSignedIn)
+    {
+        <section class="module-card">
+            <h2>Sign In Required</h2>
+            <p>Sign in to open and test this module.</p>
+            <a class="btn btn-primary" href="login">Sign in</a>
+        </section>
+    }
+    else if (!ModuleState.IsActive("printing-3d"))
+    {
+        <section class="module-card">
+            <h2>Module Not Active</h2>
+            <p>Activate 3D Printing from Home to continue.</p>
+            <a class="btn btn-outline-primary" href="/">Go to Home</a>
+        </section>
+    }
+    else
+    {
+        <section class="module-grid">
+            <article class="module-card module-card-cta">
+                <h2>Material Inventory</h2>
+                <p>Track filaments, spool details, and purchase history.</p>
+                <a class="btn btn-primary" href="/modules/printing-3d/inventory">Open Inventory</a>
+            </article>
+            <article class="module-card">
+                <h2>Projects</h2>
+                <p>Set up and monitor active print builds and outcomes.</p>
+                <a class="btn btn-outline-secondary" href="/modules/printing-3d/projects">Open Projects</a>
+            </article>
+            <article class="module-card">
+                <h2>Patterns</h2>
+                <p>Organize model references and reusable print instructions.</p>
+                <a class="btn btn-outline-secondary" href="/modules/printing-3d/patterns">Open Patterns</a>
+            </article>
+            <article class="module-card">
+                <h2>Queue</h2>
+                <p>Prioritize runs, monitor status, and manage print order.</p>
+                <a class="btn btn-outline-secondary" href="/modules/printing-3d/queue">Open Queue</a>
+            </article>
+            <article class="module-card">
+                <h2>Settings</h2>
+                <p>Configure module defaults and workflow preferences.</p>
+                <a class="btn btn-outline-secondary" href="/modules/printing-3d/settings">Open Settings</a>
+            </article>
+        </section>
+    }
+</div>
 
 @code {
     protected override async Task OnInitializedAsync()
