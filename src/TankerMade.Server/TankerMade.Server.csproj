@@ -29,7 +29,12 @@
     <ProjectReference Include="..\TankerMade.Contracts\TankerMade.Contracts.csproj" />
     <ProjectReference Include="..\TankerMade.Core\TankerMade.Core.csproj" />
     <ProjectReference Include="..\TankerMade.Modules.Crafting\TankerMade.Modules.Crafting.csproj" />
+    <ProjectReference Include="..\TankerMade.Modules.Crochet\TankerMade.Modules.Crochet.csproj" />
+    <ProjectReference Include="..\TankerMade.Modules.Embroidery\TankerMade.Modules.Embroidery.csproj" />
+    <ProjectReference Include="..\TankerMade.Modules.Knitting\TankerMade.Modules.Knitting.csproj" />
     <ProjectReference Include="..\TankerMade.Modules.Printing3D\TankerMade.Modules.Printing3D.csproj" />
+    <ProjectReference Include="..\TankerMade.Modules.Quilting\TankerMade.Modules.Quilting.csproj" />
+    <ProjectReference Include="..\TankerMade.Modules.Sewing\TankerMade.Modules.Sewing.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,19 @@
+@page "/modules/embroidery"
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+
+<PageTitle>Embroidery</PageTitle>
+
+<h1>Embroidery</h1>
+@if (!AuthSession.IsSignedIn)
+{
+    <p>Sign in to open this module.</p>
+}
+else if (!ModuleState.IsActive("embroidery"))
+{
+    <p>Activate Embroidery from Home to continue.</p>
+}
+else
+{
+    <p>This live module shell is ready for the UI/feature pass.</p>
+}

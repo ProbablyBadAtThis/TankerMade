@@ -1,0 +1,19 @@
+@page "/modules/quilting"
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+
+<PageTitle>Quilting</PageTitle>
+
+<h1>Quilting</h1>
+@if (!AuthSession.IsSignedIn)
+{
+    <p>Sign in to open this module.</p>
+}
+else if (!ModuleState.IsActive("quilting"))
+{
+    <p>Activate Quilting from Home to continue.</p>
+}
+else
+{
+    <p>This live module shell is ready for the UI/feature pass.</p>
+}

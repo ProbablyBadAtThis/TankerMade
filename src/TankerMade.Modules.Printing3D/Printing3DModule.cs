@@ -7,7 +7,7 @@ public sealed class Printing3DModule : IModule, IModuleNavigation, IModulePackag
     public const string ModuleKey = "printing-3d";
     public const string Name = "3D Printing";
     public const string Version = "0.1.0";
-    public const string Description = "Reference maker module for 3D printing inventory and workflow proofs.";
+    public const string Description = "Live module for 3D printing workflows and data.";
 
     public static readonly Printing3DModule Instance = new();
 
@@ -22,7 +22,7 @@ public sealed class Printing3DModule : IModule, IModuleNavigation, IModulePackag
     bool IModule.IsBundled => true;
 
     string IModuleNavigation.NavigationLabel => Name;
-    string IModuleNavigation.NavigationRoute => "modules/printing-3d/inventory";
+    string IModuleNavigation.NavigationRoute => "modules/printing-3d";
     int IModuleNavigation.NavigationOrder => 200;
 
     string IModulePackaging.ManifestVersion => "1";

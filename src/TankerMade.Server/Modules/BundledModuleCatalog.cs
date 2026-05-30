@@ -1,6 +1,10 @@
 using TankerMade.Core.Modules;
-using TankerMade.Modules.Crafting;
+using TankerMade.Modules.Crochet;
+using TankerMade.Modules.Embroidery;
+using TankerMade.Modules.Knitting;
 using TankerMade.Modules.Printing3D;
+using TankerMade.Modules.Quilting;
+using TankerMade.Modules.Sewing;
 
 namespace TankerMade.Server.Modules;
 
@@ -9,11 +13,23 @@ public static class BundledModuleCatalog
     public static readonly IReadOnlyList<ModuleDiscoveryRegistration> Registrations =
     [
         new(
-            Guid.Parse("55555555-5555-5555-5555-555555555551"),
-            CraftingModule.Instance),
-        new(
             Guid.Parse("55555555-5555-5555-5555-555555555552"),
-            Printing3DModule.Instance)
+            Printing3DModule.Instance),
+        new(
+            Guid.Parse("55555555-5555-5555-5555-555555555553"),
+            CrochetModule.Instance),
+        new(
+            Guid.Parse("55555555-5555-5555-5555-555555555554"),
+            EmbroideryModule.Instance),
+        new(
+            Guid.Parse("55555555-5555-5555-5555-555555555555"),
+            KnittingModule.Instance),
+        new(
+            Guid.Parse("55555555-5555-5555-5555-555555555556"),
+            QuiltingModule.Instance),
+        new(
+            Guid.Parse("55555555-5555-5555-5555-555555555557"),
+            SewingModule.Instance)
     ];
 
     public static void Validate()

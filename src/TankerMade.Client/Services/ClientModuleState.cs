@@ -6,7 +6,12 @@ public class ClientModuleState
     private readonly HashSet<string> _activeModuleKeys = [];
     private readonly List<ClientModuleSummary> _availableModules =
     [
-        new("crafting", "Crafting", "Pattern-based maker workflows supplied by the reference module.", false, "Crafting", "modules/crafting", 100)
+        new("printing-3d", "3D Printing", "Live module for 3D printing workflows and data.", false, "3D Printing", "modules/printing-3d", 200),
+        new("crochet", "Crochet", "Live module for crochet workflows and data.", false, "Crochet", "modules/crochet", 300),
+        new("embroidery", "Embroidery", "Live module for embroidery workflows and data.", false, "Embroidery", "modules/embroidery", 400),
+        new("knitting", "Knitting", "Live module for knitting workflows and data.", false, "Knitting", "modules/knitting", 500),
+        new("quilting", "Quilting", "Live module for quilting workflows and data.", false, "Quilting", "modules/quilting", 600),
+        new("sewing", "Sewing", "Live module for sewing workflows and data.", false, "Sewing", "modules/sewing", 700)
     ];
 
     public ClientModuleState(TankerMadeApiClient apiClient)
@@ -72,7 +77,12 @@ public class ClientModuleState
     {
         _activeModuleKeys.Clear();
         _availableModules.Clear();
-        _availableModules.Add(new("crafting", "Crafting", "Pattern-based maker workflows supplied by the reference module.", false, "Crafting", "modules/crafting", 100));
+        _availableModules.Add(new("printing-3d", "3D Printing", "Live module for 3D printing workflows and data.", false, "3D Printing", "modules/printing-3d", 200));
+        _availableModules.Add(new("crochet", "Crochet", "Live module for crochet workflows and data.", false, "Crochet", "modules/crochet", 300));
+        _availableModules.Add(new("embroidery", "Embroidery", "Live module for embroidery workflows and data.", false, "Embroidery", "modules/embroidery", 400));
+        _availableModules.Add(new("knitting", "Knitting", "Live module for knitting workflows and data.", false, "Knitting", "modules/knitting", 500));
+        _availableModules.Add(new("quilting", "Quilting", "Live module for quilting workflows and data.", false, "Quilting", "modules/quilting", 600));
+        _availableModules.Add(new("sewing", "Sewing", "Live module for sewing workflows and data.", false, "Sewing", "modules/sewing", 700));
         Changed?.Invoke();
     }
 

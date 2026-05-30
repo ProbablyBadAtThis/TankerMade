@@ -1,0 +1,19 @@
+@page "/modules/printing-3d/projects"
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+
+<PageTitle>3D Printing Projects</PageTitle>
+
+<h1>3D Printing Projects</h1>
+@if (!AuthSession.IsSignedIn)
+{
+    <p>Sign in to use this module section.</p>
+}
+else if (!ModuleState.IsActive("printing-3d"))
+{
+    <p>Activate 3D Printing from Home to continue.</p>
+}
+else
+{
+    <p>This live module section is scaffolded and ready for the UI/feature pass.</p>
+}

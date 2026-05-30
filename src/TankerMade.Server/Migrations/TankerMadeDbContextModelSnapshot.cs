@@ -281,22 +281,62 @@ namespace TankerMade.Server.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("55555555-5555-5555-5555-555555555551"),
+                            Id = new Guid("55555555-5555-5555-5555-555555555552"),
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Reference maker module for pattern-based crafting workflows.",
+                            Description = "Live module for 3D printing workflows and data.",
                             IsBundled = true,
-                            ModuleKey = "crafting",
-                            Name = "Crafting",
+                            ModuleKey = "printing-3d",
+                            Name = "3D Printing",
                             Version = "0.1.0"
                         },
                         new
                         {
-                            Id = new Guid("55555555-5555-5555-5555-555555555552"),
+                            Id = new Guid("55555555-5555-5555-5555-555555555553"),
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Reference maker module for 3D printing inventory and workflow proofs.",
+                            Description = "Live module for crochet workflows and data.",
                             IsBundled = true,
-                            ModuleKey = "printing-3d",
-                            Name = "3D Printing",
+                            ModuleKey = "crochet",
+                            Name = "Crochet",
+                            Version = "0.1.0"
+                        },
+                        new
+                        {
+                            Id = new Guid("55555555-5555-5555-5555-555555555554"),
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Live module for embroidery workflows and data.",
+                            IsBundled = true,
+                            ModuleKey = "embroidery",
+                            Name = "Embroidery",
+                            Version = "0.1.0"
+                        },
+                        new
+                        {
+                            Id = new Guid("55555555-5555-5555-5555-555555555555"),
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Live module for knitting workflows and data.",
+                            IsBundled = true,
+                            ModuleKey = "knitting",
+                            Name = "Knitting",
+                            Version = "0.1.0"
+                        },
+                        new
+                        {
+                            Id = new Guid("55555555-5555-5555-5555-555555555556"),
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Live module for quilting workflows and data.",
+                            IsBundled = true,
+                            ModuleKey = "quilting",
+                            Name = "Quilting",
+                            Version = "0.1.0"
+                        },
+                        new
+                        {
+                            Id = new Guid("55555555-5555-5555-5555-555555555557"),
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Live module for sewing workflows and data.",
+                            IsBundled = true,
+                            ModuleKey = "sewing",
+                            Name = "Sewing",
                             Version = "0.1.0"
                         });
                 });
