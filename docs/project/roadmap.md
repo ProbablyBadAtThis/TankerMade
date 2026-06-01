@@ -1,6 +1,6 @@
 # TankerMade — Roadmap
 Source: Distilled from original artifact.md phases A-I, updated to reflect current stack and progress.
-Last reviewed: 2026-05-28
+Last reviewed: 2026-06-01
 
 ---
 
@@ -10,6 +10,8 @@ Phase A is behavior-complete as of the May 22, 2026 smoke test. Phase B is compl
 Phase E is complete after wiring neutral Core reference categories through module extension points, enforcing module-owned category boundaries, and supporting module-provided add/new option flows in inventory surfaces.
 
 Phase D should make modules architecturally real, not distribution-real. The goal is to prove that domain modules own their inventory, kit, filtering, reference data, and project-linking behavior while Core remains an independent host. Packaging, external module directories, installable artifacts, module-store concepts, and licensing remain later concerns for Phase F or beyond.
+
+Phase I cleanup now includes neutralizing module API surfaces so module-specific legacy controllers are replaced by Core-neutral module capability endpoints. Current direction remains: Core provides neutral templates/contracts, modules provide behavior through registration/handlers.
 
 ## Phase A — Hardening, Module Host & Reference Module
 

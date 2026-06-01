@@ -1,16 +1,16 @@
 # TankerMade Handoff
 
-Last updated: 2026-05-30
+Last updated: 2026-06-01
 
 ## Current State
 
-- Current roadmap phase: Phase I — Security, Ops & Cleanup.
+- Current roadmap phase: Phase I — Security, Ops & Cleanup (complete).
 - Phase A is complete.
 - Phase B is complete.
 - Phase C is complete.
 - Phase D is complete: module-owned inventory, reference data, project/inventory linking, kit/grouping backend, and kit-to-project backend flows are verified.
-- Latest verified slice: Live module activation + initial UI pass verified locally by user.
-- Latest pushed commit: `a6bae54 Polish initial UI pass for live module dashboards`.
+- Latest verified slice: Neutral module capability/API cleanup verified locally by user.
+- Latest pushed commit: user pushed current branch updates locally after verification.
 - Latest unverified slice: none.
 
 ## Completed Recently
@@ -43,11 +43,15 @@ Last updated: 2026-05-30
 - Added EF migration `20260530172000_PhaseJ_LiveModulesSeedSwap` to align bundled module seed data.
 - 3D Printing now has a module home (`/modules/printing-3d`) and section pages (inventory, projects, patterns, queue, settings).
 - Initial UI pass completed for all live module dashboards and 3D Printing section pages.
+- Legacy Crafting module-specific controllers were removed in favor of neutral module capability endpoints.
+- Legacy Printing inventory controller was removed; Printing inventory now flows through neutral module inventory capabilities.
+- Printing inventory client page was updated to use neutral module inventory + neutral asset assignment/picker APIs.
+- Scalar now reflects neutral/core module capability endpoints for active module workflows.
 
 ## Next Work
 
-- Full UI lock-in pass for a single anchor module first: `Knitting`.
-- After Knitting visual system is locked, propagate style/components to Crochet, Embroidery, Quilting, Sewing, and 3D Printing.
+- Continue Knitting full UI functionality + visual lock-in pass page-by-page.
+- After Knitting lock-in is complete, propagate shared UI patterns to Crochet, Embroidery, Quilting, Sewing, and 3D Printing.
 
 ## Phase G Direction
 
@@ -76,9 +80,10 @@ Last updated: 2026-05-30
 The user reported:
 
 - `dotnet build TankerMade.sln` passed.
-- Server startup and module activation flows verified after migration/lock fixes.
-- Initial UI pass verified across live modules.
+- EF migration checks passed.
+- Smoke checks passed.
+- Neutral endpoint checks passed, including expected negative tests.
 
 ## Verification Needed Next
 
-No blocking verification is pending before starting the Knitting-focused full UI pass.
+No blocking verification is pending before continuing the Knitting-focused full UI pass.
