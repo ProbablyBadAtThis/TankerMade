@@ -1,5 +1,5 @@
 using TankerMade.Core.Entities;
-using TankerMade.Modules.Crafting;
+using TankerMade.Modules.Knitting;
 using TankerMade.Modules.Printing3D;
 using TankerMade.Server.Modules;
 using TankerMade.Server.Services;
@@ -25,7 +25,7 @@ public class ModuleRegistrationServiceTests
             .Select(definition => definition.ModuleKey)
             .ToList();
 
-        Assert.Contains(CraftingModule.ModuleKey, moduleKeys);
+        Assert.Contains(KnittingModule.ModuleKey, moduleKeys);
         Assert.Contains(Printing3DModule.ModuleKey, moduleKeys);
     }
 
@@ -35,17 +35,17 @@ public class ModuleRegistrationServiceTests
         using var factory = new DbContextTestFactory();
         await using var context = factory.CreateContext();
 
-        var crafting = context.ModuleDefinitions.Single(definition => definition.ModuleKey == CraftingModule.ModuleKey);
-        crafting.Name = "Old Name";
-        crafting.Version = "0.0.1";
+        var knitting = context.ModuleDefinitions.Single(definition => definition.ModuleKey == KnittingModule.ModuleKey);
+        knitting.Name = "Old Name";
+        knitting.Version = "0.0.1";
         await context.SaveChangesAsync();
 
         var service = new ModuleRegistrationService(context, [new BundledModuleDiscoveryProvider()]);
         await service.SyncDiscoveredModulesAsync();
 
-        var refreshed = context.ModuleDefinitions.Single(definition => definition.Id == crafting.Id);
-        Assert.Equal(CraftingModule.Name, refreshed.Name);
-        Assert.Equal(CraftingModule.Version, refreshed.Version);
+        var refreshed = context.ModuleDefinitions.Single(definition => definition.Id == knitting.Id);
+        Assert.Equal(KnittingModule.Name, refreshed.Name);
+        Assert.Equal(KnittingModule.Version, refreshed.Version);
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public class ModuleRegistrationServiceTests
         using var factory = new DbContextTestFactory();
         await using var context = factory.CreateContext();
 
-        var duplicateKey = CraftingModule.ModuleKey;
+        var duplicateKey = KnittingModule.ModuleKey;
         var provider = new DuplicateKeyDiscoveryProvider(duplicateKey);
         var service = new ModuleRegistrationService(context, [provider]);
 
