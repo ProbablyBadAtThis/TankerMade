@@ -5,9 +5,10 @@
 <PageTitle>Knitting</PageTitle>
 
 <div class="module-shell module-shell-knitting">
-    <header class="module-hero">
-        <h1>Knitting</h1>
-        <p>Module home for knitting projects, stitch flow, and yarn/tool management.</p>
+    <header class="module-hero module-hero-knitting">
+        <p class="module-kicker">Knitting Module</p>
+        <h1>Knitting Studio</h1>
+        <p>Plan projects, track stitch progress, manage your stash, and keep kits ready for your next cast-on.</p>
     </header>
 
     @if (!AuthSession.IsSignedIn)
@@ -28,21 +29,49 @@
     }
     else
     {
-        <section class="module-grid">
-            <article class="module-card">
-                <h2>Needles Up</h2>
-                <p>Monitor active knits with piece-level and step-level progress.</p>
-                <span class="module-pill">Projects</span>
+        <section class="knitting-highlight-row">
+            <article class="module-card module-card-knitting-feature">
+                <h2>Active Project Focus</h2>
+                <p>Keep step checklists, timers, and piece completion visible while you work.</p>
+                <a class="btn btn-primary" href="/modules/knitting/projects">Open Projects</a>
             </article>
-            <article class="module-card">
-                <h2>Pattern Queue</h2>
-                <p>Collect and structure pattern sets for repeatable knitting workflows.</p>
-                <span class="module-pill">Patterns</span>
+            <article class="module-card module-card-knitting-feature module-card-knitting-accent">
+                <h2>Stash and Supply Health</h2>
+                <p>Stay ahead on yarn lots, tools, and notion usage before starting new pieces.</p>
+                <a class="btn btn-outline-secondary" href="/modules/knitting/inventory">Open Inventory</a>
             </article>
-            <article class="module-card">
-                <h2>Yarn Stash</h2>
-                <p>Track yarn lots, gauges, and supply usage over time.</p>
-                <span class="module-pill">Inventory</span>
+        </section>
+
+        <section class="module-grid module-grid-knitting">
+            <article class="module-card module-card-knitting">
+                <h2>Projects</h2>
+                <p>Track progress, timers, and archive-ready status by piece.</p>
+                <span class="module-pill module-pill-knitting">Workspace</span>
+                <a class="btn btn-outline-secondary" href="/modules/knitting/projects">Open</a>
+            </article>
+            <article class="module-card module-card-knitting">
+                <h2>Patterns</h2>
+                <p>Organize pattern sets, piece order, and reusable instructions.</p>
+                <span class="module-pill module-pill-knitting">Library</span>
+                <a class="btn btn-outline-secondary" href="/modules/knitting/patterns">Open</a>
+            </article>
+            <article class="module-card module-card-knitting">
+                <h2>Inventory</h2>
+                <p>Manage yarn lots, tools, notions, and sourcing details.</p>
+                <span class="module-pill module-pill-knitting">Supplies</span>
+                <a class="btn btn-outline-secondary" href="/modules/knitting/inventory">Open</a>
+            </article>
+            <article class="module-card module-card-knitting">
+                <h2>Kits</h2>
+                <p>Prepare grouped builds and move pieces into projects when ready.</p>
+                <span class="module-pill module-pill-knitting">Planning</span>
+                <a class="btn btn-outline-secondary" href="/modules/knitting/kits">Open</a>
+            </article>
+            <article class="module-card module-card-knitting">
+                <h2>Settings</h2>
+                <p>Set defaults and references for your knitting workflow.</p>
+                <span class="module-pill module-pill-knitting">Preferences</span>
+                <a class="btn btn-outline-secondary" href="/modules/knitting/settings">Open</a>
             </article>
         </section>
     }

@@ -1,5 +1,5 @@
 using TankerMade.Core.Entities;
-using TankerMade.Modules.Crafting;
+using TankerMade.Modules.Knitting;
 using TankerMade.Modules.Printing3D;
 using TankerMade.Server.Modules;
 using TankerMade.Server.Services;
@@ -10,7 +10,7 @@ namespace TankerMade.Tests;
 public class ModuleServiceTests
 {
     [Fact]
-    public async Task ActivateAsync_marks_bundled_crafting_module_active_for_user()
+    public async Task ActivateAsync_marks_bundled_knitting_module_active_for_user()
     {
         using var factory = new DbContextTestFactory();
         await using var context = factory.CreateContext();
@@ -20,12 +20,12 @@ public class ModuleServiceTests
 
         var service = new ModuleService(context, [new BundledModuleDiscoveryProvider()]);
 
-        var activated = await service.ActivateAsync(CraftingModule.ModuleKey, user.Id);
+        var activated = await service.ActivateAsync(KnittingModule.ModuleKey, user.Id);
         var activeModules = await service.GetActiveModulesAsync(user.Id);
 
         Assert.NotNull(activated);
         Assert.True(activated.IsActive);
-        Assert.Contains(activeModules, module => module.ModuleKey == CraftingModule.ModuleKey);
+        Assert.Contains(activeModules, module => module.ModuleKey == KnittingModule.ModuleKey);
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public class ModuleServiceTests
             .Select(registration => registration.Module.ModuleKey)
             .ToList();
 
-        Assert.Contains(CraftingModule.ModuleKey, moduleKeys);
+        Assert.Contains(KnittingModule.ModuleKey, moduleKeys);
         Assert.Contains(Printing3DModule.ModuleKey, moduleKeys);
         Assert.Equal(moduleKeys.Count, moduleKeys.Distinct(StringComparer.OrdinalIgnoreCase).Count());
     }

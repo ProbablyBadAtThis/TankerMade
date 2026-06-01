@@ -1,0 +1,343 @@
+@page "/modules/knitting/kits"
+@using TankerMade.Contracts.DTOs.ModuleKits
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+
+<PageTitle>Knitting Kits</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>Knitting Kits</h1>
+    <p>Sign in to use this module section.</p>
+    <a class="btn btn-primary" href="/login">Sign in</a>
+}
+else if (!ModuleState.IsActive("knitting"))
+{
+    <h1>Knitting Kits</h1>
+    <p>Activate Knitting from Home to continue.</p>
+    <a class="btn btn-outline-primary" href="/">Go to Home</a>
+}
+else if (loading)
+{
+    <h1>Knitting Kits</h1>
+    <p>Loading...</p>
+}
+else
+{
+    <div class="page-heading">
+        <div>
+            <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
+            <h1>Kits</h1>
+            <p>Module-owned planning kits with pieces, supplies, and project handoff.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="project-panel">
+                <h2>Create Kit</h2>
+                <label class="form-label">Name</label>
+                <input class="form-control mb-2" @bind="kitForm.Name" />
+                <label class="form-label">Description</label>
+                <textarea class="form-control mb-2" rows="3" @bind="kitForm.Description"></textarea>
+                <label class="form-label">Type</label>
+                <input class="form-control mb-2" @bind="kitForm.Type" />
+                <button class="btn btn-primary" disabled="@busy" @onclick="CreateKitAsync">Create Kit</button>
+            </div>
+
+            <div class="project-panel mt-3">
+                <h2>Kits</h2>
+                @if (kits.Count == 0)
+                {
+                    <p class="mb-0">No kits yet.</p>
+                }
+                else
+                {
+                    @foreach (var kit in kits)
+                    {
+                        <button class="btn @(selectedKitId == kit.Id ? "btn-primary" : "btn-outline-secondary") w-100 mb-2 text-start"
+                                disabled="@busy"
+                                @onclick="() => SelectKitAsync(kit.Id)">
+                            @kit.Name
+                        </button>
+                    }
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            @if (selectedKit == null)
+            {
+                <div class="project-panel">
+                    <h2>Kit Details</h2>
+                    <p class="mb-0">Select a kit to manage pieces and supplies.</p>
+                </div>
+            }
+            else
+            {
+                <div class="project-panel mb-3">
+                    <h2>@selectedKit.Name</h2>
+                    <p class="mb-1">@selectedKit.Description</p>
+                    <p class="mb-0 text-muted">@selectedKit.Type</p>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="project-panel">
+                            <h2>Add Piece</h2>
+                            <label class="form-label">Piece name</label>
+                            <input class="form-control mb-2" @bind="pieceForm.Name" />
+                            <label class="form-label">Notes</label>
+                            <input class="form-control mb-2" @bind="pieceForm.Notes" />
+                            <button class="btn btn-primary" disabled="@busy" @onclick="AddPieceAsync">Add Piece</button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="project-panel">
+                            <h2>Add Supply</h2>
+                            <label class="form-label">Supply type</label>
+                            <input class="form-control mb-2" @bind="supplyForm.SupplyType" />
+                            <label class="form-label">Name</label>
+                            <input class="form-control mb-2" @bind="supplyForm.Name" />
+                            <label class="form-label">Quantity</label>
+                            <input class="form-control mb-2" type="number" step="0.01" @bind="supplyForm.Quantity" />
+                            <button class="btn btn-primary" disabled="@busy" @onclick="AddSupplyAsync">Add Supply</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <div class="project-panel">
+                            <h2>Pieces</h2>
+                            @if (selectedKit.Pieces.Count == 0)
+                            {
+                                <p class="mb-0">No pieces yet.</p>
+                            }
+                            else
+                            {
+                                @foreach (var piece in selectedKit.Pieces.OrderBy(piece => piece.SortOrder))
+                                {
+                                    <div class="border rounded p-2 mb-2">
+                                        <strong>@piece.Name</strong>
+                                        @if (!string.IsNullOrWhiteSpace(piece.Notes))
+                                        {
+                                            <p class="mb-2">@piece.Notes</p>
+                                        }
+                                        <button class="btn btn-sm btn-outline-primary"
+                                                disabled="@busy"
+                                                @onclick="() => CreateProjectForPieceAsync(piece.Id)">
+                                            @(piece.ProjectId.HasValue ? "Project Linked" : "Create Project")
+                                        </button>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="project-panel">
+                            <h2>Supplies</h2>
+                            @if (selectedKit.Supplies.Count == 0)
+                            {
+                                <p class="mb-0">No supplies yet.</p>
+                            }
+                            else
+                            {
+                                @foreach (var supply in selectedKit.Supplies.OrderBy(supply => supply.SortOrder))
+                                {
+                                    <div class="border rounded p-2 mb-2">
+                                        <strong>@supply.SupplyType:</strong> @supply.Name
+                                        @if (supply.Quantity.HasValue)
+                                        {
+                                            <span> (@supply.Quantity)</span>
+                                        }
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private readonly List<ModuleKitDto> kits = [];
+    private ModuleKitDto? selectedKit;
+    private Guid? selectedKitId;
+    private KitFormModel kitForm = new();
+    private KitPieceFormModel pieceForm = new();
+    private KitSupplyFormModel supplyForm = new();
+    private bool loading = true;
+    private bool busy;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadKitsAsync();
+    }
+
+    private async Task LoadKitsAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive("knitting"))
+            {
+                return;
+            }
+
+            kits.Clear();
+            kits.AddRange(await ApiClient.GetModuleKitsAsync("knitting"));
+
+            if (selectedKitId.HasValue)
+            {
+                selectedKit = kits.SingleOrDefault(kit => kit.Id == selectedKitId.Value);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task SelectKitAsync(Guid kitId)
+    {
+        await RunBusyAsync(async () =>
+        {
+            selectedKit = await ApiClient.GetModuleKitAsync("knitting", kitId);
+            selectedKitId = selectedKit?.Id;
+        });
+    }
+
+    private async Task CreateKitAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            var created = await ApiClient.CreateModuleKitAsync("knitting", new CreateModuleKitRequest
+            {
+                Name = kitForm.Name,
+                Description = kitForm.Description,
+                Type = kitForm.Type
+            });
+            kitForm = new();
+            selectedKitId = created.Id;
+            await LoadKitsAsync();
+            await SelectKitAsync(created.Id);
+        });
+    }
+
+    private async Task AddPieceAsync()
+    {
+        if (selectedKitId == null)
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await ApiClient.AddModuleKitPieceAsync("knitting", selectedKitId.Value, new CreateModuleKitPieceRequest
+            {
+                Name = pieceForm.Name,
+                Notes = pieceForm.Notes
+            });
+            pieceForm = new();
+            await SelectKitAsync(selectedKitId.Value);
+            await LoadKitsAsync();
+        });
+    }
+
+    private async Task AddSupplyAsync()
+    {
+        if (selectedKitId == null)
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await ApiClient.AddModuleKitSupplyAsync("knitting", selectedKitId.Value, new CreateModuleKitSupplyRequest
+            {
+                SupplyType = supplyForm.SupplyType,
+                Name = supplyForm.Name,
+                Quantity = supplyForm.Quantity
+            });
+            supplyForm = new();
+            await SelectKitAsync(selectedKitId.Value);
+            await LoadKitsAsync();
+        });
+    }
+
+    private async Task CreateProjectForPieceAsync(Guid pieceId)
+    {
+        if (selectedKitId == null)
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await ApiClient.CreateModuleProjectFromKitPieceAsync("knitting", selectedKitId.Value, pieceId);
+            await SelectKitAsync(selectedKitId.Value);
+            await LoadKitsAsync();
+        });
+    }
+
+    private async Task RunBusyAsync(Func<Task> action)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private class KitFormModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+    }
+
+    private class KitPieceFormModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Notes { get; set; } = string.Empty;
+    }
+
+    private class KitSupplyFormModel
+    {
+        public string SupplyType { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public decimal? Quantity { get; set; }
+    }
+}

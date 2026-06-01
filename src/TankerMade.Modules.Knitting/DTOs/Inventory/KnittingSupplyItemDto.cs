@@ -1,0 +1,17 @@
+namespace TankerMade.Modules.Knitting.DTOs.Inventory;
+
+public class KnittingSupplyItemDto
+{
+    public Guid Id { get; set; }
+    public string Category { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Brand { get; set; } = string.Empty;
+    public string Color { get; set; } = string.Empty;
+    public string Size { get; set; } = string.Empty;
+    public decimal Quantity { get; set; }
+    public string Unit { get; set; } = string.Empty;
+    public string Notes { get; set; } = string.Empty;
+    public Guid UserId { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}

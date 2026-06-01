@@ -1,0 +1,234 @@
+@page "/modules/knitting/projects"
+@using TankerMade.Contracts.DTOs.ModuleProjects
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+
+<PageTitle>Knitting Projects</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>Knitting Projects</h1>
+    <p>Sign in to use this module section.</p>
+    <a class="btn btn-primary" href="/login">Sign in</a>
+}
+else if (!ModuleState.IsActive("knitting"))
+{
+    <h1>Knitting Projects</h1>
+    <p>Activate Knitting from Home to continue.</p>
+    <a class="btn btn-outline-primary" href="/">Go to Home</a>
+}
+else if (loading)
+{
+    <h1>Knitting Projects</h1>
+    <p>Loading...</p>
+}
+else
+{
+    <div class="page-heading">
+        <div>
+            <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
+            <h1>Projects</h1>
+            <p>Module-owned knitting projects via core extension-point APIs.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <section class="project-panel">
+        <h2>New Project</h2>
+        <EditForm Model="form" OnValidSubmit="CreateProjectAsync" class="project-edit-form">
+            <DataAnnotationsValidator />
+            <div class="form-grid">
+                <label>
+                    <span>Name</span>
+                    <InputText class="form-control" @bind-Value="form.Name" />
+                </label>
+                <label>
+                    <span>Description</span>
+                    <InputText class="form-control" @bind-Value="form.Description" />
+                </label>
+                <label>
+                    <span>Difficulty (0-6)</span>
+                    <InputNumber class="form-control" @bind-Value="form.Difficulty" />
+                </label>
+                <label>
+                    <span>Progress (0-100)</span>
+                    <InputNumber class="form-control" @bind-Value="form.Progress" />
+                </label>
+            </div>
+            <button class="btn btn-primary" disabled="@busy" type="submit">Create Project</button>
+        </EditForm>
+    </section>
+
+    <label class="archive-toggle">
+        <input type="checkbox" @bind="showArchived" @bind:after="LoadProjectsAsync" />
+        Show archived
+    </label>
+
+    @if (projects.Count == 0)
+    {
+        <div class="empty-state">
+            <h2>No Projects Yet</h2>
+            <p>Create your first knitting project to start tracking work.</p>
+        </div>
+    }
+    else
+    {
+        <div class="project-card-grid">
+            @foreach (var project in projects)
+            {
+                <article class="project-card">
+                    <div>
+                        <h2>@project.Name</h2>
+                        <p>@project.Description</p>
+                        @if (project.IsArchived)
+                        {
+                            <span class="archive-badge">Archived</span>
+                        }
+                    </div>
+                    <div class="pattern-card-stats">
+                        <span>Difficulty @project.Difficulty</span>
+                        <span>@project.Progress%</span>
+                        <span>@(string.IsNullOrWhiteSpace(project.PatternName) ? "No pattern" : project.PatternName)</span>
+                    </div>
+                    <div class="auth-actions">
+                        @if (project.IsArchived)
+                        {
+                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => ReopenProjectAsync(project.Id)">Reopen</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => ArchiveProjectAsync(project.Id)">Archive</button>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    }
+}
+
+@code {
+    private const string ModuleKey = "knitting";
+    private readonly List<ModuleProjectDto> projects = [];
+    private ProjectFormModel form = new();
+    private bool showArchived;
+    private bool loading = true;
+    private bool busy;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadProjectsAsync();
+    }
+
+    private async Task LoadProjectsAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive(ModuleKey))
+            {
+                return;
+            }
+
+            projects.Clear();
+            projects.AddRange(await ApiClient.GetModuleProjectsAsync(ModuleKey, showArchived));
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task CreateProjectAsync()
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.CreateModuleProjectAsync(ModuleKey, new CreateModuleProjectRequest
+            {
+                Name = form.Name,
+                Description = form.Description,
+                Difficulty = form.Difficulty,
+                Progress = form.Progress
+            });
+
+            form = new ProjectFormModel();
+            await LoadProjectsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task ArchiveProjectAsync(Guid id)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.ArchiveModuleProjectAsync(ModuleKey, id);
+            await LoadProjectsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task ReopenProjectAsync(Guid id)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.ReopenModuleProjectAsync(ModuleKey, id);
+            await LoadProjectsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private class ProjectFormModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public int Difficulty { get; set; }
+        public int? Progress { get; set; }
+    }
+}

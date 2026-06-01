@@ -1,0 +1,250 @@
+@page "/modules/knitting/patterns"
+@using TankerMade.Contracts.DTOs.ModulePatterns
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+
+<PageTitle>Knitting Patterns</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>Knitting Patterns</h1>
+    <p>Sign in to use this module section.</p>
+    <a class="btn btn-primary" href="/login">Sign in</a>
+}
+else if (!ModuleState.IsActive("knitting"))
+{
+    <h1>Knitting Patterns</h1>
+    <p>Activate Knitting from Home to continue.</p>
+    <a class="btn btn-outline-primary" href="/">Go to Home</a>
+}
+else if (loading)
+{
+    <h1>Knitting Patterns</h1>
+    <p>Loading...</p>
+}
+else
+{
+    <div class="page-heading">
+        <div>
+            <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
+            <h1>Patterns</h1>
+            <p>Module-owned knitting pattern records via core extension-point APIs.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <section class="project-panel">
+        <h2>@(selectedPatternId.HasValue ? "Update Pattern" : "New Pattern")</h2>
+
+        <EditForm Model="form" OnValidSubmit="SavePatternAsync" class="project-edit-form">
+            <DataAnnotationsValidator />
+
+            <div class="form-grid">
+                <label>
+                    <span>Name</span>
+                    <InputText class="form-control" @bind-Value="form.Name" />
+                </label>
+                <label>
+                    <span>Type</span>
+                    <InputText class="form-control" @bind-Value="form.Type" />
+                </label>
+                <label>
+                    <span>Form</span>
+                    <InputText class="form-control" @bind-Value="form.Form" />
+                </label>
+                <label>
+                    <span>Difficulty</span>
+                    <InputText class="form-control" @bind-Value="form.Difficulty" />
+                </label>
+            </div>
+
+            <div class="auth-actions">
+                <button class="btn btn-primary" disabled="@busy" type="submit">@(selectedPatternId.HasValue ? "Save Changes" : "Create Pattern")</button>
+                @if (selectedPatternId.HasValue)
+                {
+                    <button class="btn btn-outline-secondary" disabled="@busy" type="button" @onclick="ResetForm">Cancel Edit</button>
+                }
+            </div>
+        </EditForm>
+    </section>
+
+    @if (patterns.Count == 0)
+    {
+        <div class="empty-state">
+            <h2>No Patterns Yet</h2>
+            <p>Create your first knitting pattern to start building module-owned workflows.</p>
+        </div>
+    }
+    else
+    {
+        <div class="pattern-card-grid">
+            @foreach (var pattern in patterns)
+            {
+                <article class="pattern-card">
+                    <h2>@pattern.Name</h2>
+                    <p>@DisplayMetadata(pattern)</p>
+                    <div class="pattern-card-stats">
+                        <span>@pattern.PieceCount pieces</span>
+                        <span>@pattern.StepCount steps</span>
+                    </div>
+                    <div class="auth-actions">
+                        <a class="btn btn-primary btn-sm" href="@($"/modules/knitting/patterns/{pattern.Id}")">Open</a>
+                        <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => StartEdit(pattern)">Edit</button>
+                        <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeletePatternAsync(pattern.Id)">Delete</button>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+}
+
+@code {
+    private const string ModuleKey = "knitting";
+    private readonly List<ModulePatternDto> patterns = [];
+    private PatternFormModel form = new();
+    private Guid? selectedPatternId;
+    private bool loading = true;
+    private bool busy;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadPatternsAsync();
+    }
+
+    private async Task LoadPatternsAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive(ModuleKey))
+            {
+                return;
+            }
+
+            patterns.Clear();
+            patterns.AddRange(await ApiClient.GetModulePatternsAsync(ModuleKey));
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task SavePatternAsync()
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (selectedPatternId.HasValue)
+            {
+                await ApiClient.UpdateModulePatternAsync(ModuleKey, selectedPatternId.Value, new UpdateModulePatternRequest
+                {
+                    Name = form.Name,
+                    Type = form.Type,
+                    Form = form.Form,
+                    Difficulty = form.Difficulty
+                });
+            }
+            else
+            {
+                await ApiClient.CreateModulePatternAsync(ModuleKey, new CreateModulePatternRequest
+                {
+                    Name = form.Name,
+                    Type = form.Type,
+                    Form = form.Form,
+                    Difficulty = form.Difficulty
+                });
+            }
+
+            ResetForm();
+            await LoadPatternsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task DeletePatternAsync(Guid patternId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.DeleteModulePatternAsync(ModuleKey, patternId);
+            if (selectedPatternId == patternId)
+            {
+                ResetForm();
+            }
+
+            await LoadPatternsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void StartEdit(ModulePatternDto pattern)
+    {
+        selectedPatternId = pattern.Id;
+        form = new PatternFormModel
+        {
+            Name = pattern.Name,
+            Type = pattern.Type,
+            Form = pattern.Form,
+            Difficulty = pattern.Difficulty
+        };
+    }
+
+    private void ResetForm()
+    {
+        selectedPatternId = null;
+        form = new PatternFormModel();
+    }
+
+    private static string DisplayMetadata(ModulePatternDto pattern)
+    {
+        var parts = new[] { pattern.Type, pattern.Form, pattern.Difficulty }
+            .Where(part => !string.IsNullOrWhiteSpace(part));
+
+        return string.Join(" - ", parts);
+    }
+
+    private class PatternFormModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public string Form { get; set; } = string.Empty;
+        public string Difficulty { get; set; } = string.Empty;
+    }
+}

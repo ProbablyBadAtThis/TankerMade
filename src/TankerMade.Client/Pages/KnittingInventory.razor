@@ -1,0 +1,208 @@
+@page "/modules/knitting/inventory"
+@using TankerMade.Contracts.DTOs.ModuleInventory
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+
+<PageTitle>Knitting Inventory</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>Knitting Inventory</h1>
+    <p>Sign in to use this module section.</p>
+    <a class="btn btn-primary" href="/login">Sign in</a>
+}
+else if (!ModuleState.IsActive("knitting"))
+{
+    <h1>Knitting Inventory</h1>
+    <p>Activate Knitting from Home to continue.</p>
+    <a class="btn btn-outline-primary" href="/">Go to Home</a>
+}
+else if (loading)
+{
+    <h1>Knitting Inventory</h1>
+    <p>Loading...</p>
+}
+else
+{
+    <div class="page-heading">
+        <div>
+            <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
+            <h1>Inventory</h1>
+            <p>Module-owned supply tracking via core extension-point APIs.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <section class="project-panel">
+        <h2>Add Supply</h2>
+        <EditForm Model="form" OnValidSubmit="CreateSupplyAsync" class="project-edit-form">
+            <DataAnnotationsValidator />
+            <div class="form-grid">
+                <label>
+                    <span>Category</span>
+                    <InputText class="form-control" @bind-Value="form.Category" />
+                </label>
+                <label>
+                    <span>Name</span>
+                    <InputText class="form-control" @bind-Value="form.Name" />
+                </label>
+                <label>
+                    <span>Brand</span>
+                    <InputText class="form-control" @bind-Value="form.Brand" />
+                </label>
+                <label>
+                    <span>Color</span>
+                    <InputText class="form-control" @bind-Value="form.Color" />
+                </label>
+                <label>
+                    <span>Size</span>
+                    <InputText class="form-control" @bind-Value="form.Size" />
+                </label>
+                <label>
+                    <span>Quantity</span>
+                    <InputNumber class="form-control" @bind-Value="form.Quantity" />
+                </label>
+                <label>
+                    <span>Unit</span>
+                    <InputText class="form-control" @bind-Value="form.Unit" />
+                </label>
+            </div>
+            <label>
+                <span>Notes</span>
+                <InputTextArea class="form-control" @bind-Value="form.Notes" />
+            </label>
+            <button class="btn btn-primary" disabled="@busy" type="submit">Add Supply</button>
+        </EditForm>
+    </section>
+
+    <div class="printing-search-row mb-3">
+        <input class="form-control" placeholder="Search supplies" @bind="search" @bind:event="oninput" />
+        <input class="form-control" placeholder="Category filter" @bind="category" @bind:event="oninput" />
+        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="LoadSuppliesAsync">Search</button>
+    </div>
+
+    @if (supplies.Count == 0)
+    {
+        <div class="empty-state">
+            <h2>No Supplies Yet</h2>
+            <p>Add your first inventory item to start tracking stash and tools.</p>
+        </div>
+    }
+    else
+    {
+        <div class="pattern-card-grid">
+            @foreach (var item in supplies)
+            {
+                <article class="pattern-card">
+                    <h2>@item.Name</h2>
+                    <p>@item.Category</p>
+                    <div class="pattern-card-stats">
+                        <span>@(string.IsNullOrWhiteSpace(item.Brand) ? "No brand" : item.Brand)</span>
+                        <span>@(string.IsNullOrWhiteSpace(item.Color) ? "No color" : item.Color)</span>
+                        <span>@item.Quantity @item.Unit</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(item.Notes))
+                    {
+                        <p>@item.Notes</p>
+                    }
+                </article>
+            }
+        </div>
+    }
+}
+
+@code {
+    private const string ModuleKey = "knitting";
+    private readonly List<ModuleSupplyItemDto> supplies = [];
+    private SupplyFormModel form = new();
+    private string search = string.Empty;
+    private string category = string.Empty;
+    private bool loading = true;
+    private bool busy;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadSuppliesAsync();
+    }
+
+    private async Task LoadSuppliesAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive(ModuleKey))
+            {
+                return;
+            }
+
+            supplies.Clear();
+            supplies.AddRange(await ApiClient.GetModuleSuppliesAsync(ModuleKey, search, category));
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task CreateSupplyAsync()
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.CreateModuleSupplyAsync(ModuleKey, new CreateModuleSupplyItemRequest
+            {
+                Category = form.Category,
+                Name = form.Name,
+                Brand = form.Brand,
+                Color = form.Color,
+                Size = form.Size,
+                Quantity = form.Quantity,
+                Unit = form.Unit,
+                Notes = form.Notes
+            });
+
+            form = new SupplyFormModel();
+            await LoadSuppliesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private class SupplyFormModel
+    {
+        public string Category { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Brand { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
+        public string Size { get; set; } = string.Empty;
+        public decimal Quantity { get; set; }
+        public string Unit { get; set; } = string.Empty;
+        public string Notes { get; set; } = string.Empty;
+    }
+}

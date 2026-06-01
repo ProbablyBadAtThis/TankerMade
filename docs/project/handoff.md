@@ -1,16 +1,16 @@
 # TankerMade Handoff
 
-Last updated: 2026-05-28
+Last updated: 2026-06-01
 
 ## Current State
 
-- Current roadmap phase: Phase I — Security, Ops & Cleanup.
+- Current roadmap phase: Phase I — Security, Ops & Cleanup (complete).
 - Phase A is complete.
 - Phase B is complete.
 - Phase C is complete.
 - Phase D is complete: module-owned inventory, reference data, project/inventory linking, kit/grouping backend, and kit-to-project backend flows are verified.
-- Latest verified slice: Phase I slice 6 deployment guidance documented (`docs/project/deployment-guidance.md`).
-- Latest pushed commit: `b5041e7 Implement Phase E reference data extension points and module option flows`.
+- Latest verified slice: Neutral module capability/API cleanup verified locally by user.
+- Latest pushed commit: user pushed current branch updates locally after verification.
 - Latest unverified slice: none.
 
 ## Completed Recently
@@ -39,10 +39,19 @@ Last updated: 2026-05-28
 - Active module navigation is now module-owned metadata rendered through host extension points.
 - Crafting module kit UI now includes dedicated module-owned kits surface and flows.
 - Registration now validates packaging compatibility against host runtime and manifest rules.
+- Added live bundled modules for: 3D Printing, Crochet, Embroidery, Knitting, Quilting, and Sewing.
+- Added EF migration `20260530172000_PhaseJ_LiveModulesSeedSwap` to align bundled module seed data.
+- 3D Printing now has a module home (`/modules/printing-3d`) and section pages (inventory, projects, patterns, queue, settings).
+- Initial UI pass completed for all live module dashboards and 3D Printing section pages.
+- Legacy Crafting module-specific controllers were removed in favor of neutral module capability endpoints.
+- Legacy Printing inventory controller was removed; Printing inventory now flows through neutral module inventory capabilities.
+- Printing inventory client page was updated to use neutral module inventory + neutral asset assignment/picker APIs.
+- Scalar now reflects neutral/core module capability endpoints for active module workflows.
 
 ## Next Work
 
-- Prepare Phase I closeout pass and confirm transition target for the next roadmap phase.
+- Continue Knitting full UI functionality + visual lock-in pass page-by-page.
+- After Knitting lock-in is complete, propagate shared UI patterns to Crochet, Embroidery, Quilting, Sewing, and 3D Printing.
 
 ## Phase G Direction
 
@@ -70,10 +79,11 @@ Last updated: 2026-05-28
 
 The user reported:
 
-- Build passed.
-- Test passed.
-- Phase F module platform hardening slices were verified locally by the user rather than through Codex sandbox builds.
+- `dotnet build TankerMade.sln` passed.
+- EF migration checks passed.
+- Smoke checks passed.
+- Neutral endpoint checks passed, including expected negative tests.
 
 ## Verification Needed Next
 
-No additional Phase I slice 6 verification is pending.
+No blocking verification is pending before continuing the Knitting-focused full UI pass.
