@@ -3,6 +3,11 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Components.Forms;
 using TankerMade.Contracts.DTOs.Assets;
+using TankerMade.Contracts.DTOs.ModulePatterns;
+using TankerMade.Contracts.DTOs.ModuleInventory;
+using TankerMade.Contracts.DTOs.ModuleProjects;
+using TankerMade.Contracts.DTOs.ModuleKits;
+using TankerMade.Contracts.DTOs.ModuleSettings;
 using TankerMade.Contracts.DTOs.Modules;
 
 namespace TankerMade.Client.Services;
@@ -89,41 +94,6 @@ public class TankerMadeApiClient
         return await response.Content.ReadFromJsonAsync<AssetRecordDto>();
     }
 
-    public async Task<IReadOnlyList<AssetRecordDto>> GetPrintingMaterialAssetsAsync(
-        Guid materialId,
-        bool includeUnassigned = true)
-    {
-        var url = BuildUrl(
-            $"api/modules/printing-3d/inventory/materials/{materialId}/assets",
-            ("includeUnassigned", includeUnassigned.ToString().ToLowerInvariant()));
-
-        return await _http.GetFromJsonAsync<IReadOnlyList<AssetRecordDto>>(url) ?? [];
-    }
-
-    public async Task<AssetRecordDto?> AssignPrintingMaterialAssetAsync(Guid materialId, Guid assetId)
-    {
-        var response = await _http.PutAsJsonAsync($"api/modules/printing-3d/inventory/materials/{materialId}/assets/{assetId}", new { });
-        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
-        {
-            return null;
-        }
-
-        await EnsureSuccessAsync(response);
-        return await response.Content.ReadFromJsonAsync<AssetRecordDto>();
-    }
-
-    public async Task<AssetRecordDto?> UnassignPrintingMaterialAssetAsync(Guid materialId, Guid assetId)
-    {
-        var response = await _http.DeleteAsync($"api/modules/printing-3d/inventory/materials/{materialId}/assets/{assetId}");
-        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
-        {
-            return null;
-        }
-
-        await EnsureSuccessAsync(response);
-        return await response.Content.ReadFromJsonAsync<AssetRecordDto>();
-    }
-
     public async Task<IReadOnlyList<AssetRecordDto>> GetAssetsForPickerAsync(
         string moduleKey,
         string recordType,
@@ -198,6 +168,331 @@ public class TankerMadeApiClient
     public async Task<IReadOnlyList<CraftingPatternSummary>> GetCraftingPatternsAsync()
     {
         return await _http.GetFromJsonAsync<IReadOnlyList<CraftingPatternSummary>>("api/modules/crafting/patterns") ?? [];
+    }
+
+    public async Task<IReadOnlyList<ModulePatternDto>> GetModulePatternsAsync(string moduleKey)
+    {
+        var response = await _http.GetAsync($"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/patterns");
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<ModulePatternDto>>() ?? [];
+    }
+
+    public async Task<ModulePatternDto?> GetModulePatternAsync(string moduleKey, Guid patternId)
+    {
+        var response = await _http.GetAsync($"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/patterns/{patternId}");
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModulePatternDto>();
+    }
+
+    public async Task<ModulePatternDto> CreateModulePatternAsync(string moduleKey, CreateModulePatternRequest request)
+    {
+        var response = await _http.PostAsJsonAsync($"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/patterns", request);
+        await EnsureSuccessAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<ModulePatternDto>()
+            ?? throw new InvalidOperationException("The server returned an empty pattern response.");
+    }
+
+    public async Task<ModulePatternDto?> UpdateModulePatternAsync(
+        string moduleKey,
+        Guid patternId,
+        UpdateModulePatternRequest request)
+    {
+        var response = await _http.PutAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/patterns/{patternId}",
+            request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModulePatternDto>();
+    }
+
+    public async Task<bool> DeleteModulePatternAsync(string moduleKey, Guid patternId)
+    {
+        var response = await _http.DeleteAsync($"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/patterns/{patternId}");
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return false;
+        }
+
+        await EnsureSuccessAsync(response);
+        return true;
+    }
+
+    public async Task<ModulePatternPieceDto?> AddModulePatternPieceAsync(
+        string moduleKey,
+        Guid patternId,
+        CreateModulePatternPieceRequest request)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/patterns/{patternId}/pieces",
+            request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModulePatternPieceDto>();
+    }
+
+    public async Task<ModulePatternPieceDto?> UpdateModulePatternPieceAsync(
+        string moduleKey,
+        Guid patternId,
+        Guid pieceId,
+        UpdateModulePatternPieceRequest request)
+    {
+        var response = await _http.PutAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/patterns/{patternId}/pieces/{pieceId}",
+            request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModulePatternPieceDto>();
+    }
+
+    public async Task<bool> DeleteModulePatternPieceAsync(string moduleKey, Guid patternId, Guid pieceId)
+    {
+        var response = await _http.DeleteAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/patterns/{patternId}/pieces/{pieceId}");
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return false;
+        }
+
+        await EnsureSuccessAsync(response);
+        return true;
+    }
+
+    public async Task<ModulePatternStepDto?> AddModulePatternStepAsync(
+        string moduleKey,
+        Guid patternId,
+        Guid pieceId,
+        CreateModulePatternStepRequest request)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/patterns/{patternId}/pieces/{pieceId}/steps",
+            request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModulePatternStepDto>();
+    }
+
+    public async Task<ModulePatternStepDto?> UpdateModulePatternStepAsync(
+        string moduleKey,
+        Guid patternId,
+        Guid pieceId,
+        Guid stepId,
+        UpdateModulePatternStepRequest request)
+    {
+        var response = await _http.PutAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/patterns/{patternId}/pieces/{pieceId}/steps/{stepId}",
+            request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModulePatternStepDto>();
+    }
+
+    public async Task<bool> DeleteModulePatternStepAsync(
+        string moduleKey,
+        Guid patternId,
+        Guid pieceId,
+        Guid stepId)
+    {
+        var response = await _http.DeleteAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/patterns/{patternId}/pieces/{pieceId}/steps/{stepId}");
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return false;
+        }
+
+        await EnsureSuccessAsync(response);
+        return true;
+    }
+
+    public async Task<IReadOnlyList<ModuleProjectDto>> GetModuleProjectsAsync(
+        string moduleKey,
+        bool includeArchived = false)
+    {
+        var path = $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/projects";
+        var url = includeArchived ? $"{path}?includeArchived=true" : path;
+        var response = await _http.GetAsync(url);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<ModuleProjectDto>>() ?? [];
+    }
+
+    public async Task<ModuleProjectDto> CreateModuleProjectAsync(string moduleKey, CreateModuleProjectRequest request)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/projects",
+            request);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModuleProjectDto>()
+            ?? throw new InvalidOperationException("The server returned an empty project response.");
+    }
+
+    public async Task<ModuleProjectDto?> ArchiveModuleProjectAsync(string moduleKey, Guid projectId)
+    {
+        var response = await _http.PutAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/projects/{projectId}/archive",
+            new { });
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModuleProjectDto>();
+    }
+
+    public async Task<ModuleProjectDto?> ReopenModuleProjectAsync(string moduleKey, Guid projectId)
+    {
+        var response = await _http.PutAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/projects/{projectId}/reopen",
+            new { });
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModuleProjectDto>();
+    }
+
+    public async Task<IReadOnlyList<ModuleSupplyItemDto>> GetModuleSuppliesAsync(
+        string moduleKey,
+        string search = "",
+        string category = "")
+    {
+        var url = BuildUrl(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/inventory/supplies",
+            ("search", search),
+            ("category", category));
+        var response = await _http.GetAsync(url);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<ModuleSupplyItemDto>>() ?? [];
+    }
+
+    public async Task<ModuleSupplyItemDto> CreateModuleSupplyAsync(
+        string moduleKey,
+        CreateModuleSupplyItemRequest request)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/inventory/supplies",
+            request);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModuleSupplyItemDto>()
+            ?? throw new InvalidOperationException("The server returned an empty supply response.");
+    }
+
+    public async Task<IReadOnlyList<ModuleKitDto>> GetModuleKitsAsync(string moduleKey, bool includeArchived = false)
+    {
+        var path = $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/kits";
+        var url = includeArchived ? $"{path}?includeArchived=true" : path;
+        var response = await _http.GetAsync(url);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<ModuleKitDto>>() ?? [];
+    }
+
+    public async Task<ModuleKitDto?> GetModuleKitAsync(string moduleKey, Guid kitId)
+    {
+        var response = await _http.GetAsync($"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/kits/{kitId}");
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModuleKitDto>();
+    }
+
+    public async Task<ModuleKitDto> CreateModuleKitAsync(string moduleKey, CreateModuleKitRequest request)
+    {
+        var response = await _http.PostAsJsonAsync($"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/kits", request);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModuleKitDto>()
+            ?? throw new InvalidOperationException("The server returned an empty kit response.");
+    }
+
+    public async Task<ModuleKitPieceDto?> AddModuleKitPieceAsync(string moduleKey, Guid kitId, CreateModuleKitPieceRequest request)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/kits/{kitId}/pieces",
+            request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModuleKitPieceDto>();
+    }
+
+    public async Task<ModuleKitSupplyDto?> AddModuleKitSupplyAsync(string moduleKey, Guid kitId, CreateModuleKitSupplyRequest request)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/kits/{kitId}/supplies",
+            request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModuleKitSupplyDto>();
+    }
+
+    public async Task<ModuleProjectDto?> CreateModuleProjectFromKitPieceAsync(string moduleKey, Guid kitId, Guid pieceId)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/kits/{kitId}/pieces/{pieceId}/project",
+            new { });
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModuleProjectDto>();
+    }
+
+    public async Task<IReadOnlyList<ModuleSettingItemDto>> GetModuleSettingsAsync(string moduleKey, string category = "")
+    {
+        var url = BuildUrl(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/settings",
+            ("category", category));
+        var response = await _http.GetAsync(url);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<ModuleSettingItemDto>>() ?? [];
+    }
+
+    public async Task<ModuleSettingItemDto> UpsertModuleSettingAsync(string moduleKey, UpsertModuleSettingItemRequest request)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/settings",
+            request);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModuleSettingItemDto>()
+            ?? throw new InvalidOperationException("The server returned an empty setting response.");
     }
 
     public async Task<IReadOnlyList<CraftingProjectSummary>> GetCraftingProjectsAsync(bool includeArchived = false)
@@ -576,21 +871,6 @@ public class TankerMadeApiClient
             ?? throw new InvalidOperationException("The server returned an empty reference response.");
     }
 
-    public async Task<IReadOnlyList<PrintingMaterialInventoryItemSummary>> GetPrintingMaterialsAsync(string search = "")
-    {
-        var url = BuildUrl("api/modules/printing-3d/inventory/materials", ("search", search));
-        return await _http.GetFromJsonAsync<IReadOnlyList<PrintingMaterialInventoryItemSummary>>(url) ?? [];
-    }
-
-    public async Task<PrintingMaterialInventoryItemSummary> CreatePrintingMaterialAsync(PrintingMaterialFormRequest request)
-    {
-        var response = await _http.PostAsJsonAsync("api/modules/printing-3d/inventory/materials", request);
-        await EnsureSuccessAsync(response);
-
-        return await response.Content.ReadFromJsonAsync<PrintingMaterialInventoryItemSummary>()
-            ?? throw new InvalidOperationException("The server returned an empty material response.");
-    }
-
     public async Task<IReadOnlyList<CraftingKitSummary>> GetCraftingKitsAsync(bool includeArchived = false)
     {
         var url = includeArchived
@@ -658,25 +938,6 @@ public class TankerMadeApiClient
 
         await EnsureSuccessAsync(response);
         return await response.Content.ReadFromJsonAsync<CraftingProjectSummary>();
-    }
-
-    public async Task<IReadOnlyList<InventoryReferenceItemSummary>> GetPrintingReferenceItemsAsync(string category)
-    {
-        return await _http.GetFromJsonAsync<IReadOnlyList<InventoryReferenceItemSummary>>(
-            $"api/modules/printing-3d/inventory/reference/{Uri.EscapeDataString(category)}") ?? [];
-    }
-
-    public async Task<InventoryReferenceItemSummary> CreatePrintingReferenceItemAsync(
-        string category,
-        string name)
-    {
-        var response = await _http.PostAsJsonAsync(
-            $"api/modules/printing-3d/inventory/reference/{Uri.EscapeDataString(category)}",
-            new { name });
-        await EnsureSuccessAsync(response);
-
-        return await response.Content.ReadFromJsonAsync<InventoryReferenceItemSummary>()
-            ?? throw new InvalidOperationException("The server returned an empty reference response.");
     }
 
     private static string BuildUrl(string path, params (string Name, string Value)[] parameters)
@@ -805,22 +1066,6 @@ public class CraftingNotionFormRequest
     public bool IsSalePrice { get; set; }
 }
 
-public class PrintingMaterialFormRequest
-{
-    public string MaterialType { get; set; } = string.Empty;
-    public string BrandName { get; set; } = string.Empty;
-    public string ColorName { get; set; } = string.Empty;
-    public decimal SpoolWeightGrams { get; set; } = 1000;
-    public decimal? RemainingWeightGrams { get; set; }
-    public string Diameter { get; set; } = string.Empty;
-    public string StorageLocation { get; set; } = string.Empty;
-    public string SpoolCode { get; set; } = string.Empty;
-    public string PrinterCompatibility { get; set; } = string.Empty;
-    public string SourceName { get; set; } = string.Empty;
-    public decimal? Price { get; set; }
-    public bool IsSalePrice { get; set; }
-}
-
 public class CraftingKitFormRequest
 {
     public string Name { get; set; } = string.Empty;
@@ -916,29 +1161,6 @@ public class CraftingNotionInventoryItemSummary
     public string Description { get; set; } = string.Empty;
     public int Quantity { get; set; }
     public decimal? RegularPrice { get; set; }
-    public IReadOnlyList<InventoryPurchaseSummary> Purchases { get; set; } = [];
-}
-
-public class PrintingSpoolSummary
-{
-    public string SpoolCode { get; set; } = string.Empty;
-    public decimal StartingWeightGrams { get; set; }
-    public decimal? RemainingWeightGrams { get; set; }
-    public string PrinterCompatibility { get; set; } = string.Empty;
-}
-
-public class PrintingMaterialInventoryItemSummary
-{
-    public Guid Id { get; set; }
-    public string MaterialType { get; set; } = string.Empty;
-    public string BrandName { get; set; } = string.Empty;
-    public string ColorName { get; set; } = string.Empty;
-    public decimal TotalSpoolWeightGrams { get; set; }
-    public decimal? RemainingWeightGrams { get; set; }
-    public string Diameter { get; set; } = string.Empty;
-    public string StorageLocation { get; set; } = string.Empty;
-    public decimal? RegularPrice { get; set; }
-    public IReadOnlyList<PrintingSpoolSummary> Spools { get; set; } = [];
     public IReadOnlyList<InventoryPurchaseSummary> Purchases { get; set; } = [];
 }
 

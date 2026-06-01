@@ -1,0 +1,169 @@
+@page "/modules/knitting/settings"
+@using TankerMade.Contracts.DTOs.ModuleSettings
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+
+<PageTitle>Knitting Settings</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>Knitting Settings</h1>
+    <p>Sign in to use this module section.</p>
+    <a class="btn btn-primary" href="/login">Sign in</a>
+}
+else if (!ModuleState.IsActive("knitting"))
+{
+    <h1>Knitting Settings</h1>
+    <p>Activate Knitting from Home to continue.</p>
+    <a class="btn btn-outline-primary" href="/">Go to Home</a>
+}
+else if (loading)
+{
+    <h1>Knitting Settings</h1>
+    <p>Loading...</p>
+}
+else
+{
+    <div class="page-heading">
+        <div>
+            <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
+            <h1>Settings</h1>
+            <p>Module-owned preferences via core extension-point APIs.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <section class="project-panel">
+        <h2>Upsert Setting</h2>
+        <EditForm Model="form" OnValidSubmit="SaveSettingAsync" class="project-edit-form">
+            <DataAnnotationsValidator />
+            <div class="form-grid">
+                <label>
+                    <span>Category</span>
+                    <InputText class="form-control" @bind-Value="form.Category" />
+                </label>
+                <label>
+                    <span>Key</span>
+                    <InputText class="form-control" @bind-Value="form.Key" />
+                </label>
+                <label>
+                    <span>Value</span>
+                    <InputText class="form-control" @bind-Value="form.Value" />
+                </label>
+            </div>
+            <button class="btn btn-primary" disabled="@busy" type="submit">Save Setting</button>
+        </EditForm>
+    </section>
+
+    <div class="printing-search-row mb-3">
+        <input class="form-control" placeholder="Category filter" @bind="categoryFilter" @bind:event="oninput" />
+        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="LoadSettingsAsync">Filter</button>
+    </div>
+
+    @if (settings.Count == 0)
+    {
+        <div class="empty-state">
+            <h2>No Settings Yet</h2>
+            <p>Create settings to store knitting defaults and preferences.</p>
+        </div>
+    }
+    else
+    {
+        <div class="pattern-card-grid">
+            @foreach (var item in settings)
+            {
+                <article class="pattern-card">
+                    <h2>@item.Key</h2>
+                    <p>@item.Category</p>
+                    <div class="pattern-card-stats">
+                        <span>@item.Value</span>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+}
+
+@code {
+    private readonly List<ModuleSettingItemDto> settings = [];
+    private SettingFormModel form = new();
+    private string categoryFilter = string.Empty;
+    private bool loading = true;
+    private bool busy;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadSettingsAsync();
+    }
+
+    private async Task LoadSettingsAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive("knitting"))
+            {
+                return;
+            }
+
+            settings.Clear();
+            settings.AddRange(await ApiClient.GetModuleSettingsAsync("knitting", categoryFilter));
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task SaveSettingAsync()
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UpsertModuleSettingAsync("knitting", new UpsertModuleSettingItemRequest
+            {
+                Category = form.Category,
+                Key = form.Key,
+                Value = form.Value
+            });
+
+            form = new();
+            await LoadSettingsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private class SettingFormModel
+    {
+        public string Category { get; set; } = string.Empty;
+        public string Key { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+    }
+}

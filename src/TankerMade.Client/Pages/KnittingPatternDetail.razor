@@ -1,0 +1,529 @@
+@page "/modules/knitting/patterns/{PatternId:guid}"
+@using TankerMade.Contracts.DTOs.ModulePatterns
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+
+<PageTitle>Knitting Pattern</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>Knitting Pattern</h1>
+    <p>Sign in to use this module section.</p>
+    <a class="btn btn-primary" href="/login">Sign in</a>
+}
+else if (!ModuleState.IsActive("knitting"))
+{
+    <h1>Knitting Pattern</h1>
+    <p>Activate Knitting from Home to continue.</p>
+    <a class="btn btn-outline-primary" href="/">Go to Home</a>
+}
+else if (loading)
+{
+    <h1>Knitting Pattern</h1>
+    <p>Loading...</p>
+}
+else if (pattern is null)
+{
+    <h1>Pattern Not Found</h1>
+    <a class="btn btn-outline-secondary" href="/modules/knitting/patterns">Back to Patterns</a>
+}
+else
+{
+    <div class="pattern-detail">
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <div class="pattern-header">
+            <div>
+                <a class="pattern-back-link" href="/modules/knitting/patterns">Patterns</a>
+                <h1>@pattern.Name</h1>
+                <p>@DisplayMetadata(pattern)</p>
+            </div>
+            <div class="pattern-stats" aria-label="Pattern summary">
+                <div>
+                    <strong>@pattern.PieceCount</strong>
+                    <span>Pieces</span>
+                </div>
+                <div>
+                    <strong>@pattern.StepCount</strong>
+                    <span>Steps</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="pattern-workspace">
+            <aside class="piece-list" aria-label="Pieces">
+                <EditForm Model="pieceForm" OnValidSubmit="AddPieceAsync" class="piece-create-form">
+                    <DataAnnotationsValidator />
+                    <label>
+                        <span>New Piece</span>
+                        <InputText class="form-control" @bind-Value="pieceForm.Name" />
+                    </label>
+                    <button class="btn btn-primary" disabled="@busy" type="submit">Add Piece</button>
+                </EditForm>
+
+                @if (pattern.Pieces.Count == 0)
+                {
+                    <p class="muted-copy">No pieces yet.</p>
+                }
+                else
+                {
+                    @foreach (var piece in pattern.Pieces)
+                    {
+                        <div class="piece-row">
+                            <button class="piece-button @(selectedPieceId == piece.Id ? "active" : string.Empty)" @onclick="() => SelectPiece(piece.Id)">
+                                <span>@piece.Name</span>
+                                <small>@piece.StepCount steps</small>
+                            </button>
+                        </div>
+                    }
+                }
+            </aside>
+
+            <section class="step-panel" aria-label="Selected piece">
+                @if (selectedPiece is null)
+                {
+                    <p>Select a piece.</p>
+                }
+                else
+                {
+                    <div class="step-panel-header">
+                        <div>
+                            <h2>@selectedPiece.Name</h2>
+                            <p>@selectedPiece.StepCount steps</p>
+                        </div>
+                        <div class="auth-actions">
+                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="StartPieceRename">Rename</button>
+                            <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="DeletePieceAsync">Delete</button>
+                        </div>
+                    </div>
+
+                    @if (editingPiece)
+                    {
+                        <EditForm Model="renamePieceForm" OnValidSubmit="RenamePieceAsync" class="piece-edit-form">
+                            <DataAnnotationsValidator />
+                            <label>
+                                <span>Piece Name</span>
+                                <InputText class="form-control" @bind-Value="renamePieceForm.Name" />
+                            </label>
+                            <div class="auth-actions">
+                                <button class="btn btn-primary btn-sm" disabled="@busy" type="submit">Save</button>
+                                <button class="btn btn-outline-secondary btn-sm" disabled="@busy" type="button" @onclick="CancelPieceRename">Cancel</button>
+                            </div>
+                        </EditForm>
+                    }
+
+                    <EditForm Model="stepForm" OnValidSubmit="AddStepAsync" class="step-form">
+                        <DataAnnotationsValidator />
+                        <div class="form-grid">
+                            <label>
+                                <span>Range Start</span>
+                                <InputNumber class="form-control" @bind-Value="stepForm.StartIndex" />
+                            </label>
+                            <label>
+                                <span>Range End</span>
+                                <InputNumber class="form-control" @bind-Value="stepForm.EndIndex" />
+                            </label>
+                            <label>
+                                <span>Label</span>
+                                <InputText class="form-control" @bind-Value="stepForm.Label" />
+                            </label>
+                        </div>
+                        <label>
+                            <span>Notes</span>
+                            <InputTextArea class="form-control" @bind-Value="stepForm.Notes" />
+                        </label>
+                        <button class="btn btn-primary" disabled="@busy" type="submit">Add Step</button>
+                    </EditForm>
+
+                    @if (selectedPiece.Steps.Count == 0)
+                    {
+                        <p class="muted-copy">No steps yet.</p>
+                    }
+                    else
+                    {
+                        <ol class="step-list">
+                            @foreach (var step in selectedPiece.Steps)
+                            {
+                                <li>
+                                    <div class="step-range">@StepRange(step)</div>
+                                    <div class="step-content">
+                                        <div class="step-title-row">
+                                            <h3>@step.Label</h3>
+                                            <div class="auth-actions">
+                                                <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => StartStepEdit(step)">Edit</button>
+                                                <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeleteStepAsync(step.Id)">Delete</button>
+                                            </div>
+                                        </div>
+                                        <p>@step.Notes</p>
+
+                                        @if (editingStepId == step.Id)
+                                        {
+                                            <EditForm Model="editStepForm" OnValidSubmit="SaveStepEditAsync" class="step-form">
+                                                <DataAnnotationsValidator />
+                                                <div class="form-grid">
+                                                    <label>
+                                                        <span>Range Start</span>
+                                                        <InputNumber class="form-control" @bind-Value="editStepForm.StartIndex" />
+                                                    </label>
+                                                    <label>
+                                                        <span>Range End</span>
+                                                        <InputNumber class="form-control" @bind-Value="editStepForm.EndIndex" />
+                                                    </label>
+                                                    <label>
+                                                        <span>Label</span>
+                                                        <InputText class="form-control" @bind-Value="editStepForm.Label" />
+                                                    </label>
+                                                </div>
+                                                <label>
+                                                    <span>Notes</span>
+                                                    <InputTextArea class="form-control" @bind-Value="editStepForm.Notes" />
+                                                </label>
+                                                <div class="auth-actions">
+                                                    <button class="btn btn-primary btn-sm" disabled="@busy" type="submit">Save</button>
+                                                    <button class="btn btn-outline-secondary btn-sm" disabled="@busy" type="button" @onclick="CancelStepEdit">Cancel</button>
+                                                </div>
+                                            </EditForm>
+                                        }
+                                    </div>
+                                </li>
+                            }
+                        </ol>
+                    }
+                }
+            </section>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid PatternId { get; set; }
+
+    private const string ModuleKey = "knitting";
+    private ModulePatternDto? pattern;
+    private ModulePatternPieceDto? selectedPiece;
+    private Guid? selectedPieceId;
+    private bool loading = true;
+    private bool busy;
+    private bool editingPiece;
+    private Guid? editingStepId;
+    private string errorMessage = string.Empty;
+
+    private PieceFormModel pieceForm = new();
+    private PieceFormModel renamePieceForm = new();
+    private StepFormModel stepForm = new();
+    private StepFormModel editStepForm = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadPatternAsync();
+    }
+
+    private async Task LoadPatternAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive(ModuleKey))
+            {
+                return;
+            }
+
+            pattern = await ApiClient.GetModulePatternAsync(ModuleKey, PatternId);
+            if (pattern != null)
+            {
+                selectedPieceId ??= pattern.Pieces.FirstOrDefault()?.Id;
+                selectedPiece = pattern.Pieces.FirstOrDefault(piece => piece.Id == selectedPieceId)
+                    ?? pattern.Pieces.FirstOrDefault();
+                selectedPieceId = selectedPiece?.Id;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task AddPieceAsync()
+    {
+        if (pattern == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.AddModulePatternPieceAsync(ModuleKey, pattern.Id, new CreateModulePatternPieceRequest
+            {
+                Name = pieceForm.Name
+            });
+            pieceForm = new();
+            await LoadPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task DeletePieceAsync()
+    {
+        if (pattern == null || selectedPiece == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.DeleteModulePatternPieceAsync(ModuleKey, pattern.Id, selectedPiece.Id);
+            selectedPieceId = null;
+            editingPiece = false;
+            await LoadPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void SelectPiece(Guid pieceId)
+    {
+        if (pattern == null)
+        {
+            return;
+        }
+
+        selectedPieceId = pieceId;
+        selectedPiece = pattern.Pieces.FirstOrDefault(piece => piece.Id == pieceId);
+        editingPiece = false;
+        editingStepId = null;
+    }
+
+    private void StartPieceRename()
+    {
+        if (selectedPiece == null)
+        {
+            return;
+        }
+
+        renamePieceForm = new PieceFormModel { Name = selectedPiece.Name };
+        editingPiece = true;
+    }
+
+    private async Task RenamePieceAsync()
+    {
+        if (pattern == null || selectedPiece == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UpdateModulePatternPieceAsync(
+                ModuleKey,
+                pattern.Id,
+                selectedPiece.Id,
+                new UpdateModulePatternPieceRequest { Name = renamePieceForm.Name });
+            editingPiece = false;
+            await LoadPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void CancelPieceRename() => editingPiece = false;
+
+    private async Task AddStepAsync()
+    {
+        if (pattern == null || selectedPiece == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.AddModulePatternStepAsync(
+                ModuleKey,
+                pattern.Id,
+                selectedPiece.Id,
+                new CreateModulePatternStepRequest
+                {
+                    StartIndex = stepForm.StartIndex,
+                    EndIndex = stepForm.EndIndex,
+                    Label = stepForm.Label,
+                    Notes = stepForm.Notes
+                });
+
+            stepForm = new();
+            await LoadPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void StartStepEdit(ModulePatternStepDto step)
+    {
+        editingStepId = step.Id;
+        editStepForm = new StepFormModel
+        {
+            StartIndex = step.StartIndex,
+            EndIndex = step.EndIndex,
+            Label = step.Label,
+            Notes = step.Notes
+        };
+    }
+
+    private async Task SaveStepEditAsync()
+    {
+        if (pattern == null || selectedPiece == null || editingStepId == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UpdateModulePatternStepAsync(
+                ModuleKey,
+                pattern.Id,
+                selectedPiece.Id,
+                editingStepId.Value,
+                new UpdateModulePatternStepRequest
+                {
+                    StartIndex = editStepForm.StartIndex,
+                    EndIndex = editStepForm.EndIndex,
+                    Label = editStepForm.Label,
+                    Notes = editStepForm.Notes
+                });
+
+            editingStepId = null;
+            await LoadPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void CancelStepEdit() => editingStepId = null;
+
+    private async Task DeleteStepAsync(Guid stepId)
+    {
+        if (pattern == null || selectedPiece == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.DeleteModulePatternStepAsync(ModuleKey, pattern.Id, selectedPiece.Id, stepId);
+            editingStepId = null;
+            await LoadPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private static string DisplayMetadata(ModulePatternDto value)
+    {
+        var parts = new[] { value.Type, value.Form, value.Difficulty }
+            .Where(part => !string.IsNullOrWhiteSpace(part));
+
+        return string.Join(" - ", parts);
+    }
+
+    private static string StepRange(ModulePatternStepDto step)
+    {
+        if (step.StartIndex == null && step.EndIndex == null)
+        {
+            return "-";
+        }
+
+        if (step.StartIndex == step.EndIndex || step.EndIndex == null)
+        {
+            return step.StartIndex?.ToString() ?? step.EndIndex?.ToString() ?? "-";
+        }
+
+        if (step.StartIndex == null)
+        {
+            return step.EndIndex?.ToString() ?? "-";
+        }
+
+        return $"{step.StartIndex}-{step.EndIndex}";
+    }
+
+    private class PieceFormModel
+    {
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private class StepFormModel
+    {
+        public int? StartIndex { get; set; }
+        public int? EndIndex { get; set; }
+        public string Label { get; set; } = string.Empty;
+        public string Notes { get; set; } = string.Empty;
+    }
+}

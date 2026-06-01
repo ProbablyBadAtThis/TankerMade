@@ -1,5 +1,5 @@
 @page "/modules/printing-3d/inventory"
-@using System.Linq
+@using TankerMade.Contracts.DTOs.ModuleInventory
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
@@ -27,7 +27,7 @@ else
     <div class="page-heading">
         <div>
             <h1>3D Printing Inventory</h1>
-            <p>Module-owned material and spool proof workspace.</p>
+            <p>Module-owned materials workspace via neutral capability APIs.</p>
         </div>
     </div>
 
@@ -38,7 +38,8 @@ else
 
     <div class="printing-search-row">
         <input class="form-control" placeholder="Search materials" @bind="search" @bind:event="oninput" />
-        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="LoadMaterialsAsync">Search</button>
+        <input class="form-control" placeholder="Material type filter" @bind="category" @bind:event="oninput" />
+        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="LoadSuppliesAsync">Search</button>
     </div>
 
     <div class="printing-layout">
@@ -48,101 +49,60 @@ else
             <div class="printing-form-grid">
                 <label>
                     <span>Material type</span>
-                    <select class="form-select" @bind="form.MaterialType">
-                        <option value="">Select material type</option>
-                        @foreach (var option in materialTypeOptions)
-                        {
-                            <option value="@option">@option</option>
-                        }
-                    </select>
+                    <input class="form-control" @bind="form.Category" />
+                </label>
+                <label>
+                    <span>Name</span>
+                    <input class="form-control" @bind="form.Name" />
                 </label>
                 <label>
                     <span>Brand</span>
-                    <input class="form-control" @bind="form.BrandName" />
+                    <input class="form-control" @bind="form.Brand" />
                 </label>
                 <label>
                     <span>Color</span>
-                    <input class="form-control" @bind="form.ColorName" />
-                </label>
-                <label>
-                    <span>Spool weight grams</span>
-                    <input class="form-control" type="number" step="0.01" @bind="form.SpoolWeightGrams" />
-                </label>
-                <label>
-                    <span>Remaining grams</span>
-                    <input class="form-control" type="number" step="0.01" @bind="form.RemainingWeightGrams" />
+                    <input class="form-control" @bind="form.Color" />
                 </label>
                 <label>
                     <span>Diameter</span>
-                    <select class="form-select" @bind="form.Diameter">
-                        <option value="">Select diameter</option>
-                        @foreach (var option in diameterOptions)
-                        {
-                            <option value="@option">@option</option>
-                        }
-                    </select>
+                    <input class="form-control" @bind="form.Size" />
                 </label>
                 <label>
-                    <span>Spool code</span>
-                    <input class="form-control" @bind="form.SpoolCode" />
-                </label>
-                <label>
-                    <span>Printer compatibility</span>
-                    <input class="form-control" @bind="form.PrinterCompatibility" />
-                </label>
-                <label>
-                    <span>Source</span>
-                    <input class="form-control" @bind="form.SourceName" />
-                </label>
-                <label>
-                    <span>Price</span>
-                    <input class="form-control" type="number" step="0.01" @bind="form.Price" />
+                    <span>Remaining grams</span>
+                    <input class="form-control" type="number" step="0.01" @bind="form.Quantity" />
                 </label>
             </div>
 
-            <div class="printing-add-row">
-                <div class="printing-inline-add">
-                    <input class="form-control" placeholder="Add new material type" @bind="newMaterialTypeName" />
-                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddMaterialTypeOptionAsync">Add Type</button>
-                </div>
-                <div class="printing-inline-add">
-                    <input class="form-control" placeholder="Add new diameter" @bind="newDiameterName" />
-                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddDiameterOptionAsync">Add Diameter</button>
-                </div>
-            </div>
-
-            <label class="form-check">
-                <input class="form-check-input" type="checkbox" @bind="form.IsSalePrice" />
-                <span class="form-check-label">Sale price</span>
+            <label>
+                <span>Storage/notes</span>
+                <InputTextArea class="form-control" @bind-Value="form.Notes" />
             </label>
 
-            <button class="btn btn-primary" disabled="@busy" @onclick="SaveMaterialAsync">Add / Merge</button>
+            <button class="btn btn-primary" disabled="@busy" @onclick="SaveSupplyAsync">Add / Merge</button>
         </section>
 
         <section class="printing-panel">
             <h2>Materials</h2>
-            @if (materials.Count == 0)
+            @if (supplies.Count == 0)
             {
                 <p class="muted-copy">No materials yet.</p>
             }
             else
             {
                 <div class="printing-card-grid">
-                    @foreach (var material in materials)
+                    @foreach (var item in supplies)
                     {
-                        <article class="printing-material-card @(selectedMaterialId == material.Id ? "printing-material-card-active" : string.Empty)">
+                        <article class="printing-material-card @(selectedMaterialId == item.Id ? "printing-material-card-active" : string.Empty)">
                             <header>
-                                <h3>@material.MaterialType</h3>
-                                <p>@material.BrandName - @material.ColorName</p>
+                                <h3>@item.Category</h3>
+                                <p>@item.Brand - @item.Name</p>
                             </header>
                             <div class="pattern-card-stats">
-                                <span>@material.TotalSpoolWeightGrams g</span>
-                                <span>@(string.IsNullOrWhiteSpace(material.Diameter) ? "No diameter" : material.Diameter)</span>
-                                <span>@(string.IsNullOrWhiteSpace(material.StorageLocation) ? "No storage location" : material.StorageLocation)</span>
+                                <span>@item.Quantity @item.Unit</span>
+                                <span>@(string.IsNullOrWhiteSpace(item.Size) ? "No diameter" : item.Size)</span>
+                                <span>@(string.IsNullOrWhiteSpace(item.Notes) ? "No storage notes" : item.Notes)</span>
                             </div>
-                            <p>@SpoolSummary(material.Spools)</p>
-                            <p>@PurchaseSummary(material.Purchases)</p>
-                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => SelectMaterialForAssetsAsync(material.Id)">
+                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => SelectMaterialForAssetsAsync(item.Id)">
                                 Manage Assets
                             </button>
                         </article>
@@ -198,14 +158,12 @@ else
 }
 
 @code {
-    private readonly List<TankerMade.Client.Services.PrintingMaterialInventoryItemSummary> materials = [];
-    private TankerMade.Client.Services.PrintingMaterialFormRequest form = new();
+    private const string MaterialRecordType = "material";
+    private readonly List<ModuleSupplyItemDto> supplies = [];
+    private ModuleSupplyFormModel form = new();
     private string search = string.Empty;
+    private string category = string.Empty;
     private string errorMessage = string.Empty;
-    private readonly List<string> materialTypeOptions = [];
-    private readonly List<string> diameterOptions = [];
-    private string newMaterialTypeName = string.Empty;
-    private string newDiameterName = string.Empty;
     private Guid? selectedMaterialId;
     private readonly List<TankerMade.Contracts.DTOs.Assets.AssetRecordDto> selectedMaterialAssets = [];
     private bool loading = true;
@@ -217,13 +175,12 @@ else
         if (AuthSession.IsSignedIn)
         {
             await ModuleState.RefreshAsync();
-            await LoadReferenceOptionsAsync();
         }
 
-        await LoadMaterialsAsync();
+        await LoadSuppliesAsync();
     }
 
-    private async Task LoadMaterialsAsync()
+    private async Task LoadSuppliesAsync()
     {
         loading = true;
         errorMessage = string.Empty;
@@ -235,8 +192,8 @@ else
                 return;
             }
 
-            materials.Clear();
-            materials.AddRange(await ApiClient.GetPrintingMaterialsAsync(search));
+            supplies.Clear();
+            supplies.AddRange(await ApiClient.GetModuleSuppliesAsync("printing-3d", search, category));
         }
         catch (Exception ex)
         {
@@ -248,16 +205,27 @@ else
         }
     }
 
-    private async Task SaveMaterialAsync()
+    private async Task SaveSupplyAsync()
     {
         busy = true;
         errorMessage = string.Empty;
 
         try
         {
-            await ApiClient.CreatePrintingMaterialAsync(form);
+            await ApiClient.CreateModuleSupplyAsync("printing-3d", new CreateModuleSupplyItemRequest
+            {
+                Category = form.Category,
+                Name = form.Name,
+                Brand = form.Brand,
+                Color = form.Color,
+                Size = form.Size,
+                Quantity = form.Quantity,
+                Unit = "g",
+                Notes = form.Notes
+            });
+
             form = new();
-            await LoadMaterialsAsync();
+            await LoadSuppliesAsync();
             selectedMaterialId = null;
             selectedMaterialAssets.Clear();
         }
@@ -269,87 +237,6 @@ else
         {
             busy = false;
         }
-    }
-
-    private async Task LoadReferenceOptionsAsync()
-    {
-        materialTypeOptions.Clear();
-        diameterOptions.Clear();
-
-        materialTypeOptions.AddRange((await ApiClient.GetPrintingReferenceItemsAsync("material-type")).Select(i => i.Name));
-        diameterOptions.AddRange((await ApiClient.GetPrintingReferenceItemsAsync("diameter")).Select(i => i.Name));
-    }
-
-    private async Task AddMaterialTypeOptionAsync()
-    {
-        await AddReferenceOptionAsync("material-type", newMaterialTypeName, () => newMaterialTypeName = string.Empty, materialTypeOptions, value => form.MaterialType = value);
-    }
-
-    private async Task AddDiameterOptionAsync()
-    {
-        await AddReferenceOptionAsync("diameter", newDiameterName, () => newDiameterName = string.Empty, diameterOptions, value => form.Diameter = value);
-    }
-
-    private async Task AddReferenceOptionAsync(
-        string category,
-        string rawName,
-        Action clearInput,
-        List<string> options,
-        Action<string> assignSelection)
-    {
-        var name = rawName.Trim();
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            return;
-        }
-
-        busy = true;
-        errorMessage = string.Empty;
-
-        try
-        {
-            var created = await ApiClient.CreatePrintingReferenceItemAsync(category, name);
-            if (!options.Contains(created.Name))
-            {
-                options.Add(created.Name);
-                options.Sort(StringComparer.OrdinalIgnoreCase);
-            }
-
-            assignSelection(created.Name);
-            clearInput();
-        }
-        catch (Exception ex)
-        {
-            errorMessage = ex.Message;
-        }
-        finally
-        {
-            busy = false;
-        }
-    }
-
-    private static string SpoolSummary(IReadOnlyList<TankerMade.Client.Services.PrintingSpoolSummary> spools)
-    {
-        if (spools.Count == 0)
-        {
-            return "No spool details.";
-        }
-
-        var first = spools[0];
-        return $"Spool {first.SpoolCode}: {first.StartingWeightGrams} g";
-    }
-
-    private static string PurchaseSummary(IReadOnlyList<TankerMade.Client.Services.InventoryPurchaseSummary> purchases)
-    {
-        if (purchases.Count == 0)
-        {
-            return "No purchase history.";
-        }
-
-        var latest = purchases[0];
-        var price = latest.Price.HasValue ? $" {latest.Price:C}" : string.Empty;
-        var sale = latest.IsSalePrice ? " sale" : string.Empty;
-        return $"Latest: {latest.SourceName}{price}{sale}";
     }
 
     private async Task SelectMaterialForAssetsAsync(Guid materialId)
@@ -367,7 +254,11 @@ else
         }
 
         selectedMaterialAssets.Clear();
-        selectedMaterialAssets.AddRange(await ApiClient.GetPrintingMaterialAssetsAsync(selectedMaterialId.Value, includeUnassigned: true));
+        selectedMaterialAssets.AddRange(await ApiClient.GetAssetsForPickerAsync(
+            "printing-3d",
+            MaterialRecordType,
+            selectedMaterialId.Value,
+            includeUnassigned: true));
     }
 
     private async Task UploadMaterialAssetAsync(InputFileChangeEventArgs args)
@@ -405,7 +296,12 @@ else
         errorMessage = string.Empty;
         try
         {
-            await ApiClient.AssignPrintingMaterialAssetAsync(selectedMaterialId.Value, assetId);
+            await ApiClient.AssignAssetAsync(assetId, new TankerMade.Contracts.DTOs.Assets.AssetAssignmentRequest
+            {
+                ModuleKey = "printing-3d",
+                RecordType = MaterialRecordType,
+                RecordId = selectedMaterialId.Value
+            });
             await LoadSelectedMaterialAssetsAsync();
         }
         catch (Exception ex)
@@ -429,7 +325,7 @@ else
         errorMessage = string.Empty;
         try
         {
-            await ApiClient.UnassignPrintingMaterialAssetAsync(selectedMaterialId.Value, assetId);
+            await ApiClient.UnassignAssetAsync(assetId);
             await LoadSelectedMaterialAssetsAsync();
         }
         catch (Exception ex)
@@ -447,5 +343,16 @@ else
         var assignment = asset.RecordId.HasValue ? "Attached" : "Unassigned";
         var sizeMb = asset.FileSizeBytes / 1024d / 1024d;
         return $"{assignment} - {asset.ContentType} - {sizeMb:0.##} MB";
+    }
+
+    private class ModuleSupplyFormModel
+    {
+        public string Category { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Brand { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
+        public string Size { get; set; } = string.Empty;
+        public decimal Quantity { get; set; }
+        public string Notes { get; set; } = string.Empty;
     }
 }
