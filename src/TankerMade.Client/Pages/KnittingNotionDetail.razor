@@ -1,0 +1,410 @@
+@page "/modules/knitting/inventory/notion/{NotionId:guid}"
+@using System.Linq
+@using TankerMade.Contracts.DTOs.Assets
+@using TankerMade.Contracts.DTOs.ModuleInventory
+@using TankerMade.Contracts.DTOs.ModuleProjects
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject TankerMade.Client.Services.KnittingCardAssetCache CardAssets
+@inject NavigationManager Navigation
+
+<PageTitle>Knitting Notion</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>Knitting Notion</h1>
+    <p>Sign in to use this module section.</p>
+    <a class="btn btn-primary" href="/login">Sign in</a>
+}
+else if (!ModuleState.IsActive(ModuleKey))
+{
+    <h1>Knitting Notion</h1>
+    <p>Activate Knitting from Home to continue.</p>
+    <a class="btn btn-outline-primary" href="/">Go to Home</a>
+}
+else if (loading)
+{
+    <h1>Knitting Notion</h1>
+    <p>Loading...</p>
+}
+else if (notion is null)
+{
+    <h1>Notion Not Found</h1>
+    <a class="btn btn-outline-secondary" href="/modules/knitting/inventory">Back to Inventory</a>
+}
+else
+{
+    <div class="pattern-detail">
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <div class="pattern-header">
+            <div>
+                <a class="pattern-back-link" href="/modules/knitting/inventory">Inventory</a>
+                <h1>@notion.TypeName</h1>
+                <p>@notion.BrandName</p>
+            </div>
+            <div class="pattern-stats" aria-label="Notion summary">
+                <div>
+                    <strong>@notion.Quantity</strong>
+                    <span>Owned</span>
+                </div>
+                <div>
+                    <strong>@DisplayValue(notion.Size)</strong>
+                    <span>Size</span>
+                </div>
+                <div>
+                    <strong>@DisplayValue(notion.ColorName)</strong>
+                    <span>Color</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-lg-4">
+                <section class="project-panel">
+                    <h2>Image &amp; Assets</h2>
+                    <AssetThumbnailImage AssetId="primaryAssetId"
+                                         SizeKey="detail"
+                                         AltText="@($"{notion.BrandName} {notion.TypeName}")"
+                                         CssClass="asset-thumbnail-image mb-3" />
+                    <InputFile OnChange="UploadAssetAsync" disabled="@busy" />
+                    <p class="muted-copy mt-2">Upload and attach images for this notion.</p>
+
+                    @if (itemAssets.Count == 0)
+                    {
+                        <p class="muted-copy mb-0">No assets attached yet.</p>
+                    }
+                    else
+                    {
+                        <ul class="project-supply-list mt-2">
+                            @foreach (var asset in itemAssets)
+                            {
+                                <li>
+                                    <div>
+                                        <strong>@asset.OriginalFileName</strong>
+                                        <span>@AssetMeta(asset)</span>
+                                    </div>
+                                    @if (asset.RecordId == notion.Id)
+                                    {
+                                        <button class="btn btn-outline-danger btn-sm"
+                                                disabled="@busy"
+                                                @onclick="() => UnassignAssetAsync(asset.Id)">
+                                            Unlink
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-outline-primary btn-sm"
+                                                disabled="@busy"
+                                                @onclick="() => AssignAssetAsync(asset.Id)">
+                                            Attach
+                                        </button>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                </section>
+            </div>
+
+            <div class="col-lg-8">
+                <section class="project-panel mb-3">
+                    <h2>Details</h2>
+                    <div class="inventory-detail-grid">
+                        <div>
+                            <strong>Brand</strong>
+                            <div>@notion.BrandName</div>
+                        </div>
+                        <div>
+                            <strong>Type</strong>
+                            <div>@notion.TypeName</div>
+                        </div>
+                        <div>
+                            <strong>Size</strong>
+                            <div>@DisplayValue(notion.Size)</div>
+                        </div>
+                        <div>
+                            <strong>Color</strong>
+                            <div>@DisplayValue(notion.ColorName)</div>
+                        </div>
+                        <div>
+                            <strong>Quantity</strong>
+                            <div>@notion.Quantity</div>
+                        </div>
+                        <div>
+                            <strong>Regular price</strong>
+                            <div>@DisplayPrice(notion.RegularPrice)</div>
+                        </div>
+                        <div>
+                            <strong>Description</strong>
+                            <div>@DisplayValue(notion.Description)</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="project-panel mb-3">
+                    <h2>Purchase History</h2>
+                    @if (notion.Purchases.Count == 0)
+                    {
+                        <p class="mb-0 muted-copy">No purchases recorded yet.</p>
+                    }
+                    else
+                    {
+                        <ul class="project-supply-list">
+                            @foreach (var purchase in notion.Purchases)
+                            {
+                                <li>
+                                    <div>
+                                        <strong>@purchase.SourceName</strong>
+                                        <span>@DisplayPurchasePrice(purchase.Price, purchase.IsSalePrice)</span>
+                                        <span>@DisplayDate(purchase.PurchasedAt ?? purchase.CreatedAt)</span>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </section>
+
+                <section class="project-panel mb-3">
+                    <h2>Projects</h2>
+                    <div class="form-grid">
+                        <label>
+                            <span>Projects Active</span>
+                            <select class="form-control" @onchange="OpenActiveProject">
+                                <option value="">Select active project...</option>
+                                @foreach (var project in activeLinkedProjects)
+                                {
+                                    <option value="@project.Id">@project.Name</option>
+                                }
+                            </select>
+                        </label>
+                        <label>
+                            <span>Project History</span>
+                            <select class="form-control" @onchange="OpenArchivedProject">
+                                <option value="">Select archived project...</option>
+                                @foreach (var project in archivedLinkedProjects)
+                                {
+                                    <option value="@project.Id">@project.Name</option>
+                                }
+                            </select>
+                        </label>
+                    </div>
+                    @if (activeLinkedProjects.Count == 0 && archivedLinkedProjects.Count == 0)
+                    {
+                        <p class="mb-0 mt-2 muted-copy">No projects link to this notion yet.</p>
+                    }
+                </section>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private const string ModuleKey = "knitting";
+    private const string RecordType = "notion";
+
+    [Parameter] public Guid NotionId { get; set; }
+
+    private ModuleNotionInventoryItemDto? notion;
+    private Guid? primaryAssetId;
+    private readonly List<AssetRecordDto> itemAssets = [];
+    private readonly List<ModuleProjectDto> activeLinkedProjects = [];
+    private readonly List<ModuleProjectDto> archivedLinkedProjects = [];
+    private string errorMessage = string.Empty;
+    private bool loading = true;
+    private bool busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+        activeLinkedProjects.Clear();
+        archivedLinkedProjects.Clear();
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive(ModuleKey))
+            {
+                return;
+            }
+
+            notion = await ApiClient.GetModuleNotionByIdAsync(ModuleKey, NotionId);
+            if (notion == null)
+            {
+                return;
+            }
+
+            primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, notion.Id);
+            await LoadAssetsAsync();
+            await LoadLinkedProjectsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task LoadLinkedProjectsAsync()
+    {
+        var projects = await ApiClient.GetModuleProjectsAsync(ModuleKey, includeArchived: true);
+        foreach (var project in projects.Where(project => ProjectLinksItem(project, NotionId)))
+        {
+            if (project.IsArchived)
+            {
+                archivedLinkedProjects.Add(project);
+            }
+            else
+            {
+                activeLinkedProjects.Add(project);
+            }
+        }
+
+        activeLinkedProjects.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
+        archivedLinkedProjects.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task LoadAssetsAsync()
+    {
+        itemAssets.Clear();
+        if (notion == null)
+        {
+            return;
+        }
+
+        itemAssets.AddRange(await ApiClient.GetAssetsForPickerAsync(
+            ModuleKey,
+            RecordType,
+            notion.Id,
+            includeUnassigned: true));
+    }
+
+    private async Task UploadAssetAsync(InputFileChangeEventArgs args)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UploadAssetAsync(ModuleKey, args.File);
+            CardAssets.Invalidate(ModuleKey, RecordType);
+            primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, NotionId);
+            await LoadAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task AssignAssetAsync(Guid assetId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.AssignAssetAsync(assetId, new AssetAssignmentRequest
+            {
+                ModuleKey = ModuleKey,
+                RecordType = RecordType,
+                RecordId = NotionId
+            });
+            CardAssets.Invalidate(ModuleKey, RecordType);
+            primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, NotionId);
+            await LoadAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task UnassignAssetAsync(Guid assetId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UnassignAssetAsync(assetId);
+            CardAssets.Invalidate(ModuleKey, RecordType);
+            primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, NotionId);
+            await LoadAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private static bool ProjectLinksItem(ModuleProjectDto project, Guid itemId)
+        => project.InventoryLinks.Any(link =>
+            string.Equals(link.InventoryItemType, RecordType, StringComparison.OrdinalIgnoreCase)
+            && link.InventoryItemId == itemId);
+
+    private void OpenActiveProject(ChangeEventArgs args)
+        => OpenProject(args.Value?.ToString());
+
+    private void OpenArchivedProject(ChangeEventArgs args)
+        => OpenProject(args.Value?.ToString());
+
+    private void OpenProject(string? rawId)
+    {
+        if (Guid.TryParse(rawId, out var projectId))
+        {
+            Navigation.NavigateTo($"/modules/knitting/projects/{projectId}");
+        }
+    }
+
+    private static string DisplayValue(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "—" : value;
+
+    private static string DisplayPrice(decimal? price)
+        => price.HasValue ? price.Value.ToString("C") : "—";
+
+    private static string DisplayPurchasePrice(decimal? price, bool isSalePrice)
+    {
+        var formatted = price.HasValue ? price.Value.ToString("C") : "No price";
+        return isSalePrice ? $"{formatted} (sale)" : formatted;
+    }
+
+    private static string DisplayDate(DateTime value)
+        => value.ToLocalTime().ToString("d");
+
+    private static string AssetMeta(AssetRecordDto asset)
+    {
+        var size = asset.FileSizeBytes > 0 ? $"{asset.FileSizeBytes / 1024} KB" : "unknown size";
+        return $"{asset.ContentType} - {size}";
+    }
+}

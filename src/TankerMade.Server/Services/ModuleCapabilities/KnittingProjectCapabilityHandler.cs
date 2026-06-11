@@ -36,6 +36,7 @@ public class KnittingProjectCapabilityHandler : IModuleProjectCapabilityHandler
             Description = request.Description,
             PatternId = request.PatternId,
             ThemeId = request.ThemeId,
+            ColorId = request.ColorId,
             Difficulty = request.Difficulty,
             Progress = request.Progress
         }, userId));
@@ -50,6 +51,7 @@ public class KnittingProjectCapabilityHandler : IModuleProjectCapabilityHandler
             PatternId = request.PatternId,
             ClearPatternId = request.ClearPatternId,
             ThemeId = request.ThemeId,
+            ColorId = request.ColorId,
             Difficulty = request.Difficulty,
             Progress = request.Progress
         }, userId);
@@ -145,12 +147,16 @@ public class KnittingProjectCapabilityHandler : IModuleProjectCapabilityHandler
             PatternName = source.PatternName,
             ThemeId = source.ThemeId,
             ThemeName = source.ThemeName,
+            ColorId = source.ColorId,
+            ColorName = source.ColorName,
             Difficulty = source.Difficulty,
             Progress = source.Progress,
             IsArchived = source.IsArchived,
             ArchivedAt = source.ArchivedAt,
             CompletedStepCount = source.CompletedStepCount,
             TotalStepCount = source.TotalStepCount,
+            CompletedStitchCount = source.CompletedStitchCount,
+            TotalStitchCount = source.TotalStitchCount,
             TotalTrackedSeconds = source.TotalTrackedSeconds,
             TimerRunning = source.TimerRunning,
             TimerStartedAt = source.TimerStartedAt,

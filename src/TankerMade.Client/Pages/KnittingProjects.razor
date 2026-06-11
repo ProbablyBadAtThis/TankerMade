@@ -1,9 +1,12 @@
 @page "/modules/knitting/projects"
 @using TankerMade.Contracts.DTOs.ModulePatterns
 @using TankerMade.Contracts.DTOs.ModuleProjects
+@using TankerMade.Contracts.DTOs.Reference
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject TankerMade.Client.Services.KnittingCardAssetCache CardAssets
+@inject TankerMade.Client.Services.KnittingRecentActivity RecentActivity
 
 <PageTitle>Knitting Projects</PageTitle>
 
@@ -44,8 +47,12 @@ else
         <div class="alert alert-danger">@errorMessage</div>
     }
 
+    <div class="auth-actions mb-3">
+        <a class="btn btn-primary" href="/modules/knitting/projects/new">New Project Wizard</a>
+    </div>
+
     <section class="project-panel">
-        <h2>New Project</h2>
+        <h2>Quick Create</h2>
         <EditForm Model="form" OnValidSubmit="CreateProjectAsync" class="project-edit-form">
             <DataAnnotationsValidator />
             <ValidationSummary />
@@ -85,12 +92,62 @@ else
         </EditForm>
     </section>
 
-    <label class="archive-toggle">
-        <input type="checkbox" @bind="showArchived" @bind:after="LoadProjectsAsync" />
-        Show archived
-    </label>
+    <div class="list-toolbar">
+        <label>
+            <span>Search</span>
+            <input class="form-control"
+                   placeholder="Filter as you type"
+                   @bind="search"
+                   @bind:event="oninput"
+                   @bind:after="ApplyFiltersAsync" />
+        </label>
+        <label>
+            <span>Sort</span>
+            <select class="form-control" @bind="sortBy" @bind:after="ApplyFiltersAsync">
+                <option value="recent">Most recent</option>
+                <option value="lastopened">Last opened</option>
+                <option value="name">Name</option>
+                <option value="progress">Progress</option>
+                <option value="difficulty">Difficulty</option>
+            </select>
+        </label>
+        <label>
+            <span>Theme</span>
+            <select class="form-control" @bind="filterThemeId" @bind:after="ApplyFiltersAsync">
+                <option value="">All themes</option>
+                @foreach (var theme in themes)
+                {
+                    <option value="@theme.Id">@theme.Name</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Difficulty</span>
+            <select class="form-control" @bind="filterDifficulty" @bind:after="ApplyFiltersAsync">
+                <option value="">All</option>
+                <option value="1">Beginner</option>
+                <option value="2">Beginner+</option>
+                <option value="3">Intermediate</option>
+                <option value="4">Intermediate+</option>
+                <option value="5">Advanced</option>
+                <option value="6">Advanced+</option>
+            </select>
+        </label>
+        <label>
+            <span>Completion</span>
+            <select class="form-control" @bind="filterCompletion" @bind:after="ApplyFiltersAsync">
+                <option value="">All</option>
+                <option value="active">In progress</option>
+                <option value="complete">100% complete</option>
+            </select>
+        </label>
+        <label class="archive-toggle">
+            <input type="checkbox" @bind="showArchived" @bind:after="LoadProjectsAsync" />
+            Show archived
+        </label>
+    </div>
 
-    @if (projects.Count == 0)
+    @if (filteredProjects.Count == 0)
     {
         <div class="empty-state">
             <h2>No Projects Yet</h2>
@@ -100,9 +157,11 @@ else
     else
     {
         <div class="project-card-grid">
-            @foreach (var project in projects)
+            @foreach (var project in filteredProjects)
             {
-                <article class="project-card">
+                var assetId = projectAssetIds.GetValueOrDefault(project.Id);
+                <article class="project-card project-card-with-image">
+                    <AssetThumbnailImage AssetId="assetId" AltText="@project.Name" />
                     <div>
                         <h2>@project.Name</h2>
                         <p>@project.Description</p>
@@ -110,11 +169,11 @@ else
                         {
                             <span class="archive-badge">Archived</span>
                         }
-                    </div>
                     <div class="pattern-card-stats">
-                        <span>Difficulty @project.Difficulty</span>
+                        <span class="@KnittingUi.DifficultyCssClass(project.Difficulty)">@KnittingUi.DifficultyLabel(project.Difficulty)</span>
                         <span>@project.Progress%</span>
-                        <span>@project.CompletedStepCount/@project.TotalStepCount steps</span>
+                        <span>@(project.TotalStitchCount > 0 ? $"{project.CompletedStitchCount}/{project.TotalStitchCount} stitches" : $"{project.CompletedStepCount}/{project.TotalStepCount} steps")</span>
+                        <span>@(string.IsNullOrWhiteSpace(project.ThemeName) ? "No theme" : project.ThemeName)</span>
                         <span>@(string.IsNullOrWhiteSpace(project.PatternName) ? "No pattern" : project.PatternName)</span>
                     </div>
                     <div class="auth-actions">
@@ -129,6 +188,7 @@ else
                         }
                         <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeleteProjectAsync(project.Id)">Delete</button>
                     </div>
+                    </div>
                 </article>
             }
         </div>
@@ -140,7 +200,17 @@ else
     private const string ProjectsShowArchivedByDefaultKey = "projects.showArchivedByDefault";
     private const string WorkspaceDefaultProjectDifficultyKey = "workspace.defaultProjectDifficulty";
     private readonly List<ModuleProjectDto> projects = [];
+    private readonly List<ModuleProjectDto> filteredProjects = [];
+    private readonly Dictionary<Guid, Guid?> projectAssetIds = [];
     private readonly List<ModulePatternDto> patterns = [];
+    private readonly List<CoreReferenceItemDto> themes = [];
+    private string search = string.Empty;
+    private string sortBy = "recent";
+    private string filterThemeId = string.Empty;
+    private string filterDifficulty = string.Empty;
+    private string filterCompletion = string.Empty;
+    private Guid? lastOpenedProjectId;
+    private DateTime? lastOpenedAt;
     private ProjectFormModel form = new();
     private bool showArchived;
     private bool loading = true;
@@ -149,12 +219,20 @@ else
     private bool busy;
     private string errorMessage = string.Empty;
 
+    [SupplyParameterFromQuery(Name = "archived")]
+    public bool? ArchivedQuery { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         await AuthSession.InitializeAsync();
         if (AuthSession.IsSignedIn)
         {
             await ModuleState.RefreshAsync();
+        }
+
+        if (ArchivedQuery == true)
+        {
+            showArchived = true;
         }
 
         sessionReady = true;
@@ -181,10 +259,29 @@ else
                 settingsInitialized = true;
             }
 
+            themes.Clear();
+            themes.AddRange(await ApiClient.GetCoreReferenceItemsAsync("themes"));
             patterns.Clear();
             patterns.AddRange(await ApiClient.GetModulePatternsAsync(ModuleKey));
+            lastOpenedProjectId = await RecentActivity.GetRecentProjectIdAsync();
+            lastOpenedAt = await RecentActivity.GetRecentProjectOpenedAtAsync();
             projects.Clear();
-            projects.AddRange(await ApiClient.GetModuleProjectsAsync(ModuleKey, showArchived));
+            var source = await ApiClient.GetModuleProjectsAsync(ModuleKey, showArchived);
+            if (!showArchived)
+            {
+                source = source.Where(project => !project.IsArchived).ToList();
+            }
+
+            projects.AddRange(source);
+            CardAssets.InvalidateAll();
+            projectAssetIds.Clear();
+            var assets = await CardAssets.GetAssetsAsync(ModuleKey, "project");
+            foreach (var project in projects)
+            {
+                projectAssetIds[project.Id] = assets.FirstOrDefault(asset => asset.RecordId == project.Id)?.Id;
+            }
+
+            ApplyFilters();
         }
         catch (Exception ex)
         {
@@ -194,6 +291,59 @@ else
         {
             loading = false;
         }
+    }
+
+    private Task ApplyFiltersAsync()
+    {
+        ApplyFilters();
+        return Task.CompletedTask;
+    }
+
+    private void ApplyFilters()
+    {
+        filteredProjects.Clear();
+        IEnumerable<ModuleProjectDto> query = projects;
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(project =>
+                project.Name.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || project.Description.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || project.PatternName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || project.ThemeName.Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (Guid.TryParse(filterThemeId, out var themeId))
+        {
+            query = query.Where(project => project.ThemeId == themeId);
+        }
+
+        if (int.TryParse(filterDifficulty, out var difficulty) && difficulty > 0)
+        {
+            query = query.Where(project => project.Difficulty == difficulty);
+        }
+
+        query = filterCompletion switch
+        {
+            "active" => query.Where(project => project.Progress < 100),
+            "complete" => query.Where(project => project.Progress >= 100),
+            _ => query
+        };
+
+        query = sortBy switch
+        {
+            "name" => query.OrderBy(project => project.Name),
+            "progress" => query.OrderByDescending(project => project.Progress),
+            "difficulty" => query.OrderByDescending(project => project.Difficulty),
+            "lastopened" => query
+                .OrderByDescending(project => lastOpenedProjectId.HasValue && project.Id == lastOpenedProjectId.Value)
+                .ThenByDescending(project => lastOpenedProjectId.HasValue && project.Id == lastOpenedProjectId.Value
+                    ? lastOpenedAt ?? project.UpdatedAt
+                    : project.UpdatedAt),
+            _ => query.OrderByDescending(project => project.UpdatedAt)
+        };
+
+        filteredProjects.AddRange(query);
     }
 
     private async Task CreateProjectAsync()

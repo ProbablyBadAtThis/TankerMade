@@ -2,6 +2,7 @@
 @using TankerMade.Contracts.DTOs.Assets
 @using TankerMade.Contracts.DTOs.ModuleInventory
 @using TankerMade.Contracts.DTOs.ModulePatterns
+@using TankerMade.Contracts.DTOs.Reference
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
@@ -39,10 +40,21 @@ else
         }
 
         <div class="pattern-header">
-            <div>
+            <div class="knitting-hero-card pattern-header-main">
+                <AssetThumbnailImage AssetId="headerAssetId"
+                                     AltText="@pattern.Name"
+                                     CssClass="asset-thumbnail-image" />
+                <div>
                 <a class="pattern-back-link" href="/modules/knitting/patterns">Patterns</a>
                 <h1>@pattern.Name</h1>
                 <p>@DisplayMetadata(pattern)</p>
+                <div class="pattern-card-stats mt-2">
+                    <span class="@KnittingUi.DifficultyCssClass(pattern.Difficulty)">@(string.IsNullOrWhiteSpace(pattern.Difficulty) ? "Unspecified" : pattern.Difficulty)</span>
+                    <span>@(string.IsNullOrWhiteSpace(pattern.ThemeName) ? "No theme" : pattern.ThemeName)</span>
+                    <span>@(string.IsNullOrWhiteSpace(pattern.ColorName) ? "No color" : pattern.ColorName)</span>
+                    <span>@(string.IsNullOrWhiteSpace(pattern.SourceName) ? "No source" : pattern.SourceName)</span>
+                </div>
+                </div>
             </div>
             <div class="pattern-stats" aria-label="Pattern summary">
                 <div>
@@ -60,6 +72,36 @@ else
             <h2>Supply Metadata</h2>
             <EditForm Model="metadataForm" OnValidSubmit="SaveMetadataAsync" class="project-edit-form">
                 <div class="form-grid">
+                    <label>
+                        <span>Theme</span>
+                        <select class="form-control" @bind="metadataForm.ThemeIdText">
+                            <option value="">No theme</option>
+                            @foreach (var theme in themes)
+                            {
+                                <option value="@theme.Id">@theme.Name</option>
+                            }
+                        </select>
+                    </label>
+                    <label>
+                        <span>Main color</span>
+                        <select class="form-control" @bind="metadataForm.ColorIdText">
+                            <option value="">No color</option>
+                            @foreach (var color in colors)
+                            {
+                                <option value="@color.Id">@color.Name</option>
+                            }
+                        </select>
+                    </label>
+                    <label>
+                        <span>Source</span>
+                        <select class="form-control" @bind="metadataForm.SourceIdText">
+                            <option value="">No source</option>
+                            @foreach (var source in sources)
+                            {
+                                <option value="@source.Id">@source.Name</option>
+                            }
+                        </select>
+                    </label>
                     <label>
                         <span>Suggested yarn weight</span>
                         <InputText class="form-control" @bind-Value="metadataForm.SuggestedYarnWeight" />
@@ -159,6 +201,10 @@ else
 
         <div class="pattern-workspace">
             <aside class="piece-list" aria-label="Pieces">
+                @if (pattern.Pieces.Count > 0 && selectedPiece != null)
+                {
+                    <p class="muted-copy mb-2">Piece @SelectedPieceIndex of @pattern.Pieces.Count</p>
+                }
                 <EditForm Model="pieceForm" OnValidSubmit="AddPieceAsync" class="piece-create-form">
                     <DataAnnotationsValidator />
                     <label>
@@ -322,6 +368,7 @@ else
     private const string ModuleKey = "knitting";
     private const string PatternRecordType = "pattern";
     private ModulePatternDto? pattern;
+    private Guid? headerAssetId;
     private ModulePatternPieceDto? selectedPiece;
     private Guid? selectedPieceId;
     private bool loading = true;
@@ -335,6 +382,12 @@ else
     private StepFormModel stepForm = new();
     private StepFormModel editStepForm = new();
     private MetadataFormModel metadataForm = new();
+    private readonly List<CoreReferenceItemDto> themes = [];
+    private readonly List<CoreReferenceItemDto> colors = [];
+    private readonly List<CoreReferenceItemDto> sources = [];
+    private int SelectedPieceIndex => pattern == null || selectedPiece == null
+        ? 0
+        : pattern.Pieces.ToList().FindIndex(piece => piece.Id == selectedPiece.Id) + 1;
     private PatternSupplyFormModel supplyForm = new() { SupplyType = "yarn" };
     private readonly List<InventoryOption> supplyInventoryOptions = [];
     private Guid? selectedSupplyInventoryId;
@@ -363,11 +416,20 @@ else
                 return;
             }
 
+            themes.Clear();
+            themes.AddRange(await ApiClient.GetCoreReferenceItemsAsync("themes"));
+            colors.Clear();
+            colors.AddRange(await ApiClient.GetCoreReferenceItemsAsync("colors"));
+            sources.Clear();
+            sources.AddRange(await ApiClient.GetCoreReferenceItemsAsync("sources"));
             pattern = await ApiClient.GetModulePatternAsync(ModuleKey, PatternId);
             if (pattern != null)
             {
                 metadataForm = new MetadataFormModel
                 {
+                    ThemeIdText = pattern.ThemeId?.ToString() ?? string.Empty,
+                    ColorIdText = pattern.ColorId?.ToString() ?? string.Empty,
+                    SourceIdText = pattern.SourceId?.ToString() ?? string.Empty,
                     SuggestedYarnWeight = pattern.SuggestedYarnWeight,
                     SuggestedNeedleSizes = pattern.SuggestedNeedleSizes,
                     RequiredNotions = pattern.RequiredNotions
@@ -726,6 +788,9 @@ else
         {
             await ApiClient.UpdateModulePatternAsync(ModuleKey, pattern.Id, new UpdateModulePatternRequest
             {
+                ThemeId = ParseOptionalGuid(metadataForm.ThemeIdText),
+                ColorId = ParseOptionalGuid(metadataForm.ColorIdText),
+                SourceId = ParseOptionalGuid(metadataForm.SourceIdText),
                 SuggestedYarnWeight = metadataForm.SuggestedYarnWeight,
                 SuggestedNeedleSizes = metadataForm.SuggestedNeedleSizes,
                 RequiredNotions = metadataForm.RequiredNotions
@@ -853,6 +918,7 @@ else
     private async Task LoadPatternAssetsAsync()
     {
         patternAssets.Clear();
+        headerAssetId = null;
         if (pattern == null)
         {
             return;
@@ -863,6 +929,7 @@ else
             PatternRecordType,
             pattern.Id,
             includeUnassigned: true));
+        headerAssetId = patternAssets.FirstOrDefault()?.Id;
     }
 
     private async Task UploadPatternAssetAsync(InputFileChangeEventArgs args)
@@ -983,8 +1050,14 @@ else
         public string Notes { get; set; } = string.Empty;
     }
 
+    private static Guid? ParseOptionalGuid(string? value)
+        => Guid.TryParse(value, out var parsed) ? parsed : null;
+
     private class MetadataFormModel
     {
+        public string ThemeIdText { get; set; } = string.Empty;
+        public string ColorIdText { get; set; } = string.Empty;
+        public string SourceIdText { get; set; } = string.Empty;
         public string SuggestedYarnWeight { get; set; } = string.Empty;
         public string SuggestedNeedleSizes { get; set; } = string.Empty;
         public string RequiredNotions { get; set; } = string.Empty;

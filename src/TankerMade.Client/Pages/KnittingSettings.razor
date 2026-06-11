@@ -1,5 +1,7 @@
 @page "/modules/knitting/settings"
+@using TankerMade.Contracts.DTOs.ModuleInventory
 @using TankerMade.Contracts.DTOs.ModuleSettings
+@using TankerMade.Contracts.DTOs.Reference
 @using System.Globalization
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
@@ -42,6 +44,78 @@ else
     {
         <div class="alert alert-success">@successMessage</div>
     }
+
+    <section class="project-panel">
+        <h2>Reference Data</h2>
+        <p class="muted-copy">Manage shared lists used across patterns, projects, and inventory.</p>
+        <div class="settings-grid">
+            <article class="pattern-card">
+                <h3>Themes</h3>
+                <ul class="reference-chip-list">
+                    @foreach (var item in themes)
+                    {
+                        <li>@item.Name</li>
+                    }
+                </ul>
+                <div class="auth-actions mt-2">
+                    <input class="form-control" placeholder="New theme" @bind="newThemeName" />
+                    <button class="btn btn-primary btn-sm" disabled="@busy" @onclick='() => AddCoreReferenceAsync("themes", newThemeName, () => newThemeName = string.Empty, themes)'>Add</button>
+                </div>
+            </article>
+            <article class="pattern-card">
+                <h3>Colors</h3>
+                <ul class="reference-chip-list">
+                    @foreach (var item in colors)
+                    {
+                        <li>@item.Name</li>
+                    }
+                </ul>
+                <div class="auth-actions mt-2">
+                    <input class="form-control" placeholder="New color" @bind="newColorName" />
+                    <button class="btn btn-primary btn-sm" disabled="@busy" @onclick='() => AddCoreReferenceAsync("colors", newColorName, () => newColorName = string.Empty, colors)'>Add</button>
+                </div>
+            </article>
+            <article class="pattern-card">
+                <h3>Sources</h3>
+                <ul class="reference-chip-list">
+                    @foreach (var item in sources)
+                    {
+                        <li>@item.Name</li>
+                    }
+                </ul>
+                <div class="auth-actions mt-2">
+                    <input class="form-control" placeholder="New source" @bind="newSourceName" />
+                    <button class="btn btn-primary btn-sm" disabled="@busy" @onclick='() => AddCoreReferenceAsync("sources", newSourceName, () => newSourceName = string.Empty, sources)'>Add</button>
+                </div>
+            </article>
+            <article class="pattern-card">
+                <h3>Brands</h3>
+                <ul class="reference-chip-list">
+                    @foreach (var item in brands)
+                    {
+                        <li>@item.Name</li>
+                    }
+                </ul>
+                <div class="auth-actions mt-2">
+                    <input class="form-control" placeholder="New brand" @bind="newBrandName" />
+                    <button class="btn btn-primary btn-sm" disabled="@busy" @onclick='() => AddCoreReferenceAsync("brands", newBrandName, () => newBrandName = string.Empty, brands)'>Add</button>
+                </div>
+            </article>
+            <article class="pattern-card">
+                <h3>Fiber Tags</h3>
+                <ul class="reference-chip-list">
+                    @foreach (var item in fiberTags)
+                    {
+                        <li>@item.Name</li>
+                    }
+                </ul>
+                <div class="auth-actions mt-2">
+                    <input class="form-control" placeholder="New fiber tag" @bind="newFiberTagName" />
+                    <button class="btn btn-primary btn-sm" disabled="@busy" @onclick="AddFiberTagAsync">Add</button>
+                </div>
+            </article>
+        </div>
+    </section>
 
     @foreach (var category in CategoryOrder)
     {
@@ -202,8 +276,19 @@ else
         new("timers.autoPauseOnComplete", "timers", "Auto Pause Timers on Step Complete", "When enabled, timers can be paused automatically after marking a step complete.", SettingKind.Boolean, "false")
     ];
 
+    private const string ModuleKey = "knitting";
     private static readonly string[] CategoryOrder = ["projects", "kits", "workspace", "timers"];
     private readonly List<ModuleSettingItemDto> customSettings = [];
+    private readonly List<CoreReferenceItemDto> themes = [];
+    private readonly List<CoreReferenceItemDto> colors = [];
+    private readonly List<CoreReferenceItemDto> sources = [];
+    private readonly List<CoreReferenceItemDto> brands = [];
+    private readonly List<ModuleInventoryReferenceItemDto> fiberTags = [];
+    private string newThemeName = string.Empty;
+    private string newColorName = string.Empty;
+    private string newSourceName = string.Empty;
+    private string newBrandName = string.Empty;
+    private string newFiberTagName = string.Empty;
     private readonly Dictionary<string, ModuleSettingItemDto> storedByKey = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> settingValues = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, int?> intValues = new(StringComparer.OrdinalIgnoreCase);
@@ -246,7 +331,11 @@ else
             }
 
             customSettings.Clear();
-            customSettings.AddRange(allSettings.Where(setting => !knownSettingDefinitions.Any(definition => definition.Key.Equals(setting.Key, StringComparison.OrdinalIgnoreCase))));
+            customSettings.AddRange(allSettings.Where(setting =>
+                !knownSettingDefinitions.Any(definition => definition.Key.Equals(setting.Key, StringComparison.OrdinalIgnoreCase))
+                && !string.Equals(setting.Category, "terms", StringComparison.OrdinalIgnoreCase)));
+
+            await LoadReferenceDataAsync();
 
             foreach (var definition in knownSettingDefinitions)
             {
@@ -357,6 +446,95 @@ else
 
             await LoadSettingsAsync();
             successMessage = $"Saved {CategoryLabel(category)} settings.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task LoadReferenceDataAsync()
+    {
+        themes.Clear();
+        themes.AddRange(await ApiClient.GetCoreReferenceItemsAsync("themes"));
+        colors.Clear();
+        colors.AddRange(await ApiClient.GetCoreReferenceItemsAsync("colors"));
+        sources.Clear();
+        sources.AddRange(await ApiClient.GetCoreReferenceItemsAsync("sources"));
+        brands.Clear();
+        brands.AddRange(await ApiClient.GetCoreReferenceItemsAsync("brands"));
+        fiberTags.Clear();
+        fiberTags.AddRange(await ApiClient.GetModuleInventoryReferenceItemsAsync(ModuleKey, "fiber-tag"));
+    }
+
+    private async Task AddCoreReferenceAsync(
+        string category,
+        string name,
+        Action clearInput,
+        List<CoreReferenceItemDto> target)
+    {
+        var trimmed = name.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            var created = await ApiClient.CreateCoreReferenceItemAsync(category, new CreateCoreReferenceItemRequest { Name = trimmed });
+            if (!target.Any(item => item.Id == created.Id))
+            {
+                target.Add(created);
+                target.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
+            }
+
+            clearInput();
+            successMessage = $"Added {trimmed}.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task AddFiberTagAsync()
+    {
+        var trimmed = newFiberTagName.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            var created = await ApiClient.CreateModuleInventoryReferenceItemAsync(
+                ModuleKey,
+                "fiber-tag",
+                new CreateModuleInventoryReferenceItemDto { Name = trimmed });
+            if (!fiberTags.Any(item => string.Equals(item.Name, created.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                fiberTags.Add(created);
+                fiberTags.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
+            }
+
+            newFiberTagName = string.Empty;
+            successMessage = $"Added fiber tag {trimmed}.";
         }
         catch (Exception ex)
         {

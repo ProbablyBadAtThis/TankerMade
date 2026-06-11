@@ -65,6 +65,36 @@ public class KnittingInventoryCapabilityHandler : IModuleCraftInventoryCapabilit
         return yarn == null ? null : MapYarn(yarn);
     }
 
+    public async Task<ModuleYarnInventoryItemDto?> UpdateYarnRemainingAsync(
+        Guid id,
+        UpdateModuleYarnRemainingRequest request,
+        Guid userId)
+    {
+        var yarn = await _service.UpdateYarnRemainingAsync(id, new UpdateKnittingYarnRemainingDto
+        {
+            EstimatedRemainingLength = request.EstimatedRemainingLength,
+            LengthUnit = request.LengthUnit,
+            CurrentWeight = request.CurrentWeight
+        }, userId);
+
+        return yarn == null ? null : MapYarn(yarn);
+    }
+
+    public async Task<ModuleYarnInventoryItemDto?> UpdateYarnLotRemainingAsync(
+        Guid yarnId,
+        Guid lotId,
+        UpdateModuleYarnLotRemainingRequest request,
+        Guid userId)
+    {
+        var yarn = await _service.UpdateYarnLotRemainingAsync(yarnId, lotId, new UpdateKnittingYarnLotRemainingDto
+        {
+            RemainingLength = request.RemainingLength,
+            CurrentWeight = request.CurrentWeight
+        }, userId);
+
+        return yarn == null ? null : MapYarn(yarn);
+    }
+
     public async Task<IReadOnlyList<ModuleToolInventoryItemDto>> GetToolsAsync(Guid userId, ModuleToolInventoryFilterRequest? filter = null)
         => (await _service.GetToolsAsync(userId, MapToolFilter(filter))).Select(MapTool).ToList();
 

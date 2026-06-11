@@ -1,0 +1,588 @@
+@page "/modules/knitting/inventory/yarn/{YarnId:guid}"
+@using System.Linq
+@using TankerMade.Contracts.DTOs.Assets
+@using TankerMade.Contracts.DTOs.ModuleInventory
+@using TankerMade.Contracts.DTOs.ModuleProjects
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject TankerMade.Client.Services.KnittingCardAssetCache CardAssets
+@inject NavigationManager Navigation
+
+<PageTitle>Knitting Yarn</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>Knitting Yarn</h1>
+    <p>Sign in to use this module section.</p>
+    <a class="btn btn-primary" href="/login">Sign in</a>
+}
+else if (!ModuleState.IsActive(ModuleKey))
+{
+    <h1>Knitting Yarn</h1>
+    <p>Activate Knitting from Home to continue.</p>
+    <a class="btn btn-outline-primary" href="/">Go to Home</a>
+}
+else if (loading)
+{
+    <h1>Knitting Yarn</h1>
+    <p>Loading...</p>
+}
+else if (yarn is null)
+{
+    <h1>Yarn Not Found</h1>
+    <a class="btn btn-outline-secondary" href="/modules/knitting/inventory">Back to Inventory</a>
+}
+else
+{
+    <div class="pattern-detail">
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <div class="pattern-header">
+            <div>
+                <a class="pattern-back-link" href="/modules/knitting/inventory">Inventory</a>
+                <h1>@yarn.BrandName</h1>
+                <p>@yarn.ColorName</p>
+            </div>
+            <div class="pattern-stats" aria-label="Yarn summary">
+                <div>
+                    <strong>@yarn.TotalSkeins</strong>
+                    <span>Skeins</span>
+                </div>
+                <div>
+                    <strong>@DisplayLength(yarn.EstimatedRemainingLength, yarn.LengthUnit)</strong>
+                    <span>Est. remaining</span>
+                </div>
+                <div>
+                    <strong>@yarn.Lots.Count</strong>
+                    <span>Lots</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-lg-4">
+                <section class="project-panel">
+                    <h2>Image &amp; Assets</h2>
+                    <AssetThumbnailImage AssetId="primaryAssetId"
+                                         SizeKey="detail"
+                                         AltText="@($"{yarn.BrandName} {yarn.ColorName}")"
+                                         CssClass="asset-thumbnail-image mb-3" />
+                    <InputFile OnChange="UploadAssetAsync" disabled="@busy" />
+                    <p class="muted-copy mt-2">Upload and attach images for this yarn.</p>
+
+                    @if (itemAssets.Count == 0)
+                    {
+                        <p class="muted-copy mb-0">No assets attached yet.</p>
+                    }
+                    else
+                    {
+                        <ul class="project-supply-list mt-2">
+                            @foreach (var asset in itemAssets)
+                            {
+                                <li>
+                                    <div>
+                                        <strong>@asset.OriginalFileName</strong>
+                                        <span>@AssetMeta(asset)</span>
+                                    </div>
+                                    @if (asset.RecordId == yarn.Id)
+                                    {
+                                        <button class="btn btn-outline-danger btn-sm"
+                                                disabled="@busy"
+                                                @onclick="() => UnassignAssetAsync(asset.Id)">
+                                            Unlink
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-outline-primary btn-sm"
+                                                disabled="@busy"
+                                                @onclick="() => AssignAssetAsync(asset.Id)">
+                                            Attach
+                                        </button>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                </section>
+            </div>
+
+            <div class="col-lg-8">
+                <section class="project-panel mb-3">
+                    <h2>Details</h2>
+                    <div class="inventory-detail-grid">
+                        <div>
+                            <strong>Brand</strong>
+                            <div>@yarn.BrandName</div>
+                        </div>
+                        <div>
+                            <strong>Color name</strong>
+                            <div>@yarn.ColorName</div>
+                        </div>
+                        <div>
+                            <strong>Main color</strong>
+                            <div>@DisplayValue(yarn.MainColor)</div>
+                        </div>
+                        <div>
+                            <strong>Weight</strong>
+                            <div>@DisplayValue(yarn.WeightName)</div>
+                        </div>
+                        <div>
+                            <strong>Fiber tag</strong>
+                            <div>@DisplayValue(yarn.FiberTag)</div>
+                        </div>
+                        <div>
+                            <strong>Fiber content</strong>
+                            <div>@DisplayValue(yarn.FiberContent)</div>
+                        </div>
+                        <div>
+                            <strong>Total skeins</strong>
+                            <div>@yarn.TotalSkeins</div>
+                        </div>
+                        <div>
+                            <strong>Estimated remaining length</strong>
+                            <div>@DisplayLength(yarn.EstimatedRemainingLength, yarn.LengthUnit)</div>
+                        </div>
+                        <div>
+                            <strong>Current weight</strong>
+                            <div>@DisplayWeight(yarn.CurrentWeight)</div>
+                        </div>
+                        <div>
+                            <strong>Regular price</strong>
+                            <div>@DisplayPrice(yarn.RegularPrice)</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="project-panel mb-3">
+                    <h2>Update Remaining</h2>
+                    <EditForm Model="remainingForm" OnValidSubmit="SaveRemainingAsync" class="project-edit-form">
+                        <div class="form-grid">
+                            <label>
+                                <span>Estimated remaining length</span>
+                                <InputNumber class="form-control" @bind-Value="remainingForm.EstimatedRemainingLength" />
+                            </label>
+                            <label>
+                                <span>Length unit</span>
+                                <InputText class="form-control" @bind-Value="remainingForm.LengthUnit" />
+                            </label>
+                            <label>
+                                <span>Current weight (g)</span>
+                                <InputNumber class="form-control" @bind-Value="remainingForm.CurrentWeight" />
+                            </label>
+                        </div>
+                        <button class="btn btn-primary btn-sm" disabled="@busy" type="submit">Save Remaining</button>
+                    </EditForm>
+                </section>
+
+                <section class="project-panel mb-3">
+                    <h2>Lots</h2>
+                    @if (yarn.Lots.Count == 0)
+                    {
+                        <p class="mb-0 muted-copy">No lots recorded yet.</p>
+                    }
+                    else
+                    {
+                        <ul class="project-supply-list">
+                            @foreach (var lot in yarn.Lots)
+                            {
+                                <li>
+                                    <div>
+                                        <strong>Lot @DisplayValue(lot.LotNumber)</strong>
+                                        <span>@lot.Skeins skeins</span>
+                                        <span>Remaining: @DisplayLength(lot.RemainingLength, yarn.LengthUnit)</span>
+                                        <span>Weight: @DisplayWeight(lot.CurrentWeight)</span>
+                                    </div>
+                                    @if (editingLotId == lot.Id)
+                                    {
+                                        <div class="form-grid mt-2">
+                                            <label>
+                                                <span>Remaining length</span>
+                                                <InputNumber class="form-control" @bind-Value="lotEditForm.RemainingLength" />
+                                            </label>
+                                            <label>
+                                                <span>Weight (g)</span>
+                                                <InputNumber class="form-control" @bind-Value="lotEditForm.CurrentWeight" />
+                                            </label>
+                                        </div>
+                                        <div class="auth-actions mt-2">
+                                            <button class="btn btn-primary btn-sm" disabled="@busy" @onclick="() => SaveLotRemainingAsync(lot.Id)">Save Lot</button>
+                                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="CancelLotEdit">Cancel</button>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => StartLotEdit(lot)">Edit</button>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                </section>
+
+                <section class="project-panel mb-3">
+                    <h2>Purchase History</h2>
+                    @if (yarn.Purchases.Count == 0)
+                    {
+                        <p class="mb-0 muted-copy">No purchases recorded yet.</p>
+                    }
+                    else
+                    {
+                        <ul class="project-supply-list">
+                            @foreach (var purchase in yarn.Purchases)
+                            {
+                                <li>
+                                    <div>
+                                        <strong>@purchase.SourceName</strong>
+                                        <span>@DisplayPurchasePrice(purchase.Price, purchase.IsSalePrice)</span>
+                                        <span>@DisplayDate(purchase.PurchasedAt ?? purchase.CreatedAt)</span>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </section>
+
+                <section class="project-panel mb-3">
+                    <h2>Projects</h2>
+                    <div class="form-grid">
+                        <label>
+                            <span>Projects Active</span>
+                            <select class="form-control" @onchange="OpenActiveProject">
+                                <option value="">Select active project...</option>
+                                @foreach (var project in activeLinkedProjects)
+                                {
+                                    <option value="@project.Id">@project.Name</option>
+                                }
+                            </select>
+                        </label>
+                        <label>
+                            <span>Project History</span>
+                            <select class="form-control" @onchange="OpenArchivedProject">
+                                <option value="">Select archived project...</option>
+                                @foreach (var project in archivedLinkedProjects)
+                                {
+                                    <option value="@project.Id">@project.Name</option>
+                                }
+                            </select>
+                        </label>
+                    </div>
+                    @if (activeLinkedProjects.Count == 0 && archivedLinkedProjects.Count == 0)
+                    {
+                        <p class="mb-0 mt-2 muted-copy">No projects link to this yarn yet.</p>
+                    }
+                </section>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private const string ModuleKey = "knitting";
+    private const string RecordType = "yarn";
+
+    [Parameter] public Guid YarnId { get; set; }
+
+    private ModuleYarnInventoryItemDto? yarn;
+    private Guid? primaryAssetId;
+    private readonly List<AssetRecordDto> itemAssets = [];
+    private readonly List<ModuleProjectDto> activeLinkedProjects = [];
+    private readonly List<ModuleProjectDto> archivedLinkedProjects = [];
+    private RemainingFormModel remainingForm = new();
+    private LotEditFormModel lotEditForm = new();
+    private Guid? editingLotId;
+    private string errorMessage = string.Empty;
+    private bool loading = true;
+    private bool busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+        activeLinkedProjects.Clear();
+        archivedLinkedProjects.Clear();
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive(ModuleKey))
+            {
+                return;
+            }
+
+            yarn = await ApiClient.GetModuleYarnByIdAsync(ModuleKey, YarnId);
+            if (yarn == null)
+            {
+                return;
+            }
+
+            remainingForm = new RemainingFormModel
+            {
+                EstimatedRemainingLength = yarn.EstimatedRemainingLength,
+                LengthUnit = yarn.LengthUnit,
+                CurrentWeight = yarn.CurrentWeight
+            };
+            primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, yarn.Id);
+            await LoadAssetsAsync();
+            await LoadLinkedProjectsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task LoadLinkedProjectsAsync()
+    {
+        var projects = await ApiClient.GetModuleProjectsAsync(ModuleKey, includeArchived: true);
+        foreach (var project in projects.Where(project => ProjectLinksItem(project, YarnId)))
+        {
+            if (project.IsArchived)
+            {
+                archivedLinkedProjects.Add(project);
+            }
+            else
+            {
+                activeLinkedProjects.Add(project);
+            }
+        }
+
+        activeLinkedProjects.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
+        archivedLinkedProjects.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task LoadAssetsAsync()
+    {
+        itemAssets.Clear();
+        if (yarn == null)
+        {
+            return;
+        }
+
+        itemAssets.AddRange(await ApiClient.GetAssetsForPickerAsync(
+            ModuleKey,
+            RecordType,
+            yarn.Id,
+            includeUnassigned: true));
+    }
+
+    private async Task UploadAssetAsync(InputFileChangeEventArgs args)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UploadAssetAsync(ModuleKey, args.File);
+            CardAssets.Invalidate(ModuleKey, RecordType);
+            primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, YarnId);
+            await LoadAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task AssignAssetAsync(Guid assetId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.AssignAssetAsync(assetId, new AssetAssignmentRequest
+            {
+                ModuleKey = ModuleKey,
+                RecordType = RecordType,
+                RecordId = YarnId
+            });
+            CardAssets.Invalidate(ModuleKey, RecordType);
+            primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, YarnId);
+            await LoadAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task UnassignAssetAsync(Guid assetId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UnassignAssetAsync(assetId);
+            CardAssets.Invalidate(ModuleKey, RecordType);
+            primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, YarnId);
+            await LoadAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private static bool ProjectLinksItem(ModuleProjectDto project, Guid itemId)
+        => project.InventoryLinks.Any(link =>
+            string.Equals(link.InventoryItemType, RecordType, StringComparison.OrdinalIgnoreCase)
+            && link.InventoryItemId == itemId);
+
+    private void OpenActiveProject(ChangeEventArgs args)
+        => OpenProject(args.Value?.ToString());
+
+    private void OpenArchivedProject(ChangeEventArgs args)
+        => OpenProject(args.Value?.ToString());
+
+    private void OpenProject(string? rawId)
+    {
+        if (Guid.TryParse(rawId, out var projectId))
+        {
+            Navigation.NavigateTo($"/modules/knitting/projects/{projectId}");
+        }
+    }
+
+    private async Task SaveRemainingAsync()
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            yarn = await ApiClient.UpdateModuleYarnRemainingAsync(ModuleKey, YarnId, new UpdateModuleYarnRemainingRequest
+            {
+                EstimatedRemainingLength = remainingForm.EstimatedRemainingLength,
+                LengthUnit = remainingForm.LengthUnit,
+                CurrentWeight = remainingForm.CurrentWeight
+            });
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void StartLotEdit(ModuleYarnLotDto lot)
+    {
+        editingLotId = lot.Id;
+        lotEditForm = new LotEditFormModel
+        {
+            RemainingLength = lot.RemainingLength,
+            CurrentWeight = lot.CurrentWeight
+        };
+    }
+
+    private void CancelLotEdit()
+    {
+        editingLotId = null;
+        lotEditForm = new();
+    }
+
+    private async Task SaveLotRemainingAsync(Guid lotId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            yarn = await ApiClient.UpdateModuleYarnLotRemainingAsync(ModuleKey, YarnId, lotId, new UpdateModuleYarnLotRemainingRequest
+            {
+                RemainingLength = lotEditForm.RemainingLength,
+                CurrentWeight = lotEditForm.CurrentWeight
+            });
+            CancelLotEdit();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private class RemainingFormModel
+    {
+        public decimal? EstimatedRemainingLength { get; set; }
+        public string LengthUnit { get; set; } = "yd";
+        public decimal? CurrentWeight { get; set; }
+    }
+
+    private class LotEditFormModel
+    {
+        public decimal? RemainingLength { get; set; }
+        public decimal? CurrentWeight { get; set; }
+    }
+
+    private static string DisplayValue(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "—" : value;
+
+    private static string DisplayLength(decimal? length, string unit)
+    {
+        if (!length.HasValue)
+        {
+            return "—";
+        }
+
+        var suffix = string.IsNullOrWhiteSpace(unit) ? string.Empty : $" {unit}";
+        return $"{length.Value:N1}{suffix}";
+    }
+
+    private static string DisplayWeight(decimal? weight)
+        => weight.HasValue ? $"{weight.Value:N2}" : "—";
+
+    private static string DisplayPrice(decimal? price)
+        => price.HasValue ? price.Value.ToString("C") : "—";
+
+    private static string DisplayPurchasePrice(decimal? price, bool isSalePrice)
+    {
+        var formatted = price.HasValue ? price.Value.ToString("C") : "No price";
+        return isSalePrice ? $"{formatted} (sale)" : formatted;
+    }
+
+    private static string DisplayDate(DateTime value)
+        => value.ToLocalTime().ToString("d");
+
+    private static string AssetMeta(AssetRecordDto asset)
+    {
+        var size = asset.FileSizeBytes > 0 ? $"{asset.FileSizeBytes / 1024} KB" : "unknown size";
+        return $"{asset.ContentType} - {size}";
+    }
+}

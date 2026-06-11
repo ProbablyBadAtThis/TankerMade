@@ -10,6 +10,8 @@ public interface IKnittingKitService
     Task<KnittingKitDto> CreateAsync(CreateKnittingKitDto createDto, Guid userId);
     Task<KnittingKitDto?> UpdateAsync(Guid kitId, CreateKnittingKitDto updateDto, Guid userId);
     Task<bool> DeleteAsync(Guid kitId, Guid userId);
+    Task<KnittingKitDto?> ArchiveAsync(Guid kitId, Guid userId);
+    Task<KnittingKitDto?> ReopenAsync(Guid kitId, Guid userId);
     Task<KnittingKitPieceDto?> AddPieceAsync(Guid kitId, CreateKnittingKitPieceDto createDto, Guid userId);
     Task<KnittingKitPieceDto?> UpdatePieceAsync(Guid kitId, Guid pieceId, CreateKnittingKitPieceDto updateDto, Guid userId);
     Task<bool> DeletePieceAsync(Guid kitId, Guid pieceId, Guid userId);

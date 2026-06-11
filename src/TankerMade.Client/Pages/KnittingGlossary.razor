@@ -1,0 +1,262 @@
+@page "/modules/knitting/glossary"
+@using TankerMade.Contracts.DTOs.ModuleSettings
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+
+<PageTitle>Knitting Glossary</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>Knitting Glossary</h1>
+    <p>Sign in to use this module section.</p>
+    <a class="btn btn-primary" href="/login">Sign in</a>
+}
+else if (!ModuleState.IsActive("knitting"))
+{
+    <h1>Knitting Glossary</h1>
+    <p>Activate Knitting from Home to continue.</p>
+    <a class="btn btn-outline-primary" href="/">Go to Home</a>
+}
+else if (loading)
+{
+    <h1>Knitting Glossary</h1>
+    <p>Loading...</p>
+}
+else
+{
+    <div class="page-heading">
+        <div>
+            <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
+            <h1>Glossary</h1>
+            <p>Stitch terms, abbreviations, and definitions you can reference while knitting.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(successMessage))
+    {
+        <div class="alert alert-success">@successMessage</div>
+    }
+
+    <section class="project-panel">
+        <h2>@(editingTermKey == null ? "Add Term" : "Edit Term")</h2>
+        <EditForm Model="termForm" OnValidSubmit="SaveTermAsync" class="project-edit-form">
+            <DataAnnotationsValidator />
+            <div class="form-grid">
+                <label>
+                    <span>Term</span>
+                    <InputText class="form-control" @bind-Value="termForm.Term" disabled="@(editingTermKey != null)" />
+                </label>
+                <label>
+                    <span>Definition</span>
+                    <InputTextArea class="form-control" rows="3" @bind-Value="termForm.Definition" />
+                </label>
+            </div>
+            <div class="auth-actions">
+                <button class="btn btn-primary btn-sm" disabled="@busy" type="submit">@(editingTermKey == null ? "Add Term" : "Save Term")</button>
+                @if (editingTermKey != null)
+                {
+                    <button class="btn btn-outline-secondary btn-sm" disabled="@busy" type="button" @onclick="CancelTermEdit">Cancel</button>
+                }
+            </div>
+        </EditForm>
+    </section>
+
+    <section class="project-panel">
+        <div class="project-panel-header">
+            <h2>Terms</h2>
+            <span class="muted-copy">@filteredTerms.Count of @allTerms.Count</span>
+        </div>
+        <label class="knitting-inventory-search d-block mb-3">
+            <span class="form-label">Search terms</span>
+            <input class="form-control"
+                   placeholder="Filter as you type"
+                   @bind="termSearch"
+                   @bind:event="oninput"
+                   @bind:after="ApplyTermFilter" />
+        </label>
+
+        @if (filteredTerms.Count == 0)
+        {
+            <p class="mb-0">@(allTerms.Count == 0 ? "No terms yet. Add your first abbreviation or stitch definition above." : "No terms match your search.")</p>
+        }
+        else
+        {
+            <ul class="project-supply-list">
+                @foreach (var term in filteredTerms)
+                {
+                    <li>
+                        <div>
+                            <strong>@term.Key</strong>
+                            <p class="mb-0">@term.Value</p>
+                        </div>
+                        <div class="auth-actions">
+                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => EditTerm(term)">Edit</button>
+                            <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeleteTermAsync(term.Key)">Delete</button>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+}
+
+@code {
+    private const string ModuleKey = "knitting";
+    private readonly List<ModuleSettingItemDto> allTerms = [];
+    private readonly List<ModuleSettingItemDto> filteredTerms = [];
+    private string termSearch = string.Empty;
+    private string? editingTermKey;
+    private TermFormModel termForm = new();
+    private bool loading = true;
+    private bool busy;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadTermsAsync();
+    }
+
+    private async Task LoadTermsAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive(ModuleKey))
+            {
+                return;
+            }
+
+            var settings = await ApiClient.GetModuleSettingsAsync(ModuleKey);
+            allTerms.Clear();
+            allTerms.AddRange(settings.Where(setting =>
+                string.Equals(setting.Category, "terms", StringComparison.OrdinalIgnoreCase)));
+            ApplyTermFilter();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private void ApplyTermFilter()
+    {
+        filteredTerms.Clear();
+        IEnumerable<ModuleSettingItemDto> query = allTerms.OrderBy(term => term.Key);
+
+        if (!string.IsNullOrWhiteSpace(termSearch))
+        {
+            query = query.Where(term =>
+                term.Key.Contains(termSearch, StringComparison.OrdinalIgnoreCase)
+                || term.Value.Contains(termSearch, StringComparison.OrdinalIgnoreCase));
+        }
+
+        filteredTerms.AddRange(query);
+    }
+
+    private async Task SaveTermAsync()
+    {
+        var term = termForm.Term.Trim();
+        if (string.IsNullOrWhiteSpace(term))
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UpsertModuleSettingAsync(ModuleKey, new UpsertModuleSettingItemRequest
+            {
+                Category = "terms",
+                Key = term,
+                Value = termForm.Definition.Trim()
+            });
+            termForm = new();
+            editingTermKey = null;
+            await LoadTermsAsync();
+            successMessage = "Saved term.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void EditTerm(ModuleSettingItemDto term)
+    {
+        editingTermKey = term.Key;
+        termForm = new TermFormModel
+        {
+            Term = term.Key,
+            Definition = term.Value
+        };
+    }
+
+    private void CancelTermEdit()
+    {
+        editingTermKey = null;
+        termForm = new();
+    }
+
+    private async Task DeleteTermAsync(string key)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.DeleteModuleSettingAsync(ModuleKey, key);
+            if (string.Equals(editingTermKey, key, StringComparison.OrdinalIgnoreCase))
+            {
+                CancelTermEdit();
+            }
+
+            await LoadTermsAsync();
+            successMessage = "Deleted term.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private class TermFormModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Term is required")]
+        [System.ComponentModel.DataAnnotations.StringLength(150, ErrorMessage = "Term cannot exceed 150 characters")]
+        public string Term { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(1000, ErrorMessage = "Definition cannot exceed 1000 characters")]
+        public string Definition { get; set; } = string.Empty;
+    }
+}

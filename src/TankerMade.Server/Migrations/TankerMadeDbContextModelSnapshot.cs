@@ -1979,6 +1979,9 @@ namespace TankerMade.Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("ColorId")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -2035,6 +2038,8 @@ namespace TankerMade.Server.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ColorId");
 
                     b.HasIndex("Slug");
 
@@ -2176,6 +2181,9 @@ namespace TankerMade.Server.Migrations
                     b.Property<DateTime?>("ArchivedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("ColorId")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -2216,6 +2224,8 @@ namespace TankerMade.Server.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ColorId");
 
                     b.HasIndex("IsArchived");
 
@@ -3271,6 +3281,11 @@ namespace TankerMade.Server.Migrations
 
             modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingPattern", b =>
                 {
+                    b.HasOne("TankerMade.Core.Entities.Color", null)
+                        .WithMany()
+                        .HasForeignKey("ColorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("TankerMade.Core.Entities.Source", null)
                         .WithMany()
                         .HasForeignKey("SourceId")
@@ -3317,6 +3332,11 @@ namespace TankerMade.Server.Migrations
 
             modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingProject", b =>
                 {
+                    b.HasOne("TankerMade.Core.Entities.Color", null)
+                        .WithMany()
+                        .HasForeignKey("ColorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("TankerMade.Modules.Knitting.Entities.KnittingPattern", null)
                         .WithMany()
                         .HasForeignKey("PatternId")

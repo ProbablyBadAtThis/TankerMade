@@ -7,6 +7,8 @@ public interface IModuleCraftInventoryCapabilityHandler : IModuleInventoryCapabi
     Task<IReadOnlyList<ModuleYarnInventoryItemDto>> GetYarnsAsync(Guid userId, ModuleYarnInventoryFilterRequest? filter = null);
     Task<ModuleYarnInventoryItemDto> CreateOrMergeYarnAsync(CreateModuleYarnInventoryItemDto request, Guid userId);
     Task<ModuleYarnInventoryItemDto?> GetYarnByIdAsync(Guid id, Guid userId);
+    Task<ModuleYarnInventoryItemDto?> UpdateYarnRemainingAsync(Guid id, UpdateModuleYarnRemainingRequest request, Guid userId);
+    Task<ModuleYarnInventoryItemDto?> UpdateYarnLotRemainingAsync(Guid yarnId, Guid lotId, UpdateModuleYarnLotRemainingRequest request, Guid userId);
     Task<IReadOnlyList<ModuleToolInventoryItemDto>> GetToolsAsync(Guid userId, ModuleToolInventoryFilterRequest? filter = null);
     Task<ModuleToolInventoryItemDto> CreateOrMergeToolAsync(CreateModuleToolInventoryItemDto request, Guid userId);
     Task<ModuleToolInventoryItemDto?> GetToolByIdAsync(Guid id, Guid userId);

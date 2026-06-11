@@ -67,6 +67,24 @@ public class ModuleKitsController : ControllerBase
             : NotFound();
     }
 
+    [HttpPut("{kitId:guid}/archive")]
+    public async Task<ActionResult<ModuleKitDto>> Archive(string moduleKey, Guid kitId)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed) return gate.Result!;
+        var kit = await gate.Handler!.ArchiveAsync(kitId, gate.UserId!.Value);
+        return kit == null ? NotFound() : Ok(kit);
+    }
+
+    [HttpPut("{kitId:guid}/reopen")]
+    public async Task<ActionResult<ModuleKitDto>> Reopen(string moduleKey, Guid kitId)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed) return gate.Result!;
+        var kit = await gate.Handler!.ReopenAsync(kitId, gate.UserId!.Value);
+        return kit == null ? NotFound() : Ok(kit);
+    }
+
     [HttpPost("{kitId:guid}/pieces")]
     public async Task<ActionResult<ModuleKitPieceDto>> AddPiece(string moduleKey, Guid kitId, CreateModuleKitPieceRequest request)
     {

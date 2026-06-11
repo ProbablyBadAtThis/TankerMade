@@ -84,6 +84,32 @@ public class KnittingKitService : IKnittingKitService
         return true;
     }
 
+    public async Task<KnittingKitDto?> ArchiveAsync(Guid kitId, Guid userId)
+    {
+        var kit = await _context.KnittingKits.SingleOrDefaultAsync(existing => existing.Id == kitId && existing.UserId == userId);
+        if (kit == null)
+        {
+            return null;
+        }
+
+        kit.Archive();
+        await _context.SaveChangesAsync();
+        return await GetByIdAsync(kitId, userId);
+    }
+
+    public async Task<KnittingKitDto?> ReopenAsync(Guid kitId, Guid userId)
+    {
+        var kit = await _context.KnittingKits.SingleOrDefaultAsync(existing => existing.Id == kitId && existing.UserId == userId);
+        if (kit == null)
+        {
+            return null;
+        }
+
+        kit.Reopen();
+        await _context.SaveChangesAsync();
+        return await GetByIdAsync(kitId, userId);
+    }
+
     public async Task<KnittingKitPieceDto?> AddPieceAsync(Guid kitId, CreateKnittingKitPieceDto createDto, Guid userId)
     {
         var kit = await _context.KnittingKits.SingleOrDefaultAsync(existing => existing.Id == kitId && existing.UserId == userId);
@@ -240,7 +266,7 @@ public class KnittingKitService : IKnittingKitService
         }
 
         var project = new KnittingProject(Guid.NewGuid(), piece.Name, userId);
-        project.Update(piece.Name, piece.Notes, null, null, 0, 0);
+        project.Update(piece.Name, piece.Notes, null, null, null, 0, 0);
 
         _context.KnittingProjects.Add(project);
         await _context.SaveChangesAsync();

@@ -123,6 +123,39 @@ public class ModuleInventoryController : ControllerBase
         return yarn == null ? NotFound() : Ok(yarn);
     }
 
+    [HttpPut("yarns/{id:guid}/remaining")]
+    public async Task<ActionResult<ModuleYarnInventoryItemDto>> UpdateYarnRemaining(
+        string moduleKey,
+        Guid id,
+        UpdateModuleYarnRemainingRequest request)
+    {
+        var gate = await ResolveCraftGateAsync(moduleKey);
+        if (!gate.IsAllowed)
+        {
+            return gate.Result!;
+        }
+
+        var yarn = await gate.Handler!.UpdateYarnRemainingAsync(id, request, gate.UserId!.Value);
+        return yarn == null ? NotFound() : Ok(yarn);
+    }
+
+    [HttpPut("yarns/{yarnId:guid}/lots/{lotId:guid}/remaining")]
+    public async Task<ActionResult<ModuleYarnInventoryItemDto>> UpdateYarnLotRemaining(
+        string moduleKey,
+        Guid yarnId,
+        Guid lotId,
+        UpdateModuleYarnLotRemainingRequest request)
+    {
+        var gate = await ResolveCraftGateAsync(moduleKey);
+        if (!gate.IsAllowed)
+        {
+            return gate.Result!;
+        }
+
+        var yarn = await gate.Handler!.UpdateYarnLotRemainingAsync(yarnId, lotId, request, gate.UserId!.Value);
+        return yarn == null ? NotFound() : Ok(yarn);
+    }
+
     [HttpGet("tools")]
     public async Task<ActionResult<IReadOnlyList<ModuleToolInventoryItemDto>>> GetTools(
         string moduleKey,

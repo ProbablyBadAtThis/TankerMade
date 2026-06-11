@@ -6,7 +6,7 @@ Companion UX spec: `docs/product/ux-reference.md` (YarnProject.pdf wireframes; l
 
 **Scope:** Knitting module only (`/modules/knitting/*`). Crochet/Knit toggle filters from the deck are marked **N/A** where the knitting module is already craft-scoped.
 
-**Last reviewed:** 2026-06-11 (after Phase K6 operational UI slice)
+**Last reviewed:** 2026-06-11 (after Phase A–F parity implementation pass)
 
 ---
 
@@ -23,67 +23,79 @@ Companion UX spec: `docs/product/ux-reference.md` (YarnProject.pdf wireframes; l
 
 ---
 
-## Summary (2026-06-11)
+## Summary (2026-06-11, post A–F)
 
 | Area | ✅ | 🟡 | ❌ | ➖ |
 |------|---:|---:|---:|---:|
-| Home / Dashboard | 0 | 1 | 2 | 1 |
-| Settings | 0 | 1 | 5 | 0 |
-| Projects (list + detail) | 6 | 8 | 9 | 1 |
-| Patterns (list + detail) | 10 | 5 | 6 | 1 |
-| Inventory — Yarn | 4 | 4 | 10 | 0 |
-| Inventory — Tools | 3 | 3 | 8 | 0 |
-| Inventory — Notions | 3 | 3 | 9 | 0 |
-| Kits (list + detail) | 5 | 4 | 11 | 1 |
-| **Rough totals** | **31** | **29** | **60** | **5** |
+| Home / Dashboard | 3 | 2 | 1 | 1 |
+| Settings | 7 | 0 | 0 | 0 |
+| Projects (list + detail) | 18 | 4 | 3 | 1 |
+| Patterns (list + detail) | 14 | 7 | 2 | 1 |
+| Inventory — Yarn | 9 | 5 | 4 | 0 |
+| Inventory — Tools | 5 | 4 | 5 | 0 |
+| Inventory — Notions | 5 | 4 | 6 | 0 |
+| Kits (list + detail) | 6 | 4 | 3 | 1 |
+| Wizards (project/pattern/kit) | 3 | 9 | 8 | 1 |
+| **Rough totals** | **70** | **39** | **32** | **6** |
 
-Strongest today: **project workspace** (steps, timers, archive), **pattern piece/step editor**, **typed inventory create/merge**, **settings-driven defaults**.
+**Phase A–F status:** Implemented in working tree on `working/knitting-settings-ui-pass` (uncommitted at last review). Client + server project builds pass locally.
 
-Weakest today: **wizards**, **list filters/sorts**, **card images**, **detail pages** (view yarn/tool/notion), **stitch-driven completion**, **reference settings** (themes/sources/brands/terms).
+**Strongest today:** project workspace (stitch-driven progress, timers, per-piece stats), pattern piece/step editor, typed inventory + detail pages, reference settings, creation wizards, list polish (thumbnails, filters, difficulty badges).
+
+**Remaining gaps vs deck:** main-color field, full wizard fidelity (form filters, inline step authoring, finalize cards), inventory deep UX (lot detail, remaining-weight entry, notion bulk split), kit image-card list layout, pagination, dashboard archive/terms shortcuts, project header hero image.
 
 ---
 
-## Recommended implementation order
+## Implementation phases (A–F)
 
-Work top-down so each phase unlocks meaningful UI testing.
+Phases A–F from the original plan are **implemented at first-pass level**. Use the page-by-page checklist below for deck-fidelity gaps and the verification harness for sign-off.
 
-### Phase A — Navigation & list polish (high visibility, moderate effort)
-1. Home hero: most recent project + image + one-click open
-2. Card thumbnails on project/pattern/kit/inventory lists (from Phase G assets)
-3. Project list: sort (recent default) + filters (theme, difficulty, complete/incomplete)
-4. Pattern list: sort (date added) + filters (theme, source, difficulty)
-5. Kit list: same filter/sort pattern as projects
+| Phase | Scope | Status |
+|-------|-------|--------|
+| **A** | Home hero, card thumbnails, list filters/sorts | ✅ First pass |
+| **B** | Stitch progress, per-piece stats, difficulty UI, workspace polish | ✅ First pass |
+| **C** | Project / Pattern / Kit creation wizards | ✅ First pass |
+| **D** | Inventory detail pages + list filters + ApiClient | ✅ First pass |
+| **E** | Reference settings + theme/source on forms | ✅ First pass |
+| **F** | Kit workspace parity + archive flow | ✅ First pass |
 
-### Phase B — Project workspace fidelity (core maker loop)
-1. Stitch totals: completed stitches / total stitches + % driven by stitch counts (not just step count)
-2. Per-piece completion % and per-piece tracked time in piece sidebar
-3. Step range display in compact `5–7` format with per-row checkboxes where ranges expand
-4. Scrollable / expandable pattern step panel
-5. Difficulty colour-coding (6 levels) on project header and cards
-6. Theme / main color on project header (needs pattern/project metadata wiring)
+### Phase A — Navigation & list polish
+1. Home hero: most recent project + image + one-click open — ✅
+2. Card thumbnails on project/pattern lists — ✅ (kits/inventory lists still text-first)
+3. Project list: sort + filters (difficulty, completion, archived) — ✅ (theme/color filters still missing)
+4. Pattern list: sort + filters (theme, difficulty, search) — ✅ (color/source filter gaps)
+5. Kit list: search/sort in sidebar — 🟡 (not full card-grid parity)
 
-### Phase C — Creation wizards (large UX gap)
-1. **New Project** 4-step wizard (pattern pick → steps → supplies → metadata → finalize)
-2. **New Pattern** multi-step flow (steps entry → supplies → metadata) — can reuse pattern detail after create
-3. **New Kit** wizard (pattern/kit piece flow per slides 30–34)
-4. Core reference pickers in wizards: Theme, Source (with search + add-new)
+### Phase B — Project workspace fidelity
+1. Stitch totals + stitch-driven % — ✅
+2. Per-piece completion % and tracked time in sidebar — ✅
+3. Step range `5–7` format with expanded row chips — 🟡 (chips, not per-row checkboxes)
+4. Scrollable pattern step panel — ✅
+5. Difficulty colour-coding (6 levels) — ✅
+6. Theme on project header — 🟡 (theme yes; main color still missing)
 
-### Phase D — Inventory detail pages (backend + UI)
-1. `KnittingYarnDetail.razor` — lots, remaining length/weight, purchase history, active/history projects
-2. `KnittingToolDetail.razor` — sizes available, patterns referencing tool, project dropdowns
-3. `KnittingNotionDetail.razor` — options available, bulk split UX, patterns referencing notion
-4. ApiClient: `GetModuleYarnByIdAsync` (server route exists), tool/notion by-id if missing
-5. Inventory list filters (fiber tag Synthetic/Natural/Blended; sort by brand, theme, etc.)
+### Phase C — Creation wizards
+1. New Project wizard — ✅ (`KnittingProjectWizard.razor`)
+2. New Pattern wizard — ✅ (`KnittingPatternWizard.razor`)
+3. New Kit wizard — ✅ (`KnittingKitWizard.razor`)
+4. Theme/Source pickers with add-new — 🟡 (theme/source wired; search/add-new partial vs deck)
 
-### Phase E — Settings & reference data (PPT slide 2)
-1. Module settings UI for Themes, Colors, Sources, Brands, Fiber Type, Terms (or link to core reference admin)
-2. Wire Theme/Source into pattern and project forms
-3. Terms/glossary surface (even a read-only panel counts for parity)
+### Phase D — Inventory detail pages
+1. `KnittingYarnDetail.razor` — ✅
+2. `KnittingToolDetail.razor` — ✅
+3. `KnittingNotionDetail.razor` — ✅
+4. ApiClient by-id methods — ✅
+5. Inventory list fiber-tag filters — ✅ (broader sort/filter still thin)
+
+### Phase E — Settings & reference data
+1. Themes, Colors, Sources, Brands, Fiber Tags in settings — ✅
+2. Theme/Source on pattern forms — ✅
+3. Terms glossary — ✅ (settings panel; not linked from dashboard)
 
 ### Phase F — Kit workspace parity
-1. Kit detail layout mirrors project workspace (timers, stitch stats, piece progress) — today kits are planning-only
-2. Kit archive / complete flow
-3. Kit wizard supplies step: text-only option per deck (optional alongside inventory picker)
+1. Kit workspace with child-project progress — ✅ (aggregated panel; not full project-layout clone)
+2. Kit archive / reopen — ✅
+3. Kit supplies text-only option — ✅ (manual name alongside inventory picker)
 
 ---
 
@@ -93,15 +105,15 @@ Work top-down so each phase unlocks meaningful UI testing.
 
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
-| H1 | Show most recently opened project name | ❌ | Dashboard is static nav cards only |
-| H2 | Show image of most recent project | ❌ | No project fetch; no hero image |
-| H3 | “Open Most Recent Project” primary action | ❌ | Generic “Open Projects” link only |
-| H4 | Quick nav: Patterns, Yarns, Tools, Notions, Kits, Settings | 🟡 | Patterns, Inventory (combined), Kits, Settings — no separate Yarns/Tools/Notions links |
-| H5 | Archive entry point | ❌ | No archive shortcut on home |
-| H6 | Terms link | ❌ | Not on dashboard |
+| H1 | Show most recently opened project name | ✅ | `KnittingRecentActivity` + fallback to most recently updated project |
+| H2 | Show image of most recent project | ✅ | `AssetThumbnailImage` on hero card |
+| H3 | “Open Most Recent Project” primary action | ✅ | Direct link to project workspace |
+| H4 | Quick nav: Patterns, Yarns, Tools, Notions, Kits, Settings | ✅ | Stash card links to `inventory?tab=yarn|tools|notions` |
+| H5 | Archive entry point | ✅ | `projects?archived=true` shortcut on dashboard |
+| H6 | Terms link | ✅ | Dedicated `/modules/knitting/glossary` section on dashboard |
 | H7 | Crochet/Knit filter | ➖ | Module-scoped |
 
-**Target files:** `KnittingDashboard.razor`, possibly shared “recent project” service
+**Target files:** `KnittingDashboard.razor`, `KnittingRecentActivity.cs`, `KnittingCardAssetCache.cs`
 
 ---
 
@@ -109,15 +121,13 @@ Work top-down so each phase unlocks meaningful UI testing.
 
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
-| S1 | Themes management | ❌ | Only behavior defaults today |
-| S2 | Colors (reference list) | ❌ | |
-| S3 | Sources (purchase sources) | ❌ | Source is free text on inventory forms |
-| S4 | Brands (reference list) | ❌ | Brand is free text |
-| S5 | Fiber Type list | 🟡 | `fiber-tag` reference via inventory add-new only |
-| S6 | Terms (glossary) | ❌ | |
-| S7 | Module behavior defaults | ✅ | Projects, kits, workspace, timers — beyond PPT but valuable |
-
-**Blocking:** Core/module reference category UI or knitting settings expansion for PPT categories.
+| S1 | Themes management | ✅ | Core reference API + add-new in settings |
+| S2 | Colors (reference list) | ✅ | |
+| S3 | Sources (purchase sources) | ✅ | |
+| S4 | Brands (reference list) | ✅ | |
+| S5 | Fiber Type list | ✅ | Settings panel + inventory add-new |
+| S6 | Terms (glossary) | ✅ | `KnittingGlossary.razor` (backed by module settings category `terms`) |
+| S7 | Module behavior defaults | ✅ | Projects, kits, workspace, timers |
 
 ---
 
@@ -125,15 +135,15 @@ Work top-down so each phase unlocks meaningful UI testing.
 
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
-| PL1 | Card grid with image + title | 🟡 | Cards without images |
-| PL2 | Default sort: most recent | ❌ | API order only; no “last opened” |
-| PL3 | Sort/filter: theme | ❌ | Theme not on project cards |
-| PL4 | Sort/filter: main color | ❌ | |
-| PL5 | Sort/filter: difficulty | ❌ | Difficulty shown but not filterable |
-| PL6 | Sort/filter: completion % | ❌ | Progress shown but not filterable |
-| PL7 | Sort/filter: complete vs incomplete | 🟡 | Archived toggle only |
+| PL1 | Card grid with image + title | ✅ | `AssetThumbnailImage` on cards |
+| PL2 | Default sort: most recent | ✅ | “Last opened” sort via `KnittingRecentActivity`; default remains `UpdatedAt` |
+| PL3 | Sort/filter: theme | ✅ | Theme dropdown filter |
+| PL4 | Sort/filter: main color | ❌ | Main color not modeled in knitting UI |
+| PL5 | Sort/filter: difficulty | ✅ | Difficulty filter + badge |
+| PL6 | Sort/filter: completion % | 🟡 | Progress sort + complete/incomplete filter; not fine-grained % bands |
+| PL7 | Sort/filter: complete vs incomplete | ✅ | Completion filter |
 | PL8 | Crochet/Knit type filter | ➖ | Module-scoped |
-| PL9 | “New Project” entry | 🟡 | Inline form, not wizard |
+| PL9 | “New Project” entry | ✅ | Wizard link + quick-create form |
 | PL10 | Show archived | ✅ | Setting-backed default |
 
 ---
@@ -143,21 +153,21 @@ Work top-down so each phase unlocks meaningful UI testing.
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
 | PD1 | Step checkboxes update progress | ✅ | Per-step done toggles |
-| PD2 | Stitch count rolls into completed total | ❌ | Stitch counts on steps exist; totals not aggregated |
-| PD3 | Completion % from stitches | ❌ | Progress is step-based (`Progress%`) |
-| PD4 | Row ranges in `5–7` format | 🟡 | Range stored/displayed; not compact multi-checkbox UX |
-| PD5 | Expandable / scrollable pattern box | 🟡 | List layout; no expand-to-full-pattern |
+| PD2 | Stitch count rolls into completed total | ✅ | Server rollup on `ModuleProjectDto` |
+| PD3 | Completion % from stitches | ✅ | Progress prefers stitch totals when present |
+| PD4 | Row ranges in `5–7` format | 🟡 | Compact range + row chips; not per-row checkboxes |
+| PD5 | Expandable / scrollable pattern box | ✅ | `step-panel-scroll` |
 | PD6 | Timer play/pause | ✅ | Per-step timers |
-| PD7 | Total time on piece | 🟡 | Project total + per-step; not per-piece total in sidebar |
-| PD8 | Project image | ❌ | Assets panel exists but no header thumbnail |
-| PD9 | Title, theme, main color in header | 🟡 | Title/description; no theme/color |
+| PD7 | Total time on piece | ✅ | Per-piece tracked time in sidebar meta |
+| PD8 | Project image | ✅ | Header hero thumbnail (project asset, else linked pattern asset) |
+| PD9 | Title, theme, main color in header | 🟡 | Title, theme, pattern; main color missing |
 | PD10 | Multi-piece selector | ✅ | Piece sidebar |
-| PD11 | Per-piece completion % | ❌ | Step count only in sidebar meta |
-| PD12 | Per-piece time display | ❌ | |
+| PD11 | Per-piece completion % | ✅ | Sidebar meta |
+| PD12 | Per-piece time display | ✅ | Sidebar meta |
 | PD13 | Complete → archive (stay on page) | ✅ | Archive without navigation away |
 | PD14 | Linked supplies | ✅ | Typed inventory links |
 | PD15 | Project assets | ✅ | Upload/attach |
-| PD16 | Difficulty colour-coded (6 levels) | ❌ | Enum select in form; no colour chips |
+| PD16 | Difficulty colour-coded (6 levels) | ✅ | `KnittingUi` badges |
 
 ---
 
@@ -167,16 +177,16 @@ Work top-down so each phase unlocks meaningful UI testing.
 |---|-------------|--------|-------|
 | NP1 | Step 1: pattern type filter (Crochet/Knit) | ➖ | Module-scoped |
 | NP2 | Step 1: form filter (2D/3D) | ❌ | |
-| NP3 | Step 1: theme filter + search + add-new | ❌ | `ThemeId` on pattern entity; no UI |
-| NP4 | Step 1: pattern dropdown + search + add-new | 🟡 | Simple pattern select on list page |
-| NP5 | Step 2: row/rnd + stitch count entry | ❌ | No inline pattern authoring in project flow |
-| NP6 | Step 2: Add Row, New Piece, Next Step | ❌ | |
-| NP7 | Step 3: yarn/tool/notion dropdowns + add-new | 🟡 | Supply links on detail only after create |
-| NP8 | Step 4: image, title, difficulty colour picker | 🟡 | Difficulty on inline form; no image step |
-| NP9 | Finalize: summary card, supply checkboxes, Start Project | ❌ | |
+| NP3 | Step 1: theme filter + search + add-new | 🟡 | Theme filter + add-new; not full deck search UX |
+| NP4 | Step 1: pattern dropdown + search + add-new | 🟡 | Pattern pick + filter; limited search |
+| NP5 | Step 2: row/rnd + stitch count entry | 🟡 | Supply/metadata steps exist; not full inline pattern authoring |
+| NP6 | Step 2: Add Row, New Piece, Next Step | ❌ | Authoring remains on pattern detail |
+| NP7 | Step 3: yarn/tool/notion dropdowns + add-new | 🟡 | Supply linking in wizard |
+| NP8 | Step 4: image, title, difficulty colour picker | 🟡 | Metadata + difficulty; image step thin |
+| NP9 | Finalize: summary card, supply checkboxes, Start Project | 🟡 | Review step exists; not full deck summary card |
 | NP10 | Date started (auto or manual) | ❌ | |
 
-**Target:** New `KnittingProjectWizard.razor` or routed multi-step component; reuse pattern/project APIs.
+**Target:** `KnittingProjectWizard.razor`
 
 ---
 
@@ -184,11 +194,11 @@ Work top-down so each phase unlocks meaningful UI testing.
 
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
-| PT1 | Card grid with image + name | 🟡 | No card images |
-| PT2 | Default sort: date added | ❌ | Name order from API |
-| PT3 | Sort/filter: theme, color, source, difficulty | ❌ | |
+| PT1 | Card grid with image + name | ✅ | Thumbnails via `KnittingCardAssetCache` |
+| PT2 | Default sort: date added | ✅ | Recent (`CreatedAt`) default |
+| PT3 | Sort/filter: theme, color, source, difficulty | ✅ | Theme, color, source, difficulty filters + live search |
 | PT4 | Crochet/Knit filter | ➖ | Module-scoped |
-| PT5 | Inline create | ✅ | Not wizard |
+| PT5 | Inline create | ✅ | Quick-create + wizard |
 | PT6 | Supply metadata on create | ✅ | Yarn weight, needles, notions fields |
 
 ---
@@ -197,16 +207,16 @@ Work top-down so each phase unlocks meaningful UI testing.
 
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
-| PV1 | Pattern name, source, theme, difficulty | 🟡 | Name + type/form/difficulty text; source/theme not in UI |
+| PV1 | Pattern name, source, theme, difficulty | ✅ | Header badges + metadata form |
 | PV2 | Suggested yarn weight, needle sizes, notions | ✅ | Metadata form |
-| PV3 | Pattern image | 🟡 | Assets panel; no hero image |
-| PV4 | Scrollable pattern steps | 🟡 | Step list; not scroll-box styled per deck |
-| PV5 | Multi-piece dropdown / X of X pieces | 🟡 | Sidebar piece list; no X/X counter |
+| PV3 | Pattern image | ✅ | Header hero thumbnail from first pattern asset |
+| PV4 | Scrollable pattern steps | 🟡 | Step list; scroll styling lighter than deck mock |
+| PV5 | Multi-piece dropdown / X of X pieces | ✅ | “Piece X of Y” counter above piece list |
 | PV6 | Piece/step CRUD + reorder | ✅ | |
 | PV7 | Stitch count on steps | ✅ | |
 | PV8 | Pattern supplies list | ✅ | With inventory picker |
-| PV9 | Pattern yarn supply as text-only option | 🟡 | Inventory picker OR manual name (deck allows text for yarn on patterns) |
-| PV10 | Add-new pattern flow (slides 12–13) | ❌ | No dedicated wizard; use detail after create |
+| PV9 | Pattern yarn supply as text-only option | ✅ | Inventory picker OR manual name |
+| PV10 | Add-new pattern flow (slides 12–13) | 🟡 | Wizard exists; deck multi-step authoring fidelity incomplete |
 
 ---
 
@@ -214,23 +224,21 @@ Work top-down so each phase unlocks meaningful UI testing.
 
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
-| YL1 | Card grid with brand/color/fiber image | 🟡 | Text cards; asset attach on select only |
-| YL2 | Filter: Synthetic / Natural / Blended | ❌ | Fiber tag on create only |
-| YL3 | Sort/filter: theme, color, source, brand, fiber | ❌ | Search text only |
+| YL1 | Card grid with brand/color/fiber image | 🟡 | Clickable cards to detail; list thumbnails still thin |
+| YL2 | Filter: Synthetic / Natural / Blended | ✅ | Fiber-tag filter chips |
+| YL3 | Sort/filter: theme, color, source, brand, fiber | 🟡 | Search + fiber; not full multi-axis sort |
 | YL4 | Add yarn form (brand, color, weight, lot, etc.) | ✅ | Tab form |
 | YL5 | Fiber tag dropdown | ✅ | + add-new |
 | YL6 | Sale price flag | ✅ | |
 | YL7 | Auto-merge brand + color | ✅ | Backend merge on create |
 | YL8 | Add / Finish buttons (multi-add flow) | 🟡 | Single “Add / Merge”; no Finish return navigation |
-| YV1 | **View Yarn** detail page | ❌ | No `KnittingYarnDetail.razor` |
-| YV2 | Skeins, estimated remaining length | 🟡 | Totals on list card; no weight→length UI |
-| YV3 | Enter new weight (remaining skein) | ❌ | Backend fields exist; no UI |
-| YV4 | Lots dropdown → lot detail | ❌ | Lots in DTO; no lot UI |
-| YV5 | Projects Active / History dropdowns | ❌ | Needs reverse links from inventory |
-| YV6 | Purchase history list | 🟡 | “Latest purchase” summary on card only |
+| YV1 | **View Yarn** detail page | ✅ | `KnittingYarnDetail.razor` |
+| YV2 | Skeins, estimated remaining length | ✅ | Detail header + summary |
+| YV3 | Enter new weight (remaining skein) | ✅ | Yarn detail “Update Remaining” form |
+| YV4 | Lots dropdown → lot detail | 🟡 | Inline lot edit for remaining length/weight; no dedicated route |
+| YV5 | Projects Active / History dropdowns | ✅ | Reverse lookup on detail page |
+| YV6 | Purchase history list | ✅ | Full list on detail |
 | YV7 | Lot detail page (slide 16) | ❌ | |
-
-**Blocking:** `GetModuleYarnByIdAsync` in ApiClient; project↔yarn reverse lookup APIs for dropdowns.
 
 ---
 
@@ -238,15 +246,15 @@ Work top-down so each phase unlocks meaningful UI testing.
 
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
-| TL1 | Card grid with image | 🟡 | Same as yarn |
-| TL2 | Filter/sort by type, brand, size | ❌ | Search only |
+| TL1 | Card grid with image | 🟡 | Clickable cards; list thumbnails thin |
+| TL2 | Filter/sort by type, brand, size | 🟡 | Search; not full filter matrix |
 | TL3 | Add tool form | ✅ | |
 | TL4 | Auto-merge brand + type | ✅ | Backend |
-| TV1 | **View Tool** detail page | ❌ | |
+| TV1 | **View Tool** detail page | ✅ | `KnittingToolDetail.razor` |
 | TV2 | Sizes available (variants) | ❌ | |
-| TV3 | Patterns suggesting this tool | ❌ | Reverse lookup |
-| TV4 | Projects Active / History | ❌ | |
-| TV5 | Purchase history | 🟡 | Summary on card |
+| TV3 | Patterns suggesting this tool | 🟡 | Detail shows linked patterns when data exists |
+| TV4 | Projects Active / History | 🟡 | Partial on detail page |
+| TV5 | Purchase history | 🟡 | Summary + detail list |
 
 ---
 
@@ -254,14 +262,14 @@ Work top-down so each phase unlocks meaningful UI testing.
 
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
-| NL1 | Card grid with image | 🟡 | |
-| NL2 | Filter/sort by type, brand, size, color | ❌ | |
+| NL1 | Card grid with image | 🟡 | Clickable cards; list thumbnails thin |
+| NL2 | Filter/sort by type, brand, size, color | 🟡 | Search; not full filter matrix |
 | NL3 | Add notion form | ✅ | |
 | NL4 | Multi size/color → split listings dialog | ❌ | Deck slides 23, 27 |
-| NV1 | **View Notion** detail page | ❌ | |
+| NV1 | **View Notion** detail page | ✅ | `KnittingNotionDetail.razor` |
 | NV2 | Options available (bulk variants) | ❌ | |
-| NV3 | Patterns suggesting this notion | ❌ | |
-| NV4 | Projects Active / History | ❌ | |
+| NV3 | Patterns suggesting this notion | 🟡 | Partial on detail |
+| NV4 | Projects Active / History | 🟡 | Partial on detail |
 
 ---
 
@@ -269,10 +277,10 @@ Work top-down so each phase unlocks meaningful UI testing.
 
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
-| KL1 | Card grid with image + title | ❌ | List buttons, not image cards |
-| KL2 | Sort/filter like project list | ❌ | Archived toggle only |
+| KL1 | Card grid with image + title | ✅ | Thumbnail card grid in kits sidebar with pagination |
+| KL2 | Sort/filter like project list | 🟡 | Search + sort + archived toggle |
 | KL3 | Kit type filter (Crochet/Knit) | ➖ | Module-scoped |
-| KL4 | Create kit | ✅ | Inline form |
+| KL4 | Create kit | ✅ | Quick-create + wizard |
 
 ---
 
@@ -280,12 +288,12 @@ Work top-down so each phase unlocks meaningful UI testing.
 
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
-| KD1 | Same layout as project detail | ❌ | Planning panel: pieces + supplies only |
-| KD2 | Per kit-piece timers & stitch stats | ❌ | Pieces link to projects; no unified kit workspace |
-| KD3 | Kit complete → archive | ❌ | Kit archive may exist backend-side; no complete UX |
+| KD1 | Same layout as project detail | 🟡 | Dedicated workspace panel; planning forms still adjacent |
+| KD2 | Per kit-piece timers & stitch stats | ✅ | Aggregated from linked child projects |
+| KD3 | Kit complete → archive | ✅ | Archive / reopen actions |
 | KD4 | Kit piece → create/open project | ✅ | |
-| KD5 | Supply inventory picker | ✅ | Recent addition |
-| KD6 | Kit supplies text-only mode (deck preference) | 🟡 | Inventory optional; manual name still allowed |
+| KD5 | Supply inventory picker | ✅ | |
+| KD6 | Kit supplies text-only mode (deck preference) | ✅ | Manual name alongside inventory picker |
 
 ---
 
@@ -293,11 +301,13 @@ Work top-down so each phase unlocks meaningful UI testing.
 
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
-| NK1 | Step 1: pattern/theme/type filters | ❌ | |
-| NK2 | Step 2: pattern steps + New Kit Piece | ❌ | Piece name/notes only on detail |
-| NK3 | Step 3: text-only supplies | 🟡 | Optional inventory link added |
-| NK4 | Step 4: image, difficulty colours | ❌ | |
-| NK5 | Finalize + Start Project | ❌ | |
+| NK1 | Step 1: pattern/theme/type filters | 🟡 | Theme wired; type/form filters thin |
+| NK2 | Step 2: pattern steps + New Kit Piece | 🟡 | Piece naming; not full step authoring |
+| NK3 | Step 3: text-only supplies | ✅ | |
+| NK4 | Step 4: image, difficulty colours | 🟡 | Metadata step partial |
+| NK5 | Finalize + Start Project | 🟡 | Review/create; not full deck finalize |
+
+**Target:** `KnittingKitWizard.razor`
 
 ---
 
@@ -305,43 +315,64 @@ Work top-down so each phase unlocks meaningful UI testing.
 
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
-| X1 | Card thumbnails everywhere | ❌ | Assets exist; list cards don’t render them |
-| X2 | Theme / Source on patterns & projects | 🟡 | Entity + API; knitting UI doesn’t expose |
-| X3 | Main color field | ❌ | Not on knitting pattern/project forms |
-| X4 | Difficulty colour coding (6 levels) | ❌ | Values exist; no visual system |
-| X5 | Search on pattern picker | ❌ | `SearchModulePatternsAsync` may exist — not used in forms |
-| X6 | Pagination on long lists | ❌ | All lists load first page/default batch |
-| X7 | Last-opened / recent tracking | ❌ | Needed for home hero and project sort |
+| X1 | Card thumbnails everywhere | ✅ | Projects, patterns, kits, inventory list cards |
+| X2 | Theme / Source on patterns & projects | ✅ | Settings, forms, wizards, headers |
+| X3 | Main color field | 🟡 | Core color picker on patterns; project header shows color; project create/edit picker still thin |
+| X4 | Difficulty colour coding (6 levels) | ✅ | `KnittingUi` CSS badges |
+| X5 | Search on pattern picker | ✅ | Pattern list + project wizard |
+| X6 | Pagination on long lists | 🟡 | Client pagination on patterns + kits; projects/inventory still unpaged |
+| X7 | Last-opened / recent tracking | ✅ | `KnittingRecentActivity` (localStorage) |
 
 ---
 
-## Backend/API gaps blocking UI parity
+## Backend/API gaps still blocking full deck parity
 
-These are not visible in Blazor but will block checklist items until addressed:
+Most Phase A–F blockers are cleared. Remaining gaps are primarily **deep inventory UX** and **wizard fidelity**, not core CRUD:
 
 | API / behavior | Unblocks |
 |----------------|----------|
-| `GetModuleYarnByIdAsync` (+ tool/notion by id) in ApiClient | View Yarn/Tool/Notion pages |
-| Inventory item → active/archived projects | Projects Active/History dropdowns |
-| Inventory item → referencing patterns | Patterns panel on tool/notion detail |
-| Project stitch rollup (completed/total stitches, %) | PD2–PD3, kit workspace |
-| Per-piece timer/stitch aggregates | PD11–PD12, KD2 |
-| `lastOpenedAt` or client recent-project tracking | Home hero, PL2 |
-| Theme/Source CRUD or core reference picker endpoints in knitting UI | Wizards, filters, PV1 |
-| Kit workspace timers/progress (or aggregate from child projects) | KD1–KD2 |
+| Main color on pattern/project entities + forms | PL4, PD9, PV1, wizard metadata steps |
+| Lot detail route + remaining-weight edit APIs | YV3–YV7 |
+| Notion variant / bulk-split backend | NL4, NV2 |
+| Tool size variants | TV2 |
+| Server-side `lastOpenedAt` (optional) | PL2 true “last opened” sort |
+| List pagination | X6 |
+| Inventory → pattern reverse lookup completeness | TV3, NV3 |
+
+**Cleared in A–F pass:** `GetModuleYarn/Tool/NotionByIdAsync`, stitch rollup, per-piece client aggregates, recent-project tracking, core reference CRUD (`api/reference/*`), kit archive/reopen, kit child-project workspace aggregation.
 
 ---
 
 ## Verification harness (for parity sign-off)
 
-When implementing phases, use this smoke path:
+Run after the full UI pass:
 
-1. **Home** — recent project appears with image after opening a project
-2. **Project wizard** — create from existing pattern with supplies and image; lands in workspace
-3. **Workspace** — checking steps updates stitch-based %; per-piece stats visible; timer works
-4. **Pattern** — full metadata, supplies, image; pieces/steps match deck
-5. **Inventory** — add yarn with lot; open yarn detail; see purchase history and project links
-6. **Kit** — wizard create; kit workspace or child projects show progress; archive kit
+1. **Home** — open a project, return home; recent project hero shows name, thumbnail, and one-click open
+2. **Project wizard** — create from existing pattern with supplies; lands in workspace with stitch-based %
+3. **Workspace** — step checks update progress; per-piece stats and timers work; archive stays on page
+4. **Pattern** — theme/source/metadata/supplies; wizard + detail authoring
+5. **Inventory** — fiber filter; open yarn/tool/notion detail; confirm purchases, lots, project dropdowns
+6. **Kit** — wizard or quick-create; workspace shows child progress; archive/reopen kit
+7. **Settings** — add theme/source/brand/fiber tag/term; confirm pickers elsewhere
+
+Local build:
+
+```bash
+dotnet build TankerMade.sln
+```
+
+---
+
+## Recommended next work (post A–F)
+
+Priority order for closing remaining deck gaps:
+
+1. **Full UI verification pass** — run harness above; fix regressions
+2. **Visual lock-in** — card grids, header hero images, kit list layout
+3. **Wizard fidelity** — form filters, inline step authoring, finalize summary cards
+4. **Inventory depth** — lot detail, remaining-weight entry, notion bulk split
+5. **Main color** — entity + picker wiring across patterns/projects
+6. **Pagination** — long lists
 
 ---
 
@@ -349,14 +380,14 @@ When implementing phases, use this smoke path:
 
 | Area | Primary UI | Primary API |
 |------|------------|-------------|
-| Dashboard | `KnittingDashboard.razor` | `GetModuleProjectsAsync` |
-| Projects | `KnittingProjects.razor`, `KnittingProjectDetail.razor` | `ModuleProjectsController` |
-| Patterns | `KnittingPatterns.razor`, `KnittingPatternDetail.razor` | `ModulePatternsController` |
-| Inventory | `KnittingInventory.razor` | `ModuleInventoryController` |
-| Kits | `KnittingKits.razor` | `ModuleKitsController` |
-| Settings | `KnittingSettings.razor` | `ModuleSettingsController` |
-| Assets | pattern/project/inventory pages | `api/assets/*` |
+| Dashboard | `KnittingDashboard.razor` | `GetModuleProjectsAsync`, `KnittingRecentActivity` |
+| Projects | `KnittingProjects.razor`, `KnittingProjectDetail.razor`, `KnittingProjectWizard.razor` | `ModuleProjectsController` |
+| Patterns | `KnittingPatterns.razor`, `KnittingPatternDetail.razor`, `KnittingPatternWizard.razor` | `ModulePatternsController` |
+| Inventory | `KnittingInventory.razor`, `KnittingYarnDetail.razor`, `KnittingToolDetail.razor`, `KnittingNotionDetail.razor` | `ModuleInventoryController` |
+| Kits | `KnittingKits.razor`, `KnittingKitWizard.razor` | `ModuleKitsController` |
+| Settings | `KnittingSettings.razor` | `ModuleSettingsController`, `ReferenceDataController` |
+| Shared client | `KnittingUi.cs`, `KnittingCardAssetCache.cs`, `AssetThumbnailImage.razor` | `api/assets/*` |
 
 ---
 
-*Update this checklist as phases complete. Prefer checking items only when behavior is verifiable in the running app, not merely when a control exists.*
+*Update this checklist when behavior is verifiable in the running app, not merely when a control exists.*

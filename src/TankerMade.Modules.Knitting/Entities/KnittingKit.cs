@@ -29,4 +29,18 @@ public class KnittingKit
         Type = type?.Trim() ?? string.Empty;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void Archive()
+    {
+        IsArchived = true;
+        ArchivedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Reopen()
+    {
+        IsArchived = false;
+        ArchivedAt = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

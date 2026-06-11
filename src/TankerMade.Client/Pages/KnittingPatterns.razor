@@ -3,6 +3,7 @@
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject TankerMade.Client.Services.KnittingCardAssetCache CardAssets
 
 <PageTitle>Knitting Patterns</PageTitle>
 
@@ -38,8 +39,12 @@ else
         <div class="alert alert-danger">@errorMessage</div>
     }
 
+    <div class="auth-actions mb-3">
+        <a class="btn btn-primary" href="/modules/knitting/patterns/new">New Pattern Wizard</a>
+    </div>
+
     <section class="project-panel">
-        <h2>@(selectedPatternId.HasValue ? "Update Pattern" : "New Pattern")</h2>
+        <h2>@(selectedPatternId.HasValue ? "Update Pattern" : "Quick Create")</h2>
 
         <EditForm Model="form" OnValidSubmit="SavePatternAsync" class="project-edit-form">
             <DataAnnotationsValidator />
@@ -61,6 +66,36 @@ else
                 <label>
                     <span>Difficulty</span>
                     <InputText class="form-control" @bind-Value="form.Difficulty" />
+                </label>
+                <label>
+                    <span>Theme</span>
+                    <select class="form-control" @bind="form.ThemeIdText">
+                        <option value="">No theme</option>
+                        @foreach (var theme in themes)
+                        {
+                            <option value="@theme.Id">@theme.Name</option>
+                        }
+                    </select>
+                </label>
+                <label>
+                    <span>Main color</span>
+                    <select class="form-control" @bind="form.ColorIdText">
+                        <option value="">No color</option>
+                        @foreach (var color in colors)
+                        {
+                            <option value="@color.Id">@color.Name</option>
+                        }
+                    </select>
+                </label>
+                <label>
+                    <span>Source</span>
+                    <select class="form-control" @bind="form.SourceIdText">
+                        <option value="">No source</option>
+                        @foreach (var source in sources)
+                        {
+                            <option value="@source.Id">@source.Name</option>
+                        }
+                    </select>
                 </label>
                 <label>
                     <span>Suggested yarn weight</span>
@@ -86,7 +121,68 @@ else
         </EditForm>
     </section>
 
-    @if (patterns.Count == 0)
+    <div class="list-toolbar">
+        <label>
+            <span>Search</span>
+            <input class="form-control"
+                   placeholder="Filter as you type"
+                   @bind="search"
+                   @bind:event="oninput"
+                   @bind:after="ApplyFiltersAsync" />
+        </label>
+        <label>
+            <span>Sort</span>
+            <select class="form-control" @bind="sortBy" @bind:after="ApplyFiltersAsync">
+                <option value="recent">Date added</option>
+                <option value="name">Name</option>
+                <option value="steps">Step count</option>
+            </select>
+        </label>
+        <label>
+            <span>Theme</span>
+            <select class="form-control" @bind="filterThemeId" @bind:after="ApplyFiltersAsync">
+                <option value="">All themes</option>
+                @foreach (var theme in themes)
+                {
+                    <option value="@theme.Id">@theme.Name</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Source</span>
+            <select class="form-control" @bind="filterSourceId" @bind:after="ApplyFiltersAsync">
+                <option value="">All sources</option>
+                @foreach (var source in sources)
+                {
+                    <option value="@source.Id">@source.Name</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Color</span>
+            <select class="form-control" @bind="filterColorId" @bind:after="ApplyFiltersAsync">
+                <option value="">All colors</option>
+                @foreach (var color in colors)
+                {
+                    <option value="@color.Id">@color.Name</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Difficulty</span>
+            <select class="form-control" @bind="filterDifficulty" @bind:after="ApplyFiltersAsync">
+                <option value="">All</option>
+                <option value="1">Beginner</option>
+                <option value="2">Beginner+</option>
+                <option value="3">Intermediate</option>
+                <option value="4">Intermediate+</option>
+                <option value="5">Advanced</option>
+                <option value="6">Advanced+</option>
+            </select>
+        </label>
+    </div>
+
+    @if (pagedPatterns.Count == 0 && filteredPatterns.Count == 0)
     {
         <div class="empty-state">
             <h2>No Patterns Yet</h2>
@@ -96,29 +192,59 @@ else
     else
     {
         <div class="pattern-card-grid">
-            @foreach (var pattern in patterns)
+            @foreach (var pattern in pagedPatterns)
             {
-                <article class="pattern-card">
+                var assetId = patternAssetIds.GetValueOrDefault(pattern.Id);
+                <article class="pattern-card pattern-card-with-image">
+                    <AssetThumbnailImage AssetId="assetId" AltText="@pattern.Name" />
+                    <div>
                     <h2>@pattern.Name</h2>
                     <p>@DisplayMetadata(pattern)</p>
                     <div class="pattern-card-stats">
+                        <span class="@KnittingUi.DifficultyCssClass(pattern.Difficulty)">@(string.IsNullOrWhiteSpace(pattern.Difficulty) ? "Unspecified" : pattern.Difficulty)</span>
                         <span>@pattern.PieceCount pieces</span>
                         <span>@pattern.StepCount steps</span>
+                        <span>@(string.IsNullOrWhiteSpace(pattern.ThemeName) ? "No theme" : pattern.ThemeName)</span>
+                        <span>@(string.IsNullOrWhiteSpace(pattern.ColorName) ? "No color" : pattern.ColorName)</span>
+                        <span>@(string.IsNullOrWhiteSpace(pattern.SourceName) ? "No source" : pattern.SourceName)</span>
                     </div>
                     <div class="auth-actions">
                         <a class="btn btn-primary btn-sm" href="@($"/modules/knitting/patterns/{pattern.Id}")">Open</a>
                         <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => StartEdit(pattern)">Edit</button>
                         <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeletePatternAsync(pattern.Id)">Delete</button>
                     </div>
+                    </div>
                 </article>
             }
         </div>
+        @if (filteredPatterns.Count > patternPageSize)
+        {
+            <div class="auth-actions mt-3">
+                <button class="btn btn-outline-secondary btn-sm" disabled="@(patternPage <= 1 || busy)" @onclick="PreviousPatternPage">Previous</button>
+                <span class="muted-copy align-self-center">Page @patternPage of @PatternPageCount</span>
+                <button class="btn btn-outline-secondary btn-sm" disabled="@(patternPage >= PatternPageCount || busy)" @onclick="NextPatternPage">Next</button>
+            </div>
+        }
     }
 }
 
 @code {
     private const string ModuleKey = "knitting";
     private readonly List<ModulePatternDto> patterns = [];
+    private readonly List<ModulePatternDto> filteredPatterns = [];
+    private readonly List<ModulePatternDto> pagedPatterns = [];
+    private readonly Dictionary<Guid, Guid?> patternAssetIds = [];
+    private readonly List<TankerMade.Contracts.DTOs.Reference.CoreReferenceItemDto> themes = [];
+    private readonly List<TankerMade.Contracts.DTOs.Reference.CoreReferenceItemDto> colors = [];
+    private readonly List<TankerMade.Contracts.DTOs.Reference.CoreReferenceItemDto> sources = [];
+    private string search = string.Empty;
+    private string sortBy = "recent";
+    private string filterThemeId = string.Empty;
+    private string filterSourceId = string.Empty;
+    private string filterColorId = string.Empty;
+    private string filterDifficulty = string.Empty;
+    private int patternPage = 1;
+    private const int patternPageSize = 12;
     private PatternFormModel form = new();
     private Guid? selectedPatternId;
     private bool loading = true;
@@ -148,8 +274,23 @@ else
                 return;
             }
 
+            themes.Clear();
+            themes.AddRange(await ApiClient.GetCoreReferenceItemsAsync("themes"));
+            colors.Clear();
+            colors.AddRange(await ApiClient.GetCoreReferenceItemsAsync("colors"));
+            sources.Clear();
+            sources.AddRange(await ApiClient.GetCoreReferenceItemsAsync("sources"));
             patterns.Clear();
             patterns.AddRange(await ApiClient.GetModulePatternsAsync(ModuleKey));
+            CardAssets.InvalidateAll();
+            patternAssetIds.Clear();
+            var assets = await CardAssets.GetAssetsAsync(ModuleKey, "pattern");
+            foreach (var pattern in patterns)
+            {
+                patternAssetIds[pattern.Id] = assets.FirstOrDefault(asset => asset.RecordId == pattern.Id)?.Id;
+            }
+
+            ApplyFilters();
         }
         catch (Exception ex)
         {
@@ -158,6 +299,97 @@ else
         finally
         {
             loading = false;
+        }
+    }
+
+    private Task ApplyFiltersAsync()
+    {
+        ApplyFilters();
+        return Task.CompletedTask;
+    }
+
+    private void ApplyFilters()
+    {
+        filteredPatterns.Clear();
+        IEnumerable<ModulePatternDto> query = patterns;
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(pattern =>
+                pattern.Name.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || pattern.Type.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || pattern.Form.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || pattern.ThemeName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || pattern.SourceName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || pattern.Difficulty.Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (Guid.TryParse(filterThemeId, out var themeId))
+        {
+            query = query.Where(pattern => pattern.ThemeId == themeId);
+        }
+
+        if (Guid.TryParse(filterSourceId, out var sourceId))
+        {
+            query = query.Where(pattern => pattern.SourceId == sourceId);
+        }
+
+        if (Guid.TryParse(filterColorId, out var colorId))
+        {
+            query = query.Where(pattern => pattern.ColorId == colorId);
+        }
+
+        if (int.TryParse(filterDifficulty, out var difficulty) && difficulty > 0)
+        {
+            var label = KnittingUi.DifficultyLabel(difficulty);
+            query = query.Where(pattern =>
+                string.Equals(pattern.Difficulty, label, StringComparison.OrdinalIgnoreCase)
+                || KnittingUi.ParseDifficulty(pattern.Difficulty) == difficulty);
+        }
+
+        query = sortBy switch
+        {
+            "name" => query.OrderBy(pattern => pattern.Name),
+            "steps" => query.OrderByDescending(pattern => pattern.StepCount),
+            _ => query.OrderByDescending(pattern => pattern.CreatedAt)
+        };
+
+        filteredPatterns.AddRange(query);
+        patternPage = 1;
+        ApplyPatternPagination();
+    }
+
+    private int PatternPageCount => filteredPatterns.Count == 0
+        ? 1
+        : (int)Math.Ceiling(filteredPatterns.Count / (double)patternPageSize);
+
+    private void ApplyPatternPagination()
+    {
+        pagedPatterns.Clear();
+        if (filteredPatterns.Count == 0)
+        {
+            return;
+        }
+
+        var skip = (patternPage - 1) * patternPageSize;
+        pagedPatterns.AddRange(filteredPatterns.Skip(skip).Take(patternPageSize));
+    }
+
+    private void PreviousPatternPage()
+    {
+        if (patternPage > 1)
+        {
+            patternPage--;
+            ApplyPatternPagination();
+        }
+    }
+
+    private void NextPatternPage()
+    {
+        if (patternPage < PatternPageCount)
+        {
+            patternPage++;
+            ApplyPatternPagination();
         }
     }
 
@@ -176,6 +408,9 @@ else
                     Type = form.Type,
                     Form = form.Form,
                     Difficulty = form.Difficulty,
+                    ThemeId = ParseOptionalGuid(form.ThemeIdText),
+                    ColorId = ParseOptionalGuid(form.ColorIdText),
+                    SourceId = ParseOptionalGuid(form.SourceIdText),
                     SuggestedYarnWeight = form.SuggestedYarnWeight,
                     SuggestedNeedleSizes = form.SuggestedNeedleSizes,
                     RequiredNotions = form.RequiredNotions
@@ -189,6 +424,9 @@ else
                     Type = form.Type,
                     Form = form.Form,
                     Difficulty = form.Difficulty,
+                    ThemeId = ParseOptionalGuid(form.ThemeIdText),
+                    ColorId = ParseOptionalGuid(form.ColorIdText),
+                    SourceId = ParseOptionalGuid(form.SourceIdText),
                     SuggestedYarnWeight = form.SuggestedYarnWeight,
                     SuggestedNeedleSizes = form.SuggestedNeedleSizes,
                     RequiredNotions = form.RequiredNotions
@@ -242,6 +480,9 @@ else
             Type = pattern.Type,
             Form = pattern.Form,
             Difficulty = pattern.Difficulty,
+            ThemeIdText = pattern.ThemeId?.ToString() ?? string.Empty,
+            ColorIdText = pattern.ColorId?.ToString() ?? string.Empty,
+            SourceIdText = pattern.SourceId?.ToString() ?? string.Empty,
             SuggestedYarnWeight = pattern.SuggestedYarnWeight,
             SuggestedNeedleSizes = pattern.SuggestedNeedleSizes,
             RequiredNotions = pattern.RequiredNotions
@@ -253,6 +494,9 @@ else
         selectedPatternId = null;
         form = new PatternFormModel();
     }
+
+    private static Guid? ParseOptionalGuid(string? value)
+        => Guid.TryParse(value, out var parsed) ? parsed : null;
 
     private static string DisplayMetadata(ModulePatternDto pattern)
     {
@@ -276,6 +520,12 @@ else
 
         [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "Difficulty cannot exceed 100 characters")]
         public string Difficulty { get; set; } = string.Empty;
+
+        public string ThemeIdText { get; set; } = string.Empty;
+
+        public string ColorIdText { get; set; } = string.Empty;
+
+        public string SourceIdText { get; set; } = string.Empty;
 
         [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "Suggested yarn weight cannot exceed 100 characters")]
         public string SuggestedYarnWeight { get; set; } = string.Empty;

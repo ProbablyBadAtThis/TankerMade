@@ -10,6 +10,8 @@ public class ModulePatternDto
     public string Difficulty { get; set; } = string.Empty;
     public Guid? ThemeId { get; set; }
     public string ThemeName { get; set; } = string.Empty;
+    public Guid? ColorId { get; set; }
+    public string ColorName { get; set; } = string.Empty;
     public Guid? SourceId { get; set; }
     public string SourceName { get; set; } = string.Empty;
     public string SuggestedYarnWeight { get; set; } = string.Empty;

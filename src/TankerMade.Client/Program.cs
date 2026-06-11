@@ -14,5 +14,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseA
 builder.Services.AddScoped<AuthSession>();
 builder.Services.AddScoped<TankerMadeApiClient>();
 builder.Services.AddScoped<ClientModuleState>();
+builder.Services.AddScoped<KnittingRecentActivity>();
+builder.Services.AddScoped<KnittingCardAssetCache>();
 
 await builder.Build().RunAsync();

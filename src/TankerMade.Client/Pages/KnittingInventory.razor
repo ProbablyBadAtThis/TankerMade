@@ -5,6 +5,8 @@
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject TankerMade.Client.Services.KnittingCardAssetCache CardAssets
+@inject NavigationManager Navigation
 
 <PageTitle>Knitting Inventory</PageTitle>
 
@@ -20,14 +22,14 @@ else if (!ModuleState.IsActive("knitting"))
     <p>Activate Knitting from Home to continue.</p>
     <a class="btn btn-outline-primary" href="/">Go to Home</a>
 }
-else if (loading)
+else if (initialLoading)
 {
     <h1>Knitting Inventory</h1>
     <p>Loading...</p>
 }
 else
 {
-    <div class="page-heading">
+    <div class="knitting-inventory-page page-heading">
         <div>
             <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
             <h1>Inventory</h1>
@@ -46,16 +48,27 @@ else
         <button class="@TabButtonClass("notions")" @onclick='() => SetTab("notions")'>Notions</button>
     </div>
 
-    <div class="input-group mb-3">
-        <input class="form-control" placeholder="Search inventory" @bind="search" @bind:event="oninput" />
-        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="LoadInventoryAsync">Search</button>
-    </div>
+    <label class="knitting-inventory-search d-block mb-3">
+        <span class="form-label">Search</span>
+        <input class="form-control"
+               placeholder="Filter as you type"
+               @bind="search"
+               @bind:event="oninput"
+               @bind:after="ApplyInventorySearch" />
+    </label>
 
     @if (activeTab == "yarn")
     {
-        <div class="row g-3">
-            <div class="col-lg-4">
-                <div class="crafting-panel">
+        <div class="d-flex gap-2 flex-wrap mb-3">
+            <button class="@FiberFilterButtonClass(string.Empty)" disabled="@busy" @onclick='() => SetFiberFilterAsync(string.Empty)'>All</button>
+            <button class="@FiberFilterButtonClass("Synthetic")" disabled="@busy" @onclick='() => SetFiberFilterAsync("Synthetic")'>Synthetic</button>
+            <button class="@FiberFilterButtonClass("Natural")" disabled="@busy" @onclick='() => SetFiberFilterAsync("Natural")'>Natural</button>
+            <button class="@FiberFilterButtonClass("Blended")" disabled="@busy" @onclick='() => SetFiberFilterAsync("Blended")'>Blended</button>
+        </div>
+
+        <div class="row g-3 knitting-inventory-layout">
+            <div class="col-12 col-xl-4">
+                <div class="crafting-panel knitting-inventory-form-panel">
                     <h2>Add Yarn</h2>
                     <label class="form-label">Brand</label>
                     <input class="form-control mb-2" @bind="yarnForm.BrandName" />
@@ -99,36 +112,51 @@ else
                         <input class="form-check-input" type="checkbox" @bind="yarnForm.IsSalePrice" />
                         <span class="form-check-label">Sale price</span>
                     </label>
-                    <button class="btn btn-primary" disabled="@busy" @onclick="SaveYarnAsync">Add / Merge</button>
+                    <div class="auth-actions">
+                        <button class="btn btn-primary" disabled="@busy" @onclick="SaveYarnAsync">Add / Merge</button>
+                        <a class="btn btn-outline-secondary" href="/modules/knitting/inventory?tab=yarn">Finish</a>
+                    </div>
                 </div>
             </div>
-            <div class="col-lg-8">
-                <div class="pattern-card-grid">
+            <div class="col-12 col-xl-8">
+                <div class="inventory-list-panel @(listBusy ? "is-refreshing" : string.Empty)">
+                @if (listBusy)
+                {
+                    <p class="inventory-list-status muted-copy">Updating list…</p>
+                }
+                <div class="pattern-card-grid knitting-inventory-card-grid">
                     @foreach (var yarn in yarns)
                     {
-                        <div class="pattern-card @(selectedItemId == yarn.Id ? "printing-material-card-active" : string.Empty)">
-                            <h2>@yarn.BrandName</h2>
-                            <p>@yarn.ColorName</p>
-                            <div class="pattern-card-stats">
-                                <span>@yarn.TotalSkeins skeins</span>
-                                <span>@yarn.WeightName</span>
-                                <span>@yarn.FiberTag</span>
-                            </div>
-                            <p>@PurchaseSummary(yarn.Purchases)</p>
+                        var assetId = yarnAssetIds.GetValueOrDefault(yarn.Id);
+                        <div class="pattern-card pattern-card-with-image @(selectedItemId == yarn.Id ? "printing-material-card-active" : string.Empty)">
+                            <AssetThumbnailImage AssetId="assetId" AltText="@($"{yarn.BrandName} {yarn.ColorName}")" />
+                            <div>
+                            <a class="pattern-card-link" href="/modules/knitting/inventory/yarn/@yarn.Id">
+                                <h2>@yarn.BrandName</h2>
+                                <p>@yarn.ColorName</p>
+                                <div class="pattern-card-stats">
+                                    <span>@yarn.TotalSkeins skeins</span>
+                                    <span>@yarn.WeightName</span>
+                                    <span>@yarn.FiberTag</span>
+                                </div>
+                                <p>@PurchaseSummary(yarn.Purchases)</p>
+                            </a>
                             <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => SelectItemForAssetsAsync(yarn.Id, YarnRecordType)">
                                 Manage Assets
                             </button>
+                            </div>
                         </div>
                     }
+                </div>
                 </div>
             </div>
         </div>
     }
     else if (activeTab == "tools")
     {
-        <div class="row g-3">
-            <div class="col-lg-4">
-                <div class="crafting-panel">
+        <div class="row g-3 knitting-inventory-layout">
+            <div class="col-12 col-xl-4">
+                <div class="crafting-panel knitting-inventory-form-panel">
                     <h2>Add Tool</h2>
                     <label class="form-label">Brand</label>
                     <input class="form-control mb-2" @bind="toolForm.BrandName" />
@@ -156,35 +184,50 @@ else
                         <input class="form-check-input" type="checkbox" @bind="toolForm.IsSalePrice" />
                         <span class="form-check-label">Sale price</span>
                     </label>
-                    <button class="btn btn-primary" disabled="@busy" @onclick="SaveToolAsync">Add / Merge</button>
+                    <div class="auth-actions">
+                        <button class="btn btn-primary" disabled="@busy" @onclick="SaveToolAsync">Add / Merge</button>
+                        <a class="btn btn-outline-secondary" href="/modules/knitting/inventory?tab=tools">Finish</a>
+                    </div>
                 </div>
             </div>
-            <div class="col-lg-8">
-                <div class="pattern-card-grid">
+            <div class="col-12 col-xl-8">
+                <div class="inventory-list-panel @(listBusy ? "is-refreshing" : string.Empty)">
+                @if (listBusy)
+                {
+                    <p class="inventory-list-status muted-copy">Updating list…</p>
+                }
+                <div class="pattern-card-grid knitting-inventory-card-grid">
                     @foreach (var tool in tools)
                     {
-                        <div class="pattern-card @(selectedItemId == tool.Id ? "printing-material-card-active" : string.Empty)">
-                            <h2>@tool.TypeName</h2>
-                            <p>@tool.BrandName</p>
-                            <div class="pattern-card-stats">
-                                <span>@tool.Quantity owned</span>
-                                <span>@tool.Size</span>
-                            </div>
-                            <p>@PurchaseSummary(tool.Purchases)</p>
+                        var assetId = toolAssetIds.GetValueOrDefault(tool.Id);
+                        <div class="pattern-card pattern-card-with-image @(selectedItemId == tool.Id ? "printing-material-card-active" : string.Empty)">
+                            <AssetThumbnailImage AssetId="assetId" AltText="@($"{tool.BrandName} {tool.TypeName}")" />
+                            <div>
+                            <a class="pattern-card-link" href="/modules/knitting/inventory/tool/@tool.Id">
+                                <h2>@tool.TypeName</h2>
+                                <p>@tool.BrandName</p>
+                                <div class="pattern-card-stats">
+                                    <span>@tool.Quantity owned</span>
+                                    <span>@tool.Size</span>
+                                </div>
+                                <p>@PurchaseSummary(tool.Purchases)</p>
+                            </a>
                             <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => SelectItemForAssetsAsync(tool.Id, ToolRecordType)">
                                 Manage Assets
                             </button>
+                            </div>
                         </div>
                     }
+                </div>
                 </div>
             </div>
         </div>
     }
     else
     {
-        <div class="row g-3">
-            <div class="col-lg-4">
-                <div class="crafting-panel">
+        <div class="row g-3 knitting-inventory-layout">
+            <div class="col-12 col-xl-4">
+                <div class="crafting-panel knitting-inventory-form-panel">
                     <h2>Add Notion</h2>
                     <label class="form-label">Brand</label>
                     <input class="form-control mb-2" @bind="notionForm.BrandName" />
@@ -214,27 +257,42 @@ else
                         <input class="form-check-input" type="checkbox" @bind="notionForm.IsSalePrice" />
                         <span class="form-check-label">Sale price</span>
                     </label>
-                    <button class="btn btn-primary" disabled="@busy" @onclick="SaveNotionAsync">Add / Merge</button>
+                    <div class="auth-actions">
+                        <button class="btn btn-primary" disabled="@busy" @onclick="SaveNotionAsync">Add / Merge</button>
+                        <a class="btn btn-outline-secondary" href="/modules/knitting/inventory?tab=notions">Finish</a>
+                    </div>
                 </div>
             </div>
-            <div class="col-lg-8">
-                <div class="pattern-card-grid">
+            <div class="col-12 col-xl-8">
+                <div class="inventory-list-panel @(listBusy ? "is-refreshing" : string.Empty)">
+                @if (listBusy)
+                {
+                    <p class="inventory-list-status muted-copy">Updating list…</p>
+                }
+                <div class="pattern-card-grid knitting-inventory-card-grid">
                     @foreach (var notion in notions)
                     {
-                        <div class="pattern-card @(selectedItemId == notion.Id ? "printing-material-card-active" : string.Empty)">
-                            <h2>@notion.TypeName</h2>
-                            <p>@notion.BrandName</p>
-                            <div class="pattern-card-stats">
-                                <span>@notion.Quantity owned</span>
-                                <span>@notion.Size</span>
-                                <span>@notion.ColorName</span>
-                            </div>
-                            <p>@PurchaseSummary(notion.Purchases)</p>
+                        var assetId = notionAssetIds.GetValueOrDefault(notion.Id);
+                        <div class="pattern-card pattern-card-with-image @(selectedItemId == notion.Id ? "printing-material-card-active" : string.Empty)">
+                            <AssetThumbnailImage AssetId="assetId" AltText="@($"{notion.BrandName} {notion.TypeName}")" />
+                            <div>
+                            <a class="pattern-card-link" href="/modules/knitting/inventory/notion/@notion.Id">
+                                <h2>@notion.TypeName</h2>
+                                <p>@notion.BrandName</p>
+                                <div class="pattern-card-stats">
+                                    <span>@notion.Quantity owned</span>
+                                    <span>@notion.Size</span>
+                                    <span>@notion.ColorName</span>
+                                </div>
+                                <p>@PurchaseSummary(notion.Purchases)</p>
+                            </a>
                             <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => SelectItemForAssetsAsync(notion.Id, NotionRecordType)">
                                 Manage Assets
                             </button>
+                            </div>
                         </div>
                     }
+                </div>
                 </div>
             </div>
         </div>
@@ -291,6 +349,12 @@ else
     private const string ToolRecordType = "tool";
     private const string NotionRecordType = "notion";
 
+    private readonly Dictionary<Guid, Guid?> yarnAssetIds = [];
+    private readonly Dictionary<Guid, Guid?> toolAssetIds = [];
+    private readonly Dictionary<Guid, Guid?> notionAssetIds = [];
+    private readonly List<ModuleYarnInventoryItemDto> allYarns = [];
+    private readonly List<ModuleToolInventoryItemDto> allTools = [];
+    private readonly List<ModuleNotionInventoryItemDto> allNotions = [];
     private readonly List<ModuleYarnInventoryItemDto> yarns = [];
     private readonly List<ModuleToolInventoryItemDto> tools = [];
     private readonly List<ModuleNotionInventoryItemDto> notions = [];
@@ -299,6 +363,7 @@ else
     private CreateModuleNotionInventoryItemDto notionForm = new();
     private string activeTab = "yarn";
     private string search = string.Empty;
+    private string fiberTag = string.Empty;
     private string errorMessage = string.Empty;
     private readonly List<string> yarnWeightOptions = [];
     private readonly List<string> fiberTagOptions = [];
@@ -311,8 +376,12 @@ else
     private Guid? selectedItemId;
     private string selectedRecordType = YarnRecordType;
     private readonly List<AssetRecordDto> selectedItemAssets = [];
-    private bool loading = true;
+    private bool initialLoading = true;
+    private bool listBusy;
     private bool busy;
+
+    [SupplyParameterFromQuery(Name = "tab")]
+    public string? TabQuery { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -323,20 +392,49 @@ else
             await LoadReferenceOptionsAsync();
         }
 
-        await LoadInventoryAsync();
+        if (IsValidTab(TabQuery))
+        {
+            activeTab = TabQuery!;
+        }
+
+        await LoadInventoryAsync(isInitialLoad: true);
     }
 
     private async Task SetTab(string tab)
     {
+        if (!IsValidTab(tab))
+        {
+            return;
+        }
+
         activeTab = tab;
         selectedItemId = null;
         selectedItemAssets.Clear();
+        if (tab != "yarn")
+        {
+            fiberTag = string.Empty;
+        }
+
+        Navigation.NavigateTo($"/modules/knitting/inventory?tab={tab}", replace: true);
         await LoadInventoryAsync();
     }
 
-    private async Task LoadInventoryAsync()
+    private static bool IsValidTab(string? tab)
     {
-        loading = true;
+        return tab is "yarn" or "tools" or "notions";
+    }
+
+    private async Task LoadInventoryAsync(bool isInitialLoad = false)
+    {
+        if (isInitialLoad)
+        {
+            initialLoading = true;
+        }
+        else
+        {
+            listBusy = true;
+        }
+
         errorMessage = string.Empty;
 
         try
@@ -348,19 +446,22 @@ else
 
             if (activeTab == "yarn")
             {
-                yarns.Clear();
-                yarns.AddRange(await ApiClient.GetModuleYarnsAsync(ModuleKey, search));
+                allYarns.Clear();
+                allYarns.AddRange(await ApiClient.GetModuleYarnsAsync(ModuleKey, fiberTag: fiberTag));
             }
             else if (activeTab == "tools")
             {
-                tools.Clear();
-                tools.AddRange(await ApiClient.GetModuleToolsAsync(ModuleKey, search));
+                allTools.Clear();
+                allTools.AddRange(await ApiClient.GetModuleToolsAsync(ModuleKey));
             }
             else
             {
-                notions.Clear();
-                notions.AddRange(await ApiClient.GetModuleNotionsAsync(ModuleKey, search));
+                allNotions.Clear();
+                allNotions.AddRange(await ApiClient.GetModuleNotionsAsync(ModuleKey));
             }
+
+            await LoadInventoryAssetsAsync();
+            ApplyInventorySearch();
         }
         catch (Exception ex)
         {
@@ -368,8 +469,105 @@ else
         }
         finally
         {
-            loading = false;
+            if (isInitialLoad)
+            {
+                initialLoading = false;
+            }
+            else
+            {
+                listBusy = false;
+            }
         }
+    }
+
+    private async Task LoadInventoryAssetsAsync()
+    {
+        yarnAssetIds.Clear();
+        toolAssetIds.Clear();
+        notionAssetIds.Clear();
+
+        var yarnAssets = await CardAssets.GetAssetsAsync(ModuleKey, YarnRecordType);
+        foreach (var yarn in allYarns)
+        {
+            yarnAssetIds[yarn.Id] = yarnAssets.FirstOrDefault(asset => asset.RecordId == yarn.Id)?.Id;
+        }
+
+        var toolAssets = await CardAssets.GetAssetsAsync(ModuleKey, ToolRecordType);
+        foreach (var tool in allTools)
+        {
+            toolAssetIds[tool.Id] = toolAssets.FirstOrDefault(asset => asset.RecordId == tool.Id)?.Id;
+        }
+
+        var notionAssets = await CardAssets.GetAssetsAsync(ModuleKey, NotionRecordType);
+        foreach (var notion in allNotions)
+        {
+            notionAssetIds[notion.Id] = notionAssets.FirstOrDefault(asset => asset.RecordId == notion.Id)?.Id;
+        }
+    }
+
+    private void ApplyInventorySearch()
+    {
+        yarns.Clear();
+        tools.Clear();
+        notions.Clear();
+
+        if (activeTab == "yarn")
+        {
+            yarns.AddRange(FilterYarns(allYarns));
+        }
+        else if (activeTab == "tools")
+        {
+            tools.AddRange(FilterTools(allTools));
+        }
+        else
+        {
+            notions.AddRange(FilterNotions(allNotions));
+        }
+    }
+
+    private IEnumerable<ModuleYarnInventoryItemDto> FilterYarns(IEnumerable<ModuleYarnInventoryItemDto> source)
+    {
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            return source;
+        }
+
+        return source.Where(item =>
+            item.BrandName.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || item.ColorName.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || item.MainColor.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || item.WeightName.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || item.FiberTag.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || item.FiberContent.Contains(search, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private IEnumerable<ModuleToolInventoryItemDto> FilterTools(IEnumerable<ModuleToolInventoryItemDto> source)
+    {
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            return source;
+        }
+
+        return source.Where(item =>
+            item.BrandName.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || item.TypeName.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || item.Size.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || item.Description.Contains(search, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private IEnumerable<ModuleNotionInventoryItemDto> FilterNotions(IEnumerable<ModuleNotionInventoryItemDto> source)
+    {
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            return source;
+        }
+
+        return source.Where(item =>
+            item.BrandName.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || item.TypeName.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || item.Size.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || item.ColorName.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || item.Description.Contains(search, StringComparison.OrdinalIgnoreCase));
     }
 
     private async Task SaveYarnAsync()
@@ -585,6 +783,19 @@ else
     private string TabButtonClass(string tab)
     {
         return activeTab == tab ? "btn btn-primary" : "btn btn-outline-secondary";
+    }
+
+    private string FiberFilterButtonClass(string tag)
+    {
+        return string.Equals(fiberTag, tag, StringComparison.OrdinalIgnoreCase)
+            ? "btn btn-primary btn-sm"
+            : "btn btn-outline-secondary btn-sm";
+    }
+
+    private async Task SetFiberFilterAsync(string tag)
+    {
+        fiberTag = tag;
+        await LoadInventoryAsync();
     }
 
     private static string PurchaseSummary(IReadOnlyList<ModuleYarnPurchaseDto> purchases)

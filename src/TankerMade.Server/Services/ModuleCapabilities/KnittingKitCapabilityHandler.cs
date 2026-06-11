@@ -51,6 +51,18 @@ public class KnittingKitCapabilityHandler : IModuleKitCapabilityHandler
     public Task<bool> DeleteAsync(Guid kitId, Guid userId)
         => _service.DeleteAsync(kitId, userId);
 
+    public async Task<ModuleKitDto?> ArchiveAsync(Guid kitId, Guid userId)
+    {
+        var kit = await _service.ArchiveAsync(kitId, userId);
+        return kit == null ? null : Map(kit);
+    }
+
+    public async Task<ModuleKitDto?> ReopenAsync(Guid kitId, Guid userId)
+    {
+        var kit = await _service.ReopenAsync(kitId, userId);
+        return kit == null ? null : Map(kit);
+    }
+
     public async Task<ModuleKitPieceDto?> AddPieceAsync(Guid kitId, CreateModuleKitPieceRequest request, Guid userId)
     {
         var piece = await _service.AddPieceAsync(kitId, new CreateKnittingKitPieceDto { Name = request.Name, Notes = request.Notes }, userId);

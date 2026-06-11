@@ -222,6 +222,17 @@ code {
     text-decoration: none;
 }
 
+.pattern-card-link {
+    color: inherit;
+    display: grid;
+    gap: 0.6rem;
+    text-decoration: none;
+}
+
+.pattern-card-link:hover {
+    color: inherit;
+}
+
 .project-card {
     border: 1px solid #d9dee7;
     border-radius: 8px;
@@ -349,6 +360,11 @@ code {
     gap: 1rem;
     justify-content: space-between;
     padding-bottom: 1rem;
+}
+
+.pattern-header-main {
+    flex: 1;
+    min-width: 0;
 }
 
 .pattern-header h1 {
@@ -1307,4 +1323,204 @@ code {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
+}
+
+/* Knitting parity: difficulty, cards, lists, workspace */
+.difficulty-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.2rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.difficulty-beginner { background: #d8f3dc; color: #1b4332; }
+.difficulty-beginner-plus { background: #b7e4c7; color: #1b4332; }
+.difficulty-intermediate { background: #ffe8a1; color: #7c4a03; }
+.difficulty-intermediate-plus { background: #ffd166; color: #7c4a03; }
+.difficulty-advanced { background: #fec5bb; color: #7f1d1d; }
+.difficulty-advanced-plus { background: #f4978e; color: #7f1d1d; }
+.difficulty-unspecified { background: #e9ecef; color: #495057; }
+
+.difficulty-picker {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.difficulty-picker button {
+    border: 2px solid transparent;
+    border-radius: 0.5rem;
+    padding: 0.65rem 0.5rem;
+    font-weight: 600;
+}
+
+.difficulty-picker button.active {
+    border-color: #1b6ec2;
+    box-shadow: 0 0 0 0.15rem rgba(27, 110, 194, 0.2);
+}
+
+.list-toolbar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.reference-chip-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.reference-chip-list li {
+    background: var(--surface-muted, #f3f4f6);
+    border-radius: 999px;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.85rem;
+}
+
+.knitting-inventory-page {
+    max-width: 72rem;
+}
+
+.knitting-inventory-layout {
+    align-items: flex-start;
+}
+
+.knitting-inventory-form-panel {
+    max-width: 100%;
+}
+
+.knitting-inventory-card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+}
+
+.inventory-list-panel {
+    position: relative;
+    min-height: 4rem;
+}
+
+.inventory-list-panel.is-refreshing {
+    opacity: 0.72;
+}
+
+.inventory-list-status {
+    margin: 0 0 0.5rem;
+    font-size: 0.9rem;
+}
+
+.knitting-inventory-search {
+    max-width: 28rem;
+}
+
+.knitting-hero-card {
+    display: grid;
+    grid-template-columns: minmax(8rem, 12rem) 1fr;
+    gap: 1rem;
+    align-items: center;
+}
+
+.pattern-card-with-image,
+.project-card-with-image,
+.kit-card-with-image {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: 0.85rem;
+    align-items: start;
+}
+
+.asset-thumbnail-image,
+.asset-thumbnail-placeholder {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    background: #f1f3f5;
+}
+
+.asset-thumbnail-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #868e96;
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 0.5rem;
+}
+
+.step-panel-scroll {
+    max-height: 28rem;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.step-range-group {
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 0.65rem 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.step-range-rows {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.35rem;
+}
+
+.step-range-chip {
+    border: 1px solid #ced4da;
+    border-radius: 999px;
+    padding: 0.1rem 0.55rem;
+    font-size: 0.78rem;
+    background: #f8f9fa;
+}
+
+.wizard-shell {
+    display: grid;
+    gap: 1rem;
+}
+
+.wizard-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.wizard-step-pill {
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+    background: #e9ecef;
+    font-size: 0.85rem;
+}
+
+.wizard-step-pill.active {
+    background: #1b6ec2;
+    color: #fff;
+}
+
+.wizard-step-pill.complete {
+    background: #d8f3dc;
+    color: #1b4332;
+}
+
+.inventory-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 0.75rem;
+}
+
+@media (max-width: 720px) {
+    .knitting-hero-card,
+    .pattern-card-with-image,
+    .project-card-with-image,
+    .kit-card-with-image {
+        grid-template-columns: 1fr;
+    }
 }

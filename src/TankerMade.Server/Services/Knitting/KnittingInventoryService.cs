@@ -80,6 +80,51 @@ public class KnittingInventoryService : IKnittingInventoryService
         return yarn == null ? null : await MapYarnAsync(yarn.Id);
     }
 
+    public async Task<KnittingYarnInventoryItemDto?> UpdateYarnRemainingAsync(
+        Guid id,
+        UpdateKnittingYarnRemainingDto request,
+        Guid userId)
+    {
+        var yarn = await _context.KnittingYarnInventoryItems
+            .SingleOrDefaultAsync(y => y.Id == id && y.UserId == userId);
+        if (yarn == null)
+        {
+            return null;
+        }
+
+        yarn.SetRemainingMeasurements(
+            request.EstimatedRemainingLength,
+            request.LengthUnit,
+            request.CurrentWeight);
+        await _context.SaveChangesAsync();
+        return await MapYarnAsync(yarn.Id);
+    }
+
+    public async Task<KnittingYarnInventoryItemDto?> UpdateYarnLotRemainingAsync(
+        Guid yarnId,
+        Guid lotId,
+        UpdateKnittingYarnLotRemainingDto request,
+        Guid userId)
+    {
+        var yarn = await _context.KnittingYarnInventoryItems
+            .SingleOrDefaultAsync(y => y.Id == yarnId && y.UserId == userId);
+        if (yarn == null)
+        {
+            return null;
+        }
+
+        var lot = await _context.KnittingYarnLots
+            .SingleOrDefaultAsync(l => l.Id == lotId && l.YarnInventoryItemId == yarnId);
+        if (lot == null)
+        {
+            return null;
+        }
+
+        lot.SetRemaining(request.RemainingLength, request.CurrentWeight);
+        await _context.SaveChangesAsync();
+        return await MapYarnAsync(yarnId);
+    }
+
     public async Task<IReadOnlyList<KnittingYarnInventoryItemDto>> GetYarnsAsync(
         Guid userId,
         KnittingYarnInventoryFilterDto? filter = null)

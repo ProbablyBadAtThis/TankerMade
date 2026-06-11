@@ -40,6 +40,26 @@ public class KnittingYarnInventoryItem
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void SetRemainingMeasurements(decimal? estimatedRemainingLength, string? lengthUnit, decimal? currentWeight)
+    {
+        if (estimatedRemainingLength.HasValue)
+        {
+            EstimatedRemainingLength = estimatedRemainingLength;
+        }
+
+        if (!string.IsNullOrWhiteSpace(lengthUnit))
+        {
+            LengthUnit = lengthUnit.Trim();
+        }
+
+        if (currentWeight.HasValue)
+        {
+            CurrentWeight = currentWeight;
+        }
+
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void MergeDetails(
         string mainColor,
         string weightName,

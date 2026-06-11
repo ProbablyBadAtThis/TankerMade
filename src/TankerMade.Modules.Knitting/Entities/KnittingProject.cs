@@ -8,6 +8,7 @@ public class KnittingProject
     public string Description { get; set; } = string.Empty;
     public Guid? PatternId { get; set; }
     public Guid? ThemeId { get; set; }
+    public Guid? ColorId { get; set; }
     public int Difficulty { get; set; }
     public int Progress { get; set; }
     public bool IsArchived { get; set; }
@@ -31,12 +32,13 @@ public class KnittingProject
         Slug = SlugGenerator.Generate(name);
     }
 
-    public void Update(string name, string description, Guid? patternId, Guid? themeId, int difficulty, int progress)
+    public void Update(string name, string description, Guid? patternId, Guid? themeId, Guid? colorId, int difficulty, int progress)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
         Description = description ?? string.Empty;
         PatternId = patternId;
         ThemeId = themeId;
+        ColorId = colorId;
         Difficulty = difficulty;
         SetProgress(progress);
         Slug = SlugGenerator.Generate(name);

@@ -980,6 +980,11 @@ public class TankerMadeDbContext : DbContext
                 .HasForeignKey(e => e.SourceId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            entity.HasOne<Color>()
+                .WithMany()
+                .HasForeignKey(e => e.ColorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.Slug);
             entity.HasIndex(e => new { e.UserId, e.Name });
@@ -1082,6 +1087,11 @@ public class TankerMadeDbContext : DbContext
             entity.HasOne<Theme>()
                 .WithMany()
                 .HasForeignKey(e => e.ThemeId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne<Color>()
+                .WithMany()
+                .HasForeignKey(e => e.ColorId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasIndex(e => e.UserId);

@@ -1,6 +1,10 @@
 @page "/modules/knitting"
+@using TankerMade.Contracts.DTOs.ModuleProjects
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject TankerMade.Client.Services.KnittingRecentActivity RecentActivity
+@inject TankerMade.Client.Services.KnittingCardAssetCache CardAssets
 
 <PageTitle>Knitting</PageTitle>
 
@@ -27,8 +31,39 @@
             <a class="btn btn-outline-primary" href="/">Go to Home</a>
         </section>
     }
+    else if (loading)
+    {
+        <section class="module-card">
+            <p>Loading recent activity...</p>
+        </section>
+    }
     else
     {
+        @if (recentProject != null)
+        {
+            <section class="module-card module-card-knitting-feature mb-3">
+                <div class="knitting-hero-card">
+                    <AssetThumbnailImage AssetId="recentProjectAssetId"
+                                         AltText="@recentProject.Name"
+                                         CssClass="asset-thumbnail-image" />
+                    <div>
+                        <p class="module-kicker mb-1">Most Recent Project</p>
+                        <h2>@recentProject.Name</h2>
+                        <p class="mb-2">@(string.IsNullOrWhiteSpace(recentProject.ThemeName) ? "No theme" : recentProject.ThemeName)</p>
+                        <div class="pattern-card-stats mb-2">
+                            <span class="@KnittingUi.DifficultyCssClass(recentProject.Difficulty)">@KnittingUi.DifficultyLabel(recentProject.Difficulty)</span>
+                            <span>@recentProject.Progress%</span>
+                            @if (recentProject.TotalStitchCount > 0)
+                            {
+                                <span>@recentProject.CompletedStitchCount/@recentProject.TotalStitchCount stitches</span>
+                            }
+                        </div>
+                        <a class="btn btn-primary" href="@($"/modules/knitting/projects/{recentProject.Id}")">Open Most Recent Project</a>
+                    </div>
+                </div>
+            </section>
+        }
+
         <section class="knitting-highlight-row">
             <article class="module-card module-card-knitting-feature">
                 <h2>Active Project Focus</h2>
@@ -38,7 +73,12 @@
             <article class="module-card module-card-knitting-feature module-card-knitting-accent">
                 <h2>Stash and Supply Health</h2>
                 <p>Stay ahead on yarn lots, tools, and notion usage before starting new pieces.</p>
-                <a class="btn btn-outline-secondary" href="/modules/knitting/inventory">Open Inventory</a>
+                <div class="auth-actions">
+                    <a class="btn btn-outline-secondary" href="/modules/knitting/inventory">All Inventory</a>
+                    <a class="btn btn-link" href="/modules/knitting/inventory?tab=yarn">Yarn</a>
+                    <a class="btn btn-link" href="/modules/knitting/inventory?tab=tools">Tools</a>
+                    <a class="btn btn-link" href="/modules/knitting/inventory?tab=notions">Notions</a>
+                </div>
             </article>
         </section>
 
@@ -46,31 +86,35 @@
             <article class="module-card module-card-knitting">
                 <h2>Projects</h2>
                 <p>Track progress, timers, and archive-ready status by piece.</p>
-                <span class="module-pill module-pill-knitting">Workspace</span>
                 <a class="btn btn-outline-secondary" href="/modules/knitting/projects">Open</a>
+                <a class="btn btn-link" href="/modules/knitting/projects/new">New Project Wizard</a>
+                <a class="btn btn-link" href="/modules/knitting/projects?archived=true">Archived Projects</a>
             </article>
             <article class="module-card module-card-knitting">
                 <h2>Patterns</h2>
                 <p>Organize pattern sets, piece order, and reusable instructions.</p>
-                <span class="module-pill module-pill-knitting">Library</span>
                 <a class="btn btn-outline-secondary" href="/modules/knitting/patterns">Open</a>
+                <a class="btn btn-link" href="/modules/knitting/patterns/new">New Pattern Wizard</a>
             </article>
             <article class="module-card module-card-knitting">
                 <h2>Inventory</h2>
-                <p>Manage yarn lots, tools, notions, and sourcing details.</p>
-                <span class="module-pill module-pill-knitting">Supplies</span>
+                <p>Yarn, tools, and notions with lots and purchase history.</p>
                 <a class="btn btn-outline-secondary" href="/modules/knitting/inventory">Open</a>
             </article>
             <article class="module-card module-card-knitting">
                 <h2>Kits</h2>
                 <p>Prepare grouped builds and move pieces into projects when ready.</p>
-                <span class="module-pill module-pill-knitting">Planning</span>
                 <a class="btn btn-outline-secondary" href="/modules/knitting/kits">Open</a>
+                <a class="btn btn-link" href="/modules/knitting/kits/new">New Kit Wizard</a>
+            </article>
+            <article class="module-card module-card-knitting">
+                <h2>Glossary</h2>
+                <p>Stitch abbreviations, technique names, and definitions for quick reference.</p>
+                <a class="btn btn-outline-secondary" href="/modules/knitting/glossary">Open</a>
             </article>
             <article class="module-card module-card-knitting">
                 <h2>Settings</h2>
-                <p>Set defaults and references for your knitting workflow.</p>
-                <span class="module-pill module-pill-knitting">Preferences</span>
+                <p>Reference lists, defaults, and module preferences.</p>
                 <a class="btn btn-outline-secondary" href="/modules/knitting/settings">Open</a>
             </article>
         </section>
@@ -78,12 +122,44 @@
 </div>
 
 @code {
+    private const string ModuleKey = "knitting";
+    private ModuleProjectDto? recentProject;
+    private Guid? recentProjectAssetId;
+    private bool loading = true;
+
     protected override async Task OnInitializedAsync()
     {
         await AuthSession.InitializeAsync();
         if (AuthSession.IsSignedIn)
         {
             await ModuleState.RefreshAsync();
+            await LoadRecentProjectAsync();
+        }
+
+        loading = false;
+    }
+
+    private async Task LoadRecentProjectAsync()
+    {
+        if (!ModuleState.IsActive(ModuleKey))
+        {
+            return;
+        }
+
+        var recentId = await RecentActivity.GetRecentProjectIdAsync();
+        if (!recentId.HasValue)
+        {
+            var projects = await ApiClient.GetModuleProjectsAsync(ModuleKey, includeArchived: false);
+            recentProject = projects.OrderByDescending(project => project.UpdatedAt).FirstOrDefault();
+        }
+        else
+        {
+            recentProject = await ApiClient.GetModuleProjectAsync(ModuleKey, recentId.Value);
+        }
+
+        if (recentProject != null)
+        {
+            recentProjectAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, "project", recentProject.Id);
         }
     }
 }

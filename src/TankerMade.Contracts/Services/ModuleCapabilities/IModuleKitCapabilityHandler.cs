@@ -12,6 +12,8 @@ public interface IModuleKitCapabilityHandler
     Task<ModuleKitDto> CreateAsync(CreateModuleKitRequest request, Guid userId);
     Task<ModuleKitDto?> UpdateAsync(Guid kitId, UpdateModuleKitRequest request, Guid userId);
     Task<bool> DeleteAsync(Guid kitId, Guid userId);
+    Task<ModuleKitDto?> ArchiveAsync(Guid kitId, Guid userId);
+    Task<ModuleKitDto?> ReopenAsync(Guid kitId, Guid userId);
     Task<ModuleKitPieceDto?> AddPieceAsync(Guid kitId, CreateModuleKitPieceRequest request, Guid userId);
     Task<ModuleKitPieceDto?> UpdatePieceAsync(Guid kitId, Guid pieceId, UpdateModuleKitPieceRequest request, Guid userId);
     Task<bool> DeletePieceAsync(Guid kitId, Guid pieceId, Guid userId);

@@ -26,6 +26,7 @@ public class KnittingPatternService : IKnittingPatternService
             createDto.Form,
             createDto.Difficulty,
             createDto.ThemeId,
+            createDto.ColorId,
             createDto.SourceId,
             createDto.SuggestedYarnWeight,
             createDto.SuggestedNeedleSizes,
@@ -106,6 +107,7 @@ public class KnittingPatternService : IKnittingPatternService
             UseIncomingValue(updateDto.Form, pattern.Form),
             UseIncomingValue(updateDto.Difficulty, pattern.Difficulty),
             updateDto.ThemeId ?? pattern.ThemeId,
+            updateDto.ColorId ?? pattern.ColorId,
             updateDto.SourceId ?? pattern.SourceId,
             UseIncomingValue(updateDto.SuggestedYarnWeight, pattern.SuggestedYarnWeight),
             UseIncomingValue(updateDto.SuggestedNeedleSizes, pattern.SuggestedNeedleSizes),
@@ -392,6 +394,13 @@ public class KnittingPatternService : IKnittingPatternService
                 .Select(s => s.Name)
                 .SingleOrDefaultAsync() ?? string.Empty;
 
+        var colorName = pattern.ColorId == null
+            ? string.Empty
+            : await _context.Colors
+                .Where(c => c.Id == pattern.ColorId)
+                .Select(c => c.Name)
+                .SingleOrDefaultAsync() ?? string.Empty;
+
         var pieces = await MapPiecesAsync(pattern.Id);
         var supplies = await MapSuppliesAsync(pattern.Id);
 
@@ -405,6 +414,8 @@ public class KnittingPatternService : IKnittingPatternService
             Difficulty = pattern.Difficulty,
             ThemeId = pattern.ThemeId,
             ThemeName = themeName,
+            ColorId = pattern.ColorId,
+            ColorName = colorName,
             SourceId = pattern.SourceId,
             SourceName = sourceName,
             SuggestedYarnWeight = pattern.SuggestedYarnWeight,

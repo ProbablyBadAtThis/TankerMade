@@ -1,8 +1,10 @@
 @page "/modules/knitting/kits"
 @using TankerMade.Contracts.DTOs.ModuleKits
+@using TankerMade.Contracts.DTOs.ModuleProjects
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject TankerMade.Client.Services.KnittingCardAssetCache CardAssets
 
 <PageTitle>Knitting Kits</PageTitle>
 
@@ -38,10 +40,14 @@ else
         <div class="alert alert-danger">@errorMessage</div>
     }
 
+    <div class="auth-actions mb-3">
+        <a class="btn btn-primary" href="/modules/knitting/kits/new">New Kit Wizard</a>
+    </div>
+
     <div class="row g-3">
         <div class="col-lg-4">
             <div class="project-panel">
-                <h2>Create Kit</h2>
+                <h2>Quick Create</h2>
                 <EditForm Model="kitForm" OnValidSubmit="CreateKitAsync" class="project-edit-form">
                     <DataAnnotationsValidator />
                     <ValidationSummary />
@@ -71,19 +77,58 @@ else
                         Show archived
                     </label>
                 </div>
-                @if (kits.Count == 0)
+                <div class="list-toolbar mb-2">
+                    <label>
+                        <span>Search</span>
+                        <input class="form-control" @bind="kitSearch" @bind:event="oninput" @bind:after="ApplyKitFilters" />
+                    </label>
+                    <label>
+                        <span>Sort</span>
+                        <select class="form-control" @bind="kitSortBy" @bind:after="ApplyKitFilters">
+                            <option value="recent">Most recent</option>
+                            <option value="name">Name</option>
+                        </select>
+                    </label>
+                </div>
+                @if (filteredKits.Count == 0)
                 {
                     <p class="mb-0">No kits yet.</p>
                 }
                 else
                 {
-                    @foreach (var kit in kits)
+                    <div class="pattern-card-grid knitting-kit-list-grid">
+                        @foreach (var kit in pagedKits)
+                        {
+                            var assetId = kitAssetIds.GetValueOrDefault(kit.Id);
+                            <article class="pattern-card kit-card-with-image @(selectedKitId == kit.Id ? "printing-material-card-active" : string.Empty)">
+                                <AssetThumbnailImage AssetId="assetId" AltText="@kit.Name" />
+                                <div>
+                                    <h2>@kit.Name</h2>
+                                    <p>@(string.IsNullOrWhiteSpace(kit.Description) ? "No description" : kit.Description)</p>
+                                    @if (kit.IsArchived)
+                                    {
+                                        <span class="archive-badge">Archived</span>
+                                    }
+                                    <div class="pattern-card-stats">
+                                        <span>@kit.Pieces.Count pieces</span>
+                                        <span>@(string.IsNullOrWhiteSpace(kit.Type) ? "No type" : kit.Type)</span>
+                                    </div>
+                                    <button class="btn btn-primary btn-sm mt-2"
+                                            disabled="@busy"
+                                            @onclick="() => SelectKitAsync(kit.Id)">
+                                        @(selectedKitId == kit.Id ? "Selected" : "Open")
+                                    </button>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                    @if (filteredKits.Count > kitPageSize)
                     {
-                        <button class="btn @(selectedKitId == kit.Id ? "btn-primary" : "btn-outline-secondary") w-100 mb-2 text-start"
-                                disabled="@busy"
-                                @onclick="() => SelectKitAsync(kit.Id)">
-                            @kit.Name @(kit.IsArchived ? "(Archived)" : string.Empty)
-                        </button>
+                        <div class="auth-actions mt-2">
+                            <button class="btn btn-outline-secondary btn-sm" disabled="@(kitPage <= 1 || busy)" @onclick="PreviousKitPage">Previous</button>
+                            <span class="muted-copy align-self-center">Page @kitPage of @KitPageCount</span>
+                            <button class="btn btn-outline-secondary btn-sm" disabled="@(kitPage >= KitPageCount || busy)" @onclick="NextKitPage">Next</button>
+                        </div>
                     }
                 }
             </div>
@@ -109,9 +154,74 @@ else
                     }
                     <div class="auth-actions mt-2">
                         <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => OpenKitEdit(selectedKit)">Edit Details</button>
+                        @if (selectedKit.IsArchived)
+                        {
+                            <button class="btn btn-outline-primary btn-sm" disabled="@busy" @onclick="ReopenKitAsync">Reopen Kit</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="ArchiveKitAsync">Archive Kit</button>
+                        }
                         <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="DeleteKitAsync">Delete Kit</button>
                     </div>
                 </div>
+
+                <section class="project-panel mb-3">
+                    <h2>Kit Workspace</h2>
+                    <div class="pattern-card-stats mb-2">
+                        <span>@KitOverallProgress% complete</span>
+                        <span>@KitCompletedStitches / @KitTotalStitches stitches</span>
+                        <span>@KnittingUi.FormatDurationCompact(KitTotalTrackedSeconds) tracked</span>
+                        <span>@KitLinkedProjectCount / @selectedKit.Pieces.Count pieces started</span>
+                    </div>
+                    @if (selectedKit.Pieces.Count == 0)
+                    {
+                        <p class="mb-0">Add pieces to track kit progress.</p>
+                    }
+                    else
+                    {
+                        @foreach (var piece in selectedKit.Pieces.OrderBy(piece => piece.SortOrder))
+                        {
+                            var childProject = piece.ProjectId.HasValue
+                                ? kitChildProjects.GetValueOrDefault(piece.ProjectId.Value)
+                                : null;
+                            <div class="border rounded p-2 mb-2">
+                                <strong>@piece.Name</strong>
+                                @if (childProject == null)
+                                {
+                                    <p class="mb-2 text-muted">No linked project yet.</p>
+                                }
+                                else
+                                {
+                                    <div class="pattern-card-stats mt-1">
+                                        <span class="@KnittingUi.DifficultyCssClass(childProject.Difficulty)">@KnittingUi.DifficultyLabel(childProject.Difficulty)</span>
+                                        <span>@childProject.Progress% complete</span>
+                                        <span>@childProject.CompletedStitchCount / @childProject.TotalStitchCount stitches</span>
+                                        <span>@KnittingUi.FormatDurationCompact(childProject.TotalTrackedSeconds) tracked</span>
+                                        @if (childProject.TimerRunning)
+                                        {
+                                            <span>Timer running</span>
+                                        }
+                                    </div>
+                                }
+                                <div class="auth-actions mt-2">
+                                    @if (childProject != null)
+                                    {
+                                        <a class="btn btn-sm btn-outline-primary" href="@($"/modules/knitting/projects/{childProject.Id}")">Open Workspace</a>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-outline-primary"
+                                                disabled="@busy"
+                                                @onclick="() => CreateProjectForPieceAsync(piece.Id)">
+                                            Create Project
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                </section>
 
                 <div class="row g-3">
                     <div class="col-md-6">
@@ -297,7 +407,15 @@ else
     private const string ModuleKey = "knitting";
     private const string KitsShowArchivedByDefaultKey = "kits.showArchivedByDefault";
     private readonly List<ModuleKitDto> kits = [];
+    private readonly List<ModuleKitDto> filteredKits = [];
+    private readonly List<ModuleKitDto> pagedKits = [];
+    private readonly Dictionary<Guid, Guid?> kitAssetIds = [];
+    private int kitPage = 1;
+    private const int kitPageSize = 6;
+    private readonly Dictionary<Guid, ModuleProjectDto> kitChildProjects = [];
     private ModuleKitDto? selectedKit;
+    private string kitSearch = string.Empty;
+    private string kitSortBy = "recent";
     private Guid? selectedKitId;
     private Guid? editingPieceId;
     private Guid? editingSupplyId;
@@ -346,6 +464,15 @@ else
 
             kits.Clear();
             kits.AddRange(await ApiClient.GetModuleKitsAsync(ModuleKey, showArchived));
+            CardAssets.InvalidateAll();
+            kitAssetIds.Clear();
+            var assets = await CardAssets.GetAssetsAsync(ModuleKey, "kit");
+            foreach (var kit in kits)
+            {
+                kitAssetIds[kit.Id] = assets.FirstOrDefault(asset => asset.RecordId == kit.Id)?.Id;
+            }
+
+            ApplyKitFilters();
 
             if (selectedKitId.HasValue)
             {
@@ -366,6 +493,64 @@ else
         }
     }
 
+    private void ApplyKitFilters()
+    {
+        filteredKits.Clear();
+        IEnumerable<ModuleKitDto> query = kits;
+
+        if (!string.IsNullOrWhiteSpace(kitSearch))
+        {
+            query = query.Where(kit =>
+                kit.Name.Contains(kitSearch, StringComparison.OrdinalIgnoreCase)
+                || kit.Description.Contains(kitSearch, StringComparison.OrdinalIgnoreCase)
+                || kit.Type.Contains(kitSearch, StringComparison.OrdinalIgnoreCase));
+        }
+
+        query = kitSortBy switch
+        {
+            "name" => query.OrderBy(kit => kit.Name),
+            _ => query.OrderByDescending(kit => kit.UpdatedAt)
+        };
+
+        filteredKits.AddRange(query);
+        kitPage = 1;
+        ApplyKitPagination();
+    }
+
+    private int KitPageCount => filteredKits.Count == 0
+        ? 1
+        : (int)Math.Ceiling(filteredKits.Count / (double)kitPageSize);
+
+    private void ApplyKitPagination()
+    {
+        pagedKits.Clear();
+        if (filteredKits.Count == 0)
+        {
+            return;
+        }
+
+        var skip = (kitPage - 1) * kitPageSize;
+        pagedKits.AddRange(filteredKits.Skip(skip).Take(kitPageSize));
+    }
+
+    private void PreviousKitPage()
+    {
+        if (kitPage > 1)
+        {
+            kitPage--;
+            ApplyKitPagination();
+        }
+    }
+
+    private void NextKitPage()
+    {
+        if (kitPage < KitPageCount)
+        {
+            kitPage++;
+            ApplyKitPagination();
+        }
+    }
+
     private async Task SelectKitAsync(Guid kitId)
     {
         await RunBusyAsync(async () =>
@@ -373,6 +558,84 @@ else
             selectedKit = await ApiClient.GetModuleKitAsync("knitting", kitId);
             selectedKitId = selectedKit?.Id;
             await LoadKitInventoryOptionsAsync();
+            await LoadKitWorkspaceAsync();
+        });
+    }
+
+    private async Task LoadKitWorkspaceAsync()
+    {
+        kitChildProjects.Clear();
+        if (selectedKit == null)
+        {
+            return;
+        }
+
+        var projectIds = selectedKit.Pieces
+            .Where(piece => piece.ProjectId.HasValue)
+            .Select(piece => piece.ProjectId!.Value)
+            .Distinct()
+            .ToList();
+
+        foreach (var projectId in projectIds)
+        {
+            var project = await ApiClient.GetModuleProjectAsync(ModuleKey, projectId);
+            if (project != null)
+            {
+                kitChildProjects[projectId] = project;
+            }
+        }
+    }
+
+    private int KitOverallProgress
+    {
+        get
+        {
+            var projects = kitChildProjects.Values.ToList();
+            return projects.Count == 0 ? 0 : (int)Math.Round(projects.Average(project => project.Progress));
+        }
+    }
+
+    private int KitCompletedStitches => kitChildProjects.Values.Sum(project => project.CompletedStitchCount);
+
+    private int KitTotalStitches => kitChildProjects.Values.Sum(project => project.TotalStitchCount);
+
+    private long KitTotalTrackedSeconds => kitChildProjects.Values.Sum(project => project.TotalTrackedSeconds);
+
+    private int KitLinkedProjectCount => selectedKit?.Pieces.Count(piece => piece.ProjectId.HasValue) ?? 0;
+
+    private async Task ArchiveKitAsync()
+    {
+        if (selectedKitId == null)
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            selectedKit = await ApiClient.ArchiveModuleKitAsync(ModuleKey, selectedKitId.Value);
+            await LoadKitsAsync();
+            if (selectedKit != null)
+            {
+                await LoadKitWorkspaceAsync();
+            }
+        });
+    }
+
+    private async Task ReopenKitAsync()
+    {
+        if (selectedKitId == null)
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            selectedKit = await ApiClient.ReopenModuleKitAsync(ModuleKey, selectedKitId.Value);
+            await LoadKitsAsync();
+            if (selectedKit != null)
+            {
+                await LoadKitWorkspaceAsync();
+            }
         });
     }
 

@@ -6,6 +6,8 @@ public interface IKnittingInventoryService
 {
     Task<KnittingYarnInventoryItemDto> CreateOrMergeYarnAsync(CreateKnittingYarnInventoryItemDto createDto, Guid userId);
     Task<KnittingYarnInventoryItemDto?> GetYarnByIdAsync(Guid id, Guid userId);
+    Task<KnittingYarnInventoryItemDto?> UpdateYarnRemainingAsync(Guid id, UpdateKnittingYarnRemainingDto request, Guid userId);
+    Task<KnittingYarnInventoryItemDto?> UpdateYarnLotRemainingAsync(Guid yarnId, Guid lotId, UpdateKnittingYarnLotRemainingDto request, Guid userId);
     Task<IReadOnlyList<KnittingYarnInventoryItemDto>> GetYarnsAsync(Guid userId, KnittingYarnInventoryFilterDto? filter = null);
     Task<KnittingToolInventoryItemDto> CreateOrMergeToolAsync(CreateKnittingToolInventoryItemDto createDto, Guid userId);
     Task<KnittingToolInventoryItemDto?> GetToolByIdAsync(Guid id, Guid userId);

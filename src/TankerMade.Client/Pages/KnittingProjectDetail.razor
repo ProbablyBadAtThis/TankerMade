@@ -7,6 +7,8 @@
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject TankerMade.Client.Services.KnittingRecentActivity RecentActivity
+@inject TankerMade.Client.Services.KnittingCardAssetCache CardAssets
 
 <PageTitle>Knitting Project</PageTitle>
 
@@ -41,10 +43,29 @@ else
         }
 
         <div class="pattern-header">
-            <div>
+            <div class="knitting-hero-card pattern-header-main">
+                <AssetThumbnailImage AssetId="projectAssetId"
+                                     AltText="@project.Name"
+                                     CssClass="asset-thumbnail-image" />
+                <div>
                 <a class="pattern-back-link" href="/modules/knitting/projects">Projects</a>
                 <h1>@project.Name</h1>
                 <p>@ProjectHeaderMeta</p>
+                <div class="pattern-card-stats mt-1">
+                    <span class="@KnittingUi.DifficultyCssClass(project.Difficulty)">@KnittingUi.DifficultyLabel(project.Difficulty)</span>
+                    @if (!string.IsNullOrWhiteSpace(project.ThemeName))
+                    {
+                        <span>@project.ThemeName</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(project.ColorName))
+                    {
+                        <span>@project.ColorName</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(project.PatternName))
+                    {
+                        <span>@project.PatternName</span>
+                    }
+                </div>
                 @if (!string.IsNullOrWhiteSpace(project.Description))
                 {
                     <p>@project.Description</p>
@@ -53,6 +74,7 @@ else
                 {
                     <span class="archive-badge">Archived</span>
                 }
+                </div>
             </div>
             <div class="pattern-stats" aria-label="Project summary">
                 <div>
@@ -60,11 +82,11 @@ else
                     <span>Progress</span>
                 </div>
                 <div>
-                    <strong>@project.CompletedStepCount/@project.TotalStepCount</strong>
-                    <span>Steps</span>
+                    <strong>@(project.TotalStitchCount > 0 ? $"{project.CompletedStitchCount}/{project.TotalStitchCount}" : $"{project.CompletedStepCount}/{project.TotalStepCount}")</strong>
+                    <span>@(project.TotalStitchCount > 0 ? "Stitches" : "Steps")</span>
                 </div>
                 <div>
-                    <strong>@FormatDurationCompact(GetTrackedSeconds())</strong>
+                    <strong>@KnittingUi.FormatDurationCompact(GetTrackedSeconds())</strong>
                     <span>Tracked</span>
                 </div>
             </div>
@@ -144,7 +166,7 @@ else
                         <div class="piece-row">
                             <button class="piece-button @(selectedPieceId == piece.Id ? "active" : string.Empty)" @onclick="() => SelectPiece(piece.Id)">
                                 <span>@piece.Name</span>
-                                <small>@piece.StepCount steps</small>
+                                <small>@PieceSidebarMeta(piece)</small>
                             </button>
                         </div>
                     }
@@ -163,13 +185,23 @@ else
                                 <p>@SelectedPieceMeta</p>
                             </div>
                         </div>
-                        <ol class="step-list">
+                        <ol class="step-list step-panel-scroll">
                             @foreach (var step in selectedPiece.Steps)
                             {
                                 var timer = project.Timers.FirstOrDefault(timer => timer.PatternStepId == step.Id);
                                 var isComplete = completedStepIds.Contains(step.Id);
-                                <li>
-                                    <div class="step-range">@StepRange(step)</div>
+                                var rangeValues = KnittingUi.ExpandStepRange(step.StartIndex, step.EndIndex).ToList();
+                                <li class="step-range-group">
+                                    <div class="step-range">@KnittingUi.FormatStepRange(step.StartIndex, step.EndIndex)</div>
+                                    @if (rangeValues.Count > 1)
+                                    {
+                                        <div class="step-range-rows">
+                                            @foreach (var row in rangeValues)
+                                            {
+                                                <span class="step-range-chip">Row @row</span>
+                                            }
+                                        </div>
+                                    }
                                     <div class="step-content">
                                         <div class="step-title-row">
                                             <h3>@StepLabel(step)</h3>
@@ -349,6 +381,7 @@ else
     private const string TimersDefaultEditMinutesKey = "timers.defaultEditMinutes";
     private const string TimersAutoPauseOnCompleteKey = "timers.autoPauseOnComplete";
     private ModuleProjectDto? project;
+    private Guid? projectAssetId;
     private ModulePatternDto? pattern;
     private ModulePatternPieceDto? selectedPiece;
     private Guid? selectedPieceId;
@@ -399,18 +432,25 @@ else
         && timerEditMinutes >= 0
         && timerEditSeconds >= 0;
 
-    private string SelectedPieceMeta
-    {
-        get
-        {
-            if (selectedPiece == null)
-            {
-                return string.Empty;
-            }
+    private string SelectedPieceMeta => selectedPiece == null ? string.Empty : PieceSidebarMeta(selectedPiece);
 
-            var completedCount = selectedPiece.Steps.Count(step => completedStepIds.Contains(step.Id));
-            return $"{selectedPiece.StepCount} steps - {completedCount}/{selectedPiece.StepCount} complete";
-        }
+    private string PieceSidebarMeta(ModulePatternPieceDto piece)
+    {
+        var completedSteps = piece.Steps.Count(step => completedStepIds.Contains(step.Id));
+        var totalSteps = piece.StepCount;
+        var percent = totalSteps == 0 ? 0 : (int)Math.Round(completedSteps * 100.0 / totalSteps, MidpointRounding.AwayFromZero);
+
+        var totalStitches = piece.Steps.Sum(step => step.StitchCount ?? 0);
+        var completedStitches = piece.Steps
+            .Where(step => completedStepIds.Contains(step.Id))
+            .Sum(step => step.StitchCount ?? 0);
+
+        var trackedSeconds = piece.Steps.Sum(step => GetStepTrackedSeconds(step.Id));
+        var stitchSummary = totalStitches > 0
+            ? $"{completedStitches}/{totalStitches} stitches"
+            : $"{completedSteps}/{totalSteps} steps";
+
+        return $"{percent}% · {stitchSummary} · {KnittingUi.FormatDurationCompact(trackedSeconds)}";
     }
 
     protected override async Task OnInitializedAsync()
@@ -456,6 +496,19 @@ else
             patterns.Clear();
             patterns.AddRange(await ApiClient.GetModulePatternsAsync(ModuleKey));
             project = await ApiClient.GetModuleProjectAsync(ModuleKey, ProjectId);
+            projectAssetId = null;
+            if (project != null)
+            {
+                await RecentActivity.RecordProjectOpenedAsync(project.Id);
+                var projectAssets = await CardAssets.GetAssetsAsync(ModuleKey, "project");
+                projectAssetId = projectAssets.FirstOrDefault(asset => asset.RecordId == project.Id)?.Id;
+                if (!projectAssetId.HasValue && project.PatternId.HasValue)
+                {
+                    var patternAssets = await CardAssets.GetAssetsAsync(ModuleKey, "pattern");
+                    projectAssetId = patternAssets.FirstOrDefault(asset => asset.RecordId == project.PatternId.Value)?.Id;
+                }
+            }
+
             if (project?.PatternId != null)
             {
                 pattern = await ApiClient.GetModulePatternAsync(ModuleKey, project.PatternId.Value);

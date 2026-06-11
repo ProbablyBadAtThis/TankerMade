@@ -10,12 +10,16 @@ public class ModuleProjectDto
     public string PatternName { get; set; } = string.Empty;
     public Guid? ThemeId { get; set; }
     public string ThemeName { get; set; } = string.Empty;
+    public Guid? ColorId { get; set; }
+    public string ColorName { get; set; } = string.Empty;
     public int Difficulty { get; set; }
     public int Progress { get; set; }
     public bool IsArchived { get; set; }
     public DateTime? ArchivedAt { get; set; }
     public int CompletedStepCount { get; set; }
     public int TotalStepCount { get; set; }
+    public int CompletedStitchCount { get; set; }
+    public int TotalStitchCount { get; set; }
     public long TotalTrackedSeconds { get; set; }
     public bool TimerRunning { get; set; }
     public DateTime? TimerStartedAt { get; set; }

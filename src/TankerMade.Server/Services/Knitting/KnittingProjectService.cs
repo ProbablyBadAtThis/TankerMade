@@ -27,6 +27,7 @@ public class KnittingProjectService : IKnittingProjectService
             createDto.Description,
             createDto.PatternId,
             createDto.ThemeId,
+            createDto.ColorId,
             createDto.Difficulty,
             createDto.Progress ?? 0);
 
@@ -111,6 +112,7 @@ public class KnittingProjectService : IKnittingProjectService
                 : updateDto.Description.Trim(),
             patternId,
             updateDto.ThemeId ?? project.ThemeId,
+            updateDto.ColorId ?? project.ColorId,
             updateDto.Difficulty ?? project.Difficulty,
             updateDto.Progress ?? project.Progress);
         project.SetProgress(await CalculateStepCompletionPercentAsync(project));
@@ -362,6 +364,13 @@ public class KnittingProjectService : IKnittingProjectService
                 .Select(theme => theme.Name)
                 .SingleOrDefaultAsync() ?? string.Empty;
 
+        var colorName = project.ColorId == null
+            ? string.Empty
+            : await _context.Colors
+                .Where(color => color.Id == project.ColorId)
+                .Select(color => color.Name)
+                .SingleOrDefaultAsync() ?? string.Empty;
+
         var patternStepIds = await GetLinkedPatternStepIdsAsync(project);
         var stepProgress = new List<KnittingProjectStepProgressDto>();
         if (patternStepIds.Count > 0)
@@ -405,6 +414,7 @@ public class KnittingProjectService : IKnittingProjectService
             .ToList();
 
         var inventoryLinks = await MapInventoryLinksAsync(project.Id);
+        var stitchProgress = await CalculateStitchProgressAsync(patternStepIds, stepProgress);
 
         return new KnittingProjectDto
         {
@@ -416,14 +426,18 @@ public class KnittingProjectService : IKnittingProjectService
             PatternName = patternName,
             ThemeId = project.ThemeId,
             ThemeName = themeName,
+            ColorId = project.ColorId,
+            ColorName = colorName,
             Difficulty = project.Difficulty,
             Progress = patternStepIds.Count == 0
                 ? project.Progress
-                : CalculateCompletionPercent(stepProgress.Count, patternStepIds.Count),
+                : stitchProgress.ProgressPercent,
             IsArchived = project.IsArchived,
             ArchivedAt = project.ArchivedAt,
             CompletedStepCount = stepProgress.Count,
             TotalStepCount = patternStepIds.Count,
+            CompletedStitchCount = stitchProgress.CompletedStitches,
+            TotalStitchCount = stitchProgress.TotalStitches,
             TotalTrackedSeconds = timers.Sum(timer => timer.GetElapsedSeconds(now)),
             TimerRunning = timerDtos.Any(timer => timer.IsRunning),
             TimerStartedAt = timerDtos.FirstOrDefault(timer => timer.IsRunning)?.StartedAt,
@@ -558,6 +572,38 @@ public class KnittingProjectService : IKnittingProjectService
             .CountAsync(progress => patternStepIds.Contains(progress.PatternStepId));
 
         return CalculateCompletionPercent(completedCount, patternStepIds.Count);
+    }
+
+    private async Task<(int CompletedStitches, int TotalStitches, int ProgressPercent)> CalculateStitchProgressAsync(
+        IReadOnlyList<Guid> patternStepIds,
+        IReadOnlyList<KnittingProjectStepProgressDto> stepProgress)
+    {
+        if (patternStepIds.Count == 0)
+        {
+            return (0, 0, 0);
+        }
+
+        var completedStepIds = stepProgress
+            .Where(progress => progress.IsComplete)
+            .Select(progress => progress.PatternStepId)
+            .ToHashSet();
+
+        var steps = await _context.KnittingPatternSteps
+            .AsNoTracking()
+            .Where(step => patternStepIds.Contains(step.Id))
+            .Select(step => new { step.Id, step.StitchCount })
+            .ToListAsync();
+
+        var totalStitches = steps.Sum(step => step.StitchCount ?? 0);
+        var completedStitches = steps
+            .Where(step => completedStepIds.Contains(step.Id))
+            .Sum(step => step.StitchCount ?? 0);
+
+        var progressPercent = totalStitches > 0
+            ? CalculateCompletionPercent(completedStitches, totalStitches)
+            : CalculateCompletionPercent(completedStepIds.Count, patternStepIds.Count);
+
+        return (completedStitches, totalStitches, progressPercent);
     }
 
     private static int CalculateCompletionPercent(int completedCount, int totalCount)

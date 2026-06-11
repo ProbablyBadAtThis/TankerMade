@@ -10,8 +10,8 @@ Last updated: 2026-06-11
 - Phase C is complete.
 - Phase D is complete: module-owned inventory, reference data, project/inventory linking, kit/grouping backend, and kit-to-project backend flows are verified.
 - Latest verified slice: Neutral module capability/API cleanup verified locally by user.
-- Latest pushed commit: pending for `working/knitting-settings-ui-pass` (current in-progress branch).
-- Latest unverified slice: Knitting settings functionality pass + UX stabilization is in progress in working tree.
+- Latest pushed commit: `1035689` on `working/knitting-settings-ui-pass` (Phase K6 operational slice).
+- Latest unverified slice: Knitting parity follow-up (kit/inventory card thumbnails, yarn remaining edit APIs, main color on patterns/projects, glossary page, live search, client pagination on patterns/kits) — migration `PhaseK7_KnittingColorAndYarnRemaining`; pending real-browser verification pass.
 
 ## Completed Recently
 
@@ -65,11 +65,21 @@ Last updated: 2026-06-11
   - Project timers now use compact tracked-time display and a D/H/M/S timer edit input model.
   - Kit detail editing now runs in a dedicated modal to avoid create/edit form overlap.
   - Pattern detail half-width layout was tightened for piece controls and workspace readability.
+- Knitting UI parity phases A–F are implemented in the current working tree (see `docs/project/knitting-ui-parity-checklist.md`):
+  - **A:** Dashboard recent-project hero, list thumbnails/filters/sorts on projects and patterns, kit search/sort.
+  - **B:** Stitch-driven progress, per-piece sidebar stats, difficulty badges, scrollable step panel, compact row ranges.
+  - **C:** Project, pattern, and kit creation wizards with theme/source pickers.
+  - **D:** Yarn/tool/notion detail pages, fiber-tag inventory filters, by-id ApiClient methods.
+  - **E:** Reference settings (themes/colors/sources/brands/fiber tags/terms); theme/source on pattern flows.
+  - **F:** Kit archive/reopen and child-project workspace aggregation.
+  - Shared client infrastructure: `KnittingUi`, `KnittingRecentActivity`, `KnittingCardAssetCache`, `AssetThumbnailImage`, `ReferenceDataController`.
 
 ## Next Work
 
-- Continue Knitting full UI functionality + visual lock-in pass page-by-page, focusing on verification/fixes from the latest settings-integrated UI behavior.
-- After Knitting lock-in is complete, propagate shared UI patterns to Crochet, Embroidery, Quilting, Sewing, and 3D Printing.
+- Run the parity verification harness in `docs/project/knitting-ui-parity-checklist.md` (full UI smoke pass).
+- Fix regressions found during verification; then visual lock-in (card grids, header images, kit list layout).
+- Close remaining deck gaps: main color, wizard finalize fidelity, inventory lot/weight UX, pagination.
+- After Knitting sign-off, propagate shared UI patterns to Crochet, Embroidery, Quilting, Sewing, and 3D Printing.
 
 ## Phase G Direction
 
@@ -104,7 +114,8 @@ The user reported:
 
 ## Verification Needed Next
 
-No blocking verification is pending before continuing the Knitting-focused full UI pass.
-Next local verification after the current Knitting settings + UX slice should be:
+Phases A–F are code-complete in the working tree; parity sign-off requires a manual UI pass.
 
-- `dotnet build TankerMade.sln`
+1. `dotnet build TankerMade.sln`
+2. Run server + client locally; execute the verification harness in `docs/project/knitting-ui-parity-checklist.md`
+3. Report any failures for fix-up before commit/push

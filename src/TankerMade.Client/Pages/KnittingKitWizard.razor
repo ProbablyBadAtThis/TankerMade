@@ -1,0 +1,771 @@
+@page "/modules/knitting/kits/new"
+@using TankerMade.Contracts.DTOs.Assets
+@using TankerMade.Contracts.DTOs.ModuleKits
+@using TankerMade.Contracts.DTOs.ModulePatterns
+@using TankerMade.Contracts.DTOs.Reference
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>New Knitting Kit</PageTitle>
+
+@if (!sessionReady)
+{
+    <p>Loading...</p>
+}
+else if (!AuthSession.IsSignedIn)
+{
+    <h1>New Kit</h1>
+    <p>Sign in to use this module section.</p>
+    <a class="btn btn-primary" href="/login">Sign in</a>
+}
+else if (!ModuleState.IsActive(ModuleKey))
+{
+    <h1>New Kit</h1>
+    <p>Activate Knitting from Home to continue.</p>
+    <a class="btn btn-outline-primary" href="/">Go to Home</a>
+}
+else
+{
+    <div class="page-heading">
+        <div>
+            <a class="pattern-back-link" href="/modules/knitting/kits">Kits</a>
+            <h1>New Kit</h1>
+            <p>Plan kit pieces, supplies, and metadata before saving.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <div class="wizard-shell">
+        <nav class="wizard-steps" aria-label="Wizard steps">
+            @foreach (var (step, label, index) in VisibleSteps.Select((entry, index) => (entry.Step, entry.Label, index)))
+            {
+                var pillClass = step == currentStep ? "wizard-step-pill active" : index < CurrentStepPosition ? "wizard-step-pill complete" : "wizard-step-pill";
+                <span class="@pillClass">@label</span>
+            }
+        </nav>
+
+        <section class="project-panel">
+            @if (currentStep == KitWizardStep.Setup)
+            {
+                <h2>Kit Setup</h2>
+                <label>
+                    <span>Kit name</span>
+                    <InputText class="form-control" @bind-Value="kitName" />
+                </label>
+
+                <div class="list-toolbar mt-3">
+                    <label>
+                        <span>Type</span>
+                        <select class="form-control" @bind="typeFilter" @bind:after="ApplyPatternFilters">
+                            <option value="">Any</option>
+                            <option value="Knit">Knit</option>
+                            <option value="Crochet">Crochet</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Form</span>
+                        <select class="form-control" @bind="formFilter" @bind:after="ApplyPatternFilters">
+                            <option value="">Any</option>
+                            <option value="2D">2D</option>
+                            <option value="3D">3D</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Theme</span>
+                        <select class="form-control" @bind="themeFilterIdText" @bind:after="ApplyPatternFilters">
+                            <option value="">Any theme</option>
+                            @foreach (var theme in themes)
+                            {
+                                <option value="@theme.Id">@theme.Name</option>
+                            }
+                        </select>
+                    </label>
+                    <label>
+                        <span>Search patterns</span>
+                        <InputText class="form-control" @bind-Value="patternSearch" @bind-Value:after="ApplyPatternFilters" />
+                    </label>
+                </div>
+
+                <label class="archive-toggle mb-3">
+                    <input type="checkbox" @bind="createNewPattern" @bind:after="OnCreateNewPatternChanged" />
+                    Create a new pattern for inline steps
+                </label>
+
+                @if (createNewPattern)
+                {
+                    <div class="form-grid">
+                        <label>
+                            <span>New pattern name</span>
+                            <InputText class="form-control" @bind-Value="newPatternName" />
+                        </label>
+                        <label>
+                            <span>Type</span>
+                            <InputText class="form-control" @bind-Value="newPatternType" />
+                        </label>
+                        <label>
+                            <span>Form</span>
+                            <InputText class="form-control" @bind-Value="newPatternForm" />
+                        </label>
+                    </div>
+                }
+                else
+                {
+                    <label>
+                        <span>Reference pattern (optional)</span>
+                        <select class="form-control" @bind="selectedPatternIdText" @bind:after="OnReferencePatternChanged">
+                            <option value="">None</option>
+                            @foreach (var pattern in filteredPatterns)
+                            {
+                                <option value="@pattern.Id">@pattern.Name</option>
+                            }
+                        </select>
+                    </label>
+                }
+            }
+            else if (currentStep == KitWizardStep.Pieces)
+            {
+                <h2>Kit Pieces</h2>
+
+                @if (draftPieces.Count > 0)
+                {
+                    <ul class="project-supply-list mb-3">
+                        @foreach (var piece in draftPieces)
+                        {
+                            <li>
+                                <div>
+                                    <strong>@piece.Name</strong>
+                                    @if (!string.IsNullOrWhiteSpace(piece.Notes))
+                                    {
+                                        <span class="text-muted"> — @piece.Notes</span>
+                                    }
+                                    @if (piece.Steps.Count > 0)
+                                    {
+                                        <span class="text-muted"> (@piece.Steps.Count steps)</span>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                <div class="form-grid">
+                    <label>
+                        <span>Piece name</span>
+                        <InputText class="form-control" @bind-Value="draftPieceName" />
+                    </label>
+                    <label>
+                        <span>Notes</span>
+                        <InputText class="form-control" @bind-Value="draftPieceNotes" />
+                    </label>
+                </div>
+                <button class="btn btn-outline-primary mt-2" type="button" disabled="@busy" @onclick="AddDraftPiece">Add Piece</button>
+
+                @if (createNewPattern)
+                {
+                    <hr />
+                    <h3>Inline Pattern Steps</h3>
+                    <div class="form-grid">
+                        <label>
+                            <span>Step label</span>
+                            <InputText class="form-control" @bind-Value="draftStepLabel" />
+                        </label>
+                        <label>
+                            <span>Row start</span>
+                            <InputNumber class="form-control" @bind-Value="draftStartIndex" />
+                        </label>
+                        <label>
+                            <span>Row end</span>
+                            <InputNumber class="form-control" @bind-Value="draftEndIndex" />
+                        </label>
+                        <label>
+                            <span>Stitch count</span>
+                            <InputNumber class="form-control" @bind-Value="draftStitchCount" />
+                        </label>
+                    </div>
+                    <button class="btn btn-outline-secondary mt-2" type="button" disabled="@busy" @onclick="AddDraftStep">Add Step to Last Piece</button>
+                }
+            }
+            else if (currentStep == KitWizardStep.Supplies)
+            {
+                <h2>Supplies</h2>
+                <div class="form-grid">
+                    <label>
+                        <span>Supply type</span>
+                        <select class="form-control" @bind="supplyType" @bind:after="LoadSupplyInventoryOptionsAsync">
+                            <option value="yarn">Yarn</option>
+                            <option value="tool">Tool</option>
+                            <option value="notion">Notion</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Name</span>
+                        <InputText class="form-control" @bind-Value="supplyName" />
+                    </label>
+                    <label>
+                        <span>Inventory item (optional)</span>
+                        <select class="form-control" @bind="selectedSupplyInventoryIdText" @bind:after="OnSupplyInventoryChanged">
+                            <option value="">Manual name only</option>
+                            @foreach (var option in supplyInventoryOptions)
+                            {
+                                <option value="@option.Id">@option.Label</option>
+                            }
+                        </select>
+                    </label>
+                    <label>
+                        <span>Quantity</span>
+                        <InputNumber class="form-control" @bind-Value="supplyQuantity" />
+                    </label>
+                </div>
+                <button class="btn btn-outline-primary mt-2" type="button" disabled="@busy" @onclick="AddDraftSupply">Add Supply</button>
+
+                @if (draftSupplies.Count > 0)
+                {
+                    <ul class="project-supply-list mt-3">
+                        @foreach (var supply in draftSupplies)
+                        {
+                            <li>
+                                <div>
+                                    <strong>@supply.Name</strong>
+                                    <span class="text-muted">(@supply.SupplyType)</span>
+                                </div>
+                                <button class="btn btn-outline-danger btn-sm" type="button" disabled="@busy" @onclick="() => draftSupplies.Remove(supply)">Remove</button>
+                            </li>
+                        }
+                    </ul>
+                }
+            }
+            else if (currentStep == KitWizardStep.Metadata)
+            {
+                <h2>Kit Metadata</h2>
+                <div class="knitting-hero-card mb-3">
+                    @if (uploadedAssetId.HasValue)
+                    {
+                        <AssetThumbnailImage AssetId="uploadedAssetId" AltText="Kit image preview" />
+                    }
+                    else
+                    {
+                        <div class="asset-thumbnail-placeholder">No image yet</div>
+                    }
+                    <div>
+                        <label>
+                            <span>Kit image</span>
+                            <InputFile OnChange="UploadKitImageAsync" disabled="@busy" />
+                        </label>
+                    </div>
+                </div>
+                <label>
+                    <span>Description</span>
+                    <InputTextArea class="form-control" rows="3" @bind-Value="kitDescription" />
+                </label>
+                <div class="mt-3">
+                    <span>Difficulty</span>
+                    <DifficultyPicker @bind-Value="kitDifficulty" Disabled="busy" />
+                </div>
+            }
+            else
+            {
+                <h2>Finalize Kit</h2>
+                <article class="project-card kit-card-with-image">
+                    @if (uploadedAssetId.HasValue)
+                    {
+                        <AssetThumbnailImage AssetId="uploadedAssetId" AltText="Kit preview" />
+                    }
+                    else
+                    {
+                        <div class="asset-thumbnail-placeholder">No image</div>
+                    }
+                    <div>
+                        <h3>@kitName</h3>
+                        <p><span class="@KnittingUi.DifficultyCssClass(kitDifficulty)">@KnittingUi.DifficultyLabel(kitDifficulty)</span></p>
+                        <p class="mb-1"><strong>Pieces:</strong> @draftPieces.Count</p>
+                        <p class="mb-0"><strong>Supplies:</strong> @draftSupplies.Count</p>
+                    </div>
+                </article>
+                <button class="btn btn-primary mt-3" type="button" disabled="@busy" @onclick="FinalizeKitAsync">Create Kit</button>
+            }
+
+            @if (currentStep != KitWizardStep.Finalize)
+            {
+                <div class="auth-actions mt-3">
+                    @if (CurrentStepPosition > 0)
+                    {
+                        <button class="btn btn-outline-secondary" type="button" disabled="@busy" @onclick="PreviousStep">Back</button>
+                    }
+                    <button class="btn btn-primary" type="button" disabled="@busy" @onclick="NextStep">Next</button>
+                </div>
+            }
+            else if (CurrentStepPosition > 0)
+            {
+                <div class="auth-actions mt-3">
+                    <button class="btn btn-outline-secondary" type="button" disabled="@busy" @onclick="PreviousStep">Back</button>
+                </div>
+            }
+        </section>
+    </div>
+}
+
+@code {
+    private const string ModuleKey = "knitting";
+    private const string KitRecordType = "kit";
+
+    private enum KitWizardStep
+    {
+        Setup,
+        Pieces,
+        Supplies,
+        Metadata,
+        Finalize
+    }
+
+    private readonly List<ModulePatternDto> allPatterns = [];
+    private readonly List<ModulePatternDto> filteredPatterns = [];
+    private readonly List<CoreReferenceItemDto> themes = [];
+    private readonly List<DraftKitPiece> draftPieces = [];
+    private readonly List<DraftKitSupply> draftSupplies = [];
+    private readonly List<InventoryOption> supplyInventoryOptions = [];
+
+    private KitWizardStep currentStep = KitWizardStep.Setup;
+    private bool sessionReady;
+    private bool busy;
+    private bool createNewPattern;
+    private string errorMessage = string.Empty;
+    private string kitName = string.Empty;
+    private string kitDescription = string.Empty;
+    private int kitDifficulty = 1;
+    private Guid? uploadedAssetId;
+    private string typeFilter = string.Empty;
+    private string formFilter = string.Empty;
+    private string themeFilterIdText = string.Empty;
+    private string patternSearch = string.Empty;
+    private string selectedPatternIdText = string.Empty;
+    private string newPatternName = string.Empty;
+    private string newPatternType = "Knit";
+    private string newPatternForm = "2D";
+    private string draftPieceName = string.Empty;
+    private string draftPieceNotes = string.Empty;
+    private string draftStepLabel = string.Empty;
+    private int? draftStartIndex;
+    private int? draftEndIndex;
+    private int? draftStitchCount;
+    private string supplyType = "yarn";
+    private string supplyName = string.Empty;
+    private string selectedSupplyInventoryIdText = string.Empty;
+    private decimal? supplyQuantity;
+
+    private IEnumerable<(KitWizardStep Step, string Label)> VisibleSteps
+    {
+        get
+        {
+            yield return (KitWizardStep.Setup, "Setup");
+            yield return (KitWizardStep.Pieces, "Pieces");
+            yield return (KitWizardStep.Supplies, "Supplies");
+            yield return (KitWizardStep.Metadata, "Details");
+            yield return (KitWizardStep.Finalize, "Create");
+        }
+    }
+
+    private int CurrentStepPosition => VisibleSteps.ToList().FindIndex(entry => entry.Step == currentStep);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        sessionReady = true;
+        themes.AddRange(await ApiClient.GetCoreReferenceItemsAsync("themes"));
+        await LoadPatternsAsync();
+    }
+
+    private async Task LoadPatternsAsync()
+    {
+        try
+        {
+            allPatterns.Clear();
+            allPatterns.AddRange(await ApiClient.GetModulePatternsAsync(ModuleKey));
+            ApplyPatternFilters();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private void ApplyPatternFilters()
+    {
+        filteredPatterns.Clear();
+        Guid? themeFilterId = Guid.TryParse(themeFilterIdText, out var parsedThemeId) ? parsedThemeId : null;
+
+        filteredPatterns.AddRange(allPatterns.Where(pattern =>
+            (string.IsNullOrWhiteSpace(typeFilter) || pattern.Type.Equals(typeFilter, StringComparison.OrdinalIgnoreCase))
+            && (string.IsNullOrWhiteSpace(formFilter) || pattern.Form.Equals(formFilter, StringComparison.OrdinalIgnoreCase))
+            && (!themeFilterId.HasValue || pattern.ThemeId == themeFilterId)
+            && (string.IsNullOrWhiteSpace(patternSearch)
+                || pattern.Name.Contains(patternSearch, StringComparison.OrdinalIgnoreCase))));
+    }
+
+    private async Task OnReferencePatternChanged()
+    {
+        if (!Guid.TryParse(selectedPatternIdText, out var patternId))
+        {
+            return;
+        }
+
+        var pattern = await ApiClient.GetModulePatternAsync(ModuleKey, patternId);
+        if (pattern == null)
+        {
+            return;
+        }
+
+        draftPieces.Clear();
+        foreach (var piece in pattern.Pieces)
+        {
+            draftPieces.Add(new DraftKitPiece
+            {
+                Name = piece.Name,
+                Notes = $"From pattern {pattern.Name}"
+            });
+        }
+    }
+
+    private void OnCreateNewPatternChanged()
+    {
+        if (createNewPattern && draftPieces.Count == 0)
+        {
+            draftPieceName = "Piece 1";
+        }
+    }
+
+    private void AddDraftPiece()
+    {
+        if (string.IsNullOrWhiteSpace(draftPieceName))
+        {
+            errorMessage = "Enter a piece name.";
+            return;
+        }
+
+        draftPieces.Add(new DraftKitPiece
+        {
+            Name = draftPieceName.Trim(),
+            Notes = draftPieceNotes.Trim()
+        });
+
+        draftPieceName = $"Piece {draftPieces.Count + 1}";
+        draftPieceNotes = string.Empty;
+        errorMessage = string.Empty;
+    }
+
+    private void AddDraftStep()
+    {
+        if (draftPieces.Count == 0)
+        {
+            errorMessage = "Add a piece before adding steps.";
+            return;
+        }
+
+        var piece = draftPieces[^1];
+        piece.Steps.Add(new DraftStep
+        {
+            Label = string.IsNullOrWhiteSpace(draftStepLabel) ? $"Step {piece.Steps.Count + 1}" : draftStepLabel.Trim(),
+            StartIndex = draftStartIndex,
+            EndIndex = draftEndIndex,
+            StitchCount = draftStitchCount
+        });
+
+        draftStepLabel = string.Empty;
+        draftStartIndex = null;
+        draftEndIndex = null;
+        draftStitchCount = null;
+        errorMessage = string.Empty;
+    }
+
+    private async Task LoadSupplyInventoryOptionsAsync()
+    {
+        supplyInventoryOptions.Clear();
+        selectedSupplyInventoryIdText = string.Empty;
+
+        switch (supplyType)
+        {
+            case "tool":
+                foreach (var tool in await ApiClient.GetModuleToolsAsync(ModuleKey))
+                {
+                    supplyInventoryOptions.Add(new InventoryOption(tool.Id, $"{tool.BrandName} - {tool.TypeName}"));
+                }
+
+                break;
+            case "notion":
+                foreach (var notion in await ApiClient.GetModuleNotionsAsync(ModuleKey))
+                {
+                    supplyInventoryOptions.Add(new InventoryOption(notion.Id, $"{notion.BrandName} - {notion.TypeName}"));
+                }
+
+                break;
+            default:
+                foreach (var yarn in await ApiClient.GetModuleYarnsAsync(ModuleKey))
+                {
+                    supplyInventoryOptions.Add(new InventoryOption(yarn.Id, $"{yarn.BrandName} - {yarn.ColorName}"));
+                }
+
+                break;
+        }
+    }
+
+    private void OnSupplyInventoryChanged()
+    {
+        if (!Guid.TryParse(selectedSupplyInventoryIdText, out var inventoryId))
+        {
+            return;
+        }
+
+        var selected = supplyInventoryOptions.FirstOrDefault(option => option.Id == inventoryId);
+        if (selected != null && string.IsNullOrWhiteSpace(supplyName))
+        {
+            supplyName = selected.Label;
+        }
+    }
+
+    private void AddDraftSupply()
+    {
+        if (string.IsNullOrWhiteSpace(supplyName))
+        {
+            errorMessage = "Enter a supply name.";
+            return;
+        }
+
+        draftSupplies.Add(new DraftKitSupply
+        {
+            SupplyType = supplyType,
+            Name = supplyName.Trim(),
+            InventoryItemId = Guid.TryParse(selectedSupplyInventoryIdText, out var inventoryId) ? inventoryId : null,
+            Quantity = supplyQuantity
+        });
+
+        supplyName = string.Empty;
+        selectedSupplyInventoryIdText = string.Empty;
+        supplyQuantity = null;
+        errorMessage = string.Empty;
+    }
+
+    private async Task UploadKitImageAsync(InputFileChangeEventArgs args)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var asset = await ApiClient.UploadAssetAsync(ModuleKey, args.File);
+            uploadedAssetId = asset.Id;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void NextStep()
+    {
+        if (!ValidateCurrentStep())
+        {
+            return;
+        }
+
+        var steps = VisibleSteps.ToList();
+        var index = steps.FindIndex(entry => entry.Step == currentStep);
+        if (index >= 0 && index < steps.Count - 1)
+        {
+            currentStep = steps[index + 1].Step;
+            errorMessage = string.Empty;
+
+            if (currentStep == KitWizardStep.Supplies && supplyInventoryOptions.Count == 0)
+            {
+                _ = LoadSupplyInventoryOptionsAsync();
+            }
+        }
+    }
+
+    private void PreviousStep()
+    {
+        var steps = VisibleSteps.ToList();
+        var index = steps.FindIndex(entry => entry.Step == currentStep);
+        if (index > 0)
+        {
+            currentStep = steps[index - 1].Step;
+            errorMessage = string.Empty;
+        }
+    }
+
+    private bool ValidateCurrentStep()
+    {
+        errorMessage = string.Empty;
+
+        switch (currentStep)
+        {
+            case KitWizardStep.Setup:
+                if (string.IsNullOrWhiteSpace(kitName))
+                {
+                    errorMessage = "Enter a kit name.";
+                    return false;
+                }
+
+                if (createNewPattern && string.IsNullOrWhiteSpace(newPatternName))
+                {
+                    errorMessage = "Enter a name for the new pattern.";
+                    return false;
+                }
+
+                return true;
+            case KitWizardStep.Pieces:
+                if (draftPieces.Count == 0)
+                {
+                    errorMessage = "Add at least one kit piece.";
+                    return false;
+                }
+
+                return true;
+            default:
+                return true;
+        }
+    }
+
+    private async Task FinalizeKitAsync()
+    {
+        if (!ValidateCurrentStep())
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (createNewPattern && draftPieces.Any(piece => piece.Steps.Count > 0))
+            {
+                var pattern = await ApiClient.CreateModulePatternAsync(ModuleKey, new CreateModulePatternRequest
+                {
+                    Name = newPatternName.Trim(),
+                    Type = newPatternType.Trim(),
+                    Form = newPatternForm.Trim(),
+                    Difficulty = KnittingUi.DifficultyLabel(kitDifficulty)
+                });
+
+                foreach (var draftPiece in draftPieces.Where(piece => piece.Steps.Count > 0))
+                {
+                    var piece = await ApiClient.AddModulePatternPieceAsync(ModuleKey, pattern.Id, new CreateModulePatternPieceRequest
+                    {
+                        Name = draftPiece.Name
+                    });
+
+                    if (piece == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var step in draftPiece.Steps)
+                    {
+                        await ApiClient.AddModulePatternStepAsync(ModuleKey, pattern.Id, piece.Id, new CreateModulePatternStepRequest
+                        {
+                            Label = step.Label,
+                            StartIndex = step.StartIndex,
+                            EndIndex = step.EndIndex,
+                            StitchCount = step.StitchCount
+                        });
+                    }
+                }
+            }
+
+            var description = kitDescription.Trim();
+            var difficultyLabel = KnittingUi.DifficultyLabel(kitDifficulty);
+            if (!description.Contains(difficultyLabel, StringComparison.OrdinalIgnoreCase))
+            {
+                description = string.IsNullOrWhiteSpace(description)
+                    ? $"Difficulty: {difficultyLabel}"
+                    : $"{description}{Environment.NewLine}Difficulty: {difficultyLabel}";
+            }
+
+            var kit = await ApiClient.CreateModuleKitAsync(ModuleKey, new CreateModuleKitRequest
+            {
+                Name = kitName.Trim(),
+                Description = description,
+                Type = createNewPattern ? newPatternType.Trim() : typeFilter.Trim()
+            });
+
+            foreach (var piece in draftPieces)
+            {
+                await ApiClient.AddModuleKitPieceAsync(ModuleKey, kit.Id, new CreateModuleKitPieceRequest
+                {
+                    Name = piece.Name,
+                    Notes = piece.Notes
+                });
+            }
+
+            foreach (var supply in draftSupplies)
+            {
+                await ApiClient.AddModuleKitSupplyAsync(ModuleKey, kit.Id, new CreateModuleKitSupplyRequest
+                {
+                    SupplyType = supply.SupplyType,
+                    Name = supply.Name,
+                    InventoryItemId = supply.InventoryItemId,
+                    Quantity = supply.Quantity
+                });
+            }
+
+            if (uploadedAssetId.HasValue)
+            {
+                await ApiClient.AssignAssetAsync(uploadedAssetId.Value, new AssetAssignmentRequest
+                {
+                    ModuleKey = ModuleKey,
+                    RecordType = KitRecordType,
+                    RecordId = kit.Id
+                });
+            }
+
+            Navigation.NavigateTo("/modules/knitting/kits");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private sealed class DraftKitPiece
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Notes { get; set; } = string.Empty;
+        public List<DraftStep> Steps { get; } = [];
+    }
+
+    private sealed class DraftStep
+    {
+        public string Label { get; set; } = string.Empty;
+        public int? StartIndex { get; set; }
+        public int? EndIndex { get; set; }
+        public int? StitchCount { get; set; }
+    }
+
+    private sealed class DraftKitSupply
+    {
+        public string SupplyType { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public Guid? InventoryItemId { get; set; }
+        public decimal? Quantity { get; set; }
+    }
+
+    private sealed record InventoryOption(Guid Id, string Label);
+}

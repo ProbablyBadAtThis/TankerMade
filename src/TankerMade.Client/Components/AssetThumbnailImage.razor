@@ -1,0 +1,95 @@
+@inject HttpClient Http
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@implements IAsyncDisposable
+
+@if (!string.IsNullOrWhiteSpace(imageSource))
+{
+    <img src="@imageSource"
+         alt="@AltText"
+         class="@CssClass"
+         loading="lazy" />
+}
+else if (ShowPlaceholder)
+{
+    <div class="asset-thumbnail-placeholder @CssClass" aria-hidden="true">
+        <span>@PlaceholderText</span>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid? AssetId { get; set; }
+    [Parameter] public string SizeKey { get; set; } = "card";
+    [Parameter] public string CssClass { get; set; } = "asset-thumbnail-image";
+    [Parameter] public string AltText { get; set; } = "Image";
+    [Parameter] public string PlaceholderText { get; set; } = "No image";
+    [Parameter] public bool ShowPlaceholder { get; set; } = true;
+
+    private string? imageSource;
+    private string? objectUrl;
+    private Guid? loadedAssetId;
+    private string loadedSizeKey = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!AssetId.HasValue)
+        {
+            await ClearImageAsync();
+            return;
+        }
+
+        if (loadedAssetId == AssetId && loadedSizeKey == SizeKey && !string.IsNullOrWhiteSpace(imageSource))
+        {
+            return;
+        }
+
+        await LoadImageAsync();
+    }
+
+    private async Task LoadImageAsync()
+    {
+        await ClearImageAsync();
+
+        if (!AssetId.HasValue || !AuthSession.IsSignedIn)
+        {
+            return;
+        }
+
+        try
+        {
+            var response = await Http.GetAsync($"api/assets/{AssetId.Value}/thumbnails/{Uri.EscapeDataString(SizeKey)}/download");
+            if (!response.IsSuccessStatusCode)
+            {
+                response = await Http.GetAsync($"api/assets/{AssetId.Value}/download");
+                if (!response.IsSuccessStatusCode)
+                {
+                    return;
+                }
+            }
+
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            var contentType = response.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
+            objectUrl = $"data:{contentType};base64,{Convert.ToBase64String(bytes)}";
+            imageSource = objectUrl;
+            loadedAssetId = AssetId;
+            loadedSizeKey = SizeKey;
+        }
+        catch
+        {
+            await ClearImageAsync();
+        }
+    }
+
+    private Task ClearImageAsync()
+    {
+        imageSource = null;
+        objectUrl = null;
+        loadedAssetId = null;
+        loadedSizeKey = string.Empty;
+        return Task.CompletedTask;
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        return ValueTask.CompletedTask;
+    }
+}

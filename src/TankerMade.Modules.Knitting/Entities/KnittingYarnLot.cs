@@ -33,6 +33,13 @@ public class KnittingYarnLot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void SetRemaining(decimal? remainingLength, decimal? currentWeight)
+    {
+        RemainingLength = remainingLength;
+        CurrentWeight = currentWeight;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Merge(decimal skeins, decimal? remainingLength, decimal? currentWeight)
     {
         Skeins += skeins;

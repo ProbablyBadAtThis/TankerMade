@@ -9,6 +9,7 @@ public class KnittingPattern
     public string Form { get; set; } = string.Empty;
     public string Difficulty { get; set; } = string.Empty;
     public Guid? ThemeId { get; set; }
+    public Guid? ColorId { get; set; }
     public Guid? SourceId { get; set; }
     public string SuggestedYarnWeight { get; set; } = string.Empty;
     public string SuggestedNeedleSizes { get; set; } = string.Empty;
@@ -37,6 +38,7 @@ public class KnittingPattern
         string form,
         string difficulty,
         Guid? themeId,
+        Guid? colorId,
         Guid? sourceId,
         string suggestedYarnWeight,
         string suggestedNeedleSizes,
@@ -47,6 +49,7 @@ public class KnittingPattern
         Form = form ?? string.Empty;
         Difficulty = difficulty ?? string.Empty;
         ThemeId = themeId;
+        ColorId = colorId;
         SourceId = sourceId;
         SuggestedYarnWeight = suggestedYarnWeight?.Trim() ?? string.Empty;
         SuggestedNeedleSizes = suggestedNeedleSizes?.Trim() ?? string.Empty;
