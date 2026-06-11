@@ -6,4 +6,6 @@ public interface IKnittingInventoryService
 {
     Task<IReadOnlyList<KnittingSupplyItemDto>> GetSuppliesAsync(Guid userId, string? search = null, string? category = null);
     Task<KnittingSupplyItemDto> CreateSupplyAsync(CreateKnittingSupplyItemDto createDto, Guid userId);
+    Task<KnittingSupplyItemDto?> UpdateSupplyAsync(Guid supplyId, CreateKnittingSupplyItemDto updateDto, Guid userId);
+    Task<bool> DeleteSupplyAsync(Guid supplyId, Guid userId);
 }

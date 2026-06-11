@@ -39,9 +39,10 @@ else
     }
 
     <section class="project-panel">
-        <h2>Add Supply</h2>
+        <h2>@(editingSupplyId == null ? "Add Supply" : "Update Supply")</h2>
         <EditForm Model="form" OnValidSubmit="CreateSupplyAsync" class="project-edit-form">
             <DataAnnotationsValidator />
+            <ValidationSummary />
             <div class="form-grid">
                 <label>
                     <span>Category</span>
@@ -65,7 +66,7 @@ else
                 </label>
                 <label>
                     <span>Quantity</span>
-                    <InputNumber class="form-control" @bind-Value="form.Quantity" />
+                    <InputNumber class="form-control" min="1" step="1" @bind-Value="form.Quantity" />
                 </label>
                 <label>
                     <span>Unit</span>
@@ -76,7 +77,13 @@ else
                 <span>Notes</span>
                 <InputTextArea class="form-control" @bind-Value="form.Notes" />
             </label>
-            <button class="btn btn-primary" disabled="@busy" type="submit">Add Supply</button>
+            <div class="auth-actions">
+                <button class="btn btn-primary" disabled="@busy" type="submit">@(editingSupplyId == null ? "Add Supply" : "Save Supply")</button>
+                @if (editingSupplyId != null)
+                {
+                    <button class="btn btn-outline-secondary" disabled="@busy" type="button" @onclick="CancelEdit">Cancel</button>
+                }
+            </div>
         </EditForm>
     </section>
 
@@ -110,6 +117,10 @@ else
                     {
                         <p>@item.Notes</p>
                     }
+                    <div class="auth-actions">
+                        <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => StartEdit(item)">Edit</button>
+                        <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeleteSupplyAsync(item.Id)">Delete</button>
+                    </div>
                 </article>
             }
         </div>
@@ -120,6 +131,7 @@ else
     private const string ModuleKey = "knitting";
     private readonly List<ModuleSupplyItemDto> supplies = [];
     private SupplyFormModel form = new();
+    private Guid? editingSupplyId;
     private string search = string.Empty;
     private string category = string.Empty;
     private bool loading = true;
@@ -169,7 +181,7 @@ else
 
         try
         {
-            await ApiClient.CreateModuleSupplyAsync(ModuleKey, new CreateModuleSupplyItemRequest
+            var request = new UpdateModuleSupplyItemRequest
             {
                 Category = form.Category,
                 Name = form.Name,
@@ -179,9 +191,76 @@ else
                 Quantity = form.Quantity,
                 Unit = form.Unit,
                 Notes = form.Notes
-            });
+            };
+
+            if (editingSupplyId == null)
+            {
+                await ApiClient.CreateModuleSupplyAsync(ModuleKey, new CreateModuleSupplyItemRequest
+                {
+                    Category = request.Category,
+                    Name = request.Name,
+                    Brand = request.Brand,
+                    Color = request.Color,
+                    Size = request.Size,
+                    Quantity = request.Quantity,
+                    Unit = request.Unit,
+                    Notes = request.Notes
+                });
+            }
+            else
+            {
+                await ApiClient.UpdateModuleSupplyAsync(ModuleKey, editingSupplyId.Value, request);
+            }
 
             form = new SupplyFormModel();
+            editingSupplyId = null;
+            await LoadSuppliesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void StartEdit(ModuleSupplyItemDto item)
+    {
+        editingSupplyId = item.Id;
+        form = new SupplyFormModel
+        {
+            Category = item.Category,
+            Name = item.Name,
+            Brand = item.Brand,
+            Color = item.Color,
+            Size = item.Size,
+            Quantity = Math.Max(1, (int)Math.Round(item.Quantity, MidpointRounding.AwayFromZero)),
+            Unit = item.Unit,
+            Notes = item.Notes
+        };
+    }
+
+    private void CancelEdit()
+    {
+        editingSupplyId = null;
+        form = new SupplyFormModel();
+    }
+
+    private async Task DeleteSupplyAsync(Guid supplyId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.DeleteModuleSupplyAsync(ModuleKey, supplyId);
+            if (editingSupplyId == supplyId)
+            {
+                CancelEdit();
+            }
+
             await LoadSuppliesAsync();
         }
         catch (Exception ex)
@@ -196,13 +275,30 @@ else
 
     private class SupplyFormModel
     {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Category is required")]
+        [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "Category cannot exceed 100 characters")]
         public string Category { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Name is required")]
+        [System.ComponentModel.DataAnnotations.StringLength(200, ErrorMessage = "Name cannot exceed 200 characters")]
         public string Name { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(150, ErrorMessage = "Brand cannot exceed 150 characters")]
         public string Brand { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "Color cannot exceed 100 characters")]
         public string Color { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "Size cannot exceed 100 characters")]
         public string Size { get; set; } = string.Empty;
-        public decimal Quantity { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Range(1, 999999, ErrorMessage = "Quantity must be a positive whole number")]
+        public int Quantity { get; set; } = 1;
+
+        [System.ComponentModel.DataAnnotations.StringLength(40, ErrorMessage = "Unit cannot exceed 40 characters")]
         public string Unit { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(1000, ErrorMessage = "Notes cannot exceed 1000 characters")]
         public string Notes { get; set; } = string.Empty;
     }
 }

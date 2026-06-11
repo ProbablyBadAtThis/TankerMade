@@ -1,5 +1,6 @@
 @page "/modules/knitting/settings"
 @using TankerMade.Contracts.DTOs.ModuleSettings
+@using System.Globalization
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
@@ -29,7 +30,7 @@ else
         <div>
             <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
             <h1>Settings</h1>
-            <p>Module-owned preferences via core extension-point APIs.</p>
+            <p>Set module behavior defaults for projects, kits, workspace, and timers.</p>
         </div>
     </div>
 
@@ -37,51 +38,142 @@ else
     {
         <div class="alert alert-danger">@errorMessage</div>
     }
+    @if (!string.IsNullOrWhiteSpace(successMessage))
+    {
+        <div class="alert alert-success">@successMessage</div>
+    }
+
+    @foreach (var category in CategoryOrder)
+    {
+        var definitions = knownSettingDefinitions.Where(definition => definition.Category == category).ToList();
+        if (definitions.Count == 0)
+        {
+            continue;
+        }
+
+        <section class="project-panel">
+            <div class="project-panel-header">
+                <h2>@CategoryLabel(category)</h2>
+                <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => ResetCategoryDefaultsAsync(category)">Reset Category</button>
+            </div>
+            <div class="settings-grid">
+                @foreach (var definition in definitions)
+                {
+                    var key = definition.Key;
+                    var item = storedByKey.TryGetValue(key, out var existingItem) ? existingItem : null;
+                    <article class="pattern-card">
+                        <h3>@definition.Label</h3>
+                        <p>@definition.Description</p>
+                        <small class="muted-copy">@definition.Key</small>
+
+                        @if (definition.Kind == SettingKind.Boolean)
+                        {
+                            <label class="archive-toggle mt-2">
+                                <input type="checkbox"
+                                       checked="@GetBoolSetting(definition)"
+                                       @onchange="args => SetBoolSetting(definition, args)" />
+                                Enabled
+                            </label>
+                        }
+                        else if (definition.Kind == SettingKind.Integer)
+                        {
+                            <label class="mt-2">
+                                <span>Value</span>
+                                <input class="form-control"
+                                       type="number"
+                                       min="@definition.MinValue"
+                                       max="@definition.MaxValue"
+                                       value="@GetIntValue(definition)"
+                                       @onchange="args => SetIntValue(definition, args)" />
+                            </label>
+                        }
+                        else if (definition.Kind == SettingKind.Option)
+                        {
+                            <label class="mt-2">
+                                <span>Value</span>
+                                <select class="form-control"
+                                        value="@GetStringValue(definition)"
+                                        @onchange="args => SetStringValue(definition, args)">
+                                    @foreach (var option in definition.Options)
+                                    {
+                                        <option value="@option.Value">@option.Label</option>
+                                    }
+                                </select>
+                            </label>
+                        }
+                        else
+                        {
+                            <label class="mt-2">
+                                <span>Value</span>
+                                <input class="form-control"
+                                       type="text"
+                                       value="@GetStringValue(definition)"
+                                       @onchange="args => SetStringValue(definition, args)" />
+                            </label>
+                        }
+
+                        <div class="auth-actions mt-2">
+                            <button class="btn btn-primary btn-sm" disabled="@busy" @onclick="() => SaveKnownSettingAsync(definition)">Save</button>
+                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => ResetKnownSettingAsync(definition)">Reset</button>
+                            @if (item != null)
+                            {
+                                <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeleteKnownSettingAsync(definition)">Delete Override</button>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+    }
 
     <section class="project-panel">
-        <h2>Upsert Setting</h2>
-        <EditForm Model="form" OnValidSubmit="SaveSettingAsync" class="project-edit-form">
+        <div class="project-panel-header">
+            <h2>Advanced Settings</h2>
+            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="ClearCustomForm">Clear Form</button>
+        </div>
+        <p class="muted-copy">Use this for custom module values not covered above.</p>
+        <EditForm Model="customForm" OnValidSubmit="SaveCustomSettingAsync" class="project-edit-form">
             <DataAnnotationsValidator />
+            <ValidationSummary />
             <div class="form-grid">
                 <label>
                     <span>Category</span>
-                    <InputText class="form-control" @bind-Value="form.Category" />
+                    <InputText class="form-control" @bind-Value="customForm.Category" />
                 </label>
                 <label>
                     <span>Key</span>
-                    <InputText class="form-control" @bind-Value="form.Key" />
+                    <InputText class="form-control" @bind-Value="customForm.Key" />
                 </label>
                 <label>
                     <span>Value</span>
-                    <InputText class="form-control" @bind-Value="form.Value" />
+                    <InputText class="form-control" @bind-Value="customForm.Value" />
                 </label>
             </div>
-            <button class="btn btn-primary" disabled="@busy" type="submit">Save Setting</button>
+            <button class="btn btn-primary" disabled="@busy" type="submit">Save Custom Setting</button>
         </EditForm>
     </section>
 
-    <div class="printing-search-row mb-3">
-        <input class="form-control" placeholder="Category filter" @bind="categoryFilter" @bind:event="oninput" />
-        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="LoadSettingsAsync">Filter</button>
-    </div>
-
-    @if (settings.Count == 0)
+    @if (customSettings.Count == 0)
     {
         <div class="empty-state">
-            <h2>No Settings Yet</h2>
-            <p>Create settings to store knitting defaults and preferences.</p>
+            <h2>No Custom Settings</h2>
+            <p>Custom keys outside predefined knitting controls will appear here.</p>
         </div>
     }
     else
     {
         <div class="pattern-card-grid">
-            @foreach (var item in settings)
+            @foreach (var item in customSettings)
             {
                 <article class="pattern-card">
                     <h2>@item.Key</h2>
                     <p>@item.Category</p>
                     <div class="pattern-card-stats">
                         <span>@item.Value</span>
+                    </div>
+                    <div class="auth-actions">
+                        <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => EditCustomSetting(item)">Edit</button>
+                        <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeleteSettingAsync(item.Key)">Delete</button>
                     </div>
                 </article>
             }
@@ -90,15 +182,40 @@ else
 }
 
 @code {
-    private readonly List<ModuleSettingItemDto> settings = [];
-    private SettingFormModel form = new();
-    private string categoryFilter = string.Empty;
+    private static readonly IReadOnlyList<KnownSettingDefinition> knownSettingDefinitions =
+    [
+        new("projects.showArchivedByDefault", "projects", "Show Archived Projects by Default", "Opens the projects list with archived items already included.", SettingKind.Boolean, "false"),
+        new("kits.showArchivedByDefault", "kits", "Show Archived Kits by Default", "Opens the kits list with archived items already included.", SettingKind.Boolean, "false"),
+        new("workspace.defaultProjectDifficulty", "workspace", "Default Project Difficulty", "Applies to new knitting projects before you pick a different value.", SettingKind.Option, "0",
+        options:
+        [
+            new SettingOption("0", "Unspecified"),
+            new SettingOption("1", "Beginner"),
+            new SettingOption("2", "Beginner+"),
+            new SettingOption("3", "Intermediate"),
+            new SettingOption("4", "Intermediate+"),
+            new SettingOption("5", "Advanced"),
+            new SettingOption("6", "Advanced+")
+        ]),
+        new("workspace.defaultSupplyPlannedQuantity", "workspace", "Default Planned Supply Quantity", "Pre-fills project supply links when you add a new linked supply.", SettingKind.Integer, "1", 1, 999999),
+        new("timers.defaultEditMinutes", "timers", "Timer Edit Starting Minutes", "Starting value in timer edit dialogs when no tracked time exists yet.", SettingKind.Integer, "0", 0, 1440),
+        new("timers.autoPauseOnComplete", "timers", "Auto Pause Timers on Step Complete", "When enabled, timers can be paused automatically after marking a step complete.", SettingKind.Boolean, "false")
+    ];
+
+    private static readonly string[] CategoryOrder = ["projects", "kits", "workspace", "timers"];
+    private readonly List<ModuleSettingItemDto> customSettings = [];
+    private readonly Dictionary<string, ModuleSettingItemDto> storedByKey = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> settingValues = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, int?> intValues = new(StringComparer.OrdinalIgnoreCase);
+    private SettingFormModel customForm = new();
     private bool loading = true;
     private bool busy;
     private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
+        EnsureKnownSettingState();
         await AuthSession.InitializeAsync();
         if (AuthSession.IsSignedIn)
         {
@@ -110,6 +227,7 @@ else
 
     private async Task LoadSettingsAsync()
     {
+        EnsureKnownSettingState();
         loading = true;
         errorMessage = string.Empty;
 
@@ -120,8 +238,25 @@ else
                 return;
             }
 
-            settings.Clear();
-            settings.AddRange(await ApiClient.GetModuleSettingsAsync("knitting", categoryFilter));
+            var allSettings = await ApiClient.GetModuleSettingsAsync("knitting");
+            storedByKey.Clear();
+            foreach (var setting in allSettings)
+            {
+                storedByKey[setting.Key] = setting;
+            }
+
+            customSettings.Clear();
+            customSettings.AddRange(allSettings.Where(setting => !knownSettingDefinitions.Any(definition => definition.Key.Equals(setting.Key, StringComparison.OrdinalIgnoreCase))));
+
+            foreach (var definition in knownSettingDefinitions)
+            {
+                var value = storedByKey.TryGetValue(definition.Key, out var stored)
+                    ? stored.Value
+                    : definition.DefaultValue;
+
+                settingValues[definition.Key] = value;
+                intValues[definition.Key] = ParseIntValue(definition, value);
+            }
         }
         catch (Exception ex)
         {
@@ -133,22 +268,22 @@ else
         }
     }
 
-    private async Task SaveSettingAsync()
+    private async Task SaveKnownSettingAsync(KnownSettingDefinition definition)
     {
         busy = true;
         errorMessage = string.Empty;
+        successMessage = string.Empty;
 
         try
         {
             await ApiClient.UpsertModuleSettingAsync("knitting", new UpsertModuleSettingItemRequest
             {
-                Category = form.Category,
-                Key = form.Key,
-                Value = form.Value
+                Category = definition.Category,
+                Key = definition.Key,
+                Value = GetNormalizedValue(definition)
             });
-
-            form = new();
             await LoadSettingsAsync();
+            successMessage = $"Saved {definition.Label}.";
         }
         catch (Exception ex)
         {
@@ -160,10 +295,363 @@ else
         }
     }
 
+    private async Task ResetKnownSettingAsync(KnownSettingDefinition definition)
+    {
+        settingValues[definition.Key] = definition.DefaultValue;
+        intValues[definition.Key] = ParseIntValue(definition, definition.DefaultValue);
+        await SaveKnownSettingAsync(definition);
+    }
+
+    private async Task DeleteKnownSettingAsync(KnownSettingDefinition definition)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.DeleteModuleSettingAsync("knitting", definition.Key);
+            settingValues[definition.Key] = definition.DefaultValue;
+            intValues[definition.Key] = ParseIntValue(definition, definition.DefaultValue);
+            await LoadSettingsAsync();
+            successMessage = $"Reset {definition.Label} to default.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task ResetCategoryDefaultsAsync(string category)
+    {
+        foreach (var definition in knownSettingDefinitions.Where(definition => definition.Category == category))
+        {
+            settingValues[definition.Key] = definition.DefaultValue;
+            intValues[definition.Key] = ParseIntValue(definition, definition.DefaultValue);
+        }
+
+        await SaveCategoryAsync(category);
+    }
+
+    private async Task SaveCategoryAsync(string category)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            foreach (var definition in knownSettingDefinitions.Where(definition => definition.Category == category))
+            {
+                await ApiClient.UpsertModuleSettingAsync("knitting", new UpsertModuleSettingItemRequest
+                {
+                    Category = definition.Category,
+                    Key = definition.Key,
+                    Value = GetNormalizedValue(definition)
+                });
+            }
+
+            await LoadSettingsAsync();
+            successMessage = $"Saved {CategoryLabel(category)} settings.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task SaveCustomSettingAsync()
+    {
+        busy = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UpsertModuleSettingAsync("knitting", new UpsertModuleSettingItemRequest
+            {
+                Category = customForm.Category,
+                Key = customForm.Key,
+                Value = customForm.Value
+            });
+
+            customForm = new();
+            await LoadSettingsAsync();
+            successMessage = "Saved custom setting.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void EditCustomSetting(ModuleSettingItemDto setting)
+    {
+        customForm = new SettingFormModel
+        {
+            Category = setting.Category,
+            Key = setting.Key,
+            Value = setting.Value
+        };
+    }
+
+    private void ClearCustomForm()
+    {
+        customForm = new SettingFormModel();
+    }
+
+    private async Task DeleteSettingAsync(string key)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.DeleteModuleSettingAsync("knitting", key);
+            if (string.Equals(customForm.Key, key, StringComparison.OrdinalIgnoreCase))
+            {
+                customForm = new SettingFormModel();
+            }
+
+            await LoadSettingsAsync();
+            successMessage = "Deleted custom setting.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private static bool TryParseBool(string value, out bool parsed)
+        => bool.TryParse(value, out parsed);
+
+    private bool GetBoolSetting(KnownSettingDefinition definition)
+    {
+        if (!settingValues.TryGetValue(definition.Key, out var value))
+        {
+            value = definition.DefaultValue;
+        }
+
+        return TryParseBool(value, out var parsed) && parsed;
+    }
+
+    private void SetBoolSetting(KnownSettingDefinition definition, ChangeEventArgs args)
+    {
+        var isEnabled = args.Value is bool value && value;
+        settingValues[definition.Key] = isEnabled ? "true" : "false";
+    }
+
+    private static int? ParseIntValue(KnownSettingDefinition definition, string value)
+    {
+        if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
+        {
+            parsed = int.TryParse(definition.DefaultValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var fallback) ? fallback : 0;
+        }
+
+        if (definition.MinValue.HasValue && parsed < definition.MinValue.Value)
+        {
+            parsed = definition.MinValue.Value;
+        }
+
+        if (definition.MaxValue.HasValue && parsed > definition.MaxValue.Value)
+        {
+            parsed = definition.MaxValue.Value;
+        }
+
+        return parsed;
+    }
+
+    private string GetNormalizedValue(KnownSettingDefinition definition)
+    {
+        if (definition.Kind == SettingKind.Boolean)
+        {
+            return GetBoolSetting(definition) ? "true" : "false";
+        }
+
+        if (definition.Kind == SettingKind.Integer)
+        {
+            var current = intValues.TryGetValue(definition.Key, out var value)
+                ? value
+                : ParseIntValue(definition, definition.DefaultValue);
+            if (!current.HasValue)
+            {
+                current = ParseIntValue(definition, definition.DefaultValue);
+            }
+
+            var normalized = current ?? 0;
+            if (definition.MinValue.HasValue && normalized < definition.MinValue.Value)
+            {
+                normalized = definition.MinValue.Value;
+            }
+
+            if (definition.MaxValue.HasValue && normalized > definition.MaxValue.Value)
+            {
+                normalized = definition.MaxValue.Value;
+            }
+
+            intValues[definition.Key] = normalized;
+            settingValues[definition.Key] = normalized.ToString(CultureInfo.InvariantCulture);
+            return settingValues[definition.Key];
+        }
+
+        var selected = settingValues.TryGetValue(definition.Key, out var stringValue)
+            ? stringValue
+            : definition.DefaultValue;
+
+        if (definition.Kind == SettingKind.Option
+            && definition.Options.Count > 0
+            && !definition.Options.Any(option => option.Value == selected))
+        {
+            selected = definition.DefaultValue;
+        }
+
+        settingValues[definition.Key] = selected;
+        return selected.Trim();
+    }
+
+    private static string CategoryLabel(string category)
+    {
+        return category switch
+        {
+            "projects" => "Projects",
+            "kits" => "Kits",
+            "workspace" => "Workspace",
+            "timers" => "Timers",
+            _ => category
+        };
+    }
+
+    private string GetIntValue(KnownSettingDefinition definition)
+    {
+        var value = intValues.TryGetValue(definition.Key, out var stored)
+            ? stored
+            : ParseIntValue(definition, definition.DefaultValue);
+        return (value ?? 0).ToString(CultureInfo.InvariantCulture);
+    }
+
+    private void SetIntValue(KnownSettingDefinition definition, ChangeEventArgs args)
+    {
+        var raw = args.Value?.ToString() ?? definition.DefaultValue;
+        var parsed = ParseIntValue(definition, raw);
+        intValues[definition.Key] = parsed;
+        settingValues[definition.Key] = (parsed ?? 0).ToString(CultureInfo.InvariantCulture);
+    }
+
+    private string GetStringValue(KnownSettingDefinition definition)
+    {
+        if (!settingValues.TryGetValue(definition.Key, out var value))
+        {
+            value = definition.DefaultValue;
+            settingValues[definition.Key] = value;
+        }
+
+        return value;
+    }
+
+    private void SetStringValue(KnownSettingDefinition definition, ChangeEventArgs args)
+    {
+        settingValues[definition.Key] = args.Value?.ToString() ?? definition.DefaultValue;
+    }
+
+    private void EnsureKnownSettingState()
+    {
+        foreach (var definition in knownSettingDefinitions)
+        {
+            if (!settingValues.ContainsKey(definition.Key))
+            {
+                settingValues[definition.Key] = definition.DefaultValue;
+            }
+
+            if (!intValues.ContainsKey(definition.Key))
+            {
+                intValues[definition.Key] = ParseIntValue(definition, definition.DefaultValue);
+            }
+        }
+    }
+
+    private enum SettingKind
+    {
+        Boolean,
+        Integer,
+        Option,
+        Text
+    }
+
+    private sealed class SettingOption
+    {
+        public SettingOption(string value, string label)
+        {
+            Value = value;
+            Label = label;
+        }
+
+        public string Value { get; }
+        public string Label { get; }
+    }
+
+    private sealed class KnownSettingDefinition
+    {
+        public KnownSettingDefinition(
+            string key,
+            string category,
+            string label,
+            string description,
+            SettingKind kind,
+            string defaultValue,
+            int? minValue = null,
+            int? maxValue = null,
+            IReadOnlyList<SettingOption>? options = null)
+        {
+            Key = key;
+            Category = category;
+            Label = label;
+            Description = description;
+            Kind = kind;
+            DefaultValue = defaultValue;
+            MinValue = minValue;
+            MaxValue = maxValue;
+            Options = options ?? [];
+        }
+
+        public string Key { get; }
+        public string Category { get; }
+        public string Label { get; }
+        public string Description { get; }
+        public SettingKind Kind { get; }
+        public string DefaultValue { get; }
+        public int? MinValue { get; }
+        public int? MaxValue { get; }
+        public IReadOnlyList<SettingOption> Options { get; }
+    }
+
     private class SettingFormModel
     {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Category is required")]
+        [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "Category cannot exceed 100 characters")]
         public string Category { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Key is required")]
+        [System.ComponentModel.DataAnnotations.StringLength(150, ErrorMessage = "Key cannot exceed 150 characters")]
         public string Key { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(1000, ErrorMessage = "Value cannot exceed 1000 characters")]
         public string Value { get; set; } = string.Empty;
     }
 }

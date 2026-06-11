@@ -14,6 +14,14 @@ public class ModuleProjectDto
     public int Progress { get; set; }
     public bool IsArchived { get; set; }
     public DateTime? ArchivedAt { get; set; }
+    public int CompletedStepCount { get; set; }
+    public int TotalStepCount { get; set; }
+    public long TotalTrackedSeconds { get; set; }
+    public bool TimerRunning { get; set; }
+    public DateTime? TimerStartedAt { get; set; }
+    public IReadOnlyList<ModuleProjectStepProgressDto> StepProgress { get; set; } = [];
+    public IReadOnlyList<ModuleProjectTimerDto> Timers { get; set; } = [];
+    public IReadOnlyList<ModuleProjectInventoryLinkDto> InventoryLinks { get; set; } = [];
     public Guid UserId { get; set; }
     public string Username { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }

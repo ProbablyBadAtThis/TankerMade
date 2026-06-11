@@ -78,6 +78,10 @@ else
                                 <span>@piece.Name</span>
                                 <small>@piece.StepCount steps</small>
                             </button>
+                            <div class="piece-order-actions">
+                                <button class="btn btn-outline-secondary btn-sm" disabled="@(busy || IsFirstPiece(piece.Id))" @onclick="() => MovePieceAsync(piece.Id, -1)">Up</button>
+                                <button class="btn btn-outline-secondary btn-sm" disabled="@(busy || IsLastPiece(piece.Id))" @onclick="() => MovePieceAsync(piece.Id, 1)">Down</button>
+                            </div>
                         </div>
                     }
                 }
@@ -131,6 +135,10 @@ else
                                 <span>Label</span>
                                 <InputText class="form-control" @bind-Value="stepForm.Label" />
                             </label>
+                            <label>
+                                <span>Stitch Count</span>
+                                <InputNumber class="form-control" @bind-Value="stepForm.StitchCount" />
+                            </label>
                         </div>
                         <label>
                             <span>Notes</span>
@@ -154,6 +162,8 @@ else
                                         <div class="step-title-row">
                                             <h3>@step.Label</h3>
                                             <div class="auth-actions">
+                                                <button class="btn btn-outline-secondary btn-sm" disabled="@(busy || IsFirstStep(step.Id))" @onclick="() => MoveStepAsync(step.Id, -1)">Up</button>
+                                                <button class="btn btn-outline-secondary btn-sm" disabled="@(busy || IsLastStep(step.Id))" @onclick="() => MoveStepAsync(step.Id, 1)">Down</button>
                                                 <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => StartStepEdit(step)">Edit</button>
                                                 <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeleteStepAsync(step.Id)">Delete</button>
                                             </div>
@@ -176,6 +186,10 @@ else
                                                     <label>
                                                         <span>Label</span>
                                                         <InputText class="form-control" @bind-Value="editStepForm.Label" />
+                                                    </label>
+                                                    <label>
+                                                        <span>Stitch Count</span>
+                                                        <InputNumber class="form-control" @bind-Value="editStepForm.StitchCount" />
                                                     </label>
                                                 </div>
                                                 <label>
@@ -392,6 +406,7 @@ else
                     StartIndex = stepForm.StartIndex,
                     EndIndex = stepForm.EndIndex,
                     Label = stepForm.Label,
+                    StitchCount = stepForm.StitchCount,
                     Notes = stepForm.Notes
                 });
 
@@ -416,6 +431,7 @@ else
             StartIndex = step.StartIndex,
             EndIndex = step.EndIndex,
             Label = step.Label,
+            StitchCount = step.StitchCount,
             Notes = step.Notes
         };
     }
@@ -442,6 +458,7 @@ else
                     StartIndex = editStepForm.StartIndex,
                     EndIndex = editStepForm.EndIndex,
                     Label = editStepForm.Label,
+                    StitchCount = editStepForm.StitchCount,
                     Notes = editStepForm.Notes
                 });
 
@@ -474,6 +491,98 @@ else
         {
             await ApiClient.DeleteModulePatternStepAsync(ModuleKey, pattern.Id, selectedPiece.Id, stepId);
             editingStepId = null;
+            await LoadPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private bool IsFirstPiece(Guid pieceId)
+        => pattern?.Pieces.FirstOrDefault()?.Id == pieceId;
+
+    private bool IsLastPiece(Guid pieceId)
+        => pattern?.Pieces.LastOrDefault()?.Id == pieceId;
+
+    private bool IsFirstStep(Guid stepId)
+        => selectedPiece?.Steps.FirstOrDefault()?.Id == stepId;
+
+    private bool IsLastStep(Guid stepId)
+        => selectedPiece?.Steps.LastOrDefault()?.Id == stepId;
+
+    private async Task MovePieceAsync(Guid pieceId, int direction)
+    {
+        if (pattern == null)
+        {
+            return;
+        }
+
+        var orderedIds = pattern.Pieces.Select(piece => piece.Id).ToList();
+        var index = orderedIds.IndexOf(pieceId);
+        if (index < 0)
+        {
+            return;
+        }
+
+        var target = index + direction;
+        if (target < 0 || target >= orderedIds.Count)
+        {
+            return;
+        }
+
+        (orderedIds[index], orderedIds[target]) = (orderedIds[target], orderedIds[index]);
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.ReorderModulePatternPiecesAsync(ModuleKey, pattern.Id, orderedIds);
+            await LoadPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task MoveStepAsync(Guid stepId, int direction)
+    {
+        if (pattern == null || selectedPiece == null)
+        {
+            return;
+        }
+
+        var orderedIds = selectedPiece.Steps.Select(step => step.Id).ToList();
+        var index = orderedIds.IndexOf(stepId);
+        if (index < 0)
+        {
+            return;
+        }
+
+        var target = index + direction;
+        if (target < 0 || target >= orderedIds.Count)
+        {
+            return;
+        }
+
+        (orderedIds[index], orderedIds[target]) = (orderedIds[target], orderedIds[index]);
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.ReorderModulePatternStepsAsync(ModuleKey, pattern.Id, selectedPiece.Id, orderedIds);
             await LoadPatternAsync();
         }
         catch (Exception ex)
@@ -523,6 +632,7 @@ else
     {
         public int? StartIndex { get; set; }
         public int? EndIndex { get; set; }
+        public int? StitchCount { get; set; }
         public string Label { get; set; } = string.Empty;
         public string Notes { get; set; } = string.Empty;
     }

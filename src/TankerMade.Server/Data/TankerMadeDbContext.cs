@@ -48,6 +48,9 @@ public class TankerMadeDbContext : DbContext
     public DbSet<KnittingPatternPiece> KnittingPatternPieces { get; set; }
     public DbSet<KnittingPatternStep> KnittingPatternSteps { get; set; }
     public DbSet<KnittingProject> KnittingProjects { get; set; }
+    public DbSet<KnittingProjectStepProgress> KnittingProjectStepProgress { get; set; }
+    public DbSet<KnittingProjectTimer> KnittingProjectTimers { get; set; }
+    public DbSet<KnittingProjectInventoryLink> KnittingProjectInventoryLinks { get; set; }
     public DbSet<KnittingSupplyItem> KnittingSupplyItems { get; set; }
     public DbSet<KnittingKit> KnittingKits { get; set; }
     public DbSet<KnittingKitPiece> KnittingKitPieces { get; set; }
@@ -96,6 +99,9 @@ public class TankerMadeDbContext : DbContext
         ConfigureKnittingPatternPiece(modelBuilder);
         ConfigureKnittingPatternStep(modelBuilder);
         ConfigureKnittingProject(modelBuilder);
+        ConfigureKnittingProjectStepProgress(modelBuilder);
+        ConfigureKnittingProjectTimer(modelBuilder);
+        ConfigureKnittingProjectInventoryLink(modelBuilder);
         ConfigureKnittingSupplyItem(modelBuilder);
         ConfigureKnittingKit(modelBuilder);
         ConfigureKnittingKitPiece(modelBuilder);
@@ -865,6 +871,82 @@ public class TankerMadeDbContext : DbContext
             entity.HasIndex(e => e.Slug);
             entity.HasIndex(e => new { e.UserId, e.IsArchived, e.Name });
             entity.HasIndex(e => new { e.UserId, e.PatternId });
+        });
+    }
+
+    private void ConfigureKnittingProjectStepProgress(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingProjectStepProgress>(entity =>
+        {
+            entity.ToTable("KnittingProjectStepProgress");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.IsComplete).IsRequired();
+
+            entity.HasOne<KnittingProject>()
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<KnittingPatternStep>()
+                .WithMany()
+                .HasForeignKey(e => e.PatternStepId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.PatternStepId);
+            entity.HasIndex(e => new { e.ProjectId, e.PatternStepId }).IsUnique();
+        });
+    }
+
+    private void ConfigureKnittingProjectTimer(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingProjectTimer>(entity =>
+        {
+            entity.ToTable("KnittingProjectTimers");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.ElapsedSeconds).IsRequired();
+            entity.Property(e => e.IsRunning).IsRequired();
+
+            entity.HasOne<KnittingProject>()
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<KnittingPatternStep>()
+                .WithMany()
+                .HasForeignKey(e => e.PatternStepId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.PatternStepId);
+            entity.HasIndex(e => new { e.ProjectId, e.PatternStepId }).IsUnique();
+        });
+    }
+
+    private void ConfigureKnittingProjectInventoryLink(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingProjectInventoryLink>(entity =>
+        {
+            entity.ToTable("KnittingProjectInventoryLinks");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+
+            entity.HasOne<KnittingProject>()
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<KnittingSupplyItem>()
+                .WithMany()
+                .HasForeignKey(e => e.SupplyItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.SupplyItemId);
+            entity.HasIndex(e => new { e.ProjectId, e.SupplyItemId }).IsUnique();
         });
     }
 

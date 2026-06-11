@@ -15,4 +15,11 @@ public interface IModuleProjectCapabilityHandler
     Task<ModuleProjectDto?> ArchiveAsync(Guid id, Guid userId);
     Task<ModuleProjectDto?> ReopenAsync(Guid id, Guid userId);
     Task<bool> DeleteAsync(Guid id, Guid userId);
+    Task<ModuleProjectDto?> SetStepProgressAsync(Guid projectId, Guid patternStepId, UpdateModuleProjectStepProgressRequest request, Guid userId);
+    Task<ModuleProjectDto?> StartTimerAsync(Guid projectId, Guid patternStepId, UpdateModuleProjectTimerRequest request, Guid userId);
+    Task<ModuleProjectDto?> PauseTimerAsync(Guid projectId, Guid patternStepId, UpdateModuleProjectTimerRequest request, Guid userId);
+    Task<ModuleProjectDto?> SetTimerAsync(Guid projectId, Guid patternStepId, UpdateModuleProjectTimerRequest request, Guid userId);
+    Task<ModuleProjectDto?> ResetTimerAsync(Guid projectId, Guid patternStepId, Guid userId);
+    Task<ModuleProjectDto?> AddInventoryLinkAsync(Guid projectId, CreateModuleProjectInventoryLinkRequest request, Guid userId);
+    Task<bool> RemoveInventoryLinkAsync(Guid projectId, Guid linkId, Guid userId);
 }

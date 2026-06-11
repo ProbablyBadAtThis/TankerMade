@@ -33,6 +33,26 @@ public class KnittingInventoryCapabilityHandler : IModuleInventoryCapabilityHand
             Notes = request.Notes
         }, userId));
 
+    public async Task<ModuleSupplyItemDto?> UpdateSupplyAsync(Guid supplyId, UpdateModuleSupplyItemRequest request, Guid userId)
+    {
+        var supply = await _service.UpdateSupplyAsync(supplyId, new CreateKnittingSupplyItemDto
+        {
+            Category = request.Category,
+            Name = request.Name,
+            Brand = request.Brand,
+            Color = request.Color,
+            Size = request.Size,
+            Quantity = request.Quantity,
+            Unit = request.Unit,
+            Notes = request.Notes
+        }, userId);
+
+        return supply == null ? null : Map(supply);
+    }
+
+    public Task<bool> DeleteSupplyAsync(Guid supplyId, Guid userId)
+        => _service.DeleteSupplyAsync(supplyId, userId);
+
     private static ModuleSupplyItemDto Map(KnittingSupplyItemDto source)
     {
         return new ModuleSupplyItemDto

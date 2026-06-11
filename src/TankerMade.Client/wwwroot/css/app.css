@@ -255,6 +255,11 @@ code {
     margin: 0;
 }
 
+.pattern-card h3 {
+    font-size: 1rem;
+    margin: 0;
+}
+
 .project-card p {
     color: #536173;
     margin: 0.35rem 0 0;
@@ -308,6 +313,12 @@ code {
     color: #384657;
     font-size: 0.85rem;
     padding: 0.35rem 0.5rem;
+}
+
+.settings-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
 }
 
 .pattern-form {
@@ -684,6 +695,30 @@ code {
     text-align: right;
 }
 
+.timer-edit-grid {
+    align-items: end;
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: minmax(0, 1fr) repeat(4, minmax(4.25rem, 1fr));
+}
+
+.timer-edit-grid > span {
+    color: #536173;
+    font-weight: 600;
+}
+
+.timer-edit-grid label {
+    display: grid;
+    gap: 0.25rem;
+    grid-template-columns: 1fr;
+}
+
+.timer-edit-grid label span {
+    color: #536173;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
 .timer-dialog-error {
     color: #b42318;
     font-size: 0.9rem;
@@ -707,6 +742,18 @@ code {
 .piece-list {
     display: grid;
     gap: 0.5rem;
+}
+
+.piece-list .piece-create-form {
+    justify-items: start;
+}
+
+.piece-list .piece-create-form .form-control {
+    max-width: 20rem;
+}
+
+.piece-list .piece-create-form .btn {
+    width: auto;
 }
 
 .piece-create-form,
@@ -757,6 +804,11 @@ code {
     display: grid;
     gap: 0.5rem;
     grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.piece-order-actions {
+    display: grid;
+    gap: 0.35rem;
 }
 
 .piece-button.active {
@@ -901,6 +953,10 @@ code {
 .step-list p {
     color: #384657;
     margin: 0.25rem 0 0;
+}
+
+.kit-edit-dialog {
+    max-width: 32rem;
 }
 
 .printing-search-row {
@@ -1209,6 +1265,38 @@ code {
 
     .project-supply-list li .btn {
         justify-self: start;
+    }
+}
+
+@media (max-width: 1100px) {
+    .pattern-workspace {
+        grid-template-columns: 1fr;
+    }
+
+    .piece-list .piece-create-form .form-control {
+        max-width: 100%;
+    }
+
+    .piece-row {
+        grid-template-columns: 1fr;
+    }
+
+    .piece-order-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .piece-order-actions .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 900px) {
+    .timer-edit-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .timer-edit-grid > span {
+        grid-column: 1 / -1;
     }
 }
 

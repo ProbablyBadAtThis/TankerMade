@@ -1,0 +1,1005 @@
+@page "/modules/knitting/projects/{ProjectId:guid}"
+@implements IDisposable
+@using TankerMade.Contracts.DTOs.ModuleInventory
+@using TankerMade.Contracts.DTOs.ModulePatterns
+@using TankerMade.Contracts.DTOs.ModuleProjects
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+
+<PageTitle>Knitting Project</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>Knitting Project</h1>
+    <p>Sign in to use this module section.</p>
+    <a class="btn btn-primary" href="/login">Sign in</a>
+}
+else if (!ModuleState.IsActive(ModuleKey))
+{
+    <h1>Knitting Project</h1>
+    <p>Activate Knitting from Home to continue.</p>
+    <a class="btn btn-outline-primary" href="/">Go to Home</a>
+}
+else if (loading)
+{
+    <h1>Knitting Project</h1>
+    <p>Loading...</p>
+}
+else if (project is null)
+{
+    <h1>Project Not Found</h1>
+    <a class="btn btn-outline-secondary" href="/modules/knitting/projects">Back to Projects</a>
+}
+else
+{
+    <div class="pattern-detail">
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <div class="pattern-header">
+            <div>
+                <a class="pattern-back-link" href="/modules/knitting/projects">Projects</a>
+                <h1>@project.Name</h1>
+                <p>@ProjectHeaderMeta</p>
+                @if (!string.IsNullOrWhiteSpace(project.Description))
+                {
+                    <p>@project.Description</p>
+                }
+                @if (project.IsArchived)
+                {
+                    <span class="archive-badge">Archived</span>
+                }
+            </div>
+            <div class="pattern-stats" aria-label="Project summary">
+                <div>
+                    <strong>@project.Progress%</strong>
+                    <span>Progress</span>
+                </div>
+                <div>
+                    <strong>@project.CompletedStepCount/@project.TotalStepCount</strong>
+                    <span>Steps</span>
+                </div>
+                <div>
+                    <strong>@FormatDurationCompact(GetTrackedSeconds())</strong>
+                    <span>Tracked</span>
+                </div>
+            </div>
+        </div>
+
+        <section class="project-panel">
+            <div class="project-panel-header">
+                <h2>Workspace Setup</h2>
+                <a class="btn btn-outline-secondary btn-sm" href="/modules/knitting/patterns">Patterns</a>
+            </div>
+            <EditForm Model="form" OnValidSubmit="SaveAsync" class="project-edit-form">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="form-grid">
+                    <label>
+                        <span>Name</span>
+                        <InputText class="form-control" @bind-Value="form.Name" />
+                    </label>
+                    <label>
+                        <span>Description</span>
+                        <InputTextArea class="form-control" @bind-Value="form.Description" />
+                    </label>
+                    <label>
+                        <span>Pattern</span>
+                        <InputSelect class="form-control" disabled="@PatternSelectionLocked" @bind-Value="form.PatternIdText">
+                            <option value="">No pattern linked</option>
+                            @foreach (var patternOption in patterns)
+                            {
+                                <option value="@patternOption.Id">@patternOption.Name</option>
+                            }
+                        </InputSelect>
+                        @if (PatternSelectionLocked)
+                        {
+                            <small class="muted-copy">Pattern changes are locked after progress, timer, or supply-link history exists.</small>
+                        }
+                    </label>
+                    <label>
+                        <span>Difficulty</span>
+                        <InputSelect class="form-control" @bind-Value="form.Difficulty">
+                            <option value="0">Unspecified</option>
+                            <option value="1">Beginner</option>
+                            <option value="2">Beginner+</option>
+                            <option value="3">Intermediate</option>
+                            <option value="4">Intermediate+</option>
+                            <option value="5">Advanced</option>
+                            <option value="6">Advanced+</option>
+                        </InputSelect>
+                    </label>
+                </div>
+                <div class="auth-actions">
+                    <button class="btn btn-primary" disabled="@busy" type="submit">Save Project</button>
+                    @if (project.IsArchived)
+                    {
+                        <button class="btn btn-outline-secondary" type="button" disabled="@busy" @onclick="ReopenProjectAsync">Reopen Project</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-danger" type="button" disabled="@busy" @onclick="ArchiveProjectAsync">Archive Project</button>
+                    }
+                </div>
+            </EditForm>
+        </section>
+
+        @if (pattern is null || pattern.Pieces.Count == 0)
+        {
+            <div class="empty-state">
+                <h2>No Pattern Steps</h2>
+                <p>Link a pattern to this project to track steps and timers.</p>
+            </div>
+        }
+        else
+        {
+            <div class="pattern-workspace">
+                <aside class="piece-list">
+                    @foreach (var piece in pattern.Pieces)
+                    {
+                        <div class="piece-row">
+                            <button class="piece-button @(selectedPieceId == piece.Id ? "active" : string.Empty)" @onclick="() => SelectPiece(piece.Id)">
+                                <span>@piece.Name</span>
+                                <small>@piece.StepCount steps</small>
+                            </button>
+                        </div>
+                    }
+                </aside>
+
+                <section class="step-panel">
+                    @if (selectedPiece is null)
+                    {
+                        <p>Select a piece.</p>
+                    }
+                    else
+                    {
+                        <div class="step-panel-header">
+                            <div>
+                                <h2>@selectedPiece.Name</h2>
+                                <p>@SelectedPieceMeta</p>
+                            </div>
+                        </div>
+                        <ol class="step-list">
+                            @foreach (var step in selectedPiece.Steps)
+                            {
+                                var timer = project.Timers.FirstOrDefault(timer => timer.PatternStepId == step.Id);
+                                var isComplete = completedStepIds.Contains(step.Id);
+                                <li>
+                                    <div class="step-range">@StepRange(step)</div>
+                                    <div class="step-content">
+                                        <div class="step-title-row">
+                                            <h3>@StepLabel(step)</h3>
+                                            <div class="auth-actions">
+                                                <label class="d-flex gap-2 align-items-center">
+                                                    <input type="checkbox" checked="@isComplete" @onchange="args => ToggleStepAsync(step.Id, args)" />
+                                                    Done
+                                                </label>
+                                                @if (timer?.IsRunning == true)
+                                                {
+                                                    <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => PauseTimerAsync(step.Id)">Pause</button>
+                                                }
+                                                else
+                                                {
+                                                    <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => StartTimerAsync(step.Id)">Start</button>
+                                                }
+                                                <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => OpenTimerEdit(step)">Edit</button>
+                                            </div>
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(step.Notes))
+                                        {
+                                            <p>@step.Notes</p>
+                                        }
+                                        <small>@StepMeta(step, timer)</small>
+                                    </div>
+                                </li>
+                            }
+                        </ol>
+                    }
+                </section>
+            </div>
+        }
+
+        <section class="project-panel mt-3">
+            <h2>Linked Supplies</h2>
+            <div class="form-grid">
+                <label>
+                    <span>Supply</span>
+                    <select class="form-control" @bind="selectedSupplyId">
+                        <option value="">Select supply</option>
+                        @foreach (var supply in supplies)
+                        {
+                            <option value="@supply.Id">@supply.Name (@supply.Category)</option>
+                        }
+                    </select>
+                </label>
+                <label>
+                    <span>Quantity Planned</span>
+                    <InputNumber class="form-control" @bind-Value="supplyQuantity" />
+                </label>
+                <label>
+                    <span>Notes</span>
+                    <InputText class="form-control" @bind-Value="supplyNotes" />
+                </label>
+            </div>
+            <button class="btn btn-primary" disabled="@busy" @onclick="AddSupplyLinkAsync">Add Supply Link</button>
+
+            @if (project.InventoryLinks.Count == 0)
+            {
+                <p class="mt-3 mb-0">No supply links yet.</p>
+            }
+            else
+            {
+                <ul class="project-supply-list mt-3">
+                    @foreach (var link in project.InventoryLinks)
+                    {
+                        <li>
+                            <div>
+                                <strong>@link.SupplyItemName</strong>
+                                <span>@(link.QuantityPlanned?.ToString() ?? "-") planned</span>
+                                @if (!string.IsNullOrWhiteSpace(link.Notes))
+                                {
+                                    <small>@link.Notes</small>
+                                }
+                            </div>
+                            <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => RemoveSupplyLinkAsync(link.Id)">Remove</button>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+    </div>
+}
+
+@if (timerEditStep != null)
+{
+    <div class="modal-backdrop-panel" role="presentation">
+        <div class="timer-dialog" role="dialog" aria-modal="true" aria-labelledby="timer-edit-title">
+            <div class="timer-dialog-header">
+                <h2 id="timer-edit-title">Adjust Step Time</h2>
+                <button class="btn btn-outline-secondary btn-sm" type="button" disabled="@busy" @onclick="CloseTimerEdit">Close</button>
+            </div>
+            <div class="timer-dialog-fields">
+                <label>
+                    <span>Step</span>
+                    <strong>@StepLabel(timerEditStep)</strong>
+                </label>
+                <div class="timer-edit-grid">
+                    <span>Elapsed Time</span>
+                    <label>
+                        <span>D</span>
+                        <InputNumber class="form-control" min="0" @bind-Value="timerEditDays" />
+                    </label>
+                    <label>
+                        <span>H</span>
+                        <InputNumber class="form-control" min="0" @bind-Value="timerEditHours" />
+                    </label>
+                    <label>
+                        <span>M</span>
+                        <InputNumber class="form-control" min="0" @bind-Value="timerEditMinutes" />
+                    </label>
+                    <label>
+                        <span>S</span>
+                        <InputNumber class="form-control" min="0" @bind-Value="timerEditSeconds" />
+                    </label>
+                </div>
+            </div>
+            @if (!IsTimerEditValid)
+            {
+                <p class="timer-dialog-error">Use non-negative values for days, hours, minutes, and seconds.</p>
+            }
+            <div class="timer-dialog-actions">
+                <button class="btn btn-primary" type="button" disabled="@(busy || !IsTimerEditValid)" @onclick="SaveTimerEditAsync">Save</button>
+                <button class="btn btn-outline-danger" type="button" disabled="@busy" @onclick="ResetTimerFromDialogAsync">Reset</button>
+                <button class="btn btn-outline-secondary" type="button" disabled="@busy" @onclick="CloseTimerEdit">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+
+    private const string ModuleKey = "knitting";
+    private const string WorkspaceDefaultSupplyQuantityKey = "workspace.defaultSupplyPlannedQuantity";
+    private const string TimersDefaultEditMinutesKey = "timers.defaultEditMinutes";
+    private const string TimersAutoPauseOnCompleteKey = "timers.autoPauseOnComplete";
+    private ModuleProjectDto? project;
+    private ModulePatternDto? pattern;
+    private ModulePatternPieceDto? selectedPiece;
+    private Guid? selectedPieceId;
+    private readonly List<ModulePatternDto> patterns = [];
+    private readonly List<ModuleSupplyItemDto> supplies = [];
+    private ProjectFormModel form = new();
+    private HashSet<Guid> completedStepIds = [];
+    private Guid? selectedSupplyId;
+    private decimal? supplyQuantity;
+    private string supplyNotes = string.Empty;
+    private bool loading = true;
+    private bool settingsInitialized;
+    private bool busy;
+    private string errorMessage = string.Empty;
+    private readonly System.Timers.Timer clock = new(1000);
+    private ModulePatternStepDto? timerEditStep;
+    private int timerEditDays;
+    private int timerEditHours;
+    private int timerEditMinutes;
+    private int timerEditSeconds;
+    private int defaultTimerEditMinutes;
+    private bool autoPauseOnComplete;
+    private string ProjectMeta
+    {
+        get
+        {
+            if (project == null)
+            {
+                return string.Empty;
+            }
+
+            var parts = new[]
+            {
+                string.IsNullOrWhiteSpace(project.PatternName) ? "No pattern linked" : project.PatternName,
+                DifficultyLabel(project.Difficulty)
+            }.Where(value => !string.IsNullOrWhiteSpace(value));
+
+            return string.Join(" - ", parts);
+        }
+    }
+
+    private string ProjectHeaderMeta => ProjectMeta;
+    private bool IsTimerEditValid =>
+        timerEditDays >= 0
+        && timerEditHours >= 0
+        && timerEditMinutes >= 0
+        && timerEditSeconds >= 0;
+
+    private string SelectedPieceMeta
+    {
+        get
+        {
+            if (selectedPiece == null)
+            {
+                return string.Empty;
+            }
+
+            var completedCount = selectedPiece.Steps.Count(step => completedStepIds.Contains(step.Id));
+            return $"{selectedPiece.StepCount} steps - {completedCount}/{selectedPiece.StepCount} complete";
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        clock.Elapsed += (_, _) => InvokeAsync(StateHasChanged);
+        clock.Start();
+
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadAsync();
+    }
+
+    public void Dispose()
+    {
+        clock.Dispose();
+    }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive(ModuleKey))
+            {
+                return;
+            }
+
+            if (!settingsInitialized)
+            {
+                var settings = await ApiClient.GetModuleSettingsAsync(ModuleKey);
+                supplyQuantity = GetDecimalSetting(settings, WorkspaceDefaultSupplyQuantityKey);
+                defaultTimerEditMinutes = GetIntSetting(settings, TimersDefaultEditMinutesKey, 0, 0, 1440);
+                autoPauseOnComplete = GetBoolSetting(settings, TimersAutoPauseOnCompleteKey, false);
+                settingsInitialized = true;
+            }
+
+            patterns.Clear();
+            patterns.AddRange(await ApiClient.GetModulePatternsAsync(ModuleKey));
+            project = await ApiClient.GetModuleProjectAsync(ModuleKey, ProjectId);
+            if (project?.PatternId != null)
+            {
+                pattern = await ApiClient.GetModulePatternAsync(ModuleKey, project.PatternId.Value);
+                if (pattern == null)
+                {
+                    selectedPiece = null;
+                    selectedPieceId = null;
+                }
+            }
+            else
+            {
+                pattern = null;
+                selectedPiece = null;
+                selectedPieceId = null;
+            }
+
+            completedStepIds = project?.StepProgress
+                .Where(progress => progress.IsComplete)
+                .Select(progress => progress.PatternStepId)
+                .ToHashSet() ?? [];
+
+            supplies.Clear();
+            supplies.AddRange(await ApiClient.GetModuleSuppliesAsync(ModuleKey));
+            EnsureSelectedSupply();
+
+            if (pattern != null)
+            {
+                selectedPieceId ??= pattern.Pieces.FirstOrDefault()?.Id;
+                selectedPiece = pattern.Pieces.FirstOrDefault(piece => piece.Id == selectedPieceId)
+                    ?? pattern.Pieces.FirstOrDefault();
+                selectedPieceId = selectedPiece?.Id;
+            }
+
+            if (project != null)
+            {
+                form.Load(project);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private bool PatternSelectionLocked =>
+        project?.StepProgress.Any() == true
+        || project?.Timers.Any() == true
+        || project?.InventoryLinks.Any() == true;
+
+    private async Task SaveAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            if (project == null)
+            {
+                return;
+            }
+
+            var updated = await ApiClient.UpdateModuleProjectAsync(ModuleKey, project.Id, form.ToRequest(project.Id));
+            if (updated == null)
+            {
+                return;
+            }
+
+            project = updated;
+            form.Load(project);
+            completedStepIds = project.StepProgress
+                .Where(progress => progress.IsComplete)
+                .Select(progress => progress.PatternStepId)
+                .ToHashSet();
+            pattern = project.PatternId == null
+                ? null
+                : await ApiClient.GetModulePatternAsync(ModuleKey, project.PatternId.Value);
+
+            if (pattern != null)
+            {
+                selectedPieceId = pattern.Pieces.FirstOrDefault(piece => piece.Id == selectedPieceId)?.Id
+                    ?? pattern.Pieces.FirstOrDefault()?.Id;
+                selectedPiece = pattern.Pieces.FirstOrDefault(piece => piece.Id == selectedPieceId)
+                    ?? pattern.Pieces.FirstOrDefault();
+                selectedPieceId = selectedPiece?.Id;
+            }
+            else
+            {
+                selectedPiece = null;
+                selectedPieceId = null;
+            }
+        });
+    }
+
+    private async Task ArchiveProjectAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            if (project == null)
+            {
+                return;
+            }
+
+            var updated = await ApiClient.ArchiveModuleProjectAsync(ModuleKey, project.Id);
+            if (updated != null)
+            {
+                project = updated;
+                form.Load(project);
+            }
+        });
+    }
+
+    private async Task ReopenProjectAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            if (project == null)
+            {
+                return;
+            }
+
+            var updated = await ApiClient.ReopenModuleProjectAsync(ModuleKey, project.Id);
+            if (updated != null)
+            {
+                project = updated;
+                form.Load(project);
+            }
+        });
+    }
+
+    private void SelectPiece(Guid pieceId)
+    {
+        if (pattern == null)
+        {
+            return;
+        }
+
+        selectedPieceId = pieceId;
+        selectedPiece = pattern.Pieces.FirstOrDefault(piece => piece.Id == pieceId);
+    }
+
+    private async Task ToggleStepAsync(Guid stepId, ChangeEventArgs args)
+    {
+        var isComplete = args.Value is bool value && value;
+        await RunBusyAsync(async () =>
+        {
+            if (project == null)
+            {
+                return;
+            }
+
+            var updated = await ApiClient.SetModuleProjectStepProgressAsync(ModuleKey, project.Id, stepId, isComplete);
+            if (updated != null)
+            {
+                project = updated;
+                if (autoPauseOnComplete && isComplete)
+                {
+                    var timer = project.Timers.FirstOrDefault(existing => existing.PatternStepId == stepId);
+                    if (timer?.IsRunning == true)
+                    {
+                        var paused = await ApiClient.PauseModuleProjectTimerAsync(ModuleKey, project.Id, stepId);
+                        if (paused != null)
+                        {
+                            project = paused;
+                        }
+                    }
+                }
+
+                completedStepIds = project.StepProgress
+                    .Where(progress => progress.IsComplete)
+                    .Select(progress => progress.PatternStepId)
+                    .ToHashSet();
+            }
+        });
+    }
+
+    private async Task StartTimerAsync(Guid stepId)
+    {
+        await RunBusyAsync(async () =>
+        {
+            if (project == null)
+            {
+                return;
+            }
+
+            var updated = await ApiClient.StartModuleProjectTimerAsync(ModuleKey, project.Id, stepId);
+            if (updated != null)
+            {
+                project = updated;
+            }
+        });
+    }
+
+    private async Task PauseTimerAsync(Guid stepId)
+    {
+        await RunBusyAsync(async () =>
+        {
+            if (project == null)
+            {
+                return;
+            }
+
+            var updated = await ApiClient.PauseModuleProjectTimerAsync(ModuleKey, project.Id, stepId);
+            if (updated != null)
+            {
+                project = updated;
+            }
+        });
+    }
+
+    private async Task ResetTimerAsync(Guid stepId)
+    {
+        await RunBusyAsync(async () =>
+        {
+            if (project == null)
+            {
+                return;
+            }
+
+            var updated = await ApiClient.ResetModuleProjectTimerAsync(ModuleKey, project.Id, stepId);
+            if (updated != null)
+            {
+                project = updated;
+            }
+        });
+    }
+
+    private void OpenTimerEdit(ModulePatternStepDto step)
+    {
+        timerEditStep = step;
+        var trackedSeconds = GetStepTrackedSeconds(step.Id);
+        if (trackedSeconds <= 0)
+        {
+            SetTimerEditParts(defaultTimerEditMinutes * 60L);
+            return;
+        }
+
+        SetTimerEditParts(trackedSeconds);
+    }
+
+    private void CloseTimerEdit()
+    {
+        timerEditStep = null;
+        SetTimerEditParts(0);
+    }
+
+    private async Task SaveTimerEditAsync()
+    {
+        if (project == null || timerEditStep == null || !TryGetTimerEditSeconds(out var elapsedSeconds))
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            var updated = await ApiClient.SetModuleProjectTimerAsync(ModuleKey, project.Id, timerEditStep.Id, elapsedSeconds);
+            if (updated != null)
+            {
+                project = updated;
+                CloseTimerEdit();
+            }
+        });
+    }
+
+    private async Task ResetTimerFromDialogAsync()
+    {
+        if (timerEditStep == null)
+        {
+            return;
+        }
+
+        await ResetTimerAsync(timerEditStep.Id);
+        CloseTimerEdit();
+    }
+
+    private async Task AddSupplyLinkAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            if (project == null || selectedSupplyId == null)
+            {
+                errorMessage = "Select a supply before adding a link.";
+                return;
+            }
+
+            var updated = await ApiClient.AddModuleProjectInventoryLinkAsync(ModuleKey, project.Id, new CreateModuleProjectInventoryLinkRequest
+            {
+                SupplyItemId = selectedSupplyId.Value,
+                QuantityPlanned = supplyQuantity,
+                Notes = supplyNotes
+            });
+            if (updated != null)
+            {
+                project = updated;
+            }
+
+            selectedSupplyId = null;
+            supplyQuantity = null;
+            supplyNotes = string.Empty;
+            EnsureSelectedSupply();
+        });
+    }
+
+    private async Task RemoveSupplyLinkAsync(Guid linkId)
+    {
+        await RunBusyAsync(async () =>
+        {
+            if (project == null)
+            {
+                return;
+            }
+
+            await ApiClient.RemoveModuleProjectInventoryLinkAsync(ModuleKey, project.Id, linkId);
+            var refreshed = await ApiClient.GetModuleProjectAsync(ModuleKey, project.Id);
+            if (refreshed != null)
+            {
+                project = refreshed;
+                completedStepIds = project.StepProgress
+                    .Where(progress => progress.IsComplete)
+                    .Select(progress => progress.PatternStepId)
+                    .ToHashSet();
+            }
+        });
+    }
+
+    private async Task RunBusyAsync(Func<Task> action)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void EnsureSelectedSupply()
+    {
+        if (supplies.Count == 0)
+        {
+            selectedSupplyId = null;
+            return;
+        }
+
+        if (selectedSupplyId == null || supplies.All(supply => supply.Id != selectedSupplyId.Value))
+        {
+            selectedSupplyId = supplies[0].Id;
+        }
+    }
+
+    private long GetTrackedSeconds()
+    {
+        if (project == null || project.Timers.Count == 0)
+        {
+            return project?.TotalTrackedSeconds ?? 0;
+        }
+
+        return project.Timers.Sum(timer => GetStepTrackedSeconds(timer.PatternStepId));
+    }
+
+    private long GetStepTrackedSeconds(Guid patternStepId)
+    {
+        var timer = project?.Timers.FirstOrDefault(existing => existing.PatternStepId == patternStepId);
+        if (timer == null)
+        {
+            return 0;
+        }
+
+        var total = timer.ElapsedSeconds;
+        if (timer.IsRunning && timer.StartedAt != null)
+        {
+            total += Math.Max(0, (long)(DateTime.UtcNow - timer.StartedAt.Value).TotalSeconds);
+        }
+
+        return total;
+    }
+
+    private static string DifficultyLabel(int difficulty)
+    {
+        return difficulty switch
+        {
+            1 => "Beginner",
+            2 => "Beginner+",
+            3 => "Intermediate",
+            4 => "Intermediate+",
+            5 => "Advanced",
+            6 => "Advanced+",
+            _ => "Difficulty unset"
+        };
+    }
+
+    private string StepMeta(ModulePatternStepDto step, ModuleProjectTimerDto? timer)
+    {
+        var parts = new List<string>
+        {
+            FormatDurationCompact(GetStepTrackedSeconds(step.Id))
+        };
+
+        if (step.StitchCount is > 0)
+        {
+            parts.Add($"{step.StitchCount} stitches");
+        }
+
+        if (timer?.IsRunning == true)
+        {
+            parts.Add("Running");
+        }
+
+        return string.Join(" - ", parts);
+    }
+
+    private static string StepLabel(ModulePatternStepDto step)
+    {
+        if (!string.IsNullOrWhiteSpace(step.Label))
+        {
+            return step.Label;
+        }
+
+        return step.StitchCount is > 0
+            ? $"Step ({step.StitchCount} stitches)"
+            : "Step";
+    }
+
+    private static string StepRange(ModulePatternStepDto step)
+    {
+        if (step.StartIndex == null && step.EndIndex == null)
+        {
+            return "-";
+        }
+
+        if (step.StartIndex == step.EndIndex || step.EndIndex == null)
+        {
+            return step.StartIndex?.ToString() ?? step.EndIndex?.ToString() ?? "-";
+        }
+
+        if (step.StartIndex == null)
+        {
+            return step.EndIndex?.ToString() ?? "-";
+        }
+
+        return $"{step.StartIndex}-{step.EndIndex}";
+    }
+
+    private static string FormatDurationCompact(long totalSeconds)
+    {
+        var safeTotal = Math.Max(0, totalSeconds);
+        if (safeTotal == 0)
+        {
+            return "0s";
+        }
+
+        var span = TimeSpan.FromSeconds(safeTotal);
+        var parts = new List<string>();
+
+        if (span.Days > 0)
+        {
+            parts.Add($"{span.Days}d");
+        }
+
+        if (span.Hours > 0)
+        {
+            parts.Add($"{span.Hours}h");
+        }
+
+        if (span.Minutes > 0)
+        {
+            parts.Add($"{span.Minutes}m");
+        }
+
+        if (span.Seconds > 0)
+        {
+            parts.Add($"{span.Seconds}s");
+        }
+
+        return parts.Count == 0 ? "0s" : string.Join(string.Empty, parts);
+    }
+
+    private bool TryGetTimerEditSeconds(out long seconds)
+    {
+        seconds = 0;
+        if (!IsTimerEditValid)
+        {
+            return false;
+        }
+
+        try
+        {
+            checked
+            {
+                seconds =
+                    ((long)timerEditDays * 24 * 60 * 60)
+                    + ((long)timerEditHours * 60 * 60)
+                    + ((long)timerEditMinutes * 60)
+                    + timerEditSeconds;
+            }
+
+            return true;
+        }
+        catch (OverflowException)
+        {
+            return false;
+        }
+    }
+
+    private void SetTimerEditParts(long totalSeconds)
+    {
+        var span = TimeSpan.FromSeconds(Math.Max(0, totalSeconds));
+        timerEditDays = span.Days;
+        timerEditHours = span.Hours;
+        timerEditMinutes = span.Minutes;
+        timerEditSeconds = span.Seconds;
+    }
+
+    private static bool GetBoolSetting(IReadOnlyList<TankerMade.Contracts.DTOs.ModuleSettings.ModuleSettingItemDto> settings, string key, bool fallback)
+    {
+        var value = settings.FirstOrDefault(setting => setting.Key.Equals(key, StringComparison.OrdinalIgnoreCase))?.Value;
+        return bool.TryParse(value, out var parsed) ? parsed : fallback;
+    }
+
+    private static int GetIntSetting(
+        IReadOnlyList<TankerMade.Contracts.DTOs.ModuleSettings.ModuleSettingItemDto> settings,
+        string key,
+        int fallback,
+        int min,
+        int max)
+    {
+        var value = settings.FirstOrDefault(setting => setting.Key.Equals(key, StringComparison.OrdinalIgnoreCase))?.Value;
+        if (!int.TryParse(value, out var parsed))
+        {
+            return Math.Clamp(fallback, min, max);
+        }
+
+        return Math.Clamp(parsed, min, max);
+    }
+
+    private static decimal? GetDecimalSetting(
+        IReadOnlyList<TankerMade.Contracts.DTOs.ModuleSettings.ModuleSettingItemDto> settings,
+        string key)
+    {
+        var value = settings.FirstOrDefault(setting => setting.Key.Equals(key, StringComparison.OrdinalIgnoreCase))?.Value;
+        if (!decimal.TryParse(value, out var parsed) || parsed <= 0)
+        {
+            return null;
+        }
+
+        return parsed;
+    }
+
+    private sealed class ProjectFormModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Name is required")]
+        [System.ComponentModel.DataAnnotations.StringLength(200, ErrorMessage = "Name cannot exceed 200 characters")]
+        public string Name { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
+        public string Description { get; set; } = string.Empty;
+        public string PatternIdText { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Range(0, 6, ErrorMessage = "Choose a valid difficulty")]
+        public int Difficulty { get; set; }
+
+        public void Load(ModuleProjectDto project)
+        {
+            Name = project.Name;
+            Description = project.Description;
+            PatternIdText = project.PatternId?.ToString() ?? string.Empty;
+            Difficulty = project.Difficulty;
+        }
+
+        public UpdateModuleProjectRequest ToRequest(Guid projectId)
+        {
+            return new UpdateModuleProjectRequest
+            {
+                Id = projectId,
+                Name = Name,
+                Description = Description,
+                PatternId = Guid.TryParse(PatternIdText, out var patternId) ? patternId : null,
+                ClearPatternId = string.IsNullOrWhiteSpace(PatternIdText),
+                Difficulty = Difficulty
+            };
+        }
+    }
+}

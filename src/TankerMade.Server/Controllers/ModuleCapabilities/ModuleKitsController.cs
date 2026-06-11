@@ -48,6 +48,25 @@ public class ModuleKitsController : ControllerBase
         return Ok(kit);
     }
 
+    [HttpPut("{kitId:guid}")]
+    public async Task<ActionResult<ModuleKitDto>> Update(string moduleKey, Guid kitId, UpdateModuleKitRequest request)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed) return gate.Result!;
+        var kit = await gate.Handler!.UpdateAsync(kitId, request, gate.UserId!.Value);
+        return kit == null ? NotFound() : Ok(kit);
+    }
+
+    [HttpDelete("{kitId:guid}")]
+    public async Task<ActionResult> Delete(string moduleKey, Guid kitId)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed) return gate.Result!;
+        return await gate.Handler!.DeleteAsync(kitId, gate.UserId!.Value)
+            ? NoContent()
+            : NotFound();
+    }
+
     [HttpPost("{kitId:guid}/pieces")]
     public async Task<ActionResult<ModuleKitPieceDto>> AddPiece(string moduleKey, Guid kitId, CreateModuleKitPieceRequest request)
     {
@@ -57,6 +76,29 @@ public class ModuleKitsController : ControllerBase
         return piece == null ? NotFound() : Ok(piece);
     }
 
+    [HttpPut("{kitId:guid}/pieces/{pieceId:guid}")]
+    public async Task<ActionResult<ModuleKitPieceDto>> UpdatePiece(
+        string moduleKey,
+        Guid kitId,
+        Guid pieceId,
+        UpdateModuleKitPieceRequest request)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed) return gate.Result!;
+        var piece = await gate.Handler!.UpdatePieceAsync(kitId, pieceId, request, gate.UserId!.Value);
+        return piece == null ? NotFound() : Ok(piece);
+    }
+
+    [HttpDelete("{kitId:guid}/pieces/{pieceId:guid}")]
+    public async Task<ActionResult> DeletePiece(string moduleKey, Guid kitId, Guid pieceId)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed) return gate.Result!;
+        return await gate.Handler!.DeletePieceAsync(kitId, pieceId, gate.UserId!.Value)
+            ? NoContent()
+            : NotFound();
+    }
+
     [HttpPost("{kitId:guid}/supplies")]
     public async Task<ActionResult<ModuleKitSupplyDto>> AddSupply(string moduleKey, Guid kitId, CreateModuleKitSupplyRequest request)
     {
@@ -64,6 +106,29 @@ public class ModuleKitsController : ControllerBase
         if (!gate.IsAllowed) return gate.Result!;
         var supply = await gate.Handler!.AddSupplyAsync(kitId, request, gate.UserId!.Value);
         return supply == null ? NotFound() : Ok(supply);
+    }
+
+    [HttpPut("{kitId:guid}/supplies/{supplyId:guid}")]
+    public async Task<ActionResult<ModuleKitSupplyDto>> UpdateSupply(
+        string moduleKey,
+        Guid kitId,
+        Guid supplyId,
+        UpdateModuleKitSupplyRequest request)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed) return gate.Result!;
+        var supply = await gate.Handler!.UpdateSupplyAsync(kitId, supplyId, request, gate.UserId!.Value);
+        return supply == null ? NotFound() : Ok(supply);
+    }
+
+    [HttpDelete("{kitId:guid}/supplies/{supplyId:guid}")]
+    public async Task<ActionResult> DeleteSupply(string moduleKey, Guid kitId, Guid supplyId)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed) return gate.Result!;
+        return await gate.Handler!.DeleteSupplyAsync(kitId, supplyId, gate.UserId!.Value)
+            ? NoContent()
+            : NotFound();
     }
 
     [HttpPost("{kitId:guid}/pieces/{pieceId:guid}/project")]

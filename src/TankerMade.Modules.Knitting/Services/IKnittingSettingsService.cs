@@ -6,4 +6,5 @@ public interface IKnittingSettingsService
 {
     Task<IReadOnlyList<KnittingSettingItemDto>> GetAllAsync(Guid userId, string? category = null);
     Task<KnittingSettingItemDto> UpsertAsync(UpsertKnittingSettingItemDto request, Guid userId);
+    Task<bool> DeleteAsync(string key, Guid userId);
 }

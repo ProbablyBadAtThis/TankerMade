@@ -1,6 +1,6 @@
 # TankerMade Handoff
 
-Last updated: 2026-06-01
+Last updated: 2026-06-11
 
 ## Current State
 
@@ -10,8 +10,8 @@ Last updated: 2026-06-01
 - Phase C is complete.
 - Phase D is complete: module-owned inventory, reference data, project/inventory linking, kit/grouping backend, and kit-to-project backend flows are verified.
 - Latest verified slice: Neutral module capability/API cleanup verified locally by user.
-- Latest pushed commit: user pushed current branch updates locally after verification.
-- Latest unverified slice: none.
+- Latest pushed commit: pending for `working/knitting-settings-ui-pass` (current in-progress branch).
+- Latest unverified slice: Knitting settings functionality pass + UX stabilization is in progress in working tree.
 
 ## Completed Recently
 
@@ -47,10 +47,28 @@ Last updated: 2026-06-01
 - Legacy Printing inventory controller was removed; Printing inventory now flows through neutral module inventory capabilities.
 - Printing inventory client page was updated to use neutral module inventory + neutral asset assignment/picker APIs.
 - Scalar now reflects neutral/core module capability endpoints for active module workflows.
+- Knitting project workspace capability slice is now substantially implemented in current branch work:
+  - Added module project DTO coverage for step progress, timers, and project inventory links in `TankerMade.Contracts`.
+  - Added Knitting project DTO/entity support for step progress, timers, and inventory links in `TankerMade.Modules.Knitting`.
+  - Added Knitting project service behavior for step progress toggles, timer start/pause/set/reset, and supply link add/remove.
+  - Added capability-handler/controller flow for module project workspace operations to support Knitting through neutral module capability endpoints.
+  - Added EF migration `20260601215423_PhaseK5_KnittingProjectWorkspaceCapabilities`.
+  - Knitting project detail UI now has first-pass workspace behavior for piece/step checklist, timer controls, and linked supplies.
+- Knitting settings now provide a real module behavior surface instead of only raw key/value CRUD:
+  - Added typed settings groups for projects, kits, workspace defaults, and timer behavior.
+  - Added per-setting save/reset, per-category reset, and advanced custom-key management for non-modeled keys.
+  - Wired known settings into Knitting pages so values influence behavior at runtime:
+    - Projects page can default `Show archived` and default new-project difficulty from settings.
+    - Kits page can default `Show archived` from settings.
+    - Project workspace can default planned supply quantity, timer edit starting minutes, and optional auto-pause-on-complete behavior.
+- Knitting UX updates from user review are now reflected in the current slice:
+  - Project timers now use compact tracked-time display and a D/H/M/S timer edit input model.
+  - Kit detail editing now runs in a dedicated modal to avoid create/edit form overlap.
+  - Pattern detail half-width layout was tightened for piece controls and workspace readability.
 
 ## Next Work
 
-- Continue Knitting full UI functionality + visual lock-in pass page-by-page.
+- Continue Knitting full UI functionality + visual lock-in pass page-by-page, focusing on verification/fixes from the latest settings-integrated UI behavior.
 - After Knitting lock-in is complete, propagate shared UI patterns to Crochet, Embroidery, Quilting, Sewing, and 3D Printing.
 
 ## Phase G Direction
@@ -87,3 +105,6 @@ The user reported:
 ## Verification Needed Next
 
 No blocking verification is pending before continuing the Knitting-focused full UI pass.
+Next local verification after the current Knitting settings + UX slice should be:
+
+- `dotnet build TankerMade.sln`

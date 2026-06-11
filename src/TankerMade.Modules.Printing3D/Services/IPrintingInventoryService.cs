@@ -9,6 +9,8 @@ public interface IPrintingInventoryService
         Guid userId);
 
     Task<PrintingMaterialInventoryItemDto?> GetMaterialByIdAsync(Guid id, Guid userId);
+    Task<PrintingMaterialInventoryItemDto?> UpdateMaterialAsync(Guid id, CreatePrintingMaterialInventoryItemDto request, Guid userId);
+    Task<bool> DeleteMaterialAsync(Guid id, Guid userId);
     Task<IReadOnlyList<PrintingMaterialInventoryItemDto>> GetMaterialsAsync(
         Guid userId,
         PrintingMaterialInventoryFilterDto? filter = null);

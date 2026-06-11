@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TankerMade.Server.Data;
 
@@ -10,9 +11,11 @@ using TankerMade.Server.Data;
 namespace TankerMade.Server.Migrations
 {
     [DbContext(typeof(TankerMadeDbContext))]
-    partial class TankerMadeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260601215423_PhaseK5_KnittingProjectWorkspaceCapabilities")]
+    partial class PhaseK5_KnittingProjectWorkspaceCapabilities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");

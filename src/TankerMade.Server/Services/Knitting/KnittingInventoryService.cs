@@ -55,6 +55,41 @@ public class KnittingInventoryService : IKnittingInventoryService
         return Map(entity);
     }
 
+    public async Task<KnittingSupplyItemDto?> UpdateSupplyAsync(Guid supplyId, CreateKnittingSupplyItemDto updateDto, Guid userId)
+    {
+        var entity = await _context.KnittingSupplyItems
+            .SingleOrDefaultAsync(item => item.Id == supplyId && item.UserId == userId);
+        if (entity == null)
+        {
+            return null;
+        }
+
+        entity.Category = string.IsNullOrWhiteSpace(updateDto.Category)
+            ? entity.Category
+            : updateDto.Category.Trim();
+        entity.Name = string.IsNullOrWhiteSpace(updateDto.Name)
+            ? entity.Name
+            : updateDto.Name.Trim();
+        entity.Update(updateDto.Brand, updateDto.Color, updateDto.Size, updateDto.Quantity, updateDto.Unit, updateDto.Notes);
+
+        await _context.SaveChangesAsync();
+        return Map(entity);
+    }
+
+    public async Task<bool> DeleteSupplyAsync(Guid supplyId, Guid userId)
+    {
+        var entity = await _context.KnittingSupplyItems
+            .SingleOrDefaultAsync(item => item.Id == supplyId && item.UserId == userId);
+        if (entity == null)
+        {
+            return false;
+        }
+
+        _context.KnittingSupplyItems.Remove(entity);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     private static KnittingSupplyItemDto Map(KnittingSupplyItem entity)
     {
         return new KnittingSupplyItemDto
