@@ -62,6 +62,18 @@ else
                     <span>Difficulty</span>
                     <InputText class="form-control" @bind-Value="form.Difficulty" />
                 </label>
+                <label>
+                    <span>Suggested yarn weight</span>
+                    <InputText class="form-control" @bind-Value="form.SuggestedYarnWeight" />
+                </label>
+                <label>
+                    <span>Suggested needle sizes</span>
+                    <InputText class="form-control" @bind-Value="form.SuggestedNeedleSizes" />
+                </label>
+                <label>
+                    <span>Required notions</span>
+                    <InputText class="form-control" @bind-Value="form.RequiredNotions" />
+                </label>
             </div>
 
             <div class="auth-actions">
@@ -163,7 +175,10 @@ else
                     Name = form.Name,
                     Type = form.Type,
                     Form = form.Form,
-                    Difficulty = form.Difficulty
+                    Difficulty = form.Difficulty,
+                    SuggestedYarnWeight = form.SuggestedYarnWeight,
+                    SuggestedNeedleSizes = form.SuggestedNeedleSizes,
+                    RequiredNotions = form.RequiredNotions
                 });
             }
             else
@@ -173,7 +188,10 @@ else
                     Name = form.Name,
                     Type = form.Type,
                     Form = form.Form,
-                    Difficulty = form.Difficulty
+                    Difficulty = form.Difficulty,
+                    SuggestedYarnWeight = form.SuggestedYarnWeight,
+                    SuggestedNeedleSizes = form.SuggestedNeedleSizes,
+                    RequiredNotions = form.RequiredNotions
                 });
             }
 
@@ -223,7 +241,10 @@ else
             Name = pattern.Name,
             Type = pattern.Type,
             Form = pattern.Form,
-            Difficulty = pattern.Difficulty
+            Difficulty = pattern.Difficulty,
+            SuggestedYarnWeight = pattern.SuggestedYarnWeight,
+            SuggestedNeedleSizes = pattern.SuggestedNeedleSizes,
+            RequiredNotions = pattern.RequiredNotions
         };
     }
 
@@ -255,5 +276,14 @@ else
 
         [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "Difficulty cannot exceed 100 characters")]
         public string Difficulty { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "Suggested yarn weight cannot exceed 100 characters")]
+        public string SuggestedYarnWeight { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(200, ErrorMessage = "Suggested needle sizes cannot exceed 200 characters")]
+        public string SuggestedNeedleSizes { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(500, ErrorMessage = "Required notions cannot exceed 500 characters")]
+        public string RequiredNotions { get; set; } = string.Empty;
     }
 }

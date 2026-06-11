@@ -166,7 +166,7 @@ public class KnittingKitService : IKnittingKitService
             .MaxAsync() ?? 0;
 
         var supply = new KnittingKitSupply(Guid.NewGuid(), kitId, createDto.SupplyType, createDto.Name, nextSort + 1);
-        supply.Update(createDto.Quantity);
+        supply.Update(createDto.SupplyType, createDto.Name, createDto.InventoryItemId, createDto.Quantity);
 
         _context.KnittingKitSupplies.Add(supply);
         await _context.SaveChangesAsync();
@@ -189,17 +189,11 @@ public class KnittingKitService : IKnittingKitService
             return null;
         }
 
-        if (!string.IsNullOrWhiteSpace(updateDto.SupplyType))
-        {
-            supply.SupplyType = updateDto.SupplyType.Trim();
-        }
-
-        if (!string.IsNullOrWhiteSpace(updateDto.Name))
-        {
-            supply.Name = updateDto.Name.Trim();
-        }
-
-        supply.Update(updateDto.Quantity);
+        supply.Update(
+            string.IsNullOrWhiteSpace(updateDto.SupplyType) ? supply.SupplyType : updateDto.SupplyType,
+            string.IsNullOrWhiteSpace(updateDto.Name) ? supply.Name : updateDto.Name,
+            updateDto.InventoryItemId ?? supply.InventoryItemId,
+            updateDto.Quantity);
         await _context.SaveChangesAsync();
 
         return MapSupply(supply);
@@ -306,6 +300,7 @@ public class KnittingKitService : IKnittingKitService
             Id = supply.Id,
             SupplyType = supply.SupplyType,
             Name = supply.Name,
+            InventoryItemId = supply.InventoryItemId,
             Quantity = supply.Quantity,
             SortOrder = supply.SortOrder,
             CreatedAt = supply.CreatedAt,

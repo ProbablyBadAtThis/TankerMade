@@ -47,11 +47,20 @@ public class TankerMadeDbContext : DbContext
     public DbSet<KnittingPattern> KnittingPatterns { get; set; }
     public DbSet<KnittingPatternPiece> KnittingPatternPieces { get; set; }
     public DbSet<KnittingPatternStep> KnittingPatternSteps { get; set; }
+    public DbSet<KnittingPatternSupply> KnittingPatternSupplies { get; set; }
     public DbSet<KnittingProject> KnittingProjects { get; set; }
     public DbSet<KnittingProjectStepProgress> KnittingProjectStepProgress { get; set; }
     public DbSet<KnittingProjectTimer> KnittingProjectTimers { get; set; }
     public DbSet<KnittingProjectInventoryLink> KnittingProjectInventoryLinks { get; set; }
     public DbSet<KnittingSupplyItem> KnittingSupplyItems { get; set; }
+    public DbSet<KnittingYarnInventoryItem> KnittingYarnInventoryItems { get; set; }
+    public DbSet<KnittingYarnLot> KnittingYarnLots { get; set; }
+    public DbSet<KnittingYarnPurchase> KnittingYarnPurchases { get; set; }
+    public DbSet<KnittingToolInventoryItem> KnittingToolInventoryItems { get; set; }
+    public DbSet<KnittingToolPurchase> KnittingToolPurchases { get; set; }
+    public DbSet<KnittingNotionInventoryItem> KnittingNotionInventoryItems { get; set; }
+    public DbSet<KnittingNotionPurchase> KnittingNotionPurchases { get; set; }
+    public DbSet<KnittingInventoryReferenceItem> KnittingInventoryReferenceItems { get; set; }
     public DbSet<KnittingKit> KnittingKits { get; set; }
     public DbSet<KnittingKitPiece> KnittingKitPieces { get; set; }
     public DbSet<KnittingKitSupply> KnittingKitSupplies { get; set; }
@@ -98,11 +107,20 @@ public class TankerMadeDbContext : DbContext
         ConfigureKnittingPattern(modelBuilder);
         ConfigureKnittingPatternPiece(modelBuilder);
         ConfigureKnittingPatternStep(modelBuilder);
+        ConfigureKnittingPatternSupply(modelBuilder);
         ConfigureKnittingProject(modelBuilder);
         ConfigureKnittingProjectStepProgress(modelBuilder);
         ConfigureKnittingProjectTimer(modelBuilder);
         ConfigureKnittingProjectInventoryLink(modelBuilder);
         ConfigureKnittingSupplyItem(modelBuilder);
+        ConfigureKnittingYarnInventoryItem(modelBuilder);
+        ConfigureKnittingYarnLot(modelBuilder);
+        ConfigureKnittingYarnPurchase(modelBuilder);
+        ConfigureKnittingToolInventoryItem(modelBuilder);
+        ConfigureKnittingToolPurchase(modelBuilder);
+        ConfigureKnittingNotionInventoryItem(modelBuilder);
+        ConfigureKnittingNotionPurchase(modelBuilder);
+        ConfigureKnittingInventoryReferenceItem(modelBuilder);
         ConfigureKnittingKit(modelBuilder);
         ConfigureKnittingKitPiece(modelBuilder);
         ConfigureKnittingKitSupply(modelBuilder);
@@ -743,6 +761,177 @@ public class TankerMadeDbContext : DbContext
         });
     }
 
+    private void ConfigureKnittingYarnInventoryItem(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingYarnInventoryItem>(entity =>
+        {
+            entity.ToTable("KnittingYarnInventoryItems");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.BrandName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.ColorName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.NormalizedBrandName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.NormalizedColorName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.MainColor).HasMaxLength(100);
+            entity.Property(e => e.WeightName).HasMaxLength(100);
+            entity.Property(e => e.FiberContent).HasMaxLength(300);
+            entity.Property(e => e.FiberTag).HasMaxLength(50);
+            entity.Property(e => e.LengthUnit).HasMaxLength(20);
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.NormalizedBrandName, e.NormalizedColorName })
+                .IsUnique();
+        });
+    }
+
+    private void ConfigureKnittingYarnLot(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingYarnLot>(entity =>
+        {
+            entity.ToTable("KnittingYarnLots");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.LotNumber).HasMaxLength(100);
+
+            entity.HasOne<KnittingYarnInventoryItem>()
+                .WithMany()
+                .HasForeignKey(e => e.YarnInventoryItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.YarnInventoryItemId);
+            entity.HasIndex(e => new { e.YarnInventoryItemId, e.LotNumber })
+                .IsUnique();
+        });
+    }
+
+    private void ConfigureKnittingYarnPurchase(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingYarnPurchase>(entity =>
+        {
+            entity.ToTable("KnittingYarnPurchases");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.SourceName).HasMaxLength(150);
+
+            entity.HasOne<KnittingYarnInventoryItem>()
+                .WithMany()
+                .HasForeignKey(e => e.YarnInventoryItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.YarnInventoryItemId);
+        });
+    }
+
+    private void ConfigureKnittingToolInventoryItem(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingToolInventoryItem>(entity =>
+        {
+            entity.ToTable("KnittingToolInventoryItems");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.BrandName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.TypeName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.NormalizedBrandName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.NormalizedTypeName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.Size).HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.NormalizedBrandName, e.NormalizedTypeName })
+                .IsUnique();
+        });
+    }
+
+    private void ConfigureKnittingToolPurchase(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingToolPurchase>(entity =>
+        {
+            entity.ToTable("KnittingToolPurchases");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.SourceName).HasMaxLength(150);
+
+            entity.HasOne<KnittingToolInventoryItem>()
+                .WithMany()
+                .HasForeignKey(e => e.ToolInventoryItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ToolInventoryItemId);
+        });
+    }
+
+    private void ConfigureKnittingNotionInventoryItem(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingNotionInventoryItem>(entity =>
+        {
+            entity.ToTable("KnittingNotionInventoryItems");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.BrandName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.TypeName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.NormalizedBrandName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.NormalizedTypeName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.Size).HasMaxLength(100);
+            entity.Property(e => e.ColorName).HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.NormalizedBrandName, e.NormalizedTypeName })
+                .IsUnique();
+        });
+    }
+
+    private void ConfigureKnittingNotionPurchase(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingNotionPurchase>(entity =>
+        {
+            entity.ToTable("KnittingNotionPurchases");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.SourceName).HasMaxLength(150);
+
+            entity.HasOne<KnittingNotionInventoryItem>()
+                .WithMany()
+                .HasForeignKey(e => e.NotionInventoryItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.NotionInventoryItemId);
+        });
+    }
+
+    private void ConfigureKnittingInventoryReferenceItem(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingInventoryReferenceItem>(entity =>
+        {
+            entity.ToTable("KnittingInventoryReferenceItems");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.Slug).IsRequired().HasMaxLength(170);
+
+            entity.HasIndex(e => e.Category);
+            entity.HasIndex(e => new { e.Category, e.SortOrder });
+            entity.HasIndex(e => new { e.Category, e.Slug })
+                .IsUnique();
+        });
+    }
+
     private void ConfigureKnittingPattern(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<KnittingPattern>(entity =>
@@ -766,6 +955,15 @@ public class TankerMadeDbContext : DbContext
 
             entity.Property(e => e.Difficulty)
                 .HasMaxLength(100);
+
+            entity.Property(e => e.SuggestedYarnWeight)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.SuggestedNeedleSizes)
+                .HasMaxLength(200);
+
+            entity.Property(e => e.RequiredNotions)
+                .HasMaxLength(1000);
 
             entity.HasOne<User>()
                 .WithMany()
@@ -835,6 +1033,26 @@ public class TankerMadeDbContext : DbContext
 
             entity.HasIndex(e => e.PatternPieceId);
             entity.HasIndex(e => new { e.PatternPieceId, e.SortOrder });
+        });
+    }
+
+    private void ConfigureKnittingPatternSupply(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingPatternSupply>(entity =>
+        {
+            entity.ToTable("KnittingPatternSupplies");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.SupplyType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+
+            entity.HasOne<KnittingPattern>()
+                .WithMany()
+                .HasForeignKey(e => e.PatternId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.PatternId);
+            entity.HasIndex(e => new { e.PatternId, e.SortOrder });
         });
     }
 
@@ -932,6 +1150,7 @@ public class TankerMadeDbContext : DbContext
             entity.ToTable("KnittingProjectInventoryLinks");
             entity.HasKey(e => e.Id);
 
+            entity.Property(e => e.InventoryItemType).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Notes).HasMaxLength(1000);
 
             entity.HasOne<KnittingProject>()
@@ -939,14 +1158,9 @@ public class TankerMadeDbContext : DbContext
                 .HasForeignKey(e => e.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasOne<KnittingSupplyItem>()
-                .WithMany()
-                .HasForeignKey(e => e.SupplyItemId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             entity.HasIndex(e => e.ProjectId);
-            entity.HasIndex(e => e.SupplyItemId);
-            entity.HasIndex(e => new { e.ProjectId, e.SupplyItemId }).IsUnique();
+            entity.HasIndex(e => new { e.ProjectId, e.InventoryItemType, e.InventoryItemId })
+                .IsUnique();
         });
     }
 
@@ -1038,6 +1252,7 @@ public class TankerMadeDbContext : DbContext
 
             entity.HasIndex(e => e.KitId);
             entity.HasIndex(e => new { e.KitId, e.SortOrder });
+            entity.HasIndex(e => e.InventoryItemId);
         });
     }
 
@@ -1195,6 +1410,25 @@ public class TankerMadeDbContext : DbContext
             new { Id = Guid.Parse("66666666-6666-6666-6666-66666666660e"), Category = "notion-type", Name = "Stitch Marker", Slug = "stitch-marker", SortOrder = 2, CreatedAt = now },
             new { Id = Guid.Parse("66666666-6666-6666-6666-66666666660f"), Category = "notion-type", Name = "Tapestry Needle", Slug = "tapestry-needle", SortOrder = 3, CreatedAt = now },
             new { Id = Guid.Parse("66666666-6666-6666-6666-666666666610"), Category = "notion-type", Name = "Zipper", Slug = "zipper", SortOrder = 4, CreatedAt = now }
+        );
+
+        modelBuilder.Entity<KnittingInventoryReferenceItem>().HasData(
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888801"), Category = "yarn-weight", Name = "Lace", Slug = "lace", SortOrder = 1, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888802"), Category = "yarn-weight", Name = "Fingering", Slug = "fingering", SortOrder = 2, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888803"), Category = "yarn-weight", Name = "DK", Slug = "dk", SortOrder = 3, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888804"), Category = "yarn-weight", Name = "Worsted", Slug = "worsted", SortOrder = 4, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888805"), Category = "yarn-weight", Name = "Bulky", Slug = "bulky", SortOrder = 5, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888806"), Category = "fiber-tag", Name = "Synthetic", Slug = "synthetic", SortOrder = 1, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888807"), Category = "fiber-tag", Name = "Natural", Slug = "natural", SortOrder = 2, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888808"), Category = "fiber-tag", Name = "Blended", Slug = "blended", SortOrder = 3, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888809"), Category = "tool-type", Name = "Hook", Slug = "hook", SortOrder = 1, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-88888888880a"), Category = "tool-type", Name = "Needle", Slug = "needle", SortOrder = 2, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-88888888880b"), Category = "tool-type", Name = "Gauge Ruler", Slug = "gauge-ruler", SortOrder = 3, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-88888888880c"), Category = "tool-type", Name = "Stitch Holder", Slug = "stitch-holder", SortOrder = 4, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-88888888880d"), Category = "notion-type", Name = "Button", Slug = "button", SortOrder = 1, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-88888888880e"), Category = "notion-type", Name = "Stitch Marker", Slug = "stitch-marker", SortOrder = 2, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-88888888880f"), Category = "notion-type", Name = "Tapestry Needle", Slug = "tapestry-needle", SortOrder = 3, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888810"), Category = "notion-type", Name = "Zipper", Slug = "zipper", SortOrder = 4, CreatedAt = now }
         );
 
         modelBuilder.Entity<PrintingInventoryReferenceItem>().HasData(

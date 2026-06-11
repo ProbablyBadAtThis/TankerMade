@@ -37,7 +37,10 @@ public class KnittingPatternCapabilityHandler : IModulePatternCapabilityHandler
             Form = request.Form,
             Difficulty = request.Difficulty,
             ThemeId = request.ThemeId,
-            SourceId = request.SourceId
+            SourceId = request.SourceId,
+            SuggestedYarnWeight = request.SuggestedYarnWeight,
+            SuggestedNeedleSizes = request.SuggestedNeedleSizes,
+            RequiredNotions = request.RequiredNotions
         }, userId));
 
     public async Task<ModulePatternDto?> UpdateAsync(UpdateModulePatternRequest request, Guid userId)
@@ -50,7 +53,10 @@ public class KnittingPatternCapabilityHandler : IModulePatternCapabilityHandler
             Form = request.Form,
             Difficulty = request.Difficulty,
             ThemeId = request.ThemeId,
-            SourceId = request.SourceId
+            SourceId = request.SourceId,
+            SuggestedYarnWeight = request.SuggestedYarnWeight,
+            SuggestedNeedleSizes = request.SuggestedNeedleSizes,
+            RequiredNotions = request.RequiredNotions
         }, userId);
 
         return updated == null ? null : Map(updated);
@@ -88,6 +94,7 @@ public class KnittingPatternCapabilityHandler : IModulePatternCapabilityHandler
             RangeStart = request.StartIndex,
             RangeEnd = request.EndIndex,
             Label = request.Label,
+            StitchCount = request.StitchCount,
             Instructions = request.Notes
         }, userId);
 
@@ -102,6 +109,7 @@ public class KnittingPatternCapabilityHandler : IModulePatternCapabilityHandler
             RangeStart = request.StartIndex,
             RangeEnd = request.EndIndex,
             Label = request.Label ?? string.Empty,
+            StitchCount = request.StitchCount,
             Instructions = request.Notes ?? string.Empty
         }, userId);
 
@@ -113,6 +121,21 @@ public class KnittingPatternCapabilityHandler : IModulePatternCapabilityHandler
 
     public Task<bool> ReorderStepsAsync(Guid patternId, Guid pieceId, ReorderModulePatternItemsRequest request, Guid userId)
         => _service.ReorderStepsAsync(patternId, pieceId, new ReorderKnittingPatternItemsDto { OrderedIds = request.OrderedIds }, userId);
+
+    public async Task<ModulePatternSupplyDto?> AddSupplyAsync(Guid patternId, CreateModulePatternSupplyRequest request, Guid userId)
+    {
+        var supply = await _service.AddSupplyAsync(patternId, new CreateKnittingPatternSupplyDto
+        {
+            SupplyType = request.SupplyType,
+            Name = request.Name,
+            InventoryItemId = request.InventoryItemId
+        }, userId);
+
+        return supply == null ? null : Map(supply);
+    }
+
+    public Task<bool> DeleteSupplyAsync(Guid patternId, Guid supplyId, Guid userId)
+        => _service.DeleteSupplyAsync(patternId, supplyId, userId);
 
     private static ModulePatternDto Map(KnittingPatternDto source)
     {
@@ -130,8 +153,12 @@ public class KnittingPatternCapabilityHandler : IModulePatternCapabilityHandler
             ThemeName = source.ThemeName,
             SourceId = source.SourceId,
             SourceName = source.SourceName,
+            SuggestedYarnWeight = source.SuggestedYarnWeight,
+            SuggestedNeedleSizes = source.SuggestedNeedleSizes,
+            RequiredNotions = source.RequiredNotions,
             UserId = source.UserId,
             Username = source.Username,
+            Supplies = source.Supplies.Select(Map).ToList(),
             Pieces = pieces,
             PieceCount = source.PieceCount,
             StepCount = source.StepCount,
@@ -173,8 +200,23 @@ public class KnittingPatternCapabilityHandler : IModulePatternCapabilityHandler
             Label = source.Label,
             StartIndex = source.RangeStart,
             EndIndex = source.RangeEnd,
-            StitchCount = null,
+            StitchCount = source.StitchCount,
             Notes = source.Instructions
+        };
+    }
+
+    private static ModulePatternSupplyDto Map(KnittingPatternSupplyDto source)
+    {
+        return new ModulePatternSupplyDto
+        {
+            Id = source.Id,
+            PatternId = source.PatternId,
+            SupplyType = source.SupplyType,
+            Name = source.Name,
+            InventoryItemId = source.InventoryItemId,
+            SortOrder = source.SortOrder,
+            CreatedAt = source.CreatedAt,
+            UpdatedAt = source.UpdatedAt
         };
     }
 }

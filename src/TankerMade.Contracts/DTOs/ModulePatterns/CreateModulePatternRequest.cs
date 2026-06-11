@@ -8,4 +8,7 @@ public class CreateModulePatternRequest
     public string Difficulty { get; set; } = string.Empty;
     public Guid? ThemeId { get; set; }
     public Guid? SourceId { get; set; }
+    public string SuggestedYarnWeight { get; set; } = string.Empty;
+    public string SuggestedNeedleSizes { get; set; } = string.Empty;
+    public string RequiredNotions { get; set; } = string.Empty;
 }

@@ -293,17 +293,21 @@ public class KnittingProjectService : IKnittingProjectService
             return null;
         }
 
-        await EnsureSupplyBelongsToUserAsync(createDto.SupplyItemId, userId);
+        var itemType = NormalizeInventoryItemType(createDto.InventoryItemType);
+        await EnsureInventoryItemBelongsToUserAsync(itemType, createDto.InventoryItemId, userId);
 
         var existing = await _context.KnittingProjectInventoryLinks
-            .SingleOrDefaultAsync(link => link.ProjectId == projectId && link.SupplyItemId == createDto.SupplyItemId);
+            .SingleOrDefaultAsync(link => link.ProjectId == projectId
+                && link.InventoryItemType == itemType
+                && link.InventoryItemId == createDto.InventoryItemId);
 
         if (existing == null)
         {
             _context.KnittingProjectInventoryLinks.Add(new KnittingProjectInventoryLink(
                 Guid.NewGuid(),
                 projectId,
-                createDto.SupplyItemId,
+                itemType,
+                createDto.InventoryItemId,
                 createDto.QuantityPlanned,
                 createDto.Notes));
         }
@@ -473,8 +477,9 @@ public class KnittingProjectService : IKnittingProjectService
             {
                 Id = link.Id,
                 ProjectId = link.ProjectId,
-                SupplyItemId = link.SupplyItemId,
-                SupplyItemName = await GetSupplyNameAsync(link.SupplyItemId),
+                InventoryItemType = link.InventoryItemType,
+                InventoryItemId = link.InventoryItemId,
+                InventoryItemName = await GetInventoryItemNameAsync(link.InventoryItemType, link.InventoryItemId),
                 QuantityPlanned = link.QuantityPlanned,
                 Notes = link.Notes,
                 CreatedAt = link.CreatedAt,
@@ -485,22 +490,59 @@ public class KnittingProjectService : IKnittingProjectService
         return results;
     }
 
-    private async Task<string> GetSupplyNameAsync(Guid supplyItemId)
+    private const string YarnInventoryType = "yarn";
+    private const string ToolInventoryType = "tool";
+    private const string NotionInventoryType = "notion";
+
+    private async Task<string> GetInventoryItemNameAsync(string itemType, Guid itemId)
     {
-        return await _context.KnittingSupplyItems
-            .Where(item => item.Id == supplyItemId)
-            .Select(item => item.Name)
-            .SingleOrDefaultAsync() ?? string.Empty;
+        return itemType switch
+        {
+            YarnInventoryType => await _context.KnittingYarnInventoryItems
+                .Where(item => item.Id == itemId)
+                .Select(item => item.BrandName + " - " + item.ColorName)
+                .SingleOrDefaultAsync() ?? string.Empty,
+            ToolInventoryType => await _context.KnittingToolInventoryItems
+                .Where(item => item.Id == itemId)
+                .Select(item => item.BrandName + " - " + item.TypeName)
+                .SingleOrDefaultAsync() ?? string.Empty,
+            NotionInventoryType => await _context.KnittingNotionInventoryItems
+                .Where(item => item.Id == itemId)
+                .Select(item => item.BrandName + " - " + item.TypeName)
+                .SingleOrDefaultAsync() ?? string.Empty,
+            _ => string.Empty
+        };
     }
 
-    private async Task EnsureSupplyBelongsToUserAsync(Guid supplyItemId, Guid userId)
+    private async Task EnsureInventoryItemBelongsToUserAsync(string itemType, Guid itemId, Guid userId)
     {
-        var exists = await _context.KnittingSupplyItems
-            .AnyAsync(item => item.Id == supplyItemId && item.UserId == userId);
+        var exists = itemType switch
+        {
+            YarnInventoryType => await _context.KnittingYarnInventoryItems
+                .AnyAsync(item => item.Id == itemId && item.UserId == userId),
+            ToolInventoryType => await _context.KnittingToolInventoryItems
+                .AnyAsync(item => item.Id == itemId && item.UserId == userId),
+            NotionInventoryType => await _context.KnittingNotionInventoryItems
+                .AnyAsync(item => item.Id == itemId && item.UserId == userId),
+            _ => false
+        };
+
         if (!exists)
         {
-            throw new InvalidOperationException("The selected supply item is not available for this project.");
+            throw new InvalidOperationException("The selected inventory item is not available for this project.");
         }
+    }
+
+    private static string NormalizeInventoryItemType(string itemType)
+    {
+        var normalized = itemType.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            YarnInventoryType => YarnInventoryType,
+            ToolInventoryType => ToolInventoryType,
+            NotionInventoryType => NotionInventoryType,
+            _ => throw new ArgumentException("Inventory item type must be yarn, tool, or notion.", nameof(itemType))
+        };
     }
 
     private async Task<int> CalculateStepCompletionPercentAsync(KnittingProject project)

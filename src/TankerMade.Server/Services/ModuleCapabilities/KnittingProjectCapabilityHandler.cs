@@ -121,7 +121,8 @@ public class KnittingProjectCapabilityHandler : IModuleProjectCapabilityHandler
     {
         var project = await _service.AddInventoryLinkAsync(projectId, new CreateKnittingProjectInventoryLinkDto
         {
-            SupplyItemId = request.SupplyItemId,
+            InventoryItemType = request.InventoryItemType,
+            InventoryItemId = request.InventoryItemId,
             QuantityPlanned = request.QuantityPlanned,
             Notes = request.Notes
         }, userId);
@@ -175,8 +176,9 @@ public class KnittingProjectCapabilityHandler : IModuleProjectCapabilityHandler
             {
                 Id = link.Id,
                 ProjectId = link.ProjectId,
-                SupplyItemId = link.SupplyItemId,
-                SupplyItemName = link.SupplyItemName,
+                InventoryItemType = link.InventoryItemType,
+                InventoryItemId = link.InventoryItemId,
+                InventoryItemName = link.InventoryItemName,
                 QuantityPlanned = link.QuantityPlanned,
                 Notes = link.Notes,
                 CreatedAt = link.CreatedAt,

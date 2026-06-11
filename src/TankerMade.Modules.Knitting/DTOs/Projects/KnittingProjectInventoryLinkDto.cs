@@ -4,8 +4,9 @@ public class KnittingProjectInventoryLinkDto
 {
     public Guid Id { get; set; }
     public Guid ProjectId { get; set; }
-    public Guid SupplyItemId { get; set; }
-    public string SupplyItemName { get; set; } = string.Empty;
+    public string InventoryItemType { get; set; } = string.Empty;
+    public Guid InventoryItemId { get; set; }
+    public string InventoryItemName { get; set; } = string.Empty;
     public decimal? QuantityPlanned { get; set; }
     public string Notes { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }

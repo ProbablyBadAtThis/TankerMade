@@ -146,7 +146,21 @@ else
                                 <ValidationSummary />
                                 <label>
                                     <span>Supply Type</span>
-                                    <InputText class="form-control" @bind-Value="supplyForm.SupplyType" />
+                                    <select class="form-control" @bind="supplyForm.SupplyType" @bind:after="OnKitSupplyTypeChanged">
+                                        <option value="yarn">Yarn</option>
+                                        <option value="tool">Tool</option>
+                                        <option value="notion">Notion</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span>Inventory item (optional)</span>
+                                    <select class="form-control" @bind="selectedKitInventoryId" @bind:after="OnKitSupplyInventoryChanged">
+                                        <option value="">Manual name</option>
+                                        @foreach (var option in kitInventoryOptions)
+                                        {
+                                            <option value="@option.Id">@option.Label</option>
+                                        }
+                                    </select>
                                 </label>
                                 <label>
                                     <span>Name</span>
@@ -290,7 +304,9 @@ else
     private KitFormModel kitForm = new();
     private KitFormModel kitEditForm = new();
     private KitPieceFormModel pieceForm = new();
-    private KitSupplyFormModel supplyForm = new();
+    private KitSupplyFormModel supplyForm = new() { SupplyType = "yarn" };
+    private readonly List<InventoryOption> kitInventoryOptions = [];
+    private Guid? selectedKitInventoryId;
     private bool showArchived;
     private bool settingsInitialized;
     private bool showKitEditModal;
@@ -356,6 +372,7 @@ else
         {
             selectedKit = await ApiClient.GetModuleKitAsync("knitting", kitId);
             selectedKitId = selectedKit?.Id;
+            await LoadKitInventoryOptionsAsync();
         });
     }
 
@@ -426,6 +443,7 @@ else
                 {
                     SupplyType = supplyForm.SupplyType,
                     Name = supplyForm.Name,
+                    InventoryItemId = selectedKitInventoryId,
                     Quantity = supplyForm.Quantity
                 });
             }
@@ -435,11 +453,14 @@ else
                 {
                     SupplyType = supplyForm.SupplyType,
                     Name = supplyForm.Name,
+                    InventoryItemId = selectedKitInventoryId,
                     Quantity = supplyForm.Quantity
                 });
             }
 
-            supplyForm = new();
+            var supplyType = supplyForm.SupplyType;
+            supplyForm = new KitSupplyFormModel { SupplyType = supplyType };
+            selectedKitInventoryId = null;
             editingSupplyId = null;
             await SelectKitAsync(selectedKitId.Value);
             await LoadKitsAsync();
@@ -503,7 +524,7 @@ else
         });
     }
 
-    private void StartSupplyEdit(ModuleKitSupplyDto supply)
+    private async Task StartSupplyEdit(ModuleKitSupplyDto supply)
     {
         editingSupplyId = supply.Id;
         supplyForm = new KitSupplyFormModel
@@ -512,13 +533,68 @@ else
             Name = supply.Name,
             Quantity = supply.Quantity
         };
+        selectedKitInventoryId = supply.InventoryItemId;
+        await LoadKitInventoryOptionsAsync();
     }
 
     private void CancelSupplyEdit()
     {
         editingSupplyId = null;
-        supplyForm = new KitSupplyFormModel();
+        supplyForm = new KitSupplyFormModel { SupplyType = "yarn" };
+        selectedKitInventoryId = null;
     }
+
+    private async Task OnKitSupplyTypeChanged()
+    {
+        selectedKitInventoryId = null;
+        await LoadKitInventoryOptionsAsync();
+    }
+
+    private void OnKitSupplyInventoryChanged()
+    {
+        if (!selectedKitInventoryId.HasValue)
+        {
+            return;
+        }
+
+        var selected = kitInventoryOptions.FirstOrDefault(option => option.Id == selectedKitInventoryId.Value);
+        if (selected != null)
+        {
+            supplyForm.Name = selected.Label;
+        }
+    }
+
+    private async Task LoadKitInventoryOptionsAsync()
+    {
+        kitInventoryOptions.Clear();
+
+        switch (supplyForm.SupplyType)
+        {
+            case "tool":
+                foreach (var tool in await ApiClient.GetModuleToolsAsync(ModuleKey))
+                {
+                    kitInventoryOptions.Add(new InventoryOption(tool.Id, $"{tool.BrandName} - {tool.TypeName}"));
+                }
+
+                break;
+            case "notion":
+                foreach (var notion in await ApiClient.GetModuleNotionsAsync(ModuleKey))
+                {
+                    kitInventoryOptions.Add(new InventoryOption(notion.Id, $"{notion.BrandName} - {notion.TypeName}"));
+                }
+
+                break;
+            default:
+                foreach (var yarn in await ApiClient.GetModuleYarnsAsync(ModuleKey))
+                {
+                    kitInventoryOptions.Add(new InventoryOption(yarn.Id, $"{yarn.BrandName} - {yarn.ColorName}"));
+                }
+
+                break;
+        }
+    }
+
+    private sealed record InventoryOption(Guid Id, string Label);
 
     private async Task DeleteSupplyAsync(Guid supplyId)
     {
@@ -657,7 +733,7 @@ else
     {
         [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Supply type is required")]
         [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "Supply type cannot exceed 100 characters")]
-        public string SupplyType { get; set; } = string.Empty;
+        public string SupplyType { get; set; } = "yarn";
 
         [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Supply name is required")]
         [System.ComponentModel.DataAnnotations.StringLength(200, ErrorMessage = "Supply name cannot exceed 200 characters")]

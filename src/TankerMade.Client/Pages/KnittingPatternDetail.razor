@@ -1,4 +1,6 @@
 @page "/modules/knitting/patterns/{PatternId:guid}"
+@using TankerMade.Contracts.DTOs.Assets
+@using TankerMade.Contracts.DTOs.ModuleInventory
 @using TankerMade.Contracts.DTOs.ModulePatterns
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
@@ -53,6 +55,107 @@ else
                 </div>
             </div>
         </div>
+
+        <section class="project-panel mb-3">
+            <h2>Supply Metadata</h2>
+            <EditForm Model="metadataForm" OnValidSubmit="SaveMetadataAsync" class="project-edit-form">
+                <div class="form-grid">
+                    <label>
+                        <span>Suggested yarn weight</span>
+                        <InputText class="form-control" @bind-Value="metadataForm.SuggestedYarnWeight" />
+                    </label>
+                    <label>
+                        <span>Suggested needle sizes</span>
+                        <InputText class="form-control" @bind-Value="metadataForm.SuggestedNeedleSizes" />
+                    </label>
+                    <label>
+                        <span>Required notions</span>
+                        <InputText class="form-control" @bind-Value="metadataForm.RequiredNotions" />
+                    </label>
+                </div>
+                <button class="btn btn-primary btn-sm" disabled="@busy" type="submit">Save Metadata</button>
+            </EditForm>
+        </section>
+
+        <section class="project-panel mb-3">
+            <h2>Pattern Supplies</h2>
+            <div class="form-grid">
+                <label>
+                    <span>Supply type</span>
+                    <select class="form-control" @bind="supplyForm.SupplyType" @bind:after="OnSupplyTypeChanged">
+                        <option value="yarn">Yarn</option>
+                        <option value="tool">Tool</option>
+                        <option value="notion">Notion</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Inventory item (optional)</span>
+                    <select class="form-control" @bind="selectedSupplyInventoryId" @bind:after="OnSupplyInventoryChanged">
+                        <option value="">Manual name</option>
+                        @foreach (var option in supplyInventoryOptions)
+                        {
+                            <option value="@option.Id">@option.Label</option>
+                        }
+                    </select>
+                </label>
+                <label>
+                    <span>Name</span>
+                    <InputText class="form-control" @bind-Value="supplyForm.Name" />
+                </label>
+            </div>
+            <button class="btn btn-primary btn-sm" disabled="@busy" @onclick="AddPatternSupplyAsync">Add Supply</button>
+
+            @if (pattern.Supplies.Count == 0)
+            {
+                <p class="mt-3 mb-0">No supplies listed yet.</p>
+            }
+            else
+            {
+                <ul class="project-supply-list mt-3">
+                    @foreach (var supply in pattern.Supplies.OrderBy(item => item.SortOrder))
+                    {
+                        <li>
+                            <div>
+                                <strong>@supply.Name</strong>
+                                <span class="text-muted">(@supply.SupplyType)</span>
+                            </div>
+                            <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeletePatternSupplyAsync(supply.Id)">Remove</button>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+
+        <section class="project-panel mb-3">
+            <h2>Pattern Assets</h2>
+            <InputFile OnChange="UploadPatternAssetAsync" disabled="@busy" />
+            @if (patternAssets.Count == 0)
+            {
+                <p class="mt-2 mb-0 muted-copy">No assets attached yet.</p>
+            }
+            else
+            {
+                <ul class="project-supply-list mt-2">
+                    @foreach (var asset in patternAssets)
+                    {
+                        <li>
+                            <div>
+                                <strong>@asset.OriginalFileName</strong>
+                                <span>@AssetMeta(asset)</span>
+                            </div>
+                            @if (asset.RecordId == pattern.Id)
+                            {
+                                <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => UnassignPatternAssetAsync(asset.Id)">Unlink</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-primary btn-sm" disabled="@busy" @onclick="() => AssignPatternAssetAsync(asset.Id)">Attach</button>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
 
         <div class="pattern-workspace">
             <aside class="piece-list" aria-label="Pieces">
@@ -217,6 +320,7 @@ else
     [Parameter] public Guid PatternId { get; set; }
 
     private const string ModuleKey = "knitting";
+    private const string PatternRecordType = "pattern";
     private ModulePatternDto? pattern;
     private ModulePatternPieceDto? selectedPiece;
     private Guid? selectedPieceId;
@@ -230,6 +334,11 @@ else
     private PieceFormModel renamePieceForm = new();
     private StepFormModel stepForm = new();
     private StepFormModel editStepForm = new();
+    private MetadataFormModel metadataForm = new();
+    private PatternSupplyFormModel supplyForm = new() { SupplyType = "yarn" };
+    private readonly List<InventoryOption> supplyInventoryOptions = [];
+    private Guid? selectedSupplyInventoryId;
+    private readonly List<AssetRecordDto> patternAssets = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -257,10 +366,18 @@ else
             pattern = await ApiClient.GetModulePatternAsync(ModuleKey, PatternId);
             if (pattern != null)
             {
+                metadataForm = new MetadataFormModel
+                {
+                    SuggestedYarnWeight = pattern.SuggestedYarnWeight,
+                    SuggestedNeedleSizes = pattern.SuggestedNeedleSizes,
+                    RequiredNotions = pattern.RequiredNotions
+                };
                 selectedPieceId ??= pattern.Pieces.FirstOrDefault()?.Id;
                 selectedPiece = pattern.Pieces.FirstOrDefault(piece => piece.Id == selectedPieceId)
                     ?? pattern.Pieces.FirstOrDefault();
                 selectedPieceId = selectedPiece?.Id;
+                await LoadSupplyInventoryOptionsAsync();
+                await LoadPatternAssetsAsync();
             }
         }
         catch (Exception ex)
@@ -595,9 +712,238 @@ else
         }
     }
 
+    private async Task SaveMetadataAsync()
+    {
+        if (pattern == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UpdateModulePatternAsync(ModuleKey, pattern.Id, new UpdateModulePatternRequest
+            {
+                SuggestedYarnWeight = metadataForm.SuggestedYarnWeight,
+                SuggestedNeedleSizes = metadataForm.SuggestedNeedleSizes,
+                RequiredNotions = metadataForm.RequiredNotions
+            });
+            await LoadPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task AddPatternSupplyAsync()
+    {
+        if (pattern == null || string.IsNullOrWhiteSpace(supplyForm.Name))
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.AddModulePatternSupplyAsync(ModuleKey, pattern.Id, new CreateModulePatternSupplyRequest
+            {
+                SupplyType = supplyForm.SupplyType,
+                Name = supplyForm.Name.Trim(),
+                InventoryItemId = selectedSupplyInventoryId
+            });
+            var supplyType = supplyForm.SupplyType;
+            supplyForm = new PatternSupplyFormModel { SupplyType = supplyType };
+            selectedSupplyInventoryId = null;
+            await LoadPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task DeletePatternSupplyAsync(Guid supplyId)
+    {
+        if (pattern == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.DeleteModulePatternSupplyAsync(ModuleKey, pattern.Id, supplyId);
+            await LoadPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task OnSupplyTypeChanged()
+    {
+        selectedSupplyInventoryId = null;
+        await LoadSupplyInventoryOptionsAsync();
+    }
+
+    private void OnSupplyInventoryChanged()
+    {
+        if (!selectedSupplyInventoryId.HasValue)
+        {
+            return;
+        }
+
+        var selected = supplyInventoryOptions.FirstOrDefault(option => option.Id == selectedSupplyInventoryId.Value);
+        if (selected != null)
+        {
+            supplyForm.Name = selected.Label;
+        }
+    }
+
+    private async Task LoadSupplyInventoryOptionsAsync()
+    {
+        supplyInventoryOptions.Clear();
+
+        switch (supplyForm.SupplyType)
+        {
+            case "tool":
+                foreach (var tool in await ApiClient.GetModuleToolsAsync(ModuleKey))
+                {
+                    supplyInventoryOptions.Add(new InventoryOption(tool.Id, $"{tool.BrandName} - {tool.TypeName}"));
+                }
+
+                break;
+            case "notion":
+                foreach (var notion in await ApiClient.GetModuleNotionsAsync(ModuleKey))
+                {
+                    supplyInventoryOptions.Add(new InventoryOption(notion.Id, $"{notion.BrandName} - {notion.TypeName}"));
+                }
+
+                break;
+            default:
+                foreach (var yarn in await ApiClient.GetModuleYarnsAsync(ModuleKey))
+                {
+                    supplyInventoryOptions.Add(new InventoryOption(yarn.Id, $"{yarn.BrandName} - {yarn.ColorName}"));
+                }
+
+                break;
+        }
+    }
+
+    private async Task LoadPatternAssetsAsync()
+    {
+        patternAssets.Clear();
+        if (pattern == null)
+        {
+            return;
+        }
+
+        patternAssets.AddRange(await ApiClient.GetAssetsForPickerAsync(
+            ModuleKey,
+            PatternRecordType,
+            pattern.Id,
+            includeUnassigned: true));
+    }
+
+    private async Task UploadPatternAssetAsync(InputFileChangeEventArgs args)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UploadAssetAsync(ModuleKey, args.File);
+            await LoadPatternAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task AssignPatternAssetAsync(Guid assetId)
+    {
+        if (pattern == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.AssignAssetAsync(assetId, new AssetAssignmentRequest
+            {
+                ModuleKey = ModuleKey,
+                RecordType = PatternRecordType,
+                RecordId = pattern.Id
+            });
+            await LoadPatternAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task UnassignPatternAssetAsync(Guid assetId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UnassignAssetAsync(assetId);
+            await LoadPatternAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private static string AssetMeta(AssetRecordDto asset)
+    {
+        var size = asset.FileSizeBytes > 0 ? $"{asset.FileSizeBytes / 1024} KB" : "unknown size";
+        return $"{asset.ContentType} - {size}";
+    }
+
     private static string DisplayMetadata(ModulePatternDto value)
     {
-        var parts = new[] { value.Type, value.Form, value.Difficulty }
+        var parts = new[] { value.Type, value.Form, value.Difficulty, value.SuggestedYarnWeight }
             .Where(part => !string.IsNullOrWhiteSpace(part));
 
         return string.Join(" - ", parts);
@@ -636,4 +982,19 @@ else
         public string Label { get; set; } = string.Empty;
         public string Notes { get; set; } = string.Empty;
     }
+
+    private class MetadataFormModel
+    {
+        public string SuggestedYarnWeight { get; set; } = string.Empty;
+        public string SuggestedNeedleSizes { get; set; } = string.Empty;
+        public string RequiredNotions { get; set; } = string.Empty;
+    }
+
+    private class PatternSupplyFormModel
+    {
+        public string SupplyType { get; set; } = "yarn";
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private sealed record InventoryOption(Guid Id, string Label);
 }

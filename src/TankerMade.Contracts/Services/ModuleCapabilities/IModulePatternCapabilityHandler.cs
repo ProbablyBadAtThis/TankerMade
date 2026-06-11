@@ -23,4 +23,7 @@ public interface IModulePatternCapabilityHandler
     Task<ModulePatternStepDto?> UpdateStepAsync(Guid patternId, Guid pieceId, UpdateModulePatternStepRequest request, Guid userId);
     Task<bool> DeleteStepAsync(Guid patternId, Guid pieceId, Guid stepId, Guid userId);
     Task<bool> ReorderStepsAsync(Guid patternId, Guid pieceId, ReorderModulePatternItemsRequest request, Guid userId);
+
+    Task<ModulePatternSupplyDto?> AddSupplyAsync(Guid patternId, CreateModulePatternSupplyRequest request, Guid userId);
+    Task<bool> DeleteSupplyAsync(Guid patternId, Guid supplyId, Guid userId);
 }

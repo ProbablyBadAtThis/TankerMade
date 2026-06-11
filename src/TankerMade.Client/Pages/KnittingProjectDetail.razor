@@ -1,5 +1,6 @@
 @page "/modules/knitting/projects/{ProjectId:guid}"
 @implements IDisposable
+@using TankerMade.Contracts.DTOs.Assets
 @using TankerMade.Contracts.DTOs.ModuleInventory
 @using TankerMade.Contracts.DTOs.ModulePatterns
 @using TankerMade.Contracts.DTOs.ModuleProjects
@@ -206,12 +207,20 @@ else
             <h2>Linked Supplies</h2>
             <div class="form-grid">
                 <label>
-                    <span>Supply</span>
-                    <select class="form-control" @bind="selectedSupplyId">
-                        <option value="">Select supply</option>
-                        @foreach (var supply in supplies)
+                    <span>Inventory Type</span>
+                    <select class="form-control" @bind="selectedInventoryType" @bind:after="OnInventoryTypeChanged">
+                        <option value="yarn">Yarn</option>
+                        <option value="tool">Tool</option>
+                        <option value="notion">Notion</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Inventory Item</span>
+                    <select class="form-control" @bind="selectedInventoryItemId">
+                        <option value="">Select item</option>
+                        @foreach (var option in inventoryOptions)
                         {
-                            <option value="@supply.Id">@supply.Name (@supply.Category)</option>
+                            <option value="@option.Id">@option.Label</option>
                         }
                     </select>
                 </label>
@@ -237,7 +246,8 @@ else
                     {
                         <li>
                             <div>
-                                <strong>@link.SupplyItemName</strong>
+                                <strong>@link.InventoryItemName</strong>
+                                <span class="text-muted">(@link.InventoryItemType)</span>
                                 <span>@(link.QuantityPlanned?.ToString() ?? "-") planned</span>
                                 @if (!string.IsNullOrWhiteSpace(link.Notes))
                                 {
@@ -245,6 +255,37 @@ else
                                 }
                             </div>
                             <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => RemoveSupplyLinkAsync(link.Id)">Remove</button>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+
+        <section class="project-panel mt-3">
+            <h2>Project Assets</h2>
+            <InputFile OnChange="UploadProjectAssetAsync" disabled="@busy" />
+            @if (projectAssets.Count == 0)
+            {
+                <p class="mt-2 mb-0 muted-copy">No assets attached yet.</p>
+            }
+            else
+            {
+                <ul class="project-supply-list mt-2">
+                    @foreach (var asset in projectAssets)
+                    {
+                        <li>
+                            <div>
+                                <strong>@asset.OriginalFileName</strong>
+                                <span>@AssetMeta(asset)</span>
+                            </div>
+                            @if (asset.RecordId == project.Id)
+                            {
+                                <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => UnassignProjectAssetAsync(asset.Id)">Unlink</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-primary btn-sm" disabled="@busy" @onclick="() => AssignProjectAssetAsync(asset.Id)">Attach</button>
+                            }
                         </li>
                     }
                 </ul>
@@ -303,6 +344,7 @@ else
     [Parameter] public Guid ProjectId { get; set; }
 
     private const string ModuleKey = "knitting";
+    private const string ProjectRecordType = "project";
     private const string WorkspaceDefaultSupplyQuantityKey = "workspace.defaultSupplyPlannedQuantity";
     private const string TimersDefaultEditMinutesKey = "timers.defaultEditMinutes";
     private const string TimersAutoPauseOnCompleteKey = "timers.autoPauseOnComplete";
@@ -311,10 +353,12 @@ else
     private ModulePatternPieceDto? selectedPiece;
     private Guid? selectedPieceId;
     private readonly List<ModulePatternDto> patterns = [];
-    private readonly List<ModuleSupplyItemDto> supplies = [];
+    private readonly List<InventoryOption> inventoryOptions = [];
+    private readonly List<AssetRecordDto> projectAssets = [];
     private ProjectFormModel form = new();
     private HashSet<Guid> completedStepIds = [];
-    private Guid? selectedSupplyId;
+    private string selectedInventoryType = "yarn";
+    private Guid? selectedInventoryItemId;
     private decimal? supplyQuantity;
     private string supplyNotes = string.Empty;
     private bool loading = true;
@@ -433,9 +477,9 @@ else
                 .Select(progress => progress.PatternStepId)
                 .ToHashSet() ?? [];
 
-            supplies.Clear();
-            supplies.AddRange(await ApiClient.GetModuleSuppliesAsync(ModuleKey));
-            EnsureSelectedSupply();
+            await LoadInventoryOptionsAsync();
+            EnsureSelectedInventoryItem();
+            await LoadProjectAssetsAsync();
 
             if (pattern != null)
             {
@@ -691,15 +735,16 @@ else
     {
         await RunBusyAsync(async () =>
         {
-            if (project == null || selectedSupplyId == null)
+            if (project == null || selectedInventoryItemId == null)
             {
-                errorMessage = "Select a supply before adding a link.";
+                errorMessage = "Select an inventory item before adding a link.";
                 return;
             }
 
             var updated = await ApiClient.AddModuleProjectInventoryLinkAsync(ModuleKey, project.Id, new CreateModuleProjectInventoryLinkRequest
             {
-                SupplyItemId = selectedSupplyId.Value,
+                InventoryItemType = selectedInventoryType,
+                InventoryItemId = selectedInventoryItemId.Value,
                 QuantityPlanned = supplyQuantity,
                 Notes = supplyNotes
             });
@@ -708,10 +753,10 @@ else
                 project = updated;
             }
 
-            selectedSupplyId = null;
+            selectedInventoryItemId = null;
             supplyQuantity = null;
             supplyNotes = string.Empty;
-            EnsureSelectedSupply();
+            EnsureSelectedInventoryItem();
         });
     }
 
@@ -756,18 +801,148 @@ else
         }
     }
 
-    private void EnsureSelectedSupply()
+    private async Task LoadInventoryOptionsAsync()
     {
-        if (supplies.Count == 0)
+        inventoryOptions.Clear();
+
+        switch (selectedInventoryType)
         {
-            selectedSupplyId = null;
+            case "tool":
+                foreach (var tool in await ApiClient.GetModuleToolsAsync(ModuleKey))
+                {
+                    inventoryOptions.Add(new InventoryOption(tool.Id, $"{tool.BrandName} - {tool.TypeName}"));
+                }
+
+                break;
+            case "notion":
+                foreach (var notion in await ApiClient.GetModuleNotionsAsync(ModuleKey))
+                {
+                    inventoryOptions.Add(new InventoryOption(notion.Id, $"{notion.BrandName} - {notion.TypeName}"));
+                }
+
+                break;
+            default:
+                foreach (var yarn in await ApiClient.GetModuleYarnsAsync(ModuleKey))
+                {
+                    inventoryOptions.Add(new InventoryOption(yarn.Id, $"{yarn.BrandName} - {yarn.ColorName}"));
+                }
+
+                break;
+        }
+    }
+
+    private async Task OnInventoryTypeChanged()
+    {
+        selectedInventoryItemId = null;
+        await LoadInventoryOptionsAsync();
+        EnsureSelectedInventoryItem();
+    }
+
+    private void EnsureSelectedInventoryItem()
+    {
+        if (inventoryOptions.Count == 0)
+        {
+            selectedInventoryItemId = null;
             return;
         }
 
-        if (selectedSupplyId == null || supplies.All(supply => supply.Id != selectedSupplyId.Value))
+        if (selectedInventoryItemId == null || inventoryOptions.All(option => option.Id != selectedInventoryItemId.Value))
         {
-            selectedSupplyId = supplies[0].Id;
+            selectedInventoryItemId = inventoryOptions[0].Id;
         }
+    }
+
+    private sealed record InventoryOption(Guid Id, string Label);
+
+    private async Task LoadProjectAssetsAsync()
+    {
+        projectAssets.Clear();
+        if (project == null)
+        {
+            return;
+        }
+
+        projectAssets.AddRange(await ApiClient.GetAssetsForPickerAsync(
+            ModuleKey,
+            ProjectRecordType,
+            project.Id,
+            includeUnassigned: true));
+    }
+
+    private async Task UploadProjectAssetAsync(InputFileChangeEventArgs args)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UploadAssetAsync(ModuleKey, args.File);
+            await LoadProjectAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task AssignProjectAssetAsync(Guid assetId)
+    {
+        if (project == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.AssignAssetAsync(assetId, new AssetAssignmentRequest
+            {
+                ModuleKey = ModuleKey,
+                RecordType = ProjectRecordType,
+                RecordId = project.Id
+            });
+            await LoadProjectAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task UnassignProjectAssetAsync(Guid assetId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UnassignAssetAsync(assetId);
+            await LoadProjectAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private static string AssetMeta(AssetRecordDto asset)
+    {
+        var size = asset.FileSizeBytes > 0 ? $"{asset.FileSizeBytes / 1024} KB" : "unknown size";
+        return $"{asset.ContentType} - {size}";
     }
 
     private long GetTrackedSeconds()

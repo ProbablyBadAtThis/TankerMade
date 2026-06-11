@@ -9,4 +9,7 @@ public class UpdateKnittingPatternDto
     public string? Difficulty { get; set; }
     public Guid? ThemeId { get; set; }
     public Guid? SourceId { get; set; }
+    public string? SuggestedYarnWeight { get; set; }
+    public string? SuggestedNeedleSizes { get; set; }
+    public string? RequiredNotions { get; set; }
 }

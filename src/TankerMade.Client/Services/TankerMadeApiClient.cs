@@ -364,6 +364,39 @@ public class TankerMadeApiClient
         return true;
     }
 
+    public async Task<ModulePatternSupplyDto?> AddModulePatternSupplyAsync(
+        string moduleKey,
+        Guid patternId,
+        CreateModulePatternSupplyRequest request)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/patterns/{patternId}/supplies",
+            request);
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModulePatternSupplyDto>();
+    }
+
+    public async Task<bool> DeleteModulePatternSupplyAsync(
+        string moduleKey,
+        Guid patternId,
+        Guid supplyId)
+    {
+        var response = await _http.DeleteAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/patterns/{patternId}/supplies/{supplyId}");
+        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return false;
+        }
+
+        await EnsureSuccessAsync(response);
+        return true;
+    }
+
     public async Task<IReadOnlyList<ModuleProjectDto>> GetModuleProjectsAsync(
         string moduleKey,
         bool includeArchived = false)
@@ -617,6 +650,87 @@ public class TankerMadeApiClient
 
         await EnsureSuccessAsync(response);
         return true;
+    }
+
+    public async Task<IReadOnlyList<ModuleYarnInventoryItemDto>> GetModuleYarnsAsync(string moduleKey, string search = "")
+    {
+        var url = BuildUrl(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/inventory/yarns",
+            ("search", search));
+        var response = await _http.GetAsync(url);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<ModuleYarnInventoryItemDto>>() ?? [];
+    }
+
+    public async Task<IReadOnlyList<ModuleToolInventoryItemDto>> GetModuleToolsAsync(string moduleKey, string search = "")
+    {
+        var url = BuildUrl(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/inventory/tools",
+            ("search", search));
+        var response = await _http.GetAsync(url);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<ModuleToolInventoryItemDto>>() ?? [];
+    }
+
+    public async Task<IReadOnlyList<ModuleNotionInventoryItemDto>> GetModuleNotionsAsync(string moduleKey, string search = "")
+    {
+        var url = BuildUrl(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/inventory/notions",
+            ("search", search));
+        var response = await _http.GetAsync(url);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<ModuleNotionInventoryItemDto>>() ?? [];
+    }
+
+    public async Task<IReadOnlyList<ModuleInventoryReferenceItemDto>> GetModuleInventoryReferenceItemsAsync(string moduleKey, string category)
+    {
+        var response = await _http.GetAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/inventory/reference/{Uri.EscapeDataString(category)}");
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<ModuleInventoryReferenceItemDto>>() ?? [];
+    }
+
+    public async Task<ModuleInventoryReferenceItemDto> CreateModuleInventoryReferenceItemAsync(
+        string moduleKey,
+        string category,
+        CreateModuleInventoryReferenceItemDto request)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/inventory/reference/{Uri.EscapeDataString(category)}",
+            request);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModuleInventoryReferenceItemDto>()
+            ?? throw new InvalidOperationException("The server returned an empty reference item response.");
+    }
+
+    public async Task<ModuleYarnInventoryItemDto> CreateModuleYarnAsync(string moduleKey, CreateModuleYarnInventoryItemDto request)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/inventory/yarns",
+            request);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModuleYarnInventoryItemDto>()
+            ?? throw new InvalidOperationException("The server returned an empty yarn response.");
+    }
+
+    public async Task<ModuleToolInventoryItemDto> CreateModuleToolAsync(string moduleKey, CreateModuleToolInventoryItemDto request)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/inventory/tools",
+            request);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModuleToolInventoryItemDto>()
+            ?? throw new InvalidOperationException("The server returned an empty tool response.");
+    }
+
+    public async Task<ModuleNotionInventoryItemDto> CreateModuleNotionAsync(string moduleKey, CreateModuleNotionInventoryItemDto request)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/inventory/notions",
+            request);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ModuleNotionInventoryItemDto>()
+            ?? throw new InvalidOperationException("The server returned an empty notion response.");
     }
 
     public async Task<IReadOnlyList<ModuleKitDto>> GetModuleKitsAsync(string moduleKey, bool includeArchived = false)

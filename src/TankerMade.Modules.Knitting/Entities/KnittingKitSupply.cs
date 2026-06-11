@@ -6,6 +6,7 @@ public class KnittingKitSupply
     public Guid KitId { get; set; }
     public string SupplyType { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
+    public Guid? InventoryItemId { get; set; }
     public decimal? Quantity { get; set; }
     public int SortOrder { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -24,8 +25,16 @@ public class KnittingKitSupply
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void Update(decimal? quantity)
+    public void Update(string supplyType, string name, Guid? inventoryItemId, decimal? quantity)
     {
+        SupplyType = supplyType?.Trim().ToLowerInvariant() switch
+        {
+            "tool" => "tool",
+            "notion" => "notion",
+            _ => "yarn"
+        };
+        Name = name?.Trim() ?? throw new ArgumentException("Supply name is required.", nameof(name));
+        InventoryItemId = inventoryItemId;
         Quantity = quantity;
         UpdatedAt = DateTime.UtcNow;
     }

@@ -73,7 +73,13 @@ public class KnittingKitCapabilityHandler : IModuleKitCapabilityHandler
 
     public async Task<ModuleKitSupplyDto?> AddSupplyAsync(Guid kitId, CreateModuleKitSupplyRequest request, Guid userId)
     {
-        var supply = await _service.AddSupplyAsync(kitId, new CreateKnittingKitSupplyDto { SupplyType = request.SupplyType, Name = request.Name, Quantity = request.Quantity }, userId);
+        var supply = await _service.AddSupplyAsync(kitId, new CreateKnittingKitSupplyDto
+        {
+            SupplyType = request.SupplyType,
+            Name = request.Name,
+            InventoryItemId = request.InventoryItemId,
+            Quantity = request.Quantity
+        }, userId);
         return supply == null ? null : MapSupply(supply);
     }
 
@@ -83,6 +89,7 @@ public class KnittingKitCapabilityHandler : IModuleKitCapabilityHandler
         {
             SupplyType = request.SupplyType,
             Name = request.Name,
+            InventoryItemId = request.InventoryItemId,
             Quantity = request.Quantity
         }, userId);
 
@@ -137,6 +144,7 @@ public class KnittingKitCapabilityHandler : IModuleKitCapabilityHandler
             Id = supply.Id,
             SupplyType = supply.SupplyType,
             Name = supply.Name,
+            InventoryItemId = supply.InventoryItemId,
             Quantity = supply.Quantity,
             SortOrder = supply.SortOrder,
             CreatedAt = supply.CreatedAt,

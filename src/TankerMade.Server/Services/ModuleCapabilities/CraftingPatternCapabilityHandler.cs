@@ -177,4 +177,10 @@ public class CraftingPatternCapabilityHandler : IModulePatternCapabilityHandler
             Notes = source.Instructions
         };
     }
+
+    public Task<ModulePatternSupplyDto?> AddSupplyAsync(Guid patternId, CreateModulePatternSupplyRequest request, Guid userId)
+        => Task.FromResult<ModulePatternSupplyDto?>(null);
+
+    public Task<bool> DeleteSupplyAsync(Guid patternId, Guid supplyId, Guid userId)
+        => Task.FromResult(false);
 }

@@ -1,4 +1,6 @@
 @page "/modules/knitting/inventory"
+@using System.Linq
+@using TankerMade.Contracts.DTOs.Assets
 @using TankerMade.Contracts.DTOs.ModuleInventory
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
@@ -29,7 +31,7 @@ else
         <div>
             <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
             <h1>Inventory</h1>
-            <p>Module-owned supply tracking via core extension-point APIs.</p>
+            <p>Yarn, tools, and notions with lots, purchases, and merge rules.</p>
         </div>
     </div>
 
@@ -38,105 +40,279 @@ else
         <div class="alert alert-danger">@errorMessage</div>
     }
 
-    <section class="project-panel">
-        <h2>@(editingSupplyId == null ? "Add Supply" : "Update Supply")</h2>
-        <EditForm Model="form" OnValidSubmit="CreateSupplyAsync" class="project-edit-form">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-            <div class="form-grid">
-                <label>
-                    <span>Category</span>
-                    <InputText class="form-control" @bind-Value="form.Category" />
-                </label>
-                <label>
-                    <span>Name</span>
-                    <InputText class="form-control" @bind-Value="form.Name" />
-                </label>
-                <label>
-                    <span>Brand</span>
-                    <InputText class="form-control" @bind-Value="form.Brand" />
-                </label>
-                <label>
-                    <span>Color</span>
-                    <InputText class="form-control" @bind-Value="form.Color" />
-                </label>
-                <label>
-                    <span>Size</span>
-                    <InputText class="form-control" @bind-Value="form.Size" />
-                </label>
-                <label>
-                    <span>Quantity</span>
-                    <InputNumber class="form-control" min="1" step="1" @bind-Value="form.Quantity" />
-                </label>
-                <label>
-                    <span>Unit</span>
-                    <InputText class="form-control" @bind-Value="form.Unit" />
-                </label>
-            </div>
-            <label>
-                <span>Notes</span>
-                <InputTextArea class="form-control" @bind-Value="form.Notes" />
-            </label>
-            <div class="auth-actions">
-                <button class="btn btn-primary" disabled="@busy" type="submit">@(editingSupplyId == null ? "Add Supply" : "Save Supply")</button>
-                @if (editingSupplyId != null)
-                {
-                    <button class="btn btn-outline-secondary" disabled="@busy" type="button" @onclick="CancelEdit">Cancel</button>
-                }
-            </div>
-        </EditForm>
-    </section>
-
-    <div class="printing-search-row mb-3">
-        <input class="form-control" placeholder="Search supplies" @bind="search" @bind:event="oninput" />
-        <input class="form-control" placeholder="Category filter" @bind="category" @bind:event="oninput" />
-        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="LoadSuppliesAsync">Search</button>
+    <div class="d-flex gap-2 flex-wrap mb-3">
+        <button class="@TabButtonClass("yarn")" @onclick='() => SetTab("yarn")'>Yarn</button>
+        <button class="@TabButtonClass("tools")" @onclick='() => SetTab("tools")'>Tools</button>
+        <button class="@TabButtonClass("notions")" @onclick='() => SetTab("notions")'>Notions</button>
     </div>
 
-    @if (supplies.Count == 0)
+    <div class="input-group mb-3">
+        <input class="form-control" placeholder="Search inventory" @bind="search" @bind:event="oninput" />
+        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="LoadInventoryAsync">Search</button>
+    </div>
+
+    @if (activeTab == "yarn")
     {
-        <div class="empty-state">
-            <h2>No Supplies Yet</h2>
-            <p>Add your first inventory item to start tracking stash and tools.</p>
+        <div class="row g-3">
+            <div class="col-lg-4">
+                <div class="crafting-panel">
+                    <h2>Add Yarn</h2>
+                    <label class="form-label">Brand</label>
+                    <input class="form-control mb-2" @bind="yarnForm.BrandName" />
+                    <label class="form-label">Color name</label>
+                    <input class="form-control mb-2" @bind="yarnForm.ColorName" />
+                    <label class="form-label">Main color</label>
+                    <input class="form-control mb-2" @bind="yarnForm.MainColor" />
+                    <label class="form-label">Weight</label>
+                    <select class="form-select mb-2" @bind="yarnForm.WeightName">
+                        <option value="">Select weight</option>
+                        @foreach (var option in yarnWeightOptions)
+                        {
+                            <option value="@option">@option</option>
+                        }
+                    </select>
+                    <div class="input-group mb-2">
+                        <input class="form-control" placeholder="Add new weight" @bind="newYarnWeightName" />
+                        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddYarnWeightOptionAsync">Add</button>
+                    </div>
+                    <label class="form-label">Fiber tag</label>
+                    <select class="form-select mb-2" @bind="yarnForm.FiberTag">
+                        <option value="">Select fiber tag</option>
+                        @foreach (var option in fiberTagOptions)
+                        {
+                            <option value="@option">@option</option>
+                        }
+                    </select>
+                    <div class="input-group mb-2">
+                        <input class="form-control" placeholder="Add new fiber tag" @bind="newFiberTagName" />
+                        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddFiberTagOptionAsync">Add</button>
+                    </div>
+                    <label class="form-label">Skeins</label>
+                    <input class="form-control mb-2" type="number" step="0.01" @bind="yarnForm.Skeins" />
+                    <label class="form-label">Lot number</label>
+                    <input class="form-control mb-2" @bind="yarnForm.LotNumber" />
+                    <label class="form-label">Source</label>
+                    <input class="form-control mb-2" @bind="yarnForm.SourceName" />
+                    <label class="form-label">Price</label>
+                    <input class="form-control mb-2" type="number" step="0.01" @bind="yarnForm.Price" />
+                    <label class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" @bind="yarnForm.IsSalePrice" />
+                        <span class="form-check-label">Sale price</span>
+                    </label>
+                    <button class="btn btn-primary" disabled="@busy" @onclick="SaveYarnAsync">Add / Merge</button>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="pattern-card-grid">
+                    @foreach (var yarn in yarns)
+                    {
+                        <div class="pattern-card @(selectedItemId == yarn.Id ? "printing-material-card-active" : string.Empty)">
+                            <h2>@yarn.BrandName</h2>
+                            <p>@yarn.ColorName</p>
+                            <div class="pattern-card-stats">
+                                <span>@yarn.TotalSkeins skeins</span>
+                                <span>@yarn.WeightName</span>
+                                <span>@yarn.FiberTag</span>
+                            </div>
+                            <p>@PurchaseSummary(yarn.Purchases)</p>
+                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => SelectItemForAssetsAsync(yarn.Id, YarnRecordType)">
+                                Manage Assets
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else if (activeTab == "tools")
+    {
+        <div class="row g-3">
+            <div class="col-lg-4">
+                <div class="crafting-panel">
+                    <h2>Add Tool</h2>
+                    <label class="form-label">Brand</label>
+                    <input class="form-control mb-2" @bind="toolForm.BrandName" />
+                    <label class="form-label">Type</label>
+                    <select class="form-select mb-2" @bind="toolForm.TypeName">
+                        <option value="">Select type</option>
+                        @foreach (var option in toolTypeOptions)
+                        {
+                            <option value="@option">@option</option>
+                        }
+                    </select>
+                    <div class="input-group mb-2">
+                        <input class="form-control" placeholder="Add new tool type" @bind="newToolTypeName" />
+                        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddToolTypeOptionAsync">Add</button>
+                    </div>
+                    <label class="form-label">Size</label>
+                    <input class="form-control mb-2" @bind="toolForm.Size" />
+                    <label class="form-label">Quantity</label>
+                    <input class="form-control mb-2" type="number" @bind="toolForm.Quantity" />
+                    <label class="form-label">Source</label>
+                    <input class="form-control mb-2" @bind="toolForm.SourceName" />
+                    <label class="form-label">Price</label>
+                    <input class="form-control mb-2" type="number" step="0.01" @bind="toolForm.Price" />
+                    <label class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" @bind="toolForm.IsSalePrice" />
+                        <span class="form-check-label">Sale price</span>
+                    </label>
+                    <button class="btn btn-primary" disabled="@busy" @onclick="SaveToolAsync">Add / Merge</button>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="pattern-card-grid">
+                    @foreach (var tool in tools)
+                    {
+                        <div class="pattern-card @(selectedItemId == tool.Id ? "printing-material-card-active" : string.Empty)">
+                            <h2>@tool.TypeName</h2>
+                            <p>@tool.BrandName</p>
+                            <div class="pattern-card-stats">
+                                <span>@tool.Quantity owned</span>
+                                <span>@tool.Size</span>
+                            </div>
+                            <p>@PurchaseSummary(tool.Purchases)</p>
+                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => SelectItemForAssetsAsync(tool.Id, ToolRecordType)">
+                                Manage Assets
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
     }
     else
     {
-        <div class="pattern-card-grid">
-            @foreach (var item in supplies)
-            {
-                <article class="pattern-card">
-                    <h2>@item.Name</h2>
-                    <p>@item.Category</p>
-                    <div class="pattern-card-stats">
-                        <span>@(string.IsNullOrWhiteSpace(item.Brand) ? "No brand" : item.Brand)</span>
-                        <span>@(string.IsNullOrWhiteSpace(item.Color) ? "No color" : item.Color)</span>
-                        <span>@item.Quantity @item.Unit</span>
+        <div class="row g-3">
+            <div class="col-lg-4">
+                <div class="crafting-panel">
+                    <h2>Add Notion</h2>
+                    <label class="form-label">Brand</label>
+                    <input class="form-control mb-2" @bind="notionForm.BrandName" />
+                    <label class="form-label">Type</label>
+                    <select class="form-select mb-2" @bind="notionForm.TypeName">
+                        <option value="">Select type</option>
+                        @foreach (var option in notionTypeOptions)
+                        {
+                            <option value="@option">@option</option>
+                        }
+                    </select>
+                    <div class="input-group mb-2">
+                        <input class="form-control" placeholder="Add new notion type" @bind="newNotionTypeName" />
+                        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddNotionTypeOptionAsync">Add</button>
                     </div>
-                    @if (!string.IsNullOrWhiteSpace(item.Notes))
+                    <label class="form-label">Size</label>
+                    <input class="form-control mb-2" @bind="notionForm.Size" />
+                    <label class="form-label">Color</label>
+                    <input class="form-control mb-2" @bind="notionForm.ColorName" />
+                    <label class="form-label">Quantity</label>
+                    <input class="form-control mb-2" type="number" @bind="notionForm.Quantity" />
+                    <label class="form-label">Source</label>
+                    <input class="form-control mb-2" @bind="notionForm.SourceName" />
+                    <label class="form-label">Price</label>
+                    <input class="form-control mb-2" type="number" step="0.01" @bind="notionForm.Price" />
+                    <label class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" @bind="notionForm.IsSalePrice" />
+                        <span class="form-check-label">Sale price</span>
+                    </label>
+                    <button class="btn btn-primary" disabled="@busy" @onclick="SaveNotionAsync">Add / Merge</button>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="pattern-card-grid">
+                    @foreach (var notion in notions)
                     {
-                        <p>@item.Notes</p>
+                        <div class="pattern-card @(selectedItemId == notion.Id ? "printing-material-card-active" : string.Empty)">
+                            <h2>@notion.TypeName</h2>
+                            <p>@notion.BrandName</p>
+                            <div class="pattern-card-stats">
+                                <span>@notion.Quantity owned</span>
+                                <span>@notion.Size</span>
+                                <span>@notion.ColorName</span>
+                            </div>
+                            <p>@PurchaseSummary(notion.Purchases)</p>
+                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => SelectItemForAssetsAsync(notion.Id, NotionRecordType)">
+                                Manage Assets
+                            </button>
+                        </div>
                     }
-                    <div class="auth-actions">
-                        <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => StartEdit(item)">Edit</button>
-                        <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeleteSupplyAsync(item.Id)">Delete</button>
-                    </div>
-                </article>
-            }
+                </div>
+            </div>
         </div>
+    }
+
+    @if (selectedItemId.HasValue)
+    {
+        <section class="printing-panel printing-assets-panel mt-3">
+            <h2>Item Assets</h2>
+            <InputFile OnChange="UploadItemAssetAsync" disabled="@busy" />
+            <p class="muted-copy">Upload stores the file in Knitting assets. Attach to the selected item with one click.</p>
+
+            @if (selectedItemAssets.Count == 0)
+            {
+                <p class="muted-copy">No assets found for the selected item yet.</p>
+            }
+            else
+            {
+                <ul class="project-supply-list">
+                    @foreach (var asset in selectedItemAssets)
+                    {
+                        <li>
+                            <div>
+                                <strong>@asset.OriginalFileName</strong>
+                                <span>@AssetMeta(asset)</span>
+                            </div>
+                            @if (asset.RecordId == selectedItemId)
+                            {
+                                <button class="btn btn-outline-danger btn-sm"
+                                        disabled="@busy"
+                                        @onclick="() => UnassignItemAssetAsync(asset.Id)">
+                                    Unlink
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-primary btn-sm"
+                                        disabled="@busy"
+                                        @onclick="() => AssignItemAssetAsync(asset.Id)">
+                                    Attach
+                                </button>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
     }
 }
 
 @code {
     private const string ModuleKey = "knitting";
-    private readonly List<ModuleSupplyItemDto> supplies = [];
-    private SupplyFormModel form = new();
-    private Guid? editingSupplyId;
+    private const string YarnRecordType = "yarn";
+    private const string ToolRecordType = "tool";
+    private const string NotionRecordType = "notion";
+
+    private readonly List<ModuleYarnInventoryItemDto> yarns = [];
+    private readonly List<ModuleToolInventoryItemDto> tools = [];
+    private readonly List<ModuleNotionInventoryItemDto> notions = [];
+    private CreateModuleYarnInventoryItemDto yarnForm = new();
+    private CreateModuleToolInventoryItemDto toolForm = new();
+    private CreateModuleNotionInventoryItemDto notionForm = new();
+    private string activeTab = "yarn";
     private string search = string.Empty;
-    private string category = string.Empty;
+    private string errorMessage = string.Empty;
+    private readonly List<string> yarnWeightOptions = [];
+    private readonly List<string> fiberTagOptions = [];
+    private readonly List<string> toolTypeOptions = [];
+    private readonly List<string> notionTypeOptions = [];
+    private string newYarnWeightName = string.Empty;
+    private string newFiberTagName = string.Empty;
+    private string newToolTypeName = string.Empty;
+    private string newNotionTypeName = string.Empty;
+    private Guid? selectedItemId;
+    private string selectedRecordType = YarnRecordType;
+    private readonly List<AssetRecordDto> selectedItemAssets = [];
     private bool loading = true;
     private bool busy;
-    private string errorMessage = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -144,12 +320,21 @@ else
         if (AuthSession.IsSignedIn)
         {
             await ModuleState.RefreshAsync();
+            await LoadReferenceOptionsAsync();
         }
 
-        await LoadSuppliesAsync();
+        await LoadInventoryAsync();
     }
 
-    private async Task LoadSuppliesAsync()
+    private async Task SetTab(string tab)
+    {
+        activeTab = tab;
+        selectedItemId = null;
+        selectedItemAssets.Clear();
+        await LoadInventoryAsync();
+    }
+
+    private async Task LoadInventoryAsync()
     {
         loading = true;
         errorMessage = string.Empty;
@@ -161,8 +346,21 @@ else
                 return;
             }
 
-            supplies.Clear();
-            supplies.AddRange(await ApiClient.GetModuleSuppliesAsync(ModuleKey, search, category));
+            if (activeTab == "yarn")
+            {
+                yarns.Clear();
+                yarns.AddRange(await ApiClient.GetModuleYarnsAsync(ModuleKey, search));
+            }
+            else if (activeTab == "tools")
+            {
+                tools.Clear();
+                tools.AddRange(await ApiClient.GetModuleToolsAsync(ModuleKey, search));
+            }
+            else
+            {
+                notions.Clear();
+                notions.AddRange(await ApiClient.GetModuleNotionsAsync(ModuleKey, search));
+            }
         }
         catch (Exception ex)
         {
@@ -174,47 +372,42 @@ else
         }
     }
 
-    private async Task CreateSupplyAsync()
+    private async Task SaveYarnAsync()
+    {
+        await RunSaveAsync(async () =>
+        {
+            await ApiClient.CreateModuleYarnAsync(ModuleKey, yarnForm);
+            yarnForm = new();
+        });
+    }
+
+    private async Task SaveToolAsync()
+    {
+        await RunSaveAsync(async () =>
+        {
+            await ApiClient.CreateModuleToolAsync(ModuleKey, toolForm);
+            toolForm = new();
+        });
+    }
+
+    private async Task SaveNotionAsync()
+    {
+        await RunSaveAsync(async () =>
+        {
+            await ApiClient.CreateModuleNotionAsync(ModuleKey, notionForm);
+            notionForm = new();
+        });
+    }
+
+    private async Task RunSaveAsync(Func<Task> save)
     {
         busy = true;
         errorMessage = string.Empty;
 
         try
         {
-            var request = new UpdateModuleSupplyItemRequest
-            {
-                Category = form.Category,
-                Name = form.Name,
-                Brand = form.Brand,
-                Color = form.Color,
-                Size = form.Size,
-                Quantity = form.Quantity,
-                Unit = form.Unit,
-                Notes = form.Notes
-            };
-
-            if (editingSupplyId == null)
-            {
-                await ApiClient.CreateModuleSupplyAsync(ModuleKey, new CreateModuleSupplyItemRequest
-                {
-                    Category = request.Category,
-                    Name = request.Name,
-                    Brand = request.Brand,
-                    Color = request.Color,
-                    Size = request.Size,
-                    Quantity = request.Quantity,
-                    Unit = request.Unit,
-                    Notes = request.Notes
-                });
-            }
-            else
-            {
-                await ApiClient.UpdateModuleSupplyAsync(ModuleKey, editingSupplyId.Value, request);
-            }
-
-            form = new SupplyFormModel();
-            editingSupplyId = null;
-            await LoadSuppliesAsync();
+            await save();
+            await LoadInventoryAsync();
         }
         catch (Exception ex)
         {
@@ -226,42 +419,66 @@ else
         }
     }
 
-    private void StartEdit(ModuleSupplyItemDto item)
+    private async Task LoadReferenceOptionsAsync()
     {
-        editingSupplyId = item.Id;
-        form = new SupplyFormModel
+        yarnWeightOptions.Clear();
+        fiberTagOptions.Clear();
+        toolTypeOptions.Clear();
+        notionTypeOptions.Clear();
+
+        yarnWeightOptions.AddRange((await ApiClient.GetModuleInventoryReferenceItemsAsync(ModuleKey, "yarn-weight")).Select(item => item.Name));
+        fiberTagOptions.AddRange((await ApiClient.GetModuleInventoryReferenceItemsAsync(ModuleKey, "fiber-tag")).Select(item => item.Name));
+        toolTypeOptions.AddRange((await ApiClient.GetModuleInventoryReferenceItemsAsync(ModuleKey, "tool-type")).Select(item => item.Name));
+        notionTypeOptions.AddRange((await ApiClient.GetModuleInventoryReferenceItemsAsync(ModuleKey, "notion-type")).Select(item => item.Name));
+    }
+
+    private async Task AddYarnWeightOptionAsync()
+    {
+        await AddReferenceOptionAsync("yarn-weight", newYarnWeightName, () => newYarnWeightName = string.Empty, yarnWeightOptions, value => yarnForm.WeightName = value);
+    }
+
+    private async Task AddFiberTagOptionAsync()
+    {
+        await AddReferenceOptionAsync("fiber-tag", newFiberTagName, () => newFiberTagName = string.Empty, fiberTagOptions, value => yarnForm.FiberTag = value);
+    }
+
+    private async Task AddToolTypeOptionAsync()
+    {
+        await AddReferenceOptionAsync("tool-type", newToolTypeName, () => newToolTypeName = string.Empty, toolTypeOptions, value => toolForm.TypeName = value);
+    }
+
+    private async Task AddNotionTypeOptionAsync()
+    {
+        await AddReferenceOptionAsync("notion-type", newNotionTypeName, () => newNotionTypeName = string.Empty, notionTypeOptions, value => notionForm.TypeName = value);
+    }
+
+    private async Task AddReferenceOptionAsync(
+        string category,
+        string rawName,
+        Action clearInput,
+        List<string> options,
+        Action<string> assignSelection)
+    {
+        var name = rawName.Trim();
+        if (string.IsNullOrWhiteSpace(name))
         {
-            Category = item.Category,
-            Name = item.Name,
-            Brand = item.Brand,
-            Color = item.Color,
-            Size = item.Size,
-            Quantity = Math.Max(1, (int)Math.Round(item.Quantity, MidpointRounding.AwayFromZero)),
-            Unit = item.Unit,
-            Notes = item.Notes
-        };
-    }
+            return;
+        }
 
-    private void CancelEdit()
-    {
-        editingSupplyId = null;
-        form = new SupplyFormModel();
-    }
-
-    private async Task DeleteSupplyAsync(Guid supplyId)
-    {
         busy = true;
         errorMessage = string.Empty;
 
         try
         {
-            await ApiClient.DeleteModuleSupplyAsync(ModuleKey, supplyId);
-            if (editingSupplyId == supplyId)
+            var created = await ApiClient.CreateModuleInventoryReferenceItemAsync(ModuleKey, category, new CreateModuleInventoryReferenceItemDto { Name = name });
+            if (!options.Contains(created.Name))
             {
-                CancelEdit();
+                options.Add(created.Name);
+                options.Sort(StringComparer.OrdinalIgnoreCase);
             }
 
-            await LoadSuppliesAsync();
+            assignSelection(created.Name);
+            clearInput();
         }
         catch (Exception ex)
         {
@@ -273,32 +490,129 @@ else
         }
     }
 
-    private class SupplyFormModel
+    private async Task SelectItemForAssetsAsync(Guid itemId, string recordType)
     {
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Category is required")]
-        [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "Category cannot exceed 100 characters")]
-        public string Category { get; set; } = string.Empty;
+        selectedItemId = itemId;
+        selectedRecordType = recordType;
+        await LoadSelectedItemAssetsAsync();
+    }
 
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Name is required")]
-        [System.ComponentModel.DataAnnotations.StringLength(200, ErrorMessage = "Name cannot exceed 200 characters")]
-        public string Name { get; set; } = string.Empty;
+    private async Task LoadSelectedItemAssetsAsync()
+    {
+        selectedItemAssets.Clear();
+        if (!selectedItemId.HasValue)
+        {
+            return;
+        }
 
-        [System.ComponentModel.DataAnnotations.StringLength(150, ErrorMessage = "Brand cannot exceed 150 characters")]
-        public string Brand { get; set; } = string.Empty;
+        selectedItemAssets.AddRange(await ApiClient.GetAssetsForPickerAsync(
+            ModuleKey,
+            selectedRecordType,
+            selectedItemId,
+            includeUnassigned: true));
+    }
 
-        [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "Color cannot exceed 100 characters")]
-        public string Color { get; set; } = string.Empty;
+    private async Task UploadItemAssetAsync(InputFileChangeEventArgs args)
+    {
+        busy = true;
+        errorMessage = string.Empty;
 
-        [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "Size cannot exceed 100 characters")]
-        public string Size { get; set; } = string.Empty;
+        try
+        {
+            await ApiClient.UploadAssetAsync(ModuleKey, args.File);
+            await LoadSelectedItemAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
 
-        [System.ComponentModel.DataAnnotations.Range(1, 999999, ErrorMessage = "Quantity must be a positive whole number")]
-        public int Quantity { get; set; } = 1;
+    private async Task AssignItemAssetAsync(Guid assetId)
+    {
+        if (!selectedItemId.HasValue)
+        {
+            return;
+        }
 
-        [System.ComponentModel.DataAnnotations.StringLength(40, ErrorMessage = "Unit cannot exceed 40 characters")]
-        public string Unit { get; set; } = string.Empty;
+        busy = true;
+        errorMessage = string.Empty;
 
-        [System.ComponentModel.DataAnnotations.StringLength(1000, ErrorMessage = "Notes cannot exceed 1000 characters")]
-        public string Notes { get; set; } = string.Empty;
+        try
+        {
+            await ApiClient.AssignAssetAsync(assetId, new AssetAssignmentRequest
+            {
+                ModuleKey = ModuleKey,
+                RecordType = selectedRecordType,
+                RecordId = selectedItemId.Value
+            });
+            await LoadSelectedItemAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task UnassignItemAssetAsync(Guid assetId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UnassignAssetAsync(assetId);
+            await LoadSelectedItemAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private string TabButtonClass(string tab)
+    {
+        return activeTab == tab ? "btn btn-primary" : "btn btn-outline-secondary";
+    }
+
+    private static string PurchaseSummary(IReadOnlyList<ModuleYarnPurchaseDto> purchases)
+        => PurchaseSummaryCore(purchases.Select(p => (p.SourceName, p.Price, p.IsSalePrice)));
+
+    private static string PurchaseSummary(IReadOnlyList<ModuleToolPurchaseDto> purchases)
+        => PurchaseSummaryCore(purchases.Select(p => (p.SourceName, p.Price, p.IsSalePrice)));
+
+    private static string PurchaseSummary(IReadOnlyList<ModuleNotionPurchaseDto> purchases)
+        => PurchaseSummaryCore(purchases.Select(p => (p.SourceName, p.Price, p.IsSalePrice)));
+
+    private static string PurchaseSummaryCore(IEnumerable<(string SourceName, decimal? Price, bool IsSalePrice)> purchases)
+    {
+        var list = purchases.ToList();
+        if (list.Count == 0)
+        {
+            return "No purchase history.";
+        }
+
+        var latest = list[0];
+        var price = latest.Price.HasValue ? $" {latest.Price:C}" : string.Empty;
+        var sale = latest.IsSalePrice ? " sale" : string.Empty;
+        return $"Latest: {latest.SourceName}{price}{sale}";
+    }
+
+    private static string AssetMeta(AssetRecordDto asset)
+    {
+        var size = asset.FileSizeBytes > 0 ? $"{asset.FileSizeBytes / 1024} KB" : "unknown size";
+        return $"{asset.ContentType} - {size}";
     }
 }

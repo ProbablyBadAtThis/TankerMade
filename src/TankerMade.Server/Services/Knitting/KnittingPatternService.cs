@@ -20,7 +20,16 @@ public class KnittingPatternService : IKnittingPatternService
     public async Task<KnittingPatternDto> CreateAsync(CreateKnittingPatternDto createDto, Guid userId)
     {
         var pattern = new KnittingPattern(Guid.NewGuid(), createDto.Name, userId);
-        pattern.Update(createDto.Name, createDto.Type, createDto.Form, createDto.Difficulty, createDto.ThemeId, createDto.SourceId);
+        pattern.Update(
+            createDto.Name,
+            createDto.Type,
+            createDto.Form,
+            createDto.Difficulty,
+            createDto.ThemeId,
+            createDto.SourceId,
+            createDto.SuggestedYarnWeight,
+            createDto.SuggestedNeedleSizes,
+            createDto.RequiredNotions);
 
         _context.KnittingPatterns.Add(pattern);
         await _context.SaveChangesAsync();
@@ -97,7 +106,10 @@ public class KnittingPatternService : IKnittingPatternService
             UseIncomingValue(updateDto.Form, pattern.Form),
             UseIncomingValue(updateDto.Difficulty, pattern.Difficulty),
             updateDto.ThemeId ?? pattern.ThemeId,
-            updateDto.SourceId ?? pattern.SourceId);
+            updateDto.SourceId ?? pattern.SourceId,
+            UseIncomingValue(updateDto.SuggestedYarnWeight, pattern.SuggestedYarnWeight),
+            UseIncomingValue(updateDto.SuggestedNeedleSizes, pattern.SuggestedNeedleSizes),
+            UseIncomingValue(updateDto.RequiredNotions, pattern.RequiredNotions));
         await _context.SaveChangesAsync();
 
         return await MapAsync(pattern);
@@ -226,6 +238,7 @@ public class KnittingPatternService : IKnittingPatternService
             createDto.RangeStart,
             createDto.RangeEnd,
             createDto.Label,
+            createDto.StitchCount,
             createDto.Instructions,
             nextSortOrder + 1);
 
@@ -251,7 +264,7 @@ public class KnittingPatternService : IKnittingPatternService
             return null;
         }
 
-        step.Update(updateDto.RangeStart, updateDto.RangeEnd, updateDto.Label, updateDto.Instructions);
+        step.Update(updateDto.RangeStart, updateDto.RangeEnd, updateDto.Label, updateDto.StitchCount, updateDto.Instructions);
         await TouchPatternAsync(patternId);
         await _context.SaveChangesAsync();
 
@@ -306,6 +319,58 @@ public class KnittingPatternService : IKnittingPatternService
         return true;
     }
 
+    public async Task<KnittingPatternSupplyDto?> AddSupplyAsync(Guid patternId, CreateKnittingPatternSupplyDto createDto, Guid userId)
+    {
+        if (!await PatternExistsAsync(patternId, userId))
+        {
+            return null;
+        }
+
+        var nextSortOrder = await _context.KnittingPatternSupplies
+            .Where(supply => supply.PatternId == patternId)
+            .Select(supply => (int?)supply.SortOrder)
+            .MaxAsync() ?? 0;
+
+        var supply = new KnittingPatternSupply(
+            Guid.NewGuid(),
+            patternId,
+            createDto.SupplyType,
+            createDto.Name,
+            nextSortOrder + 1);
+
+        if (createDto.InventoryItemId.HasValue)
+        {
+            supply.Update(createDto.SupplyType, createDto.Name, createDto.InventoryItemId);
+        }
+
+        _context.KnittingPatternSupplies.Add(supply);
+        await TouchPatternAsync(patternId);
+        await _context.SaveChangesAsync();
+
+        return MapSupply(supply);
+    }
+
+    public async Task<bool> DeleteSupplyAsync(Guid patternId, Guid supplyId, Guid userId)
+    {
+        if (!await PatternExistsAsync(patternId, userId))
+        {
+            return false;
+        }
+
+        var supply = await _context.KnittingPatternSupplies
+            .SingleOrDefaultAsync(existing => existing.Id == supplyId && existing.PatternId == patternId);
+
+        if (supply == null)
+        {
+            return false;
+        }
+
+        _context.KnittingPatternSupplies.Remove(supply);
+        await TouchPatternAsync(patternId);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     private async Task<KnittingPatternDto> MapAsync(KnittingPattern pattern)
     {
         var userName = await _context.Users
@@ -328,6 +393,7 @@ public class KnittingPatternService : IKnittingPatternService
                 .SingleOrDefaultAsync() ?? string.Empty;
 
         var pieces = await MapPiecesAsync(pattern.Id);
+        var supplies = await MapSuppliesAsync(pattern.Id);
 
         return new KnittingPatternDto
         {
@@ -341,8 +407,12 @@ public class KnittingPatternService : IKnittingPatternService
             ThemeName = themeName,
             SourceId = pattern.SourceId,
             SourceName = sourceName,
+            SuggestedYarnWeight = pattern.SuggestedYarnWeight,
+            SuggestedNeedleSizes = pattern.SuggestedNeedleSizes,
+            RequiredNotions = pattern.RequiredNotions,
             UserId = pattern.UserId,
             Username = userName,
+            Supplies = supplies,
             Pieces = pieces,
             PieceCount = pieces.Count,
             StepCount = pieces.Sum(p => p.Steps.Count),
@@ -421,6 +491,32 @@ public class KnittingPatternService : IKnittingPatternService
         await _context.SaveChangesAsync();
     }
 
+    private async Task<IReadOnlyList<KnittingPatternSupplyDto>> MapSuppliesAsync(Guid patternId)
+    {
+        var supplies = await _context.KnittingPatternSupplies
+            .Where(supply => supply.PatternId == patternId)
+            .OrderBy(supply => supply.SortOrder)
+            .ThenBy(supply => supply.CreatedAt)
+            .ToListAsync();
+
+        return supplies.Select(MapSupply).ToList();
+    }
+
+    private static KnittingPatternSupplyDto MapSupply(KnittingPatternSupply supply)
+    {
+        return new KnittingPatternSupplyDto
+        {
+            Id = supply.Id,
+            PatternId = supply.PatternId,
+            SupplyType = supply.SupplyType,
+            Name = supply.Name,
+            InventoryItemId = supply.InventoryItemId,
+            SortOrder = supply.SortOrder,
+            CreatedAt = supply.CreatedAt,
+            UpdatedAt = supply.UpdatedAt
+        };
+    }
+
     private async Task<IReadOnlyList<KnittingPatternPieceDto>> MapPiecesAsync(Guid patternId)
     {
         var pieces = await _context.KnittingPatternPieces
@@ -484,6 +580,7 @@ public class KnittingPatternService : IKnittingPatternService
             RangeEnd = step.RangeEnd,
             DisplayRange = FormatRange(step.RangeStart, step.RangeEnd),
             Label = step.Label,
+            StitchCount = step.StitchCount,
             Instructions = step.Instructions,
             SortOrder = step.SortOrder,
             CreatedAt = step.CreatedAt,
