@@ -87,6 +87,16 @@ else
                         }
                     </InputSelect>
                 </label>
+                <label>
+                    <span>Main color</span>
+                    <InputSelect class="form-control" @bind-Value="form.ColorIdText">
+                        <option value="">None</option>
+                        @foreach (var color in colors)
+                        {
+                            <option value="@color.Id">@color.Name</option>
+                        }
+                    </InputSelect>
+                </label>
             </div>
             <button class="btn btn-primary" disabled="@busy" type="submit">Create Project</button>
         </EditForm>
@@ -122,6 +132,16 @@ else
             </select>
         </label>
         <label>
+            <span>Color</span>
+            <select class="form-control" @bind="filterColorId" @bind:after="ApplyFiltersAsync">
+                <option value="">All colors</option>
+                @foreach (var color in colors)
+                {
+                    <option value="@color.Id">@color.Name</option>
+                }
+            </select>
+        </label>
+        <label>
             <span>Difficulty</span>
             <select class="form-control" @bind="filterDifficulty" @bind:after="ApplyFiltersAsync">
                 <option value="">All</option>
@@ -147,7 +167,7 @@ else
         </label>
     </div>
 
-    @if (filteredProjects.Count == 0)
+    @if (pagedProjects.Count == 0 && filteredProjects.Count == 0)
     {
         <div class="empty-state">
             <h2>No Projects Yet</h2>
@@ -157,7 +177,7 @@ else
     else
     {
         <div class="project-card-grid">
-            @foreach (var project in filteredProjects)
+            @foreach (var project in pagedProjects)
             {
                 var assetId = projectAssetIds.GetValueOrDefault(project.Id);
                 <article class="project-card project-card-with-image">
@@ -174,6 +194,7 @@ else
                         <span>@project.Progress%</span>
                         <span>@(project.TotalStitchCount > 0 ? $"{project.CompletedStitchCount}/{project.TotalStitchCount} stitches" : $"{project.CompletedStepCount}/{project.TotalStepCount} steps")</span>
                         <span>@(string.IsNullOrWhiteSpace(project.ThemeName) ? "No theme" : project.ThemeName)</span>
+                        <span>@(string.IsNullOrWhiteSpace(project.ColorName) ? "No color" : project.ColorName)</span>
                         <span>@(string.IsNullOrWhiteSpace(project.PatternName) ? "No pattern" : project.PatternName)</span>
                     </div>
                     <div class="auth-actions">
@@ -192,23 +213,36 @@ else
                 </article>
             }
         </div>
+        @if (filteredProjects.Count > projectPageSize)
+        {
+            <div class="auth-actions mt-3">
+                <button class="btn btn-outline-secondary btn-sm" disabled="@(projectPage <= 1 || busy)" @onclick="PreviousProjectPage">Previous</button>
+                <span class="muted-copy align-self-center">Page @projectPage of @ProjectPageCount</span>
+                <button class="btn btn-outline-secondary btn-sm" disabled="@(projectPage >= ProjectPageCount || busy)" @onclick="NextProjectPage">Next</button>
+            </div>
+        }
     }
 }
 
 @code {
     private const string ModuleKey = "knitting";
+    private const int projectPageSize = 12;
     private const string ProjectsShowArchivedByDefaultKey = "projects.showArchivedByDefault";
     private const string WorkspaceDefaultProjectDifficultyKey = "workspace.defaultProjectDifficulty";
     private readonly List<ModuleProjectDto> projects = [];
     private readonly List<ModuleProjectDto> filteredProjects = [];
+    private readonly List<ModuleProjectDto> pagedProjects = [];
     private readonly Dictionary<Guid, Guid?> projectAssetIds = [];
     private readonly List<ModulePatternDto> patterns = [];
     private readonly List<CoreReferenceItemDto> themes = [];
+    private readonly List<CoreReferenceItemDto> colors = [];
     private string search = string.Empty;
     private string sortBy = "recent";
     private string filterThemeId = string.Empty;
+    private string filterColorId = string.Empty;
     private string filterDifficulty = string.Empty;
     private string filterCompletion = string.Empty;
+    private int projectPage = 1;
     private Guid? lastOpenedProjectId;
     private DateTime? lastOpenedAt;
     private ProjectFormModel form = new();
@@ -261,6 +295,8 @@ else
 
             themes.Clear();
             themes.AddRange(await ApiClient.GetCoreReferenceItemsAsync("themes"));
+            colors.Clear();
+            colors.AddRange(await ApiClient.GetCoreReferenceItemsAsync("colors"));
             patterns.Clear();
             patterns.AddRange(await ApiClient.GetModulePatternsAsync(ModuleKey));
             lastOpenedProjectId = await RecentActivity.GetRecentProjectIdAsync();
@@ -299,8 +335,38 @@ else
         return Task.CompletedTask;
     }
 
+    private int ProjectPageCount => filteredProjects.Count == 0
+        ? 1
+        : (int)Math.Ceiling(filteredProjects.Count / (double)projectPageSize);
+
+    private void ApplyPaging()
+    {
+        pagedProjects.Clear();
+        var skip = (projectPage - 1) * projectPageSize;
+        pagedProjects.AddRange(filteredProjects.Skip(skip).Take(projectPageSize));
+    }
+
+    private void PreviousProjectPage()
+    {
+        if (projectPage > 1)
+        {
+            projectPage--;
+            ApplyPaging();
+        }
+    }
+
+    private void NextProjectPage()
+    {
+        if (projectPage < ProjectPageCount)
+        {
+            projectPage++;
+            ApplyPaging();
+        }
+    }
+
     private void ApplyFilters()
     {
+        projectPage = 1;
         filteredProjects.Clear();
         IEnumerable<ModuleProjectDto> query = projects;
 
@@ -316,6 +382,11 @@ else
         if (Guid.TryParse(filterThemeId, out var themeId))
         {
             query = query.Where(project => project.ThemeId == themeId);
+        }
+
+        if (Guid.TryParse(filterColorId, out var colorId))
+        {
+            query = query.Where(project => project.ColorId == colorId);
         }
 
         if (int.TryParse(filterDifficulty, out var difficulty) && difficulty > 0)
@@ -344,6 +415,7 @@ else
         };
 
         filteredProjects.AddRange(query);
+        ApplyPaging();
     }
 
     private async Task CreateProjectAsync()
@@ -358,7 +430,9 @@ else
                 Name = form.Name,
                 Description = form.Description,
                 Difficulty = form.Difficulty,
-                PatternId = Guid.TryParse(form.PatternIdText, out var patternId) ? patternId : null
+                PatternId = Guid.TryParse(form.PatternIdText, out var patternId) ? patternId : null,
+                ColorId = Guid.TryParse(form.ColorIdText, out var colorId) ? colorId : null,
+                StartedAt = DateTime.UtcNow
             });
 
             form = new ProjectFormModel();
@@ -463,5 +537,6 @@ else
         [System.ComponentModel.DataAnnotations.Range(0, 6, ErrorMessage = "Choose a valid difficulty")]
         public int Difficulty { get; set; }
         public string PatternIdText { get; set; } = string.Empty;
+        public string ColorIdText { get; set; } = string.Empty;
     }
 }

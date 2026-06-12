@@ -108,6 +108,32 @@ else
             </div>
 
             <div class="col-lg-8">
+                @if (sizeVariants.Count > 0)
+                {
+                    <section class="project-panel mb-3">
+                        <h2>Sizes Available</h2>
+                        <ul class="project-supply-list">
+                            @foreach (var variant in sizeVariants)
+                            {
+                                <li>
+                                    <div>
+                                        <strong>@DisplayValue(variant.Size)</strong>
+                                        <span>@variant.Quantity owned</span>
+                                    </div>
+                                    @if (variant.Id != tool.Id)
+                                    {
+                                        <a class="btn btn-outline-primary btn-sm" href="/modules/knitting/inventory/tool/@variant.Id">Open</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Current</span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    </section>
+                }
+
                 <section class="project-panel mb-3">
                     <h2>Details</h2>
                     <div class="inventory-detail-grid">
@@ -202,6 +228,7 @@ else
     [Parameter] public Guid ToolId { get; set; }
 
     private ModuleToolInventoryItemDto? tool;
+    private readonly List<ModuleToolInventoryItemDto> sizeVariants = [];
     private Guid? primaryAssetId;
     private readonly List<AssetRecordDto> itemAssets = [];
     private readonly List<ModuleProjectDto> activeLinkedProjects = [];
@@ -240,6 +267,14 @@ else
             {
                 return;
             }
+
+            sizeVariants.Clear();
+            var allTools = await ApiClient.GetModuleToolsAsync(ModuleKey);
+            sizeVariants.AddRange(allTools
+                .Where(entry =>
+                    string.Equals(entry.BrandName, tool.BrandName, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(entry.TypeName, tool.TypeName, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(entry => entry.Size, StringComparer.OrdinalIgnoreCase));
 
             primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, tool.Id);
             await LoadAssetsAsync();

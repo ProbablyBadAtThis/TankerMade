@@ -4,6 +4,7 @@
 @using TankerMade.Contracts.DTOs.ModuleInventory
 @using TankerMade.Contracts.DTOs.ModulePatterns
 @using TankerMade.Contracts.DTOs.ModuleProjects
+@using TankerMade.Contracts.DTOs.Reference
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
@@ -60,6 +61,10 @@ else
                     @if (!string.IsNullOrWhiteSpace(project.ColorName))
                     {
                         <span>@project.ColorName</span>
+                    }
+                    @if (project.StartedAt.HasValue)
+                    {
+                        <span>Started @project.StartedAt.Value.ToLocalTime().ToString("MMM d, yyyy")</span>
                     }
                     @if (!string.IsNullOrWhiteSpace(project.PatternName))
                     {
@@ -124,6 +129,26 @@ else
                         }
                     </label>
                     <label>
+                        <span>Theme</span>
+                        <InputSelect class="form-control" @bind-Value="form.ThemeIdText">
+                            <option value="">None</option>
+                            @foreach (var theme in themes)
+                            {
+                                <option value="@theme.Id">@theme.Name</option>
+                            }
+                        </InputSelect>
+                    </label>
+                    <label>
+                        <span>Main color</span>
+                        <InputSelect class="form-control" @bind-Value="form.ColorIdText">
+                            <option value="">None</option>
+                            @foreach (var color in colors)
+                            {
+                                <option value="@color.Id">@color.Name</option>
+                            }
+                        </InputSelect>
+                    </label>
+                    <label>
                         <span>Difficulty</span>
                         <InputSelect class="form-control" @bind-Value="form.Difficulty">
                             <option value="0">Unspecified</option>
@@ -134,6 +159,10 @@ else
                             <option value="5">Advanced</option>
                             <option value="6">Advanced+</option>
                         </InputSelect>
+                    </label>
+                    <label>
+                        <span>Date started</span>
+                        <InputDate class="form-control" @bind-Value="form.StartedAtDate" />
                     </label>
                 </div>
                 <div class="auth-actions">
@@ -386,6 +415,8 @@ else
     private ModulePatternPieceDto? selectedPiece;
     private Guid? selectedPieceId;
     private readonly List<ModulePatternDto> patterns = [];
+    private readonly List<CoreReferenceItemDto> themes = [];
+    private readonly List<CoreReferenceItemDto> colors = [];
     private readonly List<InventoryOption> inventoryOptions = [];
     private readonly List<AssetRecordDto> projectAssets = [];
     private ProjectFormModel form = new();
@@ -495,6 +526,10 @@ else
 
             patterns.Clear();
             patterns.AddRange(await ApiClient.GetModulePatternsAsync(ModuleKey));
+            themes.Clear();
+            themes.AddRange(await ApiClient.GetCoreReferenceItemsAsync("themes"));
+            colors.Clear();
+            colors.AddRange(await ApiClient.GetCoreReferenceItemsAsync("colors"));
             project = await ApiClient.GetModuleProjectAsync(ModuleKey, ProjectId);
             projectAssetId = null;
             if (project != null)
@@ -1205,16 +1240,23 @@ else
         [System.ComponentModel.DataAnnotations.StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
         public string Description { get; set; } = string.Empty;
         public string PatternIdText { get; set; } = string.Empty;
+        public string ThemeIdText { get; set; } = string.Empty;
+        public string ColorIdText { get; set; } = string.Empty;
 
         [System.ComponentModel.DataAnnotations.Range(0, 6, ErrorMessage = "Choose a valid difficulty")]
         public int Difficulty { get; set; }
+
+        public DateTime? StartedAtDate { get; set; }
 
         public void Load(ModuleProjectDto project)
         {
             Name = project.Name;
             Description = project.Description;
             PatternIdText = project.PatternId?.ToString() ?? string.Empty;
+            ThemeIdText = project.ThemeId?.ToString() ?? string.Empty;
+            ColorIdText = project.ColorId?.ToString() ?? string.Empty;
             Difficulty = project.Difficulty;
+            StartedAtDate = project.StartedAt?.ToLocalTime().Date;
         }
 
         public UpdateModuleProjectRequest ToRequest(Guid projectId)
@@ -1226,7 +1268,12 @@ else
                 Description = Description,
                 PatternId = Guid.TryParse(PatternIdText, out var patternId) ? patternId : null,
                 ClearPatternId = string.IsNullOrWhiteSpace(PatternIdText),
-                Difficulty = Difficulty
+                ThemeId = Guid.TryParse(ThemeIdText, out var themeId) ? themeId : null,
+                ColorId = Guid.TryParse(ColorIdText, out var colorId) ? colorId : null,
+                Difficulty = Difficulty,
+                StartedAt = StartedAtDate.HasValue
+                    ? DateTime.SpecifyKind(StartedAtDate.Value, DateTimeKind.Utc)
+                    : null
             };
         }
     }

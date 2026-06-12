@@ -14,6 +14,7 @@ public class KnittingProject
     public bool IsArchived { get; set; }
     public DateTime? ArchivedAt { get; set; }
     public Guid UserId { get; set; }
+    public DateTime? StartedAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

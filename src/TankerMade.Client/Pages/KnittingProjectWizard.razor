@@ -255,6 +255,26 @@ else
                         <span>Project title</span>
                         <InputText class="form-control" @bind-Value="projectTitle" />
                     </label>
+                    <label>
+                        <span>Theme</span>
+                        <select class="form-control" @bind="projectThemeIdText">
+                            <option value="">None</option>
+                            @foreach (var theme in themes)
+                            {
+                                <option value="@theme.Id">@theme.Name</option>
+                            }
+                        </select>
+                    </label>
+                    <label>
+                        <span>Main color</span>
+                        <select class="form-control" @bind="projectColorIdText">
+                            <option value="">None</option>
+                            @foreach (var color in colors)
+                            {
+                                <option value="@color.Id">@color.Name</option>
+                            }
+                        </select>
+                    </label>
                 </div>
                 <div class="mt-3">
                     <span>Difficulty</span>
@@ -264,6 +284,19 @@ else
             else
             {
                 <h2>Ready to Start</h2>
+                <div class="form-grid mb-3">
+                    <label class="archive-toggle">
+                        <input type="checkbox" @bind="useAutoStartDate" />
+                        Use today's date as start date
+                    </label>
+                    @if (!useAutoStartDate)
+                    {
+                        <label>
+                            <span>Date started</span>
+                            <InputDate class="form-control" @bind-Value="manualStartDate" />
+                        </label>
+                    }
+                </div>
                 <article class="project-card project-card-with-image">
                     @if (uploadedAssetId.HasValue)
                     {
@@ -279,6 +312,9 @@ else
                             <span class="@KnittingUi.DifficultyCssClass(projectDifficulty)">@KnittingUi.DifficultyLabel(projectDifficulty)</span>
                         </p>
                         <p class="mb-1"><strong>Pattern:</strong> @SummaryPatternName</p>
+                        <p class="mb-1"><strong>Theme:</strong> @SummaryThemeName</p>
+                        <p class="mb-1"><strong>Color:</strong> @SummaryColorName</p>
+                        <p class="mb-1"><strong>Start date:</strong> @SummaryStartDate</p>
                         <p class="mb-1"><strong>Supplies:</strong> @pendingSupplies.Count(s => s.Include) selected</p>
                         @if (createNewPattern)
                         {
@@ -286,6 +322,21 @@ else
                         }
                     </div>
                 </article>
+                @if (pendingSupplies.Count > 0)
+                {
+                    <ul class="project-supply-list mt-3">
+                        @foreach (var supply in pendingSupplies)
+                        {
+                            <li>
+                                <label>
+                                    <input type="checkbox" @bind="supply.Include" />
+                                    <strong>@supply.Label</strong>
+                                    <span class="text-muted">(@supply.InventoryItemType)</span>
+                                </label>
+                            </li>
+                        }
+                    </ul>
+                }
                 <button class="btn btn-primary mt-3" type="button" disabled="@busy" @onclick="FinalizeProjectAsync">Start Project</button>
             }
 
@@ -325,6 +376,7 @@ else
     private readonly List<ModulePatternDto> allPatterns = [];
     private readonly List<ModulePatternDto> filteredPatterns = [];
     private readonly List<CoreReferenceItemDto> themes = [];
+    private readonly List<CoreReferenceItemDto> colors = [];
     private readonly List<DraftPiece> draftPieces = [];
     private readonly List<PendingSupply> pendingSupplies = [];
     private readonly List<InventoryOption> supplyInventoryOptions = [];
@@ -354,7 +406,11 @@ else
     private string selectedSupplyInventoryIdText = string.Empty;
     private decimal? supplyQuantity;
     private string projectTitle = string.Empty;
+    private string projectThemeIdText = string.Empty;
+    private string projectColorIdText = string.Empty;
     private int projectDifficulty = 1;
+    private bool useAutoStartDate = true;
+    private DateTime? manualStartDate = DateTime.Today;
     private Guid? uploadedAssetId;
 
     private IEnumerable<(ProjectWizardStep Step, string Label)> VisibleSteps
@@ -385,6 +441,19 @@ else
             ? (string.IsNullOrWhiteSpace(newPatternName) ? "New pattern" : newPatternName)
             : filteredPatterns.FirstOrDefault(pattern => pattern.Id.ToString() == selectedPatternIdText)?.Name ?? "Selected pattern";
 
+    private string SummaryThemeName =>
+        themes.FirstOrDefault(theme => theme.Id.ToString() == projectThemeIdText)?.Name
+        ?? (createNewPattern
+            ? themes.FirstOrDefault(theme => theme.Id.ToString() == newPatternThemeIdText)?.Name
+            : filteredPatterns.FirstOrDefault(pattern => pattern.Id.ToString() == selectedPatternIdText)?.ThemeName)
+        ?? "None";
+
+    private string SummaryColorName =>
+        colors.FirstOrDefault(color => color.Id.ToString() == projectColorIdText)?.Name ?? "None";
+
+    private string SummaryStartDate =>
+        (useAutoStartDate ? DateTime.Today : manualStartDate ?? DateTime.Today).ToString("MMM d, yyyy");
+
     protected override async Task OnInitializedAsync()
     {
         await AuthSession.InitializeAsync();
@@ -402,6 +471,8 @@ else
     {
         themes.Clear();
         themes.AddRange(await ApiClient.GetCoreReferenceItemsAsync("themes"));
+        colors.Clear();
+        colors.AddRange(await ApiClient.GetCoreReferenceItemsAsync("colors"));
     }
 
     private async Task LoadPatternsAsync()
@@ -760,12 +831,24 @@ else
                 themeId = selectedPattern?.ThemeId;
             }
 
+            if (Guid.TryParse(projectThemeIdText, out var parsedProjectThemeId))
+            {
+                themeId = parsedProjectThemeId;
+            }
+
+            Guid? colorId = Guid.TryParse(projectColorIdText, out var parsedColorId) ? parsedColorId : null;
+            var startedAt = useAutoStartDate
+                ? DateTime.UtcNow
+                : DateTime.SpecifyKind((manualStartDate ?? DateTime.Today).Date, DateTimeKind.Utc);
+
             var project = await ApiClient.CreateModuleProjectAsync(ModuleKey, new CreateModuleProjectRequest
             {
                 Name = projectTitle.Trim(),
                 PatternId = patternId,
                 ThemeId = themeId,
-                Difficulty = projectDifficulty
+                ColorId = colorId,
+                Difficulty = projectDifficulty,
+                StartedAt = startedAt
             });
 
             foreach (var supply in pendingSupplies.Where(item => item.Include))

@@ -11,4 +11,5 @@ public class UpdateKnittingProjectDto
     public Guid? ColorId { get; set; }
     public int? Difficulty { get; set; }
     public int? Progress { get; set; }
+    public DateTime? StartedAt { get; set; }
 }

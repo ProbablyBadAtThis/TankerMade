@@ -10,8 +10,9 @@ Last updated: 2026-06-11
 - Phase C is complete.
 - Phase D is complete: module-owned inventory, reference data, project/inventory linking, kit/grouping backend, and kit-to-project backend flows are verified.
 - Latest verified slice: Neutral module capability/API cleanup verified locally by user.
-- Latest pushed commit: `1035689` on `working/knitting-settings-ui-pass` (Phase K6 operational slice).
-- Latest unverified slice: Knitting parity follow-up (kit/inventory card thumbnails, yarn remaining edit APIs, main color on patterns/projects, glossary page, live search, client pagination on patterns/kits) — migration `PhaseK7_KnittingColorAndYarnRemaining`; pending real-browser verification pass.
+- Latest pushed commit: `962797d` on `working/knitting-settings-ui-pass` (Knitting parity follow-up: glossary, live search, thumbnails, wizards, color/yarn APIs, Phase K7 migration).
+- Working tree (uncommitted): Phase K8 parity pass — project `StartedAt`, color pickers/filters, wizard finalize/date started, projects/inventory pagination + list filters, yarn lot detail route, tool size variants, notion bulk-split, inventory form layout fix.
+- Knitting PPT parity (see `docs/project/knitting-ui-parity-checklist.md`): **functional pass complete**; crafter answers landed in `#ui-discussion` (2026-06-11) — see `docs/product/ux-reference.md` § Crafter decisions and `Scratch/ui-discussion/2026-06-11-crafter-answers.md`.
 
 ## Completed Recently
 
@@ -65,21 +66,27 @@ Last updated: 2026-06-11
   - Project timers now use compact tracked-time display and a D/H/M/S timer edit input model.
   - Kit detail editing now runs in a dedicated modal to avoid create/edit form overlap.
   - Pattern detail half-width layout was tightened for piece controls and workspace readability.
-- Knitting UI parity phases A–F are implemented in the current working tree (see `docs/project/knitting-ui-parity-checklist.md`):
-  - **A:** Dashboard recent-project hero, list thumbnails/filters/sorts on projects and patterns, kit search/sort.
-  - **B:** Stitch-driven progress, per-piece sidebar stats, difficulty badges, scrollable step panel, compact row ranges.
-  - **C:** Project, pattern, and kit creation wizards with theme/source pickers.
-  - **D:** Yarn/tool/notion detail pages, fiber-tag inventory filters, by-id ApiClient methods.
-  - **E:** Reference settings (themes/colors/sources/brands/fiber tags/terms); theme/source on pattern flows.
-  - **F:** Kit archive/reopen and child-project workspace aggregation.
-  - Shared client infrastructure: `KnittingUi`, `KnittingRecentActivity`, `KnittingCardAssetCache`, `AssetThumbnailImage`, `ReferenceDataController`.
+- Knitting UI parity phases A–F plus follow-up passes are on `working/knitting-settings-ui-pass` (see `docs/project/knitting-ui-parity-checklist.md`):
+  - **A:** Home hero, stash deep links, glossary section, archived shortcut; list thumbnails/filters/live search on projects, patterns, kits, inventory.
+  - **B:** Stitch-driven progress, per-piece stats, timers, difficulty badges, project/pattern header thumbnails.
+  - **C:** Project, pattern, and kit wizards (first-pass; deck fidelity still partial).
+  - **D:** Yarn/tool/notion detail pages, fiber filters, yarn remaining + lot edit APIs, sectioned inventory add forms.
+  - **E:** Reference settings; standalone `KnittingGlossary.razor`; theme/source/color on pattern flows.
+  - **F:** Kit thumbnail card grid, archive/reopen, child-project workspace aggregation.
+  - Shared client: `KnittingUi`, `KnittingRecentActivity`, `KnittingCardAssetCache`, `AssetThumbnailImage`, `DifficultyPicker`, `ReferenceDataController`.
+- User verification (real browser): home, projects, patterns, project/pattern detail pass; inventory add-form layout was unusable until `crafting-panel` → `project-panel` fix (in working tree).
+- Crafter UI answers in `#ui-discussion` (TankerMunk, 2026-06-11): cozy notebook + warm dark default; big photo project cards; single Inventory on home; sticky timer/progress; per-row checkboxes; inline pattern edits; one-form yarn add; settings accordion; autocomplete on reference add-new; reliability/speed are dealbreakers.
 
 ## Next Work
 
-- Run the parity verification harness in `docs/project/knitting-ui-parity-checklist.md` (full UI smoke pass).
-- Fix regressions found during verification; then visual lock-in (card grids, header images, kit list layout).
-- Close remaining deck gaps: main color, wizard finalize fidelity, inventory lot/weight UX, pagination.
-- After Knitting sign-off, propagate shared UI patterns to Crochet, Embroidery, Quilting, Sewing, and 3D Printing.
+1. **Visual lock-in pass** (crafter-directed): dark+warm theme default, sticky workspace chrome (timer + %), settings accordion, home → single Inventory + “last worked on” hero.
+2. **Deck fidelity gap:** per-row checkboxes for row ranges (`5–7` → one checkbox per row) — crafter must-keep.
+3. **Reference UX:** autocomplete on theme/brand/type add-new to prevent duplicates.
+4. **Commit/push** parity pass + doc updates after smoke test (`dotnet build TankerMade.sln`).
+5. **Deprioritize** modal-first pattern edits and compact card density (crafter prefers large photo cards and inline pattern editing).
+6. After Knitting sign-off, propagate shared patterns to other live modules.
+
+Parity field-check and harness: `docs/project/knitting-ui-parity-checklist.md`.
 
 ## Phase G Direction
 
@@ -114,8 +121,9 @@ The user reported:
 
 ## Verification Needed Next
 
-Phases A–F are code-complete in the working tree; parity sign-off requires a manual UI pass.
+Functional parity sign-off (real browser, not IDE embedded browser):
 
 1. `dotnet build TankerMade.sln`
-2. Run server + client locally; execute the verification harness in `docs/project/knitting-ui-parity-checklist.md`
-3. Report any failures for fix-up before commit/push
+2. Run server + client; execute harness in `docs/project/knitting-ui-parity-checklist.md`
+3. Re-test inventory add forms after sectioned layout fix (yarn/tools/notions tabs)
+4. Commit/push any remaining working-tree fixes after smoke pass

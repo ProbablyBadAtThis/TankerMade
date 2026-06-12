@@ -30,6 +30,7 @@ public class KnittingProjectService : IKnittingProjectService
             createDto.ColorId,
             createDto.Difficulty,
             createDto.Progress ?? 0);
+        project.StartedAt = createDto.StartedAt ?? DateTime.UtcNow;
 
         _context.KnittingProjects.Add(project);
         project.SetProgress(await CalculateStepCompletionPercentAsync(project));
@@ -115,6 +116,11 @@ public class KnittingProjectService : IKnittingProjectService
             updateDto.ColorId ?? project.ColorId,
             updateDto.Difficulty ?? project.Difficulty,
             updateDto.Progress ?? project.Progress);
+        if (updateDto.StartedAt.HasValue)
+        {
+            project.StartedAt = updateDto.StartedAt;
+        }
+
         project.SetProgress(await CalculateStepCompletionPercentAsync(project));
 
         await _context.SaveChangesAsync();
@@ -434,6 +440,7 @@ public class KnittingProjectService : IKnittingProjectService
                 : stitchProgress.ProgressPercent,
             IsArchived = project.IsArchived,
             ArchivedAt = project.ArchivedAt,
+            StartedAt = project.StartedAt,
             CompletedStepCount = stepProgress.Count,
             TotalStepCount = patternStepIds.Count,
             CompletedStitchCount = stitchProgress.CompletedStitches,

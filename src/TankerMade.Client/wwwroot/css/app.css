@@ -1247,6 +1247,10 @@ code {
         grid-template-columns: 1fr;
     }
 
+    .knitting-inventory-field-grid {
+        grid-template-columns: 1fr;
+    }
+
     .project-piece-selector {
         grid-template-columns: 1fr;
     }
@@ -1394,7 +1398,83 @@ code {
 }
 
 .knitting-inventory-form-panel {
+    align-items: stretch;
+    display: grid;
+    gap: 1.25rem;
+    justify-content: stretch;
     max-width: 100%;
+}
+
+.knitting-inventory-form-panel h2 {
+    font-size: 1.15rem;
+    margin: 0;
+}
+
+.knitting-inventory-form-section {
+    border-top: 1px solid #e9ecef;
+    display: grid;
+    gap: 0.85rem;
+    padding-top: 1rem;
+}
+
+.knitting-inventory-form-section:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.knitting-inventory-form-section h3 {
+    color: #536173;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.knitting-inventory-field-grid {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.knitting-inventory-field {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.knitting-inventory-field-full {
+    grid-column: 1 / -1;
+}
+
+.knitting-inventory-field .form-label {
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.knitting-inventory-inline-add {
+    display: grid;
+    gap: 0.35rem;
+    grid-column: 1 / -1;
+}
+
+.knitting-inventory-inline-add .input-group {
+    flex-wrap: nowrap;
+}
+
+.knitting-inventory-form-actions {
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 1rem;
+}
+
+.knitting-inventory-list-panel {
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    min-width: 0;
+    padding: 1rem;
 }
 
 .knitting-inventory-card-grid {

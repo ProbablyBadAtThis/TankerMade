@@ -38,7 +38,8 @@ public class KnittingProjectCapabilityHandler : IModuleProjectCapabilityHandler
             ThemeId = request.ThemeId,
             ColorId = request.ColorId,
             Difficulty = request.Difficulty,
-            Progress = request.Progress
+            Progress = request.Progress,
+            StartedAt = request.StartedAt
         }, userId));
 
     public async Task<ModuleProjectDto?> UpdateAsync(UpdateModuleProjectRequest request, Guid userId)
@@ -53,7 +54,8 @@ public class KnittingProjectCapabilityHandler : IModuleProjectCapabilityHandler
             ThemeId = request.ThemeId,
             ColorId = request.ColorId,
             Difficulty = request.Difficulty,
-            Progress = request.Progress
+            Progress = request.Progress,
+            StartedAt = request.StartedAt
         }, userId);
 
         return updated == null ? null : Map(updated);
@@ -153,6 +155,7 @@ public class KnittingProjectCapabilityHandler : IModuleProjectCapabilityHandler
             Progress = source.Progress,
             IsArchived = source.IsArchived,
             ArchivedAt = source.ArchivedAt,
+            StartedAt = source.StartedAt,
             CompletedStepCount = source.CompletedStepCount,
             TotalStepCount = source.TotalStepCount,
             CompletedStitchCount = source.CompletedStitchCount,

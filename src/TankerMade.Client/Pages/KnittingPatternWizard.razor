@@ -76,6 +76,16 @@ else
                         </select>
                     </label>
                     <label>
+                        <span>Main color</span>
+                        <select class="form-control" @bind="colorIdText">
+                            <option value="">None</option>
+                            @foreach (var color in colors)
+                            {
+                                <option value="@color.Id">@color.Name</option>
+                            }
+                        </select>
+                    </label>
+                    <label>
                         <span>Source</span>
                         <select class="form-control" @bind="sourceIdText">
                             <option value="">None</option>
@@ -236,6 +246,7 @@ else
     ];
 
     private readonly List<CoreReferenceItemDto> themes = [];
+    private readonly List<CoreReferenceItemDto> colors = [];
     private readonly List<CoreReferenceItemDto> sources = [];
     private readonly List<DraftStep> draftSteps = [];
     private readonly List<DraftSupply> draftSupplies = [];
@@ -249,6 +260,7 @@ else
     private string patternType = "Knit";
     private string patternForm = "2D";
     private string themeIdText = string.Empty;
+    private string colorIdText = string.Empty;
     private string sourceIdText = string.Empty;
     private string newThemeName = string.Empty;
     private string newSourceName = string.Empty;
@@ -274,6 +286,7 @@ else
 
         sessionReady = true;
         themes.AddRange(await ApiClient.GetCoreReferenceItemsAsync("themes"));
+        colors.AddRange(await ApiClient.GetCoreReferenceItemsAsync("colors"));
         sources.AddRange(await ApiClient.GetCoreReferenceItemsAsync("sources"));
     }
 
@@ -483,6 +496,7 @@ else
                 Form = patternForm.Trim(),
                 Difficulty = KnittingUi.DifficultyLabel(patternDifficulty),
                 ThemeId = Guid.TryParse(themeIdText, out var themeId) ? themeId : null,
+                ColorId = Guid.TryParse(colorIdText, out var colorId) ? colorId : null,
                 SourceId = Guid.TryParse(sourceIdText, out var sourceId) ? sourceId : null
             });
 

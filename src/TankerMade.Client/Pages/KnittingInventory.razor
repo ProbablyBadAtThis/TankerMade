@@ -57,6 +57,94 @@ else
                @bind:after="ApplyInventorySearch" />
     </label>
 
+    <div class="list-toolbar mb-3">
+        <label>
+            <span>Sort</span>
+            <select class="form-control" @bind="inventorySortBy" @bind:after="ApplyInventorySearch">
+                @if (activeTab == "yarn")
+                {
+                    <option value="brand">Brand</option>
+                    <option value="color">Color</option>
+                    <option value="weight">Weight</option>
+                    <option value="skeins">Skeins</option>
+                }
+                else if (activeTab == "tools")
+                {
+                    <option value="brand">Brand</option>
+                    <option value="type">Type</option>
+                    <option value="size">Size</option>
+                    <option value="quantity">Quantity</option>
+                }
+                else
+                {
+                    <option value="brand">Brand</option>
+                    <option value="type">Type</option>
+                    <option value="size">Size</option>
+                    <option value="color">Color</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Brand</span>
+            <select class="form-control" @bind="filterBrand" @bind:after="ApplyInventorySearch">
+                <option value="">All brands</option>
+                @foreach (var brand in brandFilterOptions)
+                {
+                    <option value="@brand">@brand</option>
+                }
+            </select>
+        </label>
+        @if (activeTab == "yarn")
+        {
+            <label>
+                <span>Weight</span>
+                <select class="form-control" @bind="filterWeight" @bind:after="ApplyInventorySearch">
+                    <option value="">All weights</option>
+                    @foreach (var weight in weightFilterOptions)
+                    {
+                        <option value="@weight">@weight</option>
+                    }
+                </select>
+            </label>
+        }
+        @if (activeTab == "tools" || activeTab == "notions")
+        {
+            <label>
+                <span>Type</span>
+                <select class="form-control" @bind="filterType" @bind:after="ApplyInventorySearch">
+                    <option value="">All types</option>
+                    @foreach (var type in typeFilterOptions)
+                    {
+                        <option value="@type">@type</option>
+                    }
+                </select>
+            </label>
+        }
+        @if (activeTab == "notions")
+        {
+            <label>
+                <span>Size</span>
+                <select class="form-control" @bind="filterSize" @bind:after="ApplyInventorySearch">
+                    <option value="">All sizes</option>
+                    @foreach (var size in sizeFilterOptions)
+                    {
+                        <option value="@size">@size</option>
+                    }
+                </select>
+            </label>
+            <label>
+                <span>Color</span>
+                <select class="form-control" @bind="filterColor" @bind:after="ApplyInventorySearch">
+                    <option value="">All colors</option>
+                    @foreach (var color in colorFilterOptions)
+                    {
+                        <option value="@color">@color</option>
+                    }
+                </select>
+            </label>
+        }
+    </div>
+
     @if (activeTab == "yarn")
     {
         <div class="d-flex gap-2 flex-wrap mb-3">
@@ -66,66 +154,110 @@ else
             <button class="@FiberFilterButtonClass("Blended")" disabled="@busy" @onclick='() => SetFiberFilterAsync("Blended")'>Blended</button>
         </div>
 
-        <div class="row g-3 knitting-inventory-layout">
-            <div class="col-12 col-xl-4">
-                <div class="crafting-panel knitting-inventory-form-panel">
+        <div class="row g-4 knitting-inventory-layout">
+            <div class="col-12 col-lg-5 col-xl-4">
+                <section class="project-panel knitting-inventory-form-panel">
                     <h2>Add Yarn</h2>
-                    <label class="form-label">Brand</label>
-                    <input class="form-control mb-2" @bind="yarnForm.BrandName" />
-                    <label class="form-label">Color name</label>
-                    <input class="form-control mb-2" @bind="yarnForm.ColorName" />
-                    <label class="form-label">Main color</label>
-                    <input class="form-control mb-2" @bind="yarnForm.MainColor" />
-                    <label class="form-label">Weight</label>
-                    <select class="form-select mb-2" @bind="yarnForm.WeightName">
-                        <option value="">Select weight</option>
-                        @foreach (var option in yarnWeightOptions)
-                        {
-                            <option value="@option">@option</option>
-                        }
-                    </select>
-                    <div class="input-group mb-2">
-                        <input class="form-control" placeholder="Add new weight" @bind="newYarnWeightName" />
-                        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddYarnWeightOptionAsync">Add</button>
+                    <p class="muted-copy mb-0">Merge adds to an existing brand + color match.</p>
+
+                    <div class="knitting-inventory-form-section">
+                        <h3>Basics</h3>
+                        <div class="knitting-inventory-field-grid">
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Brand</span>
+                                <input class="form-control" @bind="yarnForm.BrandName" />
+                            </label>
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Color name</span>
+                                <input class="form-control" @bind="yarnForm.ColorName" />
+                            </label>
+                            <label class="knitting-inventory-field knitting-inventory-field-full">
+                                <span class="form-label">Main color</span>
+                                <input class="form-control" @bind="yarnForm.MainColor" />
+                            </label>
+                        </div>
                     </div>
-                    <label class="form-label">Fiber tag</label>
-                    <select class="form-select mb-2" @bind="yarnForm.FiberTag">
-                        <option value="">Select fiber tag</option>
-                        @foreach (var option in fiberTagOptions)
-                        {
-                            <option value="@option">@option</option>
-                        }
-                    </select>
-                    <div class="input-group mb-2">
-                        <input class="form-control" placeholder="Add new fiber tag" @bind="newFiberTagName" />
-                        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddFiberTagOptionAsync">Add</button>
+
+                    <div class="knitting-inventory-form-section">
+                        <h3>Yarn details</h3>
+                        <div class="knitting-inventory-field-grid">
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Weight</span>
+                                <select class="form-select" @bind="yarnForm.WeightName">
+                                    <option value="">Select weight</option>
+                                    @foreach (var option in yarnWeightOptions)
+                                    {
+                                        <option value="@option">@option</option>
+                                    }
+                                </select>
+                            </label>
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Fiber tag</span>
+                                <select class="form-select" @bind="yarnForm.FiberTag">
+                                    <option value="">Select fiber tag</option>
+                                    @foreach (var option in fiberTagOptions)
+                                    {
+                                        <option value="@option">@option</option>
+                                    }
+                                </select>
+                            </label>
+                            <div class="knitting-inventory-inline-add">
+                                <span class="form-label">New weight option</span>
+                                <div class="input-group">
+                                    <input class="form-control" placeholder="Add new weight" @bind="newYarnWeightName" />
+                                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddYarnWeightOptionAsync">Add</button>
+                                </div>
+                            </div>
+                            <div class="knitting-inventory-inline-add">
+                                <span class="form-label">New fiber tag</span>
+                                <div class="input-group">
+                                    <input class="form-control" placeholder="Add new fiber tag" @bind="newFiberTagName" />
+                                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddFiberTagOptionAsync">Add</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <label class="form-label">Skeins</label>
-                    <input class="form-control mb-2" type="number" step="0.01" @bind="yarnForm.Skeins" />
-                    <label class="form-label">Lot number</label>
-                    <input class="form-control mb-2" @bind="yarnForm.LotNumber" />
-                    <label class="form-label">Source</label>
-                    <input class="form-control mb-2" @bind="yarnForm.SourceName" />
-                    <label class="form-label">Price</label>
-                    <input class="form-control mb-2" type="number" step="0.01" @bind="yarnForm.Price" />
-                    <label class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" @bind="yarnForm.IsSalePrice" />
-                        <span class="form-check-label">Sale price</span>
-                    </label>
-                    <div class="auth-actions">
+
+                    <div class="knitting-inventory-form-section">
+                        <h3>Purchase</h3>
+                        <div class="knitting-inventory-field-grid">
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Skeins</span>
+                                <input class="form-control" type="number" step="0.01" @bind="yarnForm.Skeins" />
+                            </label>
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Lot number</span>
+                                <input class="form-control" @bind="yarnForm.LotNumber" />
+                            </label>
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Source</span>
+                                <input class="form-control" @bind="yarnForm.SourceName" />
+                            </label>
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Price</span>
+                                <input class="form-control" type="number" step="0.01" @bind="yarnForm.Price" />
+                            </label>
+                            <label class="knitting-inventory-field knitting-inventory-field-full form-check">
+                                <input class="form-check-input" type="checkbox" @bind="yarnForm.IsSalePrice" />
+                                <span class="form-check-label">Sale price</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="knitting-inventory-form-actions">
                         <button class="btn btn-primary" disabled="@busy" @onclick="SaveYarnAsync">Add / Merge</button>
                         <a class="btn btn-outline-secondary" href="/modules/knitting/inventory?tab=yarn">Finish</a>
                     </div>
-                </div>
+                </section>
             </div>
-            <div class="col-12 col-xl-8">
-                <div class="inventory-list-panel @(listBusy ? "is-refreshing" : string.Empty)">
+            <div class="col-12 col-lg-7 col-xl-8">
+                <div class="knitting-inventory-list-panel inventory-list-panel @(listBusy ? "is-refreshing" : string.Empty)">
                 @if (listBusy)
                 {
                     <p class="inventory-list-status muted-copy">Updating list…</p>
                 }
                 <div class="pattern-card-grid knitting-inventory-card-grid">
-                    @foreach (var yarn in yarns)
+                    @foreach (var yarn in pagedYarns)
                     {
                         var assetId = yarnAssetIds.GetValueOrDefault(yarn.Id);
                         <div class="pattern-card pattern-card-with-image @(selectedItemId == yarn.Id ? "printing-material-card-active" : string.Empty)">
@@ -148,56 +280,93 @@ else
                         </div>
                     }
                 </div>
+                @if (yarns.Count > inventoryPageSize)
+                {
+                    <div class="auth-actions mt-3">
+                        <button class="btn btn-outline-secondary btn-sm" disabled="@(inventoryPage <= 1 || busy)" @onclick="PreviousInventoryPage">Previous</button>
+                        <span class="muted-copy align-self-center">Page @inventoryPage of @InventoryPageCount</span>
+                        <button class="btn btn-outline-secondary btn-sm" disabled="@(inventoryPage >= InventoryPageCount || busy)" @onclick="NextInventoryPage">Next</button>
+                    </div>
+                }
                 </div>
             </div>
         </div>
     }
     else if (activeTab == "tools")
     {
-        <div class="row g-3 knitting-inventory-layout">
-            <div class="col-12 col-xl-4">
-                <div class="crafting-panel knitting-inventory-form-panel">
+        <div class="row g-4 knitting-inventory-layout">
+            <div class="col-12 col-lg-5 col-xl-4">
+                <section class="project-panel knitting-inventory-form-panel">
                     <h2>Add Tool</h2>
-                    <label class="form-label">Brand</label>
-                    <input class="form-control mb-2" @bind="toolForm.BrandName" />
-                    <label class="form-label">Type</label>
-                    <select class="form-select mb-2" @bind="toolForm.TypeName">
-                        <option value="">Select type</option>
-                        @foreach (var option in toolTypeOptions)
-                        {
-                            <option value="@option">@option</option>
-                        }
-                    </select>
-                    <div class="input-group mb-2">
-                        <input class="form-control" placeholder="Add new tool type" @bind="newToolTypeName" />
-                        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddToolTypeOptionAsync">Add</button>
+                    <p class="muted-copy mb-0">Merge adds to an existing brand + type match.</p>
+
+                    <div class="knitting-inventory-form-section">
+                        <h3>Basics</h3>
+                        <div class="knitting-inventory-field-grid">
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Brand</span>
+                                <input class="form-control" @bind="toolForm.BrandName" />
+                            </label>
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Size</span>
+                                <input class="form-control" @bind="toolForm.Size" />
+                            </label>
+                            <label class="knitting-inventory-field knitting-inventory-field-full">
+                                <span class="form-label">Type</span>
+                                <select class="form-select" @bind="toolForm.TypeName">
+                                    <option value="">Select type</option>
+                                    @foreach (var option in toolTypeOptions)
+                                    {
+                                        <option value="@option">@option</option>
+                                    }
+                                </select>
+                            </label>
+                            <div class="knitting-inventory-inline-add">
+                                <span class="form-label">New tool type</span>
+                                <div class="input-group">
+                                    <input class="form-control" placeholder="Add new tool type" @bind="newToolTypeName" />
+                                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddToolTypeOptionAsync">Add</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <label class="form-label">Size</label>
-                    <input class="form-control mb-2" @bind="toolForm.Size" />
-                    <label class="form-label">Quantity</label>
-                    <input class="form-control mb-2" type="number" @bind="toolForm.Quantity" />
-                    <label class="form-label">Source</label>
-                    <input class="form-control mb-2" @bind="toolForm.SourceName" />
-                    <label class="form-label">Price</label>
-                    <input class="form-control mb-2" type="number" step="0.01" @bind="toolForm.Price" />
-                    <label class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" @bind="toolForm.IsSalePrice" />
-                        <span class="form-check-label">Sale price</span>
-                    </label>
-                    <div class="auth-actions">
+
+                    <div class="knitting-inventory-form-section">
+                        <h3>Purchase</h3>
+                        <div class="knitting-inventory-field-grid">
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Quantity</span>
+                                <input class="form-control" type="number" @bind="toolForm.Quantity" />
+                            </label>
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Price</span>
+                                <input class="form-control" type="number" step="0.01" @bind="toolForm.Price" />
+                            </label>
+                            <label class="knitting-inventory-field knitting-inventory-field-full">
+                                <span class="form-label">Source</span>
+                                <input class="form-control" @bind="toolForm.SourceName" />
+                            </label>
+                            <label class="knitting-inventory-field knitting-inventory-field-full form-check">
+                                <input class="form-check-input" type="checkbox" @bind="toolForm.IsSalePrice" />
+                                <span class="form-check-label">Sale price</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="knitting-inventory-form-actions">
                         <button class="btn btn-primary" disabled="@busy" @onclick="SaveToolAsync">Add / Merge</button>
                         <a class="btn btn-outline-secondary" href="/modules/knitting/inventory?tab=tools">Finish</a>
                     </div>
-                </div>
+                </section>
             </div>
-            <div class="col-12 col-xl-8">
-                <div class="inventory-list-panel @(listBusy ? "is-refreshing" : string.Empty)">
+            <div class="col-12 col-lg-7 col-xl-8">
+                <div class="knitting-inventory-list-panel inventory-list-panel @(listBusy ? "is-refreshing" : string.Empty)">
                 @if (listBusy)
                 {
                     <p class="inventory-list-status muted-copy">Updating list…</p>
                 }
                 <div class="pattern-card-grid knitting-inventory-card-grid">
-                    @foreach (var tool in tools)
+                    @foreach (var tool in pagedTools)
                     {
                         var assetId = toolAssetIds.GetValueOrDefault(tool.Id);
                         <div class="pattern-card pattern-card-with-image @(selectedItemId == tool.Id ? "printing-material-card-active" : string.Empty)">
@@ -219,58 +388,123 @@ else
                         </div>
                     }
                 </div>
+                @if (tools.Count > inventoryPageSize)
+                {
+                    <div class="auth-actions mt-3">
+                        <button class="btn btn-outline-secondary btn-sm" disabled="@(inventoryPage <= 1 || busy)" @onclick="PreviousInventoryPage">Previous</button>
+                        <span class="muted-copy align-self-center">Page @inventoryPage of @InventoryPageCount</span>
+                        <button class="btn btn-outline-secondary btn-sm" disabled="@(inventoryPage >= InventoryPageCount || busy)" @onclick="NextInventoryPage">Next</button>
+                    </div>
+                }
                 </div>
             </div>
         </div>
     }
     else
     {
-        <div class="row g-3 knitting-inventory-layout">
-            <div class="col-12 col-xl-4">
-                <div class="crafting-panel knitting-inventory-form-panel">
+        <div class="row g-4 knitting-inventory-layout">
+            <div class="col-12 col-lg-5 col-xl-4">
+                <section class="project-panel knitting-inventory-form-panel">
                     <h2>Add Notion</h2>
-                    <label class="form-label">Brand</label>
-                    <input class="form-control mb-2" @bind="notionForm.BrandName" />
-                    <label class="form-label">Type</label>
-                    <select class="form-select mb-2" @bind="notionForm.TypeName">
-                        <option value="">Select type</option>
-                        @foreach (var option in notionTypeOptions)
-                        {
-                            <option value="@option">@option</option>
-                        }
-                    </select>
-                    <div class="input-group mb-2">
-                        <input class="form-control" placeholder="Add new notion type" @bind="newNotionTypeName" />
-                        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddNotionTypeOptionAsync">Add</button>
+                    <p class="muted-copy mb-0">Merge adds to an existing brand + type match.</p>
+
+                    <div class="knitting-inventory-form-section">
+                        <h3>Basics</h3>
+                        <div class="knitting-inventory-field-grid">
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Brand</span>
+                                <input class="form-control" @bind="notionForm.BrandName" />
+                            </label>
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Color</span>
+                                <input class="form-control" @bind="notionForm.ColorName" />
+                            </label>
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Size</span>
+                                <input class="form-control" @bind="notionForm.Size" />
+                            </label>
+                            <label class="knitting-inventory-field knitting-inventory-field-full">
+                                <span class="form-label">Type</span>
+                                <select class="form-select" @bind="notionForm.TypeName">
+                                    <option value="">Select type</option>
+                                    @foreach (var option in notionTypeOptions)
+                                    {
+                                        <option value="@option">@option</option>
+                                    }
+                                </select>
+                            </label>
+                            <div class="knitting-inventory-inline-add">
+                                <span class="form-label">New notion type</span>
+                                <div class="input-group">
+                                    <input class="form-control" placeholder="Add new notion type" @bind="newNotionTypeName" />
+                                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddNotionTypeOptionAsync">Add</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <label class="form-label">Size</label>
-                    <input class="form-control mb-2" @bind="notionForm.Size" />
-                    <label class="form-label">Color</label>
-                    <input class="form-control mb-2" @bind="notionForm.ColorName" />
-                    <label class="form-label">Quantity</label>
-                    <input class="form-control mb-2" type="number" @bind="notionForm.Quantity" />
-                    <label class="form-label">Source</label>
-                    <input class="form-control mb-2" @bind="notionForm.SourceName" />
-                    <label class="form-label">Price</label>
-                    <input class="form-control mb-2" type="number" step="0.01" @bind="notionForm.Price" />
-                    <label class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" @bind="notionForm.IsSalePrice" />
-                        <span class="form-check-label">Sale price</span>
-                    </label>
-                    <div class="auth-actions">
+
+                    <div class="knitting-inventory-form-section">
+                        <h3>Purchase</h3>
+                        <div class="knitting-inventory-field-grid">
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Quantity</span>
+                                <input class="form-control" type="number" @bind="notionForm.Quantity" />
+                            </label>
+                            <label class="knitting-inventory-field">
+                                <span class="form-label">Price</span>
+                                <input class="form-control" type="number" step="0.01" @bind="notionForm.Price" />
+                            </label>
+                            <label class="knitting-inventory-field knitting-inventory-field-full">
+                                <span class="form-label">Source</span>
+                                <input class="form-control" @bind="notionForm.SourceName" />
+                            </label>
+                            <label class="knitting-inventory-field knitting-inventory-field-full form-check">
+                                <input class="form-check-input" type="checkbox" @bind="notionForm.IsSalePrice" />
+                                <span class="form-check-label">Sale price</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    @if (notionSplitPreview.Count > 0)
+                    {
+                        <div class="knitting-inventory-form-section">
+                            <h3>Split preview</h3>
+                            <p class="muted-copy">Multiple size/color values will create separate listings.</p>
+                            <ul class="project-supply-list">
+                                @foreach (var entry in notionSplitPreview)
+                                {
+                                    <li>
+                                        <div>
+                                            <strong>@entry.TypeName</strong>
+                                            <span>@entry.BrandName</span>
+                                            <span>Size: @entry.Size</span>
+                                            <span>Color: @entry.ColorName</span>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                            <div class="auth-actions">
+                                <button class="btn btn-primary" disabled="@busy" @onclick="ConfirmNotionSplitAsync">Create @notionSplitPreview.Count listings</button>
+                                <button class="btn btn-outline-secondary" disabled="@busy" @onclick="CancelNotionSplit">Cancel</button>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="knitting-inventory-form-actions">
                         <button class="btn btn-primary" disabled="@busy" @onclick="SaveNotionAsync">Add / Merge</button>
                         <a class="btn btn-outline-secondary" href="/modules/knitting/inventory?tab=notions">Finish</a>
                     </div>
-                </div>
+                    <p class="muted-copy mt-2 mb-0">Tip: enter comma-separated sizes or colors (e.g. S, M, L) to split into separate listings.</p>
+                </section>
             </div>
-            <div class="col-12 col-xl-8">
-                <div class="inventory-list-panel @(listBusy ? "is-refreshing" : string.Empty)">
+            <div class="col-12 col-lg-7 col-xl-8">
+                <div class="knitting-inventory-list-panel inventory-list-panel @(listBusy ? "is-refreshing" : string.Empty)">
                 @if (listBusy)
                 {
                     <p class="inventory-list-status muted-copy">Updating list…</p>
                 }
                 <div class="pattern-card-grid knitting-inventory-card-grid">
-                    @foreach (var notion in notions)
+                    @foreach (var notion in pagedNotions)
                     {
                         var assetId = notionAssetIds.GetValueOrDefault(notion.Id);
                         <div class="pattern-card pattern-card-with-image @(selectedItemId == notion.Id ? "printing-material-card-active" : string.Empty)">
@@ -293,6 +527,14 @@ else
                         </div>
                     }
                 </div>
+                @if (notions.Count > inventoryPageSize)
+                {
+                    <div class="auth-actions mt-3">
+                        <button class="btn btn-outline-secondary btn-sm" disabled="@(inventoryPage <= 1 || busy)" @onclick="PreviousInventoryPage">Previous</button>
+                        <span class="muted-copy align-self-center">Page @inventoryPage of @InventoryPageCount</span>
+                        <button class="btn btn-outline-secondary btn-sm" disabled="@(inventoryPage >= InventoryPageCount || busy)" @onclick="NextInventoryPage">Next</button>
+                    </div>
+                }
                 </div>
             </div>
         </div>
@@ -358,12 +600,30 @@ else
     private readonly List<ModuleYarnInventoryItemDto> yarns = [];
     private readonly List<ModuleToolInventoryItemDto> tools = [];
     private readonly List<ModuleNotionInventoryItemDto> notions = [];
+    private readonly List<ModuleYarnInventoryItemDto> pagedYarns = [];
+    private readonly List<ModuleToolInventoryItemDto> pagedTools = [];
+    private readonly List<ModuleNotionInventoryItemDto> pagedNotions = [];
+    private readonly List<string> brandFilterOptions = [];
+    private readonly List<string> weightFilterOptions = [];
+    private readonly List<string> typeFilterOptions = [];
+    private readonly List<string> sizeFilterOptions = [];
+    private readonly List<string> colorFilterOptions = [];
+    private readonly List<CreateModuleNotionInventoryItemDto> notionSplitPreview = [];
     private CreateModuleYarnInventoryItemDto yarnForm = new();
     private CreateModuleToolInventoryItemDto toolForm = new();
     private CreateModuleNotionInventoryItemDto notionForm = new();
+    private const int inventoryPageSize = 12;
+
     private string activeTab = "yarn";
     private string search = string.Empty;
     private string fiberTag = string.Empty;
+    private string inventorySortBy = "brand";
+    private string filterBrand = string.Empty;
+    private string filterWeight = string.Empty;
+    private string filterType = string.Empty;
+    private string filterSize = string.Empty;
+    private string filterColor = string.Empty;
+    private int inventoryPage = 1;
     private string errorMessage = string.Empty;
     private readonly List<string> yarnWeightOptions = [];
     private readonly List<string> fiberTagOptions = [];
@@ -410,6 +670,13 @@ else
         activeTab = tab;
         selectedItemId = null;
         selectedItemAssets.Clear();
+        inventoryPage = 1;
+        inventorySortBy = "brand";
+        filterBrand = string.Empty;
+        filterWeight = string.Empty;
+        filterType = string.Empty;
+        filterSize = string.Empty;
+        filterColor = string.Empty;
         if (tab != "yarn")
         {
             fiberTag = string.Empty;
@@ -505,70 +772,228 @@ else
         }
     }
 
+    private int InventoryPageCount
+    {
+        get
+        {
+            var count = activeTab switch
+            {
+                "tools" => tools.Count,
+                "notions" => notions.Count,
+                _ => yarns.Count
+            };
+            return count == 0 ? 1 : (int)Math.Ceiling(count / (double)inventoryPageSize);
+        }
+    }
+
     private void ApplyInventorySearch()
     {
+        inventoryPage = 1;
         yarns.Clear();
         tools.Clear();
         notions.Clear();
+        RebuildFilterOptions();
 
         if (activeTab == "yarn")
         {
-            yarns.AddRange(FilterYarns(allYarns));
+            yarns.AddRange(SortYarns(FilterYarns(allYarns)));
+            ApplyInventoryPaging();
         }
         else if (activeTab == "tools")
         {
-            tools.AddRange(FilterTools(allTools));
+            tools.AddRange(SortTools(FilterTools(allTools)));
+            ApplyInventoryPaging();
         }
         else
         {
-            notions.AddRange(FilterNotions(allNotions));
+            notions.AddRange(SortNotions(FilterNotions(allNotions)));
+            ApplyInventoryPaging();
+        }
+    }
+
+    private void ApplyInventoryPaging()
+    {
+        pagedYarns.Clear();
+        pagedTools.Clear();
+        pagedNotions.Clear();
+
+        var skip = (inventoryPage - 1) * inventoryPageSize;
+        if (activeTab == "yarn")
+        {
+            pagedYarns.AddRange(yarns.Skip(skip).Take(inventoryPageSize));
+        }
+        else if (activeTab == "tools")
+        {
+            pagedTools.AddRange(tools.Skip(skip).Take(inventoryPageSize));
+        }
+        else
+        {
+            pagedNotions.AddRange(notions.Skip(skip).Take(inventoryPageSize));
+        }
+    }
+
+    private void PreviousInventoryPage()
+    {
+        if (inventoryPage > 1)
+        {
+            inventoryPage--;
+            ApplyInventoryPaging();
+        }
+    }
+
+    private void NextInventoryPage()
+    {
+        if (inventoryPage < InventoryPageCount)
+        {
+            inventoryPage++;
+            ApplyInventoryPaging();
+        }
+    }
+
+    private void RebuildFilterOptions()
+    {
+        brandFilterOptions.Clear();
+        weightFilterOptions.Clear();
+        typeFilterOptions.Clear();
+        sizeFilterOptions.Clear();
+        colorFilterOptions.Clear();
+
+        if (activeTab == "yarn")
+        {
+            brandFilterOptions.AddRange(allYarns.Select(item => item.BrandName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(name => name));
+            weightFilterOptions.AddRange(allYarns.Select(item => item.WeightName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(name => name));
+        }
+        else if (activeTab == "tools")
+        {
+            brandFilterOptions.AddRange(allTools.Select(item => item.BrandName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(name => name));
+            typeFilterOptions.AddRange(allTools.Select(item => item.TypeName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(name => name));
+        }
+        else
+        {
+            brandFilterOptions.AddRange(allNotions.Select(item => item.BrandName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(name => name));
+            typeFilterOptions.AddRange(allNotions.Select(item => item.TypeName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(name => name));
+            sizeFilterOptions.AddRange(allNotions.Select(item => item.Size).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(name => name));
+            colorFilterOptions.AddRange(allNotions.Select(item => item.ColorName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(name => name));
         }
     }
 
     private IEnumerable<ModuleYarnInventoryItemDto> FilterYarns(IEnumerable<ModuleYarnInventoryItemDto> source)
     {
-        if (string.IsNullOrWhiteSpace(search))
+        var query = source;
+
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            return source;
+            query = query.Where(item =>
+                item.BrandName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.ColorName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.MainColor.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.WeightName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.FiberTag.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.FiberContent.Contains(search, StringComparison.OrdinalIgnoreCase));
         }
 
-        return source.Where(item =>
-            item.BrandName.Contains(search, StringComparison.OrdinalIgnoreCase)
-            || item.ColorName.Contains(search, StringComparison.OrdinalIgnoreCase)
-            || item.MainColor.Contains(search, StringComparison.OrdinalIgnoreCase)
-            || item.WeightName.Contains(search, StringComparison.OrdinalIgnoreCase)
-            || item.FiberTag.Contains(search, StringComparison.OrdinalIgnoreCase)
-            || item.FiberContent.Contains(search, StringComparison.OrdinalIgnoreCase));
+        if (!string.IsNullOrWhiteSpace(filterBrand))
+        {
+            query = query.Where(item => string.Equals(item.BrandName, filterBrand, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filterWeight))
+        {
+            query = query.Where(item => string.Equals(item.WeightName, filterWeight, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return query;
     }
+
+    private IEnumerable<ModuleYarnInventoryItemDto> SortYarns(IEnumerable<ModuleYarnInventoryItemDto> source)
+        => inventorySortBy switch
+        {
+            "color" => source.OrderBy(item => item.ColorName, StringComparer.OrdinalIgnoreCase),
+            "weight" => source.OrderBy(item => item.WeightName, StringComparer.OrdinalIgnoreCase),
+            "skeins" => source.OrderByDescending(item => item.TotalSkeins),
+            _ => source.OrderBy(item => item.BrandName, StringComparer.OrdinalIgnoreCase)
+        };
 
     private IEnumerable<ModuleToolInventoryItemDto> FilterTools(IEnumerable<ModuleToolInventoryItemDto> source)
     {
-        if (string.IsNullOrWhiteSpace(search))
+        var query = source;
+
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            return source;
+            query = query.Where(item =>
+                item.BrandName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.TypeName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.Size.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.Description.Contains(search, StringComparison.OrdinalIgnoreCase));
         }
 
-        return source.Where(item =>
-            item.BrandName.Contains(search, StringComparison.OrdinalIgnoreCase)
-            || item.TypeName.Contains(search, StringComparison.OrdinalIgnoreCase)
-            || item.Size.Contains(search, StringComparison.OrdinalIgnoreCase)
-            || item.Description.Contains(search, StringComparison.OrdinalIgnoreCase));
+        if (!string.IsNullOrWhiteSpace(filterBrand))
+        {
+            query = query.Where(item => string.Equals(item.BrandName, filterBrand, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filterType))
+        {
+            query = query.Where(item => string.Equals(item.TypeName, filterType, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return query;
     }
+
+    private IEnumerable<ModuleToolInventoryItemDto> SortTools(IEnumerable<ModuleToolInventoryItemDto> source)
+        => inventorySortBy switch
+        {
+            "type" => source.OrderBy(item => item.TypeName, StringComparer.OrdinalIgnoreCase),
+            "size" => source.OrderBy(item => item.Size, StringComparer.OrdinalIgnoreCase),
+            "quantity" => source.OrderByDescending(item => item.Quantity),
+            _ => source.OrderBy(item => item.BrandName, StringComparer.OrdinalIgnoreCase)
+        };
 
     private IEnumerable<ModuleNotionInventoryItemDto> FilterNotions(IEnumerable<ModuleNotionInventoryItemDto> source)
     {
-        if (string.IsNullOrWhiteSpace(search))
+        var query = source;
+
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            return source;
+            query = query.Where(item =>
+                item.BrandName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.TypeName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.Size.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.ColorName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.Description.Contains(search, StringComparison.OrdinalIgnoreCase));
         }
 
-        return source.Where(item =>
-            item.BrandName.Contains(search, StringComparison.OrdinalIgnoreCase)
-            || item.TypeName.Contains(search, StringComparison.OrdinalIgnoreCase)
-            || item.Size.Contains(search, StringComparison.OrdinalIgnoreCase)
-            || item.ColorName.Contains(search, StringComparison.OrdinalIgnoreCase)
-            || item.Description.Contains(search, StringComparison.OrdinalIgnoreCase));
+        if (!string.IsNullOrWhiteSpace(filterBrand))
+        {
+            query = query.Where(item => string.Equals(item.BrandName, filterBrand, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filterType))
+        {
+            query = query.Where(item => string.Equals(item.TypeName, filterType, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filterSize))
+        {
+            query = query.Where(item => string.Equals(item.Size, filterSize, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filterColor))
+        {
+            query = query.Where(item => string.Equals(item.ColorName, filterColor, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return query;
     }
+
+    private IEnumerable<ModuleNotionInventoryItemDto> SortNotions(IEnumerable<ModuleNotionInventoryItemDto> source)
+        => inventorySortBy switch
+        {
+            "type" => source.OrderBy(item => item.TypeName, StringComparer.OrdinalIgnoreCase),
+            "size" => source.OrderBy(item => item.Size, StringComparer.OrdinalIgnoreCase),
+            "color" => source.OrderBy(item => item.ColorName, StringComparer.OrdinalIgnoreCase),
+            _ => source.OrderBy(item => item.BrandName, StringComparer.OrdinalIgnoreCase)
+        };
 
     private async Task SaveYarnAsync()
     {
@@ -590,11 +1015,95 @@ else
 
     private async Task SaveNotionAsync()
     {
+        var splitEntries = BuildNotionSplitEntries(notionForm);
+        if (splitEntries.Count > 1)
+        {
+            notionSplitPreview.Clear();
+            notionSplitPreview.AddRange(splitEntries);
+            return;
+        }
+
         await RunSaveAsync(async () =>
         {
-            await ApiClient.CreateModuleNotionAsync(ModuleKey, notionForm);
+            await ApiClient.CreateModuleNotionAsync(ModuleKey, splitEntries[0]);
             notionForm = new();
+            CancelNotionSplit();
         });
+    }
+
+    private async Task ConfirmNotionSplitAsync()
+    {
+        if (notionSplitPreview.Count == 0)
+        {
+            return;
+        }
+
+        await RunSaveAsync(async () =>
+        {
+            foreach (var entry in notionSplitPreview)
+            {
+                await ApiClient.CreateModuleNotionAsync(ModuleKey, entry);
+            }
+
+            notionForm = new();
+            CancelNotionSplit();
+        });
+    }
+
+    private void CancelNotionSplit() => notionSplitPreview.Clear();
+
+    private static List<CreateModuleNotionInventoryItemDto> BuildNotionSplitEntries(CreateModuleNotionInventoryItemDto form)
+    {
+        var sizes = ParseMultiValue(form.Size);
+        var colors = ParseMultiValue(form.ColorName);
+        if (sizes.Count <= 1 && colors.Count <= 1)
+        {
+            return [CloneNotionForm(form, form.Size, form.ColorName)];
+        }
+
+        var entries = new List<CreateModuleNotionInventoryItemDto>();
+        foreach (var size in sizes)
+        {
+            foreach (var color in colors)
+            {
+                entries.Add(CloneNotionForm(form, size, color));
+            }
+        }
+
+        return entries;
+    }
+
+    private static CreateModuleNotionInventoryItemDto CloneNotionForm(
+        CreateModuleNotionInventoryItemDto form,
+        string size,
+        string colorName)
+        => new()
+        {
+            BrandName = form.BrandName,
+            TypeName = form.TypeName,
+            Size = size,
+            ColorName = colorName,
+            Description = form.Description,
+            Quantity = form.Quantity,
+            Price = form.Price,
+            SourceName = form.SourceName,
+            IsSalePrice = form.IsSalePrice
+        };
+
+    private static List<string> ParseMultiValue(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return [string.Empty];
+        }
+
+        var values = raw
+            .Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return values.Count == 0 ? [string.Empty] : values;
     }
 
     private async Task RunSaveAsync(Func<Task> save)

@@ -16,6 +16,7 @@ public class KnittingProjectDto
     public int Progress { get; set; }
     public bool IsArchived { get; set; }
     public DateTime? ArchivedAt { get; set; }
+    public DateTime? StartedAt { get; set; }
     public int CompletedStepCount { get; set; }
     public int TotalStepCount { get; set; }
     public int CompletedStitchCount { get; set; }

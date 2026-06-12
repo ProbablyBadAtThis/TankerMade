@@ -1,0 +1,243 @@
+@page "/modules/knitting/inventory/yarn/{YarnId:guid}/lots/{LotId:guid}"
+@using TankerMade.Contracts.DTOs.ModuleInventory
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Knitting Yarn Lot</PageTitle>
+
+@if (!AuthSession.IsSignedIn)
+{
+    <h1>Yarn Lot</h1>
+    <p>Sign in to use this module section.</p>
+    <a class="btn btn-primary" href="/login">Sign in</a>
+}
+else if (!ModuleState.IsActive(ModuleKey))
+{
+    <h1>Yarn Lot</h1>
+    <p>Activate Knitting from Home to continue.</p>
+    <a class="btn btn-outline-primary" href="/">Go to Home</a>
+}
+else if (loading)
+{
+    <h1>Yarn Lot</h1>
+    <p>Loading...</p>
+}
+else if (yarn is null || lot is null)
+{
+    <h1>Lot Not Found</h1>
+    <a class="btn btn-outline-secondary" href="/modules/knitting/inventory/yarn/@YarnId">Back to Yarn</a>
+}
+else
+{
+    <div class="pattern-detail">
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <div class="pattern-header">
+            <div>
+                <a class="pattern-back-link" href="/modules/knitting/inventory/yarn/@YarnId">@yarn.BrandName — @yarn.ColorName</a>
+                <h1>Lot @DisplayValue(lot.LotNumber)</h1>
+                <p>@yarn.WeightName · @yarn.FiberTag</p>
+            </div>
+            <div class="pattern-stats" aria-label="Lot summary">
+                <div>
+                    <strong>@lot.Skeins</strong>
+                    <span>Skeins</span>
+                </div>
+                <div>
+                    <strong>@DisplayLength(lot.RemainingLength, yarn.LengthUnit)</strong>
+                    <span>Remaining</span>
+                </div>
+                <div>
+                    <strong>@DisplayWeight(lot.CurrentWeight)</strong>
+                    <span>Weight (g)</span>
+                </div>
+            </div>
+        </div>
+
+        <section class="project-panel mb-3">
+            <h2>Lot Details</h2>
+            <div class="inventory-detail-grid">
+                <div>
+                    <strong>Lot number</strong>
+                    <div>@DisplayValue(lot.LotNumber)</div>
+                </div>
+                <div>
+                    <strong>Skeins in lot</strong>
+                    <div>@lot.Skeins</div>
+                </div>
+                <div>
+                    <strong>Created</strong>
+                    <div>@DisplayDate(lot.CreatedAt)</div>
+                </div>
+                <div>
+                    <strong>Last updated</strong>
+                    <div>@DisplayDate(lot.UpdatedAt)</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="project-panel mb-3">
+            <h2>Update Remaining</h2>
+            <EditForm Model="lotEditForm" OnValidSubmit="SaveLotRemainingAsync" class="project-edit-form">
+                <div class="form-grid">
+                    <label>
+                        <span>Remaining length</span>
+                        <InputNumber class="form-control" @bind-Value="lotEditForm.RemainingLength" />
+                    </label>
+                    <label>
+                        <span>Weight (g)</span>
+                        <InputNumber class="form-control" @bind-Value="lotEditForm.CurrentWeight" />
+                    </label>
+                </div>
+                <button class="btn btn-primary btn-sm" disabled="@busy" type="submit">Save Lot</button>
+            </EditForm>
+        </section>
+
+        <section class="project-panel">
+            <h2>Purchase History</h2>
+            @if (yarn.Purchases.Count == 0)
+            {
+                <p class="mb-0 muted-copy">No purchases recorded for this yarn yet.</p>
+            }
+            else
+            {
+                <ul class="project-supply-list">
+                    @foreach (var purchase in yarn.Purchases)
+                    {
+                        <li>
+                            <div>
+                                <strong>@purchase.SourceName</strong>
+                                <span>@DisplayPurchasePrice(purchase.Price, purchase.IsSalePrice)</span>
+                                <span>@DisplayDate(purchase.PurchasedAt ?? purchase.CreatedAt)</span>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+    </div>
+}
+
+@code {
+    private const string ModuleKey = "knitting";
+
+    [Parameter] public Guid YarnId { get; set; }
+    [Parameter] public Guid LotId { get; set; }
+
+    private ModuleYarnInventoryItemDto? yarn;
+    private ModuleYarnLotDto? lot;
+    private LotEditFormModel lotEditForm = new();
+    private string errorMessage = string.Empty;
+    private bool loading = true;
+    private bool busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive(ModuleKey))
+            {
+                return;
+            }
+
+            yarn = await ApiClient.GetModuleYarnByIdAsync(ModuleKey, YarnId);
+            lot = yarn?.Lots.FirstOrDefault(entry => entry.Id == LotId);
+            if (lot != null)
+            {
+                lotEditForm = new LotEditFormModel
+                {
+                    RemainingLength = lot.RemainingLength,
+                    CurrentWeight = lot.CurrentWeight
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task SaveLotRemainingAsync()
+    {
+        if (lot == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            yarn = await ApiClient.UpdateModuleYarnLotRemainingAsync(ModuleKey, YarnId, lot.Id, new UpdateModuleYarnLotRemainingRequest
+            {
+                RemainingLength = lotEditForm.RemainingLength,
+                CurrentWeight = lotEditForm.CurrentWeight
+            });
+            lot = yarn?.Lots.FirstOrDefault(entry => entry.Id == LotId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private sealed class LotEditFormModel
+    {
+        public decimal? RemainingLength { get; set; }
+        public decimal? CurrentWeight { get; set; }
+    }
+
+    private static string DisplayValue(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "—" : value;
+
+    private static string DisplayLength(decimal? length, string unit)
+    {
+        if (!length.HasValue)
+        {
+            return "—";
+        }
+
+        var suffix = string.IsNullOrWhiteSpace(unit) ? string.Empty : $" {unit}";
+        return $"{length.Value:N1}{suffix}";
+    }
+
+    private static string DisplayWeight(decimal? weight)
+        => weight.HasValue ? $"{weight.Value:N2}" : "—";
+
+    private static string DisplayPurchasePrice(decimal? price, bool isSalePrice)
+    {
+        var formatted = price.HasValue ? price.Value.ToString("C") : "No price";
+        return isSalePrice ? $"{formatted} (sale)" : formatted;
+    }
+
+    private static string DisplayDate(DateTime value)
+        => value.ToLocalTime().ToString("d");
+}
