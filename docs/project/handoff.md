@@ -1,77 +1,89 @@
 # TankerMade Handoff
 
-Last updated: 2026-06-11
+Last updated: 2026-06-15
 
 ## Pickup summary (new conversation)
 
 **Branch:** `working/knitting-settings-ui-pass`  
-**Latest pushed commit:** `5df49e0` — functional parity (Phase K8 `StartedAt`, color filters, inventory depth, pagination, crafter-answer docs).  
-**Uncommitted working tree:** crafter-directed **UI pass** (horizontal top nav, dark warm theme, sticky workspace, per-row checkboxes, home “worked on”, settings accordion, reference autocomplete). Client build passes; **not verified in real browser yet**; **not committed**.
+**Latest pushed commit:** `f8dbfd7` — MudBlazor shell, bottom navigation, core dashboard recent-work platform.  
+**Working tree:** clean (pushed).
 
 | Doc | Purpose |
 |-----|---------|
 | `docs/project/knitting-ui-parity-checklist.md` | Field-check + verification harness |
 | `docs/product/ux-reference.md` | Crafter decisions + wireframe reference |
 | `Scratch/ui-discussion/2026-06-11-crafter-answers.md` | Full `#ui-discussion` Q&A |
-| `Scratch/ui-discussion/2026-06-11-knitting-verification-ui-backlog.md` | Pre-answer engineering backlog (partially superseded) |
 
-**Do next:** Real-browser UI verification → commit UI pass → knitting sign-off → propagate shell/theme to other modules.
+**Do next:** Continue **UI pass** — migrate knitting pages from Bootstrap to MudBlazor; real-browser verification of shell + core dashboard; knitting sign-off; propagate patterns to other live modules.
 
 ---
 
 ## Current State
 
 - Current roadmap phase: Phase I — Security, Ops & Cleanup (complete).
-- Knitting module on `working/knitting-settings-ui-pass`: **functional parity complete** (pushed `5df49e0`); **UI pass in working tree** per `#ui-discussion` answers.
+- Knitting module on `working/knitting-settings-ui-pass`: **functional parity complete**; **host shell + core dashboard** committed; **knitting module pages still largely Bootstrap** (UI pass in progress).
 - Crafter direction captured: `docs/product/ux-reference.md` § Crafter decisions; `Scratch/ui-discussion/2026-06-11-crafter-answers.md`.
-- PPT parity rough score: **~86 ✅ · ~25 🟡 · ~1 ❌ · 6 ➖** — see `docs/project/knitting-ui-parity-checklist.md`.
+- PPT parity rough score: see `docs/project/knitting-ui-parity-checklist.md` (knitting pages unchanged functionally; shell scoring updated).
 
-### Pushed (`5df49e0`) — functional parity
+### Pushed (`f8dbfd7`) — host shell + core dashboard
 
-- Phase K7: `ColorId` on patterns/projects; yarn/lot remaining edit APIs.
-- Phase K8: project `StartedAt`; project color pickers/filters; wizard finalize + date started.
-- Inventory: lot detail route, tool size variants, notion bulk-split, sectioned add forms, list filters + pagination.
-- Wizards: inline step authoring (new pattern path), pattern/project/kit first-pass flows.
-- Docs synced with crafter answers from Slack `#ui-discussion`.
+**MudBlazor integration (client):**
 
-### Uncommitted — UI pass (crafter-directed)
+- Package: MudBlazor 9.5.0; `MudProviders.razor`, `Theme/TankerMadeMudTheme.cs`.
+- `ThemeService` bridges MudBlazor `IsDarkMode` with legacy `data-theme` CSS variables (`wwwroot/js/theme.js`).
 
-**App shell (host-wide, not knitting-only):**
+**Auth & routing:**
 
-- Vertical sidebar → **horizontal top nav** (`MainLayout.razor`, `NavMenu.razor` + CSS).
-- **App footer**; **dark warm default theme** + light toggle (`ThemeService`, `wwwroot/js/theme.js`, CSS variables in `app.css`).
+- `/` and `/login` → `Login.razor` on `EmptyLayout` (centered Mud card).
+- `/home` → core `Home.razor` dashboard (module picker + recent projects).
+- `/home/modules` → `ModuleActivation.razor`.
+- Post-auth navigation → `/home`.
 
-**Knitting module:**
+**Notebook shell (`MainLayout.razor`):**
 
-- **Home:** last *worked on* hero (`RecordProjectWorkedOnAsync`); **recently viewed** list; **single Inventory** entry (no separate yarn/tools/notions home buttons).
-- **Workspace:** sticky chrome (progress %, tracked time, current piece); **per-row checkboxes** (`KnittingRowProgress` + localStorage); timer always on step rows.
-- **Settings:** accordion sections; `ReferenceAutocompleteInput` on reference add-new (project wizard theme too).
-- **Cards:** larger photo project cards retained (crafter preference).
+- Minimal top bar: TankerMade brand only (sign-in link when logged out).
+- No left binder strip (removed per feedback).
+- **Bottom app bar** (`AppBottomNav.razor`) when signed in on Core or Knitting routes:
+  - **Center:** contextual nav icons with hover-expand labels (Core: Dashboard, Modules; Knitting: Home, Projects, Patterns, Inventory, Settings).
+  - **Left (module scope):** Dashboard return → `/home`.
+  - **Right:** `MudAvatar` menu — Dark Mode toggle, username, sign out (menu opens upward above bar).
 
-**New / touched client files:**
+**Core dashboard recent projects (cross-module, boundary-safe):**
 
-- `Layout/MainLayout.razor`, `Layout/NavMenu.razor`, `*.razor.css`
-- `Services/ThemeService.cs`, `Services/KnittingRowProgress.cs`, `Services/KnittingRecentActivity.cs` (worked-on + viewed)
-- `Components/ReferenceAutocompleteInput.razor`
-- `Pages/KnittingDashboard.razor`, `KnittingProjectDetail.razor`, `KnittingSettings.razor`, `KnittingProjectWizard.razor`
-- `wwwroot/css/app.css`, `wwwroot/index.html`
+- Core ledger: `UserRecentWorkAccess` + migration `PhaseL_CoreRecentWorkAccess`.
+- Contracts: `IRecentWorkService`, `IModuleRecentWorkSummaryProvider`, `RecentWorkSummaryDto` (title, thumbnail asset id, fallback path, last active, navigation path).
+- API: `GET/POST api/dashboard/recent-work`.
+- Knitting provider: `KnittingRecentWorkSummaryProvider`; default thumbnail `wwwroot/modules/knitting/default-project.svg` via `KnittingModule.DefaultProjectThumbnailPath`.
+- Auto-record on `GET api/modules/{moduleKey}/capabilities/projects/{id}`.
+- `Home.razor`: featured card (#1) + sidebar (#2–5); module-neutral display only.
+
+**Knitting module UI (prior passes, still Bootstrap-heavy):**
+
+- Home hero: last *worked on* + recently viewed (`KnittingRecentActivity`).
+- Workspace: sticky chrome, per-row checkboxes (`KnittingRowProgress`), timers.
+- Settings accordion + `ReferenceAutocompleteInput` (settings + project wizard theme).
+- Inventory depth, wizards, filters, pagination (functional parity from `5df49e0` and earlier).
+
+**Tests:** `RecentWorkServiceTests` (ledger upsert + inactive-module filter).
 
 ### Still thin / not done
 
+- **Knitting pages MudBlazor migration** — most module routes still Bootstrap; shell/auth/home/login use Mud.
 - Pattern wizard + inventory reference autocomplete (settings + project wizard theme only today).
-- Projects list “last worked on” sort (dashboard hero uses worked-on; list sort still last-opened/updated).
+- Projects list “last worked on” sort (core dashboard + knitting hero use worked-on; list sort still last-opened/updated).
 - Wizard slide **layout** fidelity (cosmetic).
-- Server-side pagination / `lastOpenedAt` (optional scale).
-- Propagate horizontal nav + theme to non-knitting modules.
+- Propagate Mud shell patterns to Crochet, Embroidery, Quilting, Sewing, 3D Printing dashboards.
+- `NavMenu.razor` — legacy horizontal Bootstrap nav; superseded by bottom bar (candidate for removal after migration).
+- Real-browser sign-off on new shell + core dashboard recent projects.
 
 ---
 
 ## Next Work
 
-1. **Verify UI pass** in a real browser using harness in `docs/project/knitting-ui-parity-checklist.md` (§ UI pass verification).
-2. **Commit + push** uncommitted UI pass when green: `dotnet build TankerMade.sln`.
-3. **Polish** (if verification finds gaps): inventory/pattern wizard autocomplete, projects list worked-on sort.
-4. After knitting sign-off: propagate shell + theme tokens to other live modules.
+1. **Continue UI pass** on knitting module pages (MudBlazor components, align with shell aesthetic).
+2. **Verify in real browser:** bottom nav expand/hover, avatar menu, core dashboard recent projects, login/home flows — harness in `docs/project/knitting-ui-parity-checklist.md`.
+3. **Polish** (if verification finds gaps): pattern/inventory wizard autocomplete; projects list worked-on sort.
+4. After knitting sign-off: migrate other live module dashboards + remove legacy `NavMenu` if unused.
 
 ---
 
@@ -79,16 +91,16 @@ Last updated: 2026-06-11
 
 - Phases A–I roadmap slices complete per `docs/project/roadmap.md`.
 - Crafting remains reference/template module; live modules: Knitting, Crochet, Embroidery, Quilting, Sewing, 3D Printing.
-- Knitting K5–K8: project workspace (steps, timers, supplies), settings behavior, full operational inventory/patterns/kits, color/`StartedAt`, UI parity passes.
-- Neutral module capability APIs replace legacy craft-specific controllers.
-- User verification (earlier passes): home, projects, patterns, workspace, wizards; inventory form layout fix; difficulty picker closure bug fix.
+- Knitting K5–K8: project workspace, settings, full operational inventory/patterns/kits, color/`StartedAt`.
+- Phase L (client/host): cross-module recent-work ledger + knitting summary provider + core dashboard UI.
+- MudBlazor shell: bottom nav, avatar account menu, EmptyLayout auth, centered login, `/home` core dashboard.
 
 ---
 
 ## Phase G Direction
 
 - Phase G established module-friendly image/asset primitives; thumbnails and asset picker extension points in place.
-- Core remains craft-agnostic host; modules own workflows, UI, and reference data.
+- Core remains craft-agnostic host; modules own workflows, UI, and reference data. Recent-work summaries follow this pattern (opaque ledger + module enrichment).
 
 ## Product Input Backlog
 
@@ -109,11 +121,11 @@ dotnet run --project src/TankerMade.Server
 dotnet run --project src/TankerMade.Client
 ```
 
-Run **both** harness sections in `docs/project/knitting-ui-parity-checklist.md`:
+Run harness sections in `docs/project/knitting-ui-parity-checklist.md`:
 
-1. Functional parity (inventory forms, wizards, filters, etc.)
-2. UI pass (nav, theme, sticky workspace, per-row checks, home hero, settings accordion)
+1. Functional parity (knitting module — inventory, wizards, filters, workspace)
+2. Host shell (bottom nav, avatar menu, theme toggle, login, core dashboard recent projects)
 
-Sign in as `member@test.com` → `/modules/knitting`. Use a real browser, not the IDE embedded browser.
+Sign in as `member@test.com` → `/home` and `/modules/knitting`. Use a real browser, not the IDE embedded browser.
 
 Optional re-seed: `dotnet run --project Scratch/knitting-seed/SeedKnittingData.csproj`

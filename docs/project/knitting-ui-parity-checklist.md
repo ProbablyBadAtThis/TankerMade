@@ -6,7 +6,7 @@ Companion UX spec: `docs/product/ux-reference.md` (YarnProject.pdf wireframes; l
 
 **Scope:** Knitting module only (`/modules/knitting/*`). Crochet/Knit toggle filters from the deck are marked **N/A** where the knitting module is already craft-scoped.
 
-**Last reviewed:** 2026-06-11 (`working/knitting-settings-ui-pass`; pushed `5df49e0` + uncommitted UI pass)
+**Last reviewed:** 2026-06-15 (`working/knitting-settings-ui-pass`; pushed `f8dbfd7`)
 
 ---
 
@@ -23,7 +23,7 @@ Companion UX spec: `docs/product/ux-reference.md` (YarnProject.pdf wireframes; l
 
 ---
 
-## Summary (2026-06-11, current)
+## Summary (2026-06-15, current)
 
 | Area | ✅ | 🟡 | ❌ | ➖ |
 |------|---:|---:|---:|---:|
@@ -36,20 +36,21 @@ Companion UX spec: `docs/product/ux-reference.md` (YarnProject.pdf wireframes; l
 | Inventory — Notions | 3 | 3 | 0 | 0 |
 | Kits (list + detail + wizard) | 8 | 6 | 0 | 1 |
 | Wizards (project/pattern/kit) | 2 | 10 | 1 | 1 |
-| App shell (host) | 4 | 1 | 0 | 0 |
-| Cross-cutting | 8 | 0 | 0 | 0 |
-| **Rough totals** | **~90** | **~26** | **~1** | **6** |
+| App shell (host) | 6 | 2 | 0 | 0 |
+| Core dashboard | 4 | 0 | 0 | 0 |
+| Cross-cutting | 9 | 0 | 0 | 0 |
+| **Rough totals** | **~98** | **~28** | **~1** | **6** |
 
 **Branch / build:**
 
-- **Pushed:** `5df49e0` on `working/knitting-settings-ui-pass` (functional parity + Phase K7/K8 migrations).
-- **Uncommitted:** UI pass (horizontal nav, theme, sticky workspace, per-row checks, home worked-on, settings accordion, autocomplete). Client build passes; awaiting real-browser verification.
+- **Pushed:** `f8dbfd7` on `working/knitting-settings-ui-pass` (MudBlazor shell, bottom nav, core recent-work platform + dashboard UI).
+- Prior functional parity: `5df49e0` (Phase K7/K8 migrations, inventory depth, filters, pagination).
 
-**Strongest today:** end-to-end workspace with per-row checkboxes + sticky progress/timer; dark warm theme; horizontal nav; inventory depth; list pagination/filters; crafter-aligned home and settings.
+**Strongest today:** MudBlazor host shell with bottom contextual nav; core dashboard cross-module recent projects; knitting workspace with per-row checkboxes + sticky progress/timer; inventory depth; list pagination/filters.
 
 **Crafter answers:** `docs/product/ux-reference.md` § Crafter decisions; `Scratch/ui-discussion/2026-06-11-crafter-answers.md`.
 
-**Remaining vs deck:** wizard slide layout fidelity; pattern/inventory reference autocomplete outside settings; projects list worked-on sort; optional server-side pagination.
+**Remaining vs deck:** knitting pages still Bootstrap (Mud migration in progress); wizard slide layout fidelity; pattern/inventory reference autocomplete outside settings; projects list worked-on sort; real-browser shell sign-off.
 
 ---
 
@@ -67,7 +68,7 @@ Phases A–F from the original plan are **implemented at first-pass level**. Use
 | **F** | Kit workspace parity + archive flow | ✅ First pass |
 
 ### Phase A — Navigation & list polish
-1. Home hero: last worked-on project + image + one-click open — ✅ (uncommitted UI pass)
+1. Home hero: last worked-on project + image + one-click open — ✅ (`KnittingRecentActivity`; module home)
 2. Card thumbnails on project/pattern/kit/inventory lists — ✅
 3. Project list: sort + filters (theme, color, difficulty, completion, archived, live search, pagination) — ✅ (worked-on sort on list still thin; dashboard hero uses worked-on)
 4. Pattern list: sort + filters (theme, color, source, difficulty, live search, pagination) — ✅
@@ -76,10 +77,10 @@ Phases A–F from the original plan are **implemented at first-pass level**. Use
 ### Phase B — Project workspace fidelity
 1. Stitch totals + stitch-driven % — ✅
 2. Per-piece completion % and tracked time in sidebar — ✅
-3. Step range `5–7` format with per-row checkboxes — ✅ (`KnittingRowProgress`; uncommitted UI pass)
+3. Step range `5–7` format with per-row checkboxes — ✅ (`KnittingRowProgress`)
 4. Scrollable pattern step panel — ✅
 5. Difficulty colour-coding (6 levels) — ✅
-6. Sticky workspace chrome (progress %, timer summary) — ✅ (uncommitted UI pass)
+6. Sticky workspace chrome (progress %, timer summary) — ✅ (`KnittingProjectDetail`)
 7. Theme + color on project header — ✅
 
 ### Phase C — Creation wizards
@@ -327,10 +328,26 @@ Phases A–F from the original plan are **implemented at first-pass level**. Use
 
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
-| S1 | Horizontal top navigation | ✅ | Replaced vertical sidebar (`MainLayout`, `NavMenu`) — uncommitted |
-| S2 | App footer | ✅ | Minimal footer in `MainLayout` — uncommitted |
-| S3 | Dark warm default + light toggle | ✅ | `ThemeService`, `data-theme`, CSS variables — uncommitted |
-| S4 | Nav usable at half-width | 🟡 | Collapsible on narrow; verify in real browser |
+| S1 | MudBlazor theme + dark/light toggle | ✅ | `ThemeService`, `MudProviders`, `TankerMadeMudTheme`; toggle in avatar menu on bottom bar |
+| S2 | Minimal top bar | ✅ | Brand only in `MainLayout`; no module links in header |
+| S3 | Bottom contextual navigation | ✅ | `AppBottomNav.razor` — Core + Knitting scopes; hover-expand labels; dashboard return (left); avatar menu (right) |
+| S4 | Auth on empty layout | ✅ | `Login.razor` / `Register` on `EmptyLayout`; `/` = login |
+| S5 | Core dashboard at `/home` | ✅ | Module picker + module activation link |
+| S6 | Nav usable at half-width | 🟡 | Bottom bar + hover labels; verify in real browser |
+| S7 | Legacy top nav removed from active shell | 🟡 | `NavMenu.razor` retained but unused by `MainLayout`; candidate for deletion |
+
+---
+
+## Core dashboard (`/home`)
+
+| # | Requirement | Status | Notes |
+|---|-------------|--------|-------|
+| C1 | Cross-module recent projects (top 5) | ✅ | `RecentWorkService` + `GET api/dashboard/recent-work`; featured + sidebar layout |
+| C2 | Thumbnail + title + last active only | ✅ | `RecentWorkSummaryDto`; no craft-specific fields on core UI |
+| C3 | Module default thumbnail when no photo | ✅ | Knitting: `modules/knitting/default-project.svg` via provider |
+| C4 | Auto-record project open | ✅ | On module project GET; ledger `UserRecentWorkAccess` |
+
+**Target files:** `Pages/Home.razor`, `RecentWorkController.cs`, `RecentWorkService.cs`, `KnittingRecentWorkSummaryProvider.cs`
 
 ---
 
@@ -344,7 +361,7 @@ Phases A–F from the original plan are **implemented at first-pass level**. Use
 | X4 | Difficulty colour coding (6 levels) | ✅ | `KnittingUi` CSS badges |
 | X5 | Live search on lists / pickers | ✅ | Projects, patterns, inventory, kit list; wizard pattern filter |
 | X6 | Pagination on long lists | ✅ | Client pagination on projects, patterns, kits, and inventory tabs |
-| X7 | Last-opened / worked-on tracking | ✅ | `KnittingRecentActivity`: opened, worked-on, recently viewed |
+| X7 | Last-opened / worked-on tracking | ✅ | Knitting: `KnittingRecentActivity` (client). Core: `UserRecentWorkAccess` ledger + recent-work API (cross-module) |
 | X8 | Reference autocomplete on add-new | 🟡 | Settings + project wizard theme; pattern/inventory forms still thin |
 
 ---
@@ -362,7 +379,7 @@ Core CRUD and workspace APIs are in place. Remaining blockers are mostly **wizar
 | Notion bulk-split | ✅ | Client-side split on add (`5df49e0`) |
 | Tool size variants (sibling tools) | ✅ | Tool detail page (`5df49e0`) |
 | Per-row step progress (server) | 🟡 | Row state in client localStorage (`KnittingRowProgress`); step complete when all rows checked |
-| Server-side `lastOpenedAt` / worked-on | ❌ | Optional; client localStorage today |
+| Core cross-module recent work | ✅ | Phase L — `UserRecentWorkAccess`, `IRecentWorkService`, knitting summary provider |
 | Server-side list pagination | ❌ | Optional at scale |
 | Inventory → pattern reverse lookup | 🟡 | TV3, NV3 |
 
@@ -383,15 +400,25 @@ Run in a real browser (not IDE embedded browser) as `member@test.com`:
 7. **Kits** — thumbnail grid; child progress; archive/reopen
 8. **Settings + Glossary** — accordion sections; reference autocomplete; glossary page
 
-## Verification harness — UI pass (uncommitted)
+## Verification harness — host shell + core dashboard
 
-1. **Shell** — horizontal top nav (not sidebar); footer; dark default; light toggle in header
-2. **Theme** — warm dark surfaces on knitting dashboard and project cards; difficulty colors readable
-3. **Home** — “Last Worked On” label (not “most recent opened”); no separate Yarn/Tools/Notions buttons
-4. **Workspace** — sticky bar stays visible while scrolling steps (progress %, tracked time, piece name)
-5. **Row checks** — `5–7` range shows one checkbox per row; all checked marks step complete
-6. **Settings** — folded accordion sections; datalist suggestions when typing new theme/brand
-7. **Half-width** — no horizontal page scroll on inventory/projects at ~50% browser width
+Run in a real browser (not IDE embedded browser) as `member@test.com`:
+
+1. **Login** — `/` centered card; sign in → `/home`
+2. **Core dashboard** — recent projects featured + sidebar after opening knitting projects; empty state when none; no reload loop
+3. **Bottom nav** — icon-only default; active label pinned; hover expand; dashboard return (knitting routes); avatar menu above bar
+4. **Avatar menu** — Dark Mode toggle; username; sign out
+5. **Theme** — dark/light persists; Mud + legacy CSS variables stay in sync
+6. **Half-width** — bottom bar usable; no horizontal page scroll on `/home`
+
+## Verification harness — knitting UI pass
+
+1. **Theme** — warm dark surfaces on knitting dashboard and project cards; difficulty colors readable
+2. **Module home** — “Last Worked On” label; single Inventory entry; no separate Yarn/Tools/Notions buttons
+3. **Workspace** — sticky bar stays visible while scrolling steps (progress %, tracked time, piece name)
+4. **Row checks** — `5–7` range shows one checkbox per row; all checked marks step complete
+5. **Settings** — folded accordion sections; datalist suggestions when typing new theme/brand
+6. **Half-width** — no horizontal page scroll on inventory/projects at ~50% browser width
 
 Local build:
 
@@ -407,10 +434,10 @@ Optional re-seed: `dotnet run --project Scratch/knitting-seed/SeedKnittingData.c
 
 ## Recommended next work
 
-1. Run **both** verification harness sections above in a real browser.
-2. **Commit + push** uncommitted UI pass when green (`dotnet build TankerMade.sln`).
+1. Run **all three** verification harness sections above in a real browser.
+2. **Continue UI pass:** migrate knitting module pages from Bootstrap to MudBlazor; align with shell aesthetic.
 3. **Polish if needed:** pattern/inventory reference autocomplete; projects list worked-on sort.
-4. Propagate shell + theme to other live modules after knitting sign-off.
+4. Propagate shell + Mud patterns to other live modules after knitting sign-off; remove legacy `NavMenu` when confirmed unused.
 
 ---
 
@@ -418,6 +445,7 @@ Optional re-seed: `dotnet run --project Scratch/knitting-seed/SeedKnittingData.c
 
 | Area | Primary UI | Primary API |
 |------|------------|-------------|
+| Core dashboard | `Pages/Home.razor` | `RecentWorkController`, `RecentWorkService` |
 | Dashboard | `KnittingDashboard.razor` | `GetModuleProjectsAsync`, `KnittingRecentActivity` |
 | Projects | `KnittingProjects.razor`, `KnittingProjectDetail.razor`, `KnittingProjectWizard.razor` | `ModuleProjectsController` |
 | Patterns | `KnittingPatterns.razor`, `KnittingPatternDetail.razor`, `KnittingPatternWizard.razor` | `ModulePatternsController` |
@@ -426,7 +454,8 @@ Optional re-seed: `dotnet run --project Scratch/knitting-seed/SeedKnittingData.c
 | Settings | `KnittingSettings.razor` | `ModuleSettingsController`, `ReferenceDataController` |
 | Glossary | `KnittingGlossary.razor` | `ModuleSettingsController` (category `terms`) |
 | Shared client | `KnittingUi.cs`, `KnittingRecentActivity.cs`, `KnittingRowProgress.cs`, `KnittingCardAssetCache.cs`, `AssetThumbnailImage.razor`, `ReferenceAutocompleteInput.razor` | `api/assets/*` |
-| App shell | `Layout/MainLayout.razor`, `Layout/NavMenu.razor`, `Services/ThemeService.cs`, `wwwroot/css/app.css`, `wwwroot/js/theme.js` | — |
+| App shell | `Layout/MainLayout.razor`, `Components/AppBottomNav.razor`, `Components/MudProviders.razor`, `Services/AppNavigation.cs`, `Services/ThemeService.cs`, `Layout/EmptyLayout.razor`, `wwwroot/css/app.css` | `RecentWorkController` |
+| Legacy (unused) | `Layout/NavMenu.razor` | — |
 
 ---
 

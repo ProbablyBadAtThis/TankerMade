@@ -1,7 +1,7 @@
 # TankerMade — UX Wireframes Reference
 Source: YarnProject.pdf (original hand-sketched wireframe spec)
 Status: REFERENCE — initial module UI scaffolding and first-pass styling now exist in app; this file remains the source for deeper UX behavior and visual refinement targets.
-Last reviewed: 2026-06-11
+Last reviewed: 2026-06-15
 
 ## Crafter decisions (#ui-discussion, 2026-06-11)
 
@@ -27,15 +27,16 @@ Source: TankerMunk answers in Slack `#ui-discussion`; full capture in `Scratch/u
 
 **Revised vs pre-answer engineering backlog:** Deprioritize modal-first pattern/inventory edits and aggressive card compaction; prioritize sticky workspace chrome, per-row checkboxes, dark+warm theme, home “worked on” semantics, settings accordion, reference autocomplete.
 
-### Implementation status (2026-06-11)
+### Implementation status (2026-06-15)
 
-Branch `working/knitting-settings-ui-pass`: functional parity pushed (`5df49e0`); crafter-directed UI pass in **uncommitted** working tree (verify → commit).
+Branch `working/knitting-settings-ui-pass`: functional parity pushed (`5df49e0`); MudBlazor host shell + core dashboard recent-work platform pushed (`f8dbfd7`). Knitting module pages still largely Bootstrap — UI pass continues.
 
 | Crafter decision | Status |
 |------------------|--------|
-| Dark warm default + light toggle | ✅ `ThemeService`, CSS variables |
-| Horizontal top nav (replaces sidebar) | ✅ `MainLayout` / `NavMenu` |
-| Home: last worked-on hero + recently viewed | ✅ `KnittingRecentActivity` |
+| Dark warm default + light toggle | ✅ `ThemeService` + MudBlazor; toggle in bottom-bar avatar menu |
+| App navigation | ✅ Bottom contextual nav (`AppBottomNav`); minimal top bar; `/home` core dashboard |
+| Core recent projects (cross-module) | ✅ Phase L recent-work ledger + `Home.razor` featured/sidebar (title, thumbnail, last active) |
+| Home: last worked-on hero + recently viewed | ✅ `KnittingRecentActivity` on knitting module home |
 | Single Inventory on home | ✅ `KnittingDashboard` |
 | Sticky timer + progress % in workspace | ✅ `KnittingProjectDetail` |
 | Per-row checkboxes for ranges | ✅ `KnittingRowProgress` (client localStorage) |
@@ -45,7 +46,7 @@ Branch `working/knitting-settings-ui-pass`: functional parity pushed (`5df49e0`)
 | Inline pattern edits | ✅ pattern detail |
 | One-form yarn add | ✅ inventory |
 
-**PDF vs app (intentional deltas):** PDF Home lists separate Patterns/Yarns/Tools/Notions nav; crafter chose **one Inventory** entry. PDF does not specify shell layout; app uses **horizontal top nav** (not a vertical sidebar). Track parity in `docs/project/knitting-ui-parity-checklist.md`.
+**PDF vs app (intentional deltas):** PDF Home lists separate Patterns/Yarns/Tools/Notions nav; crafter chose **one Inventory** entry on the knitting module home. PDF does not specify shell layout; app uses **bottom contextual navigation** + minimal top bar (not a vertical sidebar or full horizontal module nav). Core `/home` dashboard shows cross-module recent projects. Track parity in `docs/project/knitting-ui-parity-checklist.md`.
 
 The PDF is attached to the Claude Project. Do not remove it — it is the primary UX specification.
 
