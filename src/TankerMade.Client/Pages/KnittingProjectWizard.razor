@@ -24,7 +24,7 @@ else if (!ModuleState.IsActive(ModuleKey))
 {
     <h1>New Project</h1>
     <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/">Go to Home</a>
+    <a class="btn btn-outline-primary" href="/home">Go to Home</a>
 }
 else
 {
@@ -119,7 +119,11 @@ else
                         </label>
                     </div>
                     <div class="auth-actions mt-2">
-                        <InputText class="form-control" @bind-Value="newThemeName" placeholder="New theme name" />
+                        <ReferenceAutocompleteInput Label="New theme name"
+                                                    Placeholder="New theme name"
+                                                    Options="themeNameOptions"
+                                                    Disabled="busy"
+                                                    @bind-Value="newThemeName" />
                         <button class="btn btn-outline-secondary btn-sm" type="button" disabled="@busy" @onclick="CreateThemeAsync">Add Theme</button>
                     </div>
                 }
@@ -412,6 +416,8 @@ else
     private bool useAutoStartDate = true;
     private DateTime? manualStartDate = DateTime.Today;
     private Guid? uploadedAssetId;
+
+    private IReadOnlyList<string> themeNameOptions => themes.Select(theme => theme.Name).ToList();
 
     private IEnumerable<(ProjectWizardStep Step, string Label)> VisibleSteps
     {

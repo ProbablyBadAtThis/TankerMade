@@ -18,7 +18,8 @@ else if (ShowPlaceholder)
 
 @code {
     [Parameter] public Guid? AssetId { get; set; }
-    [Parameter] public string SizeKey { get; set; } = "card";
+    [Parameter] public string? FallbackSrc { get; set; }
+    [Parameter] public string SizeKey { get; set; } = "small";
     [Parameter] public string CssClass { get; set; } = "asset-thumbnail-image";
     [Parameter] public string AltText { get; set; } = "Image";
     [Parameter] public string PlaceholderText { get; set; } = "No image";
@@ -27,17 +28,21 @@ else if (ShowPlaceholder)
     private string? imageSource;
     private string? objectUrl;
     private Guid? loadedAssetId;
+    private string? loadedFallbackSrc;
     private string loadedSizeKey = string.Empty;
 
     protected override async Task OnParametersSetAsync()
     {
         if (!AssetId.HasValue)
         {
-            await ClearImageAsync();
+            ApplyFallbackOrClear();
             return;
         }
 
-        if (loadedAssetId == AssetId && loadedSizeKey == SizeKey && !string.IsNullOrWhiteSpace(imageSource))
+        if (loadedAssetId == AssetId
+            && loadedSizeKey == SizeKey
+            && string.Equals(loadedFallbackSrc, FallbackSrc, StringComparison.Ordinal)
+            && !string.IsNullOrWhiteSpace(imageSource))
         {
             return;
         }
@@ -51,6 +56,7 @@ else if (ShowPlaceholder)
 
         if (!AssetId.HasValue || !AuthSession.IsSignedIn)
         {
+            ApplyFallbackOrClear();
             return;
         }
 
@@ -62,6 +68,7 @@ else if (ShowPlaceholder)
                 response = await Http.GetAsync($"api/assets/{AssetId.Value}/download");
                 if (!response.IsSuccessStatusCode)
                 {
+                    ApplyFallbackOrClear();
                     return;
                 }
             }
@@ -71,12 +78,27 @@ else if (ShowPlaceholder)
             objectUrl = $"data:{contentType};base64,{Convert.ToBase64String(bytes)}";
             imageSource = objectUrl;
             loadedAssetId = AssetId;
+            loadedFallbackSrc = FallbackSrc;
             loadedSizeKey = SizeKey;
         }
         catch
         {
-            await ClearImageAsync();
+            ApplyFallbackOrClear();
         }
+    }
+
+    private void ApplyFallbackOrClear()
+    {
+        if (!string.IsNullOrWhiteSpace(FallbackSrc))
+        {
+            imageSource = FallbackSrc;
+            loadedAssetId = null;
+            loadedFallbackSrc = FallbackSrc;
+            loadedSizeKey = SizeKey;
+            return;
+        }
+
+        _ = ClearImageAsync();
     }
 
     private Task ClearImageAsync()
@@ -84,6 +106,7 @@ else if (ShowPlaceholder)
         imageSource = null;
         objectUrl = null;
         loadedAssetId = null;
+        loadedFallbackSrc = null;
         loadedSizeKey = string.Empty;
         return Task.CompletedTask;
     }

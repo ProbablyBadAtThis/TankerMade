@@ -20,6 +20,7 @@ public class TankerMadeDbContext : DbContext
     // Module host entities
     public DbSet<ModuleDefinition> ModuleDefinitions { get; set; }
     public DbSet<UserModuleActivation> UserModuleActivations { get; set; }
+    public DbSet<UserRecentWorkAccess> UserRecentWorkAccesses { get; set; }
     public DbSet<AssetRecord> AssetRecords { get; set; }
     public DbSet<AssetThumbnail> AssetThumbnails { get; set; }
 
@@ -84,6 +85,7 @@ public class TankerMadeDbContext : DbContext
 
         ConfigureUser(modelBuilder);
         ConfigureModules(modelBuilder);
+        ConfigureUserRecentWorkAccess(modelBuilder);
         ConfigureAssetRecord(modelBuilder);
         ConfigureAssetThumbnail(modelBuilder);
         ConfigureCraftingProject(modelBuilder);
@@ -192,6 +194,29 @@ public class TankerMadeDbContext : DbContext
 
             entity.HasIndex(e => new { e.UserId, e.ModuleDefinitionId })
                 .IsUnique();
+        });
+    }
+
+    private void ConfigureUserRecentWorkAccess(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UserRecentWorkAccess>(entity =>
+        {
+            entity.ToTable("CoreUserRecentWorkAccesses");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.ModuleKey).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.WorkItemType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.LastAccessedAtUtc).IsRequired();
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.UserId, e.ModuleKey, e.WorkItemType, e.WorkItemId })
+                .IsUnique();
+
+            entity.HasIndex(e => new { e.UserId, e.LastAccessedAtUtc });
         });
     }
 

@@ -8,6 +8,7 @@ public sealed class KnittingModule : IModule, IModuleNavigation, IModulePackagin
     public const string Name = "Knitting";
     public const string Version = "0.1.0";
     public const string Description = "Live module for knitting workflows and data.";
+    public const string DefaultProjectThumbnailPath = "modules/knitting/default-project.svg";
 
     public static readonly KnittingModule Instance = new();
 

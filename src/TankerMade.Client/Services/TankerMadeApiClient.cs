@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Components.Forms;
 using TankerMade.Contracts.DTOs.Assets;
 using TankerMade.Contracts.DTOs.Reference;
+using TankerMade.Contracts.DTOs.Dashboard;
 using TankerMade.Contracts.DTOs.ModulePatterns;
 using TankerMade.Contracts.DTOs.ModuleInventory;
 using TankerMade.Contracts.DTOs.ModuleProjects;
@@ -25,6 +26,18 @@ public class TankerMadeApiClient
     public async Task<IReadOnlyList<ModuleDto>> GetModulesAsync()
     {
         return await _http.GetFromJsonAsync<IReadOnlyList<ModuleDto>>("api/modules") ?? [];
+    }
+
+    public async Task<IReadOnlyList<RecentWorkSummaryDto>> GetRecentWorkAsync(int limit = 5)
+    {
+        var url = BuildUrl("api/dashboard/recent-work", ("limit", limit.ToString()));
+        return await _http.GetFromJsonAsync<IReadOnlyList<RecentWorkSummaryDto>>(url) ?? [];
+    }
+
+    public async Task RecordRecentWorkAsync(RecordRecentWorkRequest request)
+    {
+        var response = await _http.PostAsJsonAsync("api/dashboard/recent-work", request);
+        await EnsureSuccessAsync(response);
     }
 
     public async Task<IReadOnlyList<CoreReferenceItemDto>> GetCoreReferenceItemsAsync(string category, string search = "")

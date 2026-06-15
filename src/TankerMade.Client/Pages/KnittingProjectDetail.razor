@@ -9,6 +9,7 @@
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
 @inject TankerMade.Client.Services.KnittingRecentActivity RecentActivity
+@inject TankerMade.Client.Services.KnittingRowProgress RowProgress
 @inject TankerMade.Client.Services.KnittingCardAssetCache CardAssets
 
 <PageTitle>Knitting Project</PageTitle>
@@ -23,7 +24,7 @@ else if (!ModuleState.IsActive(ModuleKey))
 {
     <h1>Knitting Project</h1>
     <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/">Go to Home</a>
+    <a class="btn btn-outline-primary" href="/home">Go to Home</a>
 }
 else if (loading)
 {
@@ -188,6 +189,21 @@ else
         }
         else
         {
+            <div class="workspace-sticky-chrome" aria-label="Workspace summary">
+                <div class="workspace-sticky-stat">
+                    <strong>@project.Progress%</strong>
+                    <span>Progress</span>
+                </div>
+                <div class="workspace-sticky-stat">
+                    <strong>@KnittingUi.FormatDurationCompact(GetTrackedSeconds())</strong>
+                    <span>Tracked</span>
+                </div>
+                <div class="workspace-sticky-stat">
+                    <strong>@(selectedPiece?.Name ?? "No piece")</strong>
+                    <span>Current piece</span>
+                </div>
+            </div>
+
             <div class="pattern-workspace">
                 <aside class="piece-list">
                     @foreach (var piece in pattern.Pieces)
@@ -218,27 +234,27 @@ else
                             @foreach (var step in selectedPiece.Steps)
                             {
                                 var timer = project.Timers.FirstOrDefault(timer => timer.PatternStepId == step.Id);
-                                var isComplete = completedStepIds.Contains(step.Id);
-                                var rangeValues = KnittingUi.ExpandStepRange(step.StartIndex, step.EndIndex).ToList();
+                                var stepRows = GetStepRows(step);
                                 <li class="step-range-group">
                                     <div class="step-range">@KnittingUi.FormatStepRange(step.StartIndex, step.EndIndex)</div>
-                                    @if (rangeValues.Count > 1)
-                                    {
-                                        <div class="step-range-rows">
-                                            @foreach (var row in rangeValues)
-                                            {
-                                                <span class="step-range-chip">Row @row</span>
-                                            }
-                                        </div>
-                                    }
+                                    <div class="step-row-checks">
+                                        @foreach (var row in stepRows)
+                                        {
+                                            var rowKey = RowKey(step.Id, row);
+                                            var rowChecked = rowCheckState.GetValueOrDefault(rowKey);
+                                            <label class="step-row-check">
+                                                <input type="checkbox"
+                                                       checked="@rowChecked"
+                                                       disabled="@busy"
+                                                       @onchange="args => ToggleRowAsync(step, row, args)" />
+                                                <span>@(row >= 0 ? $"Row {row}" : StepLabel(step))</span>
+                                            </label>
+                                        }
+                                    </div>
                                     <div class="step-content">
                                         <div class="step-title-row">
                                             <h3>@StepLabel(step)</h3>
                                             <div class="auth-actions">
-                                                <label class="d-flex gap-2 align-items-center">
-                                                    <input type="checkbox" checked="@isComplete" @onchange="args => ToggleStepAsync(step.Id, args)" />
-                                                    Done
-                                                </label>
                                                 @if (timer?.IsRunning == true)
                                                 {
                                                     <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => PauseTimerAsync(step.Id)">Pause</button>
@@ -421,6 +437,7 @@ else
     private readonly List<AssetRecordDto> projectAssets = [];
     private ProjectFormModel form = new();
     private HashSet<Guid> completedStepIds = [];
+    private Dictionary<string, bool> rowCheckState = [];
     private string selectedInventoryType = "yarn";
     private Guid? selectedInventoryItemId;
     private decimal? supplyQuantity;
@@ -565,6 +582,7 @@ else
                 .Select(progress => progress.PatternStepId)
                 .ToHashSet() ?? [];
 
+            await LoadRowCheckStateAsync();
             await LoadInventoryOptionsAsync();
             EnsureSelectedInventoryItem();
             await LoadProjectAssetsAsync();
@@ -685,9 +703,70 @@ else
         selectedPiece = pattern.Pieces.FirstOrDefault(piece => piece.Id == pieceId);
     }
 
-    private async Task ToggleStepAsync(Guid stepId, ChangeEventArgs args)
+    private static List<int> GetStepRows(ModulePatternStepDto step)
     {
-        var isComplete = args.Value is bool value && value;
+        var rows = KnittingUi.ExpandStepRange(step.StartIndex, step.EndIndex).ToList();
+        return rows.Count > 0 ? rows : [-1];
+    }
+
+    private static string RowKey(Guid stepId, int row) => $"{stepId:N}:{row}";
+
+    private async Task LoadRowCheckStateAsync()
+    {
+        rowCheckState.Clear();
+        if (project == null || pattern == null)
+        {
+            return;
+        }
+
+        foreach (var piece in pattern.Pieces)
+        {
+            foreach (var step in piece.Steps)
+            {
+                var rows = GetStepRows(step);
+                var serverComplete = completedStepIds.Contains(step.Id);
+                if (serverComplete)
+                {
+                    await RowProgress.SyncStepCompletionAsync(project.Id, step.Id, rows.Where(row => row >= 0), true);
+                }
+
+                foreach (var row in rows)
+                {
+                    var key = RowKey(step.Id, row);
+                    rowCheckState[key] = serverComplete
+                        || await RowProgress.IsRowCheckedAsync(project.Id, step.Id, row);
+                }
+            }
+        }
+    }
+
+    private async Task ToggleRowAsync(ModulePatternStepDto step, int row, ChangeEventArgs args)
+    {
+        if (project == null)
+        {
+            return;
+        }
+
+        var isChecked = args.Value is bool value && value;
+        rowCheckState[RowKey(step.Id, row)] = isChecked;
+        await RowProgress.SetRowCheckedAsync(project.Id, step.Id, row, isChecked);
+
+        var rows = GetStepRows(step);
+        var allChecked = rows.All(entry => rowCheckState.GetValueOrDefault(RowKey(step.Id, entry)));
+        var shouldComplete = allChecked;
+        var currentlyComplete = completedStepIds.Contains(step.Id);
+
+        if (shouldComplete == currentlyComplete)
+        {
+            await RecentActivity.RecordProjectWorkedOnAsync(project.Id);
+            return;
+        }
+
+        await SetStepCompleteAsync(step.Id, shouldComplete);
+    }
+
+    private async Task SetStepCompleteAsync(Guid stepId, bool isComplete)
+    {
         await RunBusyAsync(async () =>
         {
             if (project == null)
@@ -696,27 +775,39 @@ else
             }
 
             var updated = await ApiClient.SetModuleProjectStepProgressAsync(ModuleKey, project.Id, stepId, isComplete);
-            if (updated != null)
+            if (updated == null)
             {
-                project = updated;
-                if (autoPauseOnComplete && isComplete)
+                return;
+            }
+
+            project = updated;
+            if (autoPauseOnComplete && isComplete)
+            {
+                var timer = project.Timers.FirstOrDefault(existing => existing.PatternStepId == stepId);
+                if (timer?.IsRunning == true)
                 {
-                    var timer = project.Timers.FirstOrDefault(existing => existing.PatternStepId == stepId);
-                    if (timer?.IsRunning == true)
+                    var paused = await ApiClient.PauseModuleProjectTimerAsync(ModuleKey, project.Id, stepId);
+                    if (paused != null)
                     {
-                        var paused = await ApiClient.PauseModuleProjectTimerAsync(ModuleKey, project.Id, stepId);
-                        if (paused != null)
-                        {
-                            project = paused;
-                        }
+                        project = paused;
                     }
                 }
-
-                completedStepIds = project.StepProgress
-                    .Where(progress => progress.IsComplete)
-                    .Select(progress => progress.PatternStepId)
-                    .ToHashSet();
             }
+
+            completedStepIds = project.StepProgress
+                .Where(progress => progress.IsComplete)
+                .Select(progress => progress.PatternStepId)
+                .ToHashSet();
+
+            var step = pattern?.Pieces.SelectMany(piece => piece.Steps).FirstOrDefault(entry => entry.Id == stepId);
+            if (step != null)
+            {
+                var rows = GetStepRows(step).Where(entry => entry >= 0);
+                await RowProgress.SyncStepCompletionAsync(project.Id, stepId, rows, isComplete);
+                await LoadRowCheckStateAsync();
+            }
+
+            await RecentActivity.RecordProjectWorkedOnAsync(project.Id);
         });
     }
 
@@ -733,6 +824,7 @@ else
             if (updated != null)
             {
                 project = updated;
+                await RecentActivity.RecordProjectWorkedOnAsync(project.Id);
             }
         });
     }
@@ -750,6 +842,7 @@ else
             if (updated != null)
             {
                 project = updated;
+                await RecentActivity.RecordProjectWorkedOnAsync(project.Id);
             }
         });
     }

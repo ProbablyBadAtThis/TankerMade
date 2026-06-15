@@ -1,0 +1,191 @@
+@inject NavigationManager Navigation
+@inject AuthSession AuthSession
+@inject ThemeService ThemeService
+@inject ClientModuleState ModuleState
+@implements IDisposable
+
+@if (_items.Count > 0)
+{
+    <MudAppBar Bottom="true"
+               Fixed="true"
+               Elevation="8"
+               Class="notebook-bottom-bar"
+               ToolBarClass="notebook-bottom-toolbar">
+        <div class="notebook-bottom-toolbar-inner"
+             @onmouseleave="ClearHovered">
+            @if (_coreDashboardItem is not null)
+            {
+                <div class="notebook-bottom-nav-lead">
+                    <NavLink href="@_coreDashboardItem.Href"
+                             Match="@_coreDashboardItem.Match"
+                             class="@GetNavClass(_coreDashboardItem)"
+                             ActiveClass="is-active"
+                             title="@_coreDashboardItem.Label"
+                             @onmouseenter="() => SetHovered(_coreDashboardItem.Href)"
+                             @onfocusin="() => SetHovered(_coreDashboardItem.Href)">
+                        <MudIcon Icon="@_coreDashboardItem.Icon" Size="Size.Medium" Class="notebook-bottom-nav-icon" />
+                        <span class="notebook-bottom-nav-label-wrap">
+                            <span class="notebook-bottom-nav-label">@_coreDashboardItem.Label</span>
+                        </span>
+                    </NavLink>
+                </div>
+            }
+
+            <div class="notebook-bottom-nav-track">
+                @foreach (var item in _items)
+                {
+                    <NavLink href="@item.Href"
+                             Match="@item.Match"
+                             class="@GetNavClass(item)"
+                             ActiveClass="is-active"
+                             title="@item.Label"
+                             @onmouseenter="() => SetHovered(item.Href)"
+                             @onfocusin="() => SetHovered(item.Href)">
+                        <MudIcon Icon="@item.Icon" Size="Size.Medium" Class="notebook-bottom-nav-icon" />
+                        <span class="notebook-bottom-nav-label-wrap">
+                            <span class="notebook-bottom-nav-label">@item.Label</span>
+                        </span>
+                    </NavLink>
+                }
+            </div>
+
+            <div class="notebook-bottom-account">
+                <MudMenu AnchorOrigin="Origin.TopRight"
+                         TransformOrigin="Origin.BottomRight"
+                         PopoverClass="notebook-account-menu-popover"
+                         ListClass="notebook-account-menu-list">
+                    <ActivatorContent>
+                        <div class="notebook-bottom-avatar-trigger"
+                             role="button"
+                             tabindex="0"
+                             title="Account"
+                             @onclick="@context.ToggleAsync">
+                            <MudAvatar Size="Size.Medium"
+                                       Color="Color.Primary"
+                                       Class="notebook-bottom-avatar">
+                                @GetInitials(AuthSession.State.Username)
+                            </MudAvatar>
+                        </div>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <div class="notebook-account-menu" @onclick:stopPropagation="true">
+                            <div class="notebook-account-menu-row">
+                                <MudText Typo="Typo.body2">Dark Mode</MudText>
+                                <MudSwitch T="bool"
+                                           Color="Color.Primary"
+                                           Value="@ThemeService.IsDarkMode"
+                                           ValueChanged="SetDarkModeAsync" />
+                            </div>
+                            <MudDivider Class="notebook-account-menu-divider" />
+                            <div class="notebook-account-menu-footer">
+                                <MudText Typo="Typo.body2" Class="notebook-account-menu-username">
+                                    @AuthSession.State.Username
+                                </MudText>
+                                <MudButton Variant="Variant.Text"
+                                           Size="Size.Small"
+                                           Color="Color.Primary"
+                                           OnClick="SignOutAsync">
+                                    Sign out
+                                </MudButton>
+                            </div>
+                        </div>
+                    </ChildContent>
+                </MudMenu>
+            </div>
+        </div>
+    </MudAppBar>
+}
+
+@code {
+    private IReadOnlyList<AppNavItem> _items = [];
+    private AppNavItem? _coreDashboardItem;
+    private string? _hoveredHref;
+
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+        AuthSession.Changed += OnSessionChanged;
+        ThemeService.Changed += OnThemeChanged;
+        RefreshItems();
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _hoveredHref = null;
+        RefreshItems();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnSessionChanged() => InvokeAsync(StateHasChanged);
+
+    private void OnThemeChanged() => InvokeAsync(StateHasChanged);
+
+    private void RefreshItems()
+    {
+        var path = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var scope = AppNavigation.GetScope(path);
+        _items = AppNavigation.GetItems(scope);
+        _coreDashboardItem = AppNavigation.GetCoreDashboardItem(scope);
+    }
+
+    private void SetHovered(string href)
+    {
+        _hoveredHref = href;
+        StateHasChanged();
+    }
+
+    private void ClearHovered()
+    {
+        if (_hoveredHref is null)
+        {
+            return;
+        }
+
+        _hoveredHref = null;
+        StateHasChanged();
+    }
+
+    private string GetNavClass(AppNavItem item)
+        => string.Equals(_hoveredHref, item.Href, StringComparison.OrdinalIgnoreCase)
+            ? "notebook-bottom-nav-item is-hovered"
+            : "notebook-bottom-nav-item";
+
+    private async Task SetDarkModeAsync(bool isDarkMode)
+    {
+        await ThemeService.SetDarkModeAsync(isDarkMode);
+        StateHasChanged();
+    }
+
+    private async Task SignOutAsync()
+    {
+        await AuthSession.SignOutAsync();
+        ModuleState.Reset();
+        Navigation.NavigateTo("/");
+    }
+
+    private static string GetInitials(string? username)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return "?";
+        }
+
+        var trimmed = username.Trim();
+        var parts = trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length >= 2)
+        {
+            return $"{char.ToUpperInvariant(parts[0][0])}{char.ToUpperInvariant(parts[1][0])}";
+        }
+
+        return trimmed.Length >= 2
+            ? trimmed[..2].ToUpperInvariant()
+            : trimmed.ToUpperInvariant();
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+        AuthSession.Changed -= OnSessionChanged;
+        ThemeService.Changed -= OnThemeChanged;
+    }
+}

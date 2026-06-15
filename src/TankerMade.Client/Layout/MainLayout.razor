@@ -1,54 +1,88 @@
 ﻿@inherits LayoutComponentBase
-@inject TankerMade.Client.Services.AuthSession AuthSession
-@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject AuthSession AuthSession
+@inject ClientModuleState ModuleState
+@inject CoreRecentModule CoreRecentModule
 @inject NavigationManager Navigation
 @implements IDisposable
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<MudLayout Class="notebook-layout">
+    <MudAppBar Elevation="0" Dense="true" Class="notebook-top-bar">
+        <MudText Typo="Typo.h6" Class="notebook-brand">TankerMade</MudText>
+        <MudSpacer />
+        @if (!AuthSession.IsSignedIn)
+        {
+            <MudButton Variant="Variant.Text" Size="Size.Small" Href="/">Sign in</MudButton>
+        }
+    </MudAppBar>
 
-    <main>
-        <div class="top-row px-4">
-            @if (AuthSession.IsSignedIn)
-            {
-                <span>@AuthSession.State.Username</span>
-                <button class="btn btn-link" @onclick="SignOutAsync">Sign out</button>
-            }
-            else
-            {
-                <a href="login">Sign in</a>
-            }
-        </div>
-
-        <article class="content px-4">
+    <MudMainContent Class="notebook-main-content">
+        <div class="notebook-page">
             @Body
-        </article>
-    </main>
-</div>
+        </div>
+    </MudMainContent>
+
+    @if (AuthSession.IsSignedIn && _showBottomNav)
+    {
+        <AppBottomNav />
+    }
+</MudLayout>
 
 @code {
+    private bool _showBottomNav;
+
     protected override async Task OnInitializedAsync()
     {
         AuthSession.Changed += StateHasChanged;
+        Navigation.LocationChanged += OnLocationChanged;
         await AuthSession.InitializeAsync();
 
         if (AuthSession.IsSignedIn)
         {
             await ModuleState.RefreshAsync();
+            await RecordModuleVisitFromUriAsync(Navigation.Uri);
         }
+
+        RefreshBottomNavVisibility();
     }
 
-    private async Task SignOutAsync()
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        await AuthSession.SignOutAsync();
-        ModuleState.Reset();
-        Navigation.NavigateTo("/");
+        RefreshBottomNavVisibility();
+        _ = RecordModuleVisitFromUriAsync(e.Location);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void RefreshBottomNavVisibility()
+    {
+        var scope = AppNavigation.GetScope(Navigation.ToBaseRelativePath(Navigation.Uri));
+        _showBottomNav = scope is AppNavigationScope.Core or AppNavigationScope.Knitting;
+    }
+
+    private async Task RecordModuleVisitFromUriAsync(string uri)
+    {
+        if (!AuthSession.IsSignedIn)
+        {
+            return;
+        }
+
+        var relativePath = Navigation.ToBaseRelativePath(uri).TrimEnd('/');
+        if (!relativePath.StartsWith("modules/", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var segments = relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length < 2)
+        {
+            return;
+        }
+
+        await CoreRecentModule.RecordModuleVisitAsync(segments[1]);
     }
 
     public void Dispose()
     {
         AuthSession.Changed -= StateHasChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
     }
 }

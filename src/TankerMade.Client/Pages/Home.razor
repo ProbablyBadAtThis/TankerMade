@@ -1,114 +1,284 @@
-﻿@page "/"
+﻿@page "/home"
+@using TankerMade.Contracts.DTOs.Dashboard
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.CoreRecentModule CoreRecentModule
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject NavigationManager Navigation
 @implements IDisposable
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Dashboard</PageTitle>
 
-<h1>TankerMade</h1>
+<MudStack Spacing="3" Class="core-shell-mud">
+    <MudStack Spacing="1">
+        <MudText Typo="Typo.overline" Color="Color.Primary">TankerMade</MudText>
+        <MudText Typo="Typo.h4">Dashboard</MudText>
+        <MudText Typo="Typo.body1" Color="Color.Secondary">Your local-first maker workbench.</MudText>
+    </MudStack>
 
-@if (!initialized)
-{
-    <p>Loading...</p>
-}
-else if (!AuthSession.IsSignedIn)
-{
-    <p>The core shell is ready. Sign in to load maker-specific modules.</p>
-    <div class="auth-actions">
-        <a class="btn btn-primary" href="login">Sign in</a>
-        <a class="btn btn-outline-secondary" href="register">Create account</a>
-    </div>
-}
-else
-{
-    <p>The core shell is ready. Choose a module to load maker-specific tools.</p>
-
-    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    @if (!initialized)
     {
-        <div class="alert alert-danger">@errorMessage</div>
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="my-2" />
     }
-
-    <div class="list-group">
-        @foreach (var module in ModuleState.AvailableModules)
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
         {
-            var isActive = ModuleState.IsActive(module.ModuleKey);
+            <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+        }
 
-            <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
-                <div>
-                    <h2 class="h5 mb-1">@module.Name</h2>
-                    <p class="mb-0">@module.Description</p>
-                </div>
-                @if (isActive)
+        <MudPaper Class="pa-4 core-panel-mud core-dashboard-recent-panel" Elevation="1">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Recent projects</MudText>
+
+                @if (featuredRecentWork != null)
                 {
-                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="() => Deactivate(module.ModuleKey)">Deactivate</button>
+                    <div class="core-dashboard-recent-layout">
+                        <MudPaper Class="pa-3 core-dashboard-recent-featured"
+                                  Elevation="0"
+                                  Outlined="true">
+                            <MudLink Href="@featuredRecentWork.NavigationPath" Underline="Underline.None" Class="core-dashboard-recent-link">
+                                <div class="core-dashboard-recent-featured-inner">
+                                    <AssetThumbnailImage AssetId="featuredRecentWork.ThumbnailAssetId"
+                                                         FallbackSrc="@GetThumbnailFallback(featuredRecentWork)"
+                                                         AltText="@featuredRecentWork.Title"
+                                                         SizeKey="medium"
+                                                         CssClass="core-dashboard-recent-thumb core-dashboard-recent-thumb-featured"
+                                                         ShowPlaceholder="false" />
+                                    <MudStack Spacing="1" Class="core-dashboard-recent-copy">
+                                        <MudText Typo="Typo.subtitle1">@featuredRecentWork.Title</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                            @FormatLastActive(featuredRecentWork.LastAccessedAtUtc)
+                                        </MudText>
+                                    </MudStack>
+                                </div>
+                            </MudLink>
+                        </MudPaper>
+
+                        @if (sidebarRecentWork.Count > 0)
+                        {
+                            <MudStack Spacing="1" Class="core-dashboard-recent-sidebar">
+                                @foreach (var item in sidebarRecentWork)
+                                {
+                                    <MudPaper Class="pa-2 core-dashboard-recent-sidebar-item"
+                                              Elevation="0"
+                                              Outlined="true">
+                                        <MudLink Href="@item.NavigationPath" Underline="Underline.None" Class="core-dashboard-recent-link">
+                                            <div class="core-dashboard-recent-sidebar-inner">
+                                                <AssetThumbnailImage AssetId="item.ThumbnailAssetId"
+                                                                     FallbackSrc="@GetThumbnailFallback(item)"
+                                                                     AltText="@item.Title"
+                                                                     SizeKey="small"
+                                                                     CssClass="core-dashboard-recent-thumb core-dashboard-recent-thumb-sidebar"
+                                                                     ShowPlaceholder="false" />
+                                                <MudStack Spacing="0" Class="core-dashboard-recent-copy">
+                                                    <MudText Typo="Typo.body2">@item.Title</MudText>
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                        @FormatLastActive(item.LastAccessedAtUtc)
+                                                    </MudText>
+                                                </MudStack>
+                                            </div>
+                                        </MudLink>
+                                    </MudPaper>
+                                }
+                            </MudStack>
+                        }
+                    </div>
                 }
                 else
                 {
-                    <button class="btn btn-primary" disabled="@busy" @onclick="() => Activate(module.ModuleKey)">Activate</button>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Open a project in an active module to see it here.
+                    </MudText>
                 }
-            </div>
-        }
-    </div>
-}
+            </MudStack>
+        </MudPaper>
+
+        <MudPaper Class="pa-4 core-panel-mud" Elevation="1" MaxWidth="MaxWidth.Small">
+            <MudStack Spacing="3">
+                <MudStack Spacing="1">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Most recent module</MudText>
+                    @if (recentModule != null)
+                    {
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   Href="@recentModule.NavigationRoute"
+                                   Class="core-module-btn-recent">
+                            @recentModule.Name
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">No recents</MudText>
+                    }
+                </MudStack>
+
+                <MudStack Spacing="1">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">All active</MudText>
+                    @if (activeModules.Count > 0)
+                    {
+                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                            @foreach (var module in activeModules)
+                            {
+                                var isRecent = module.ModuleKey == recentModuleKey;
+
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Primary"
+                                           Href="@module.NavigationRoute"
+                                           Class="@(isRecent ? "core-module-btn-recent" : null)">
+                                    @module.Name
+                                </MudButton>
+                            }
+                        </MudStack>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">None active</MudText>
+                    }
+                </MudStack>
+            </MudStack>
+        </MudPaper>
+
+        <MudPaper Class="pa-4 core-panel-mud" Elevation="1" MaxWidth="MaxWidth.Small">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.h6">Module activation</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Choose which craft modules are active in your workbench.</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/home/modules">Manage modules</MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+</MudStack>
 
 @code {
     private bool initialized;
-    private bool busy;
     private string errorMessage = string.Empty;
+    private string? recentModuleKey;
+    private ClientModuleSummary? recentModule;
+    private IReadOnlyList<ClientModuleSummary> activeModules = [];
+    private RecentWorkSummaryDto? featuredRecentWork;
+    private IReadOnlyList<RecentWorkSummaryDto> sidebarRecentWork = [];
+    private bool _loadInProgress;
 
     protected override async Task OnInitializedAsync()
     {
         AuthSession.Changed += HandleAuthChanged;
-        ModuleState.Changed += StateHasChanged;
+        ModuleState.Changed += HandleModuleStateChanged;
+        Navigation.LocationChanged += OnLocationChanged;
         await AuthSession.InitializeAsync();
 
-        if (AuthSession.IsSignedIn)
+        if (!AuthSession.IsSignedIn)
         {
-            await LoadModulesAsync();
+            Navigation.NavigateTo("/");
+            return;
         }
 
+        await LoadDashboardAsync(refreshModules: true);
         initialized = true;
     }
 
-    private async Task Activate(string moduleKey)
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        await RunModuleActionAsync(() => ModuleState.ActivateAsync(moduleKey));
+        if (!Navigation.ToBaseRelativePath(e.Location).TrimEnd('/').Equals("home", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        await LoadDashboardAsync(refreshModules: true);
+        await InvokeAsync(StateHasChanged);
     }
 
-    private async Task Deactivate(string moduleKey)
+    private async void HandleModuleStateChanged()
     {
-        await RunModuleActionAsync(() => ModuleState.DeactivateAsync(moduleKey));
+        if (!initialized)
+        {
+            return;
+        }
+
+        await LoadDashboardAsync(refreshModules: false);
+        await InvokeAsync(StateHasChanged);
     }
 
-    private async Task RunModuleActionAsync(Func<Task> action)
+    private async Task LoadDashboardAsync(bool refreshModules)
     {
-        busy = true;
+        if (_loadInProgress)
+        {
+            return;
+        }
+
+        _loadInProgress = true;
         errorMessage = string.Empty;
+        recentModule = null;
+        featuredRecentWork = null;
+        sidebarRecentWork = [];
 
         try
         {
-            await action();
+            if (refreshModules)
+            {
+                await ModuleState.RefreshAsync();
+            }
+
+            recentModuleKey = await CoreRecentModule.GetRecentModuleKeyAsync();
+
+            activeModules = ModuleState.AvailableModules
+                .Where(module => ModuleState.IsActive(module.ModuleKey))
+                .OrderBy(module => module.NavigationOrder)
+                .ThenBy(module => module.Name)
+                .ToList();
+
+            if (!string.IsNullOrWhiteSpace(recentModuleKey) && ModuleState.IsActive(recentModuleKey))
+            {
+                recentModule = activeModules.FirstOrDefault(module => module.ModuleKey == recentModuleKey);
+            }
+
+            var recentWork = await ApiClient.GetRecentWorkAsync(limit: 5);
+            featuredRecentWork = recentWork.FirstOrDefault();
+            sidebarRecentWork = recentWork.Skip(1).ToList();
         }
         catch (Exception ex)
         {
             errorMessage = ex.Message;
+            activeModules = [];
         }
         finally
         {
-            busy = false;
+            _loadInProgress = false;
         }
     }
 
-    private async Task LoadModulesAsync()
+    private static string? GetThumbnailFallback(RecentWorkSummaryDto item)
+        => string.IsNullOrWhiteSpace(item.ThumbnailFallbackPath)
+            ? null
+            : item.ThumbnailFallbackPath;
+
+    private static string FormatLastActive(DateTime lastAccessedAtUtc)
     {
-        try
+        var local = lastAccessedAtUtc.ToLocalTime();
+        var delta = DateTime.Now - local;
+        if (delta.TotalMinutes < 1)
         {
-            await ModuleState.RefreshAsync();
+            return "Active just now";
         }
-        catch (Exception ex)
+
+        if (delta.TotalHours < 1)
         {
-            errorMessage = ex.Message;
+            var minutes = Math.Max(1, (int)delta.TotalMinutes);
+            return $"Active {minutes} min ago";
         }
+
+        if (delta.TotalDays < 1)
+        {
+            var hours = Math.Max(1, (int)delta.TotalHours);
+            return $"Active {hours} hr ago";
+        }
+
+        if (delta.TotalDays < 7)
+        {
+            var days = Math.Max(1, (int)delta.TotalDays);
+            return $"Active {days} day{(days == 1 ? string.Empty : "s")} ago";
+        }
+
+        return $"Active {local:g}";
     }
 
     private void HandleAuthChanged()
@@ -116,12 +286,18 @@ else
         if (!AuthSession.IsSignedIn)
         {
             ModuleState.Reset();
+            recentModuleKey = null;
+            recentModule = null;
+            activeModules = [];
+            featuredRecentWork = null;
+            sidebarRecentWork = [];
         }
     }
 
     public void Dispose()
     {
         AuthSession.Changed -= HandleAuthChanged;
-        ModuleState.Changed -= StateHasChanged;
+        ModuleState.Changed -= HandleModuleStateChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
     }
 }

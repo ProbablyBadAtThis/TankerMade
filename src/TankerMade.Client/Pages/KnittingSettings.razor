@@ -19,7 +19,7 @@ else if (!ModuleState.IsActive("knitting"))
 {
     <h1>Knitting Settings</h1>
     <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/">Go to Home</a>
+    <a class="btn btn-outline-primary" href="/home">Go to Home</a>
 }
 else if (loading)
 {
@@ -45,77 +45,94 @@ else
         <div class="alert alert-success">@successMessage</div>
     }
 
-    <section class="project-panel">
-        <h2>Reference Data</h2>
-        <p class="muted-copy">Manage shared lists used across patterns, projects, and inventory.</p>
-        <div class="settings-grid">
-            <article class="pattern-card">
-                <h3>Themes</h3>
-                <ul class="reference-chip-list">
-                    @foreach (var item in themes)
-                    {
-                        <li>@item.Name</li>
-                    }
-                </ul>
-                <div class="auth-actions mt-2">
-                    <input class="form-control" placeholder="New theme" @bind="newThemeName" />
-                    <button class="btn btn-primary btn-sm" disabled="@busy" @onclick='() => AddCoreReferenceAsync("themes", newThemeName, () => newThemeName = string.Empty, themes)'>Add</button>
-                </div>
-            </article>
-            <article class="pattern-card">
-                <h3>Colors</h3>
-                <ul class="reference-chip-list">
-                    @foreach (var item in colors)
-                    {
-                        <li>@item.Name</li>
-                    }
-                </ul>
-                <div class="auth-actions mt-2">
-                    <input class="form-control" placeholder="New color" @bind="newColorName" />
-                    <button class="btn btn-primary btn-sm" disabled="@busy" @onclick='() => AddCoreReferenceAsync("colors", newColorName, () => newColorName = string.Empty, colors)'>Add</button>
-                </div>
-            </article>
-            <article class="pattern-card">
-                <h3>Sources</h3>
-                <ul class="reference-chip-list">
-                    @foreach (var item in sources)
-                    {
-                        <li>@item.Name</li>
-                    }
-                </ul>
-                <div class="auth-actions mt-2">
-                    <input class="form-control" placeholder="New source" @bind="newSourceName" />
-                    <button class="btn btn-primary btn-sm" disabled="@busy" @onclick='() => AddCoreReferenceAsync("sources", newSourceName, () => newSourceName = string.Empty, sources)'>Add</button>
-                </div>
-            </article>
-            <article class="pattern-card">
-                <h3>Brands</h3>
-                <ul class="reference-chip-list">
-                    @foreach (var item in brands)
-                    {
-                        <li>@item.Name</li>
-                    }
-                </ul>
-                <div class="auth-actions mt-2">
-                    <input class="form-control" placeholder="New brand" @bind="newBrandName" />
-                    <button class="btn btn-primary btn-sm" disabled="@busy" @onclick='() => AddCoreReferenceAsync("brands", newBrandName, () => newBrandName = string.Empty, brands)'>Add</button>
-                </div>
-            </article>
-            <article class="pattern-card">
-                <h3>Fiber Tags</h3>
-                <ul class="reference-chip-list">
-                    @foreach (var item in fiberTags)
-                    {
-                        <li>@item.Name</li>
-                    }
-                </ul>
-                <div class="auth-actions mt-2">
-                    <input class="form-control" placeholder="New fiber tag" @bind="newFiberTagName" />
-                    <button class="btn btn-primary btn-sm" disabled="@busy" @onclick="AddFiberTagAsync">Add</button>
-                </div>
-            </article>
+    <details class="settings-accordion" open>
+        <summary>Reference Data</summary>
+        <div class="settings-accordion-body">
+            <p class="muted-copy">Manage shared lists used across patterns, projects, and inventory. Type to see existing names before adding.</p>
+            <div class="settings-grid">
+                <article class="pattern-card">
+                    <h3>Themes</h3>
+                    <ul class="reference-chip-list">
+                        @foreach (var item in themes)
+                        {
+                            <li>@item.Name</li>
+                        }
+                    </ul>
+                    <div class="auth-actions mt-2">
+                        <ReferenceAutocompleteInput Label="New theme"
+                                                    Placeholder="New theme"
+                                                    Options="themeNames"
+                                                    @bind-Value="newThemeName" />
+                        <button class="btn btn-primary btn-sm" disabled="@busy" @onclick='() => AddCoreReferenceAsync("themes", newThemeName, () => newThemeName = string.Empty, themes)'>Add</button>
+                    </div>
+                </article>
+                <article class="pattern-card">
+                    <h3>Colors</h3>
+                    <ul class="reference-chip-list">
+                        @foreach (var item in colors)
+                        {
+                            <li>@item.Name</li>
+                        }
+                    </ul>
+                    <div class="auth-actions mt-2">
+                        <ReferenceAutocompleteInput Label="New color"
+                                                    Placeholder="New color"
+                                                    Options="colorNames"
+                                                    @bind-Value="newColorName" />
+                        <button class="btn btn-primary btn-sm" disabled="@busy" @onclick='() => AddCoreReferenceAsync("colors", newColorName, () => newColorName = string.Empty, colors)'>Add</button>
+                    </div>
+                </article>
+                <article class="pattern-card">
+                    <h3>Sources</h3>
+                    <ul class="reference-chip-list">
+                        @foreach (var item in sources)
+                        {
+                            <li>@item.Name</li>
+                        }
+                    </ul>
+                    <div class="auth-actions mt-2">
+                        <ReferenceAutocompleteInput Label="New source"
+                                                    Placeholder="New source"
+                                                    Options="sourceNames"
+                                                    @bind-Value="newSourceName" />
+                        <button class="btn btn-primary btn-sm" disabled="@busy" @onclick='() => AddCoreReferenceAsync("sources", newSourceName, () => newSourceName = string.Empty, sources)'>Add</button>
+                    </div>
+                </article>
+                <article class="pattern-card">
+                    <h3>Brands</h3>
+                    <ul class="reference-chip-list">
+                        @foreach (var item in brands)
+                        {
+                            <li>@item.Name</li>
+                        }
+                    </ul>
+                    <div class="auth-actions mt-2">
+                        <ReferenceAutocompleteInput Label="New brand"
+                                                    Placeholder="New brand"
+                                                    Options="brandNames"
+                                                    @bind-Value="newBrandName" />
+                        <button class="btn btn-primary btn-sm" disabled="@busy" @onclick='() => AddCoreReferenceAsync("brands", newBrandName, () => newBrandName = string.Empty, brands)'>Add</button>
+                    </div>
+                </article>
+                <article class="pattern-card">
+                    <h3>Fiber Tags</h3>
+                    <ul class="reference-chip-list">
+                        @foreach (var item in fiberTags)
+                        {
+                            <li>@item.Name</li>
+                        }
+                    </ul>
+                    <div class="auth-actions mt-2">
+                        <ReferenceAutocompleteInput Label="New fiber tag"
+                                                    Placeholder="New fiber tag"
+                                                    Options="fiberTagNames"
+                                                    @bind-Value="newFiberTagName" />
+                        <button class="btn btn-primary btn-sm" disabled="@busy" @onclick="AddFiberTagAsync">Add</button>
+                    </div>
+                </article>
+            </div>
         </div>
-    </section>
+    </details>
 
     @foreach (var category in CategoryOrder)
     {
@@ -125,9 +142,10 @@ else
             continue;
         }
 
-        <section class="project-panel">
-            <div class="project-panel-header">
-                <h2>@CategoryLabel(category)</h2>
+        <details class="settings-accordion" open>
+            <summary>@CategoryLabel(category)</summary>
+            <div class="settings-accordion-body">
+            <div class="project-panel-header mb-2">
                 <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => ResetCategoryDefaultsAsync(category)">Reset Category</button>
             </div>
             <div class="settings-grid">
@@ -197,12 +215,14 @@ else
                     </article>
                 }
             </div>
-        </section>
+            </div>
+        </details>
     }
 
-    <section class="project-panel">
-        <div class="project-panel-header">
-            <h2>Advanced Settings</h2>
+    <details class="settings-accordion">
+        <summary>Advanced Settings</summary>
+        <div class="settings-accordion-body">
+        <div class="project-panel-header mb-2">
             <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="ClearCustomForm">Clear Form</button>
         </div>
         <p class="muted-copy">Use this for custom module values not covered above.</p>
@@ -225,34 +245,35 @@ else
             </div>
             <button class="btn btn-primary" disabled="@busy" type="submit">Save Custom Setting</button>
         </EditForm>
-    </section>
 
-    @if (customSettings.Count == 0)
-    {
-        <div class="empty-state">
-            <h2>No Custom Settings</h2>
-            <p>Custom keys outside predefined knitting controls will appear here.</p>
+        @if (customSettings.Count == 0)
+        {
+            <div class="empty-state">
+                <h2>No Custom Settings</h2>
+                <p>Custom keys outside predefined knitting controls will appear here.</p>
+            </div>
+        }
+        else
+        {
+            <div class="pattern-card-grid">
+                @foreach (var item in customSettings)
+                {
+                    <article class="pattern-card">
+                        <h2>@item.Key</h2>
+                        <p>@item.Category</p>
+                        <div class="pattern-card-stats">
+                            <span>@item.Value</span>
+                        </div>
+                        <div class="auth-actions">
+                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => EditCustomSetting(item)">Edit</button>
+                            <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeleteSettingAsync(item.Key)">Delete</button>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
         </div>
-    }
-    else
-    {
-        <div class="pattern-card-grid">
-            @foreach (var item in customSettings)
-            {
-                <article class="pattern-card">
-                    <h2>@item.Key</h2>
-                    <p>@item.Category</p>
-                    <div class="pattern-card-stats">
-                        <span>@item.Value</span>
-                    </div>
-                    <div class="auth-actions">
-                        <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => EditCustomSetting(item)">Edit</button>
-                        <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeleteSettingAsync(item.Key)">Delete</button>
-                    </div>
-                </article>
-            }
-        </div>
-    }
+    </details>
 }
 
 @code {
@@ -297,6 +318,12 @@ else
     private bool busy;
     private string errorMessage = string.Empty;
     private string successMessage = string.Empty;
+
+    private IReadOnlyList<string> themeNames => themes.Select(item => item.Name).ToList();
+    private IReadOnlyList<string> colorNames => colors.Select(item => item.Name).ToList();
+    private IReadOnlyList<string> sourceNames => sources.Select(item => item.Name).ToList();
+    private IReadOnlyList<string> brandNames => brands.Select(item => item.Name).ToList();
+    private IReadOnlyList<string> fiberTagNames => fiberTags.Select(item => item.Name).ToList();
 
     protected override async Task OnInitializedAsync()
     {

@@ -1,0 +1,27 @@
+@inject ThemeService ThemeService
+@implements IDisposable
+
+<MudThemeProvider Theme="TankerMadeMudTheme.Theme" IsDarkMode="@ThemeService.IsDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+@ChildContent
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ThemeService.Changed += OnThemeChanged;
+        await ThemeService.InitializeAsync();
+    }
+
+    private void OnThemeChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        ThemeService.Changed -= OnThemeChanged;
+    }
+}

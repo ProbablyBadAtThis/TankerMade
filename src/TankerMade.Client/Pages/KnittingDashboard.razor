@@ -28,7 +28,7 @@
         <section class="module-card">
             <h2>Module Not Active</h2>
             <p>Activate Knitting from Home to continue.</p>
-            <a class="btn btn-outline-primary" href="/">Go to Home</a>
+            <a class="btn btn-outline-primary" href="/home">Go to Home</a>
         </section>
     }
     else if (loading)
@@ -39,28 +39,44 @@
     }
     else
     {
-        @if (recentProject != null)
+        @if (workedOnProject != null)
         {
             <section class="module-card module-card-knitting-feature mb-3">
                 <div class="knitting-hero-card">
-                    <AssetThumbnailImage AssetId="recentProjectAssetId"
-                                         AltText="@recentProject.Name"
+                    <AssetThumbnailImage AssetId="workedOnProjectAssetId"
+                                         AltText="@workedOnProject.Name"
                                          CssClass="asset-thumbnail-image" />
                     <div>
-                        <p class="module-kicker mb-1">Most Recent Project</p>
-                        <h2>@recentProject.Name</h2>
-                        <p class="mb-2">@(string.IsNullOrWhiteSpace(recentProject.ThemeName) ? "No theme" : recentProject.ThemeName)</p>
+                        <p class="module-kicker mb-1">Last Worked On</p>
+                        <h2>@workedOnProject.Name</h2>
+                        <p class="mb-2">@(string.IsNullOrWhiteSpace(workedOnProject.ThemeName) ? "No theme" : workedOnProject.ThemeName)</p>
                         <div class="pattern-card-stats mb-2">
-                            <span class="@KnittingUi.DifficultyCssClass(recentProject.Difficulty)">@KnittingUi.DifficultyLabel(recentProject.Difficulty)</span>
-                            <span>@recentProject.Progress%</span>
-                            @if (recentProject.TotalStitchCount > 0)
+                            <span class="@KnittingUi.DifficultyCssClass(workedOnProject.Difficulty)">@KnittingUi.DifficultyLabel(workedOnProject.Difficulty)</span>
+                            <span>@workedOnProject.Progress%</span>
+                            @if (workedOnProject.TotalStitchCount > 0)
                             {
-                                <span>@recentProject.CompletedStitchCount/@recentProject.TotalStitchCount stitches</span>
+                                <span>@workedOnProject.CompletedStitchCount/@workedOnProject.TotalStitchCount stitches</span>
                             }
                         </div>
-                        <a class="btn btn-primary" href="@($"/modules/knitting/projects/{recentProject.Id}")">Open Most Recent Project</a>
+                        <a class="btn btn-primary" href="@($"/modules/knitting/projects/{workedOnProject.Id}")">Continue Project</a>
                     </div>
                 </div>
+            </section>
+        }
+
+        @if (recentlyViewedProjects.Count > 0)
+        {
+            <section class="module-card module-card-knitting mb-3">
+                <h2>Recently Viewed</h2>
+                <ul class="recently-viewed-list">
+                    @foreach (var viewed in recentlyViewedProjects)
+                    {
+                        <li>
+                            <a href="@($"/modules/knitting/projects/{viewed.Id}")">@viewed.Name</a>
+                            <span class="text-muted"> · @viewed.Progress%</span>
+                        </li>
+                    }
+                </ul>
             </section>
         }
 
@@ -71,14 +87,9 @@
                 <a class="btn btn-primary" href="/modules/knitting/projects">Open Projects</a>
             </article>
             <article class="module-card module-card-knitting-feature module-card-knitting-accent">
-                <h2>Stash and Supply Health</h2>
-                <p>Stay ahead on yarn lots, tools, and notion usage before starting new pieces.</p>
-                <div class="auth-actions">
-                    <a class="btn btn-outline-secondary" href="/modules/knitting/inventory">All Inventory</a>
-                    <a class="btn btn-link" href="/modules/knitting/inventory?tab=yarn">Yarn</a>
-                    <a class="btn btn-link" href="/modules/knitting/inventory?tab=tools">Tools</a>
-                    <a class="btn btn-link" href="/modules/knitting/inventory?tab=notions">Notions</a>
-                </div>
+                <h2>Inventory</h2>
+                <p>One stash for yarn, tools, and notions — pick the tab you need inside inventory.</p>
+                <a class="btn btn-outline-secondary" href="/modules/knitting/inventory">Open Inventory</a>
             </article>
         </section>
 
@@ -123,8 +134,9 @@
 
 @code {
     private const string ModuleKey = "knitting";
-    private ModuleProjectDto? recentProject;
-    private Guid? recentProjectAssetId;
+    private ModuleProjectDto? workedOnProject;
+    private Guid? workedOnProjectAssetId;
+    private readonly List<ModuleProjectDto> recentlyViewedProjects = [];
     private bool loading = true;
 
     protected override async Task OnInitializedAsync()
@@ -133,33 +145,51 @@
         if (AuthSession.IsSignedIn)
         {
             await ModuleState.RefreshAsync();
-            await LoadRecentProjectAsync();
+            await LoadDashboardProjectsAsync();
         }
 
         loading = false;
     }
 
-    private async Task LoadRecentProjectAsync()
+    private async Task LoadDashboardProjectsAsync()
     {
         if (!ModuleState.IsActive(ModuleKey))
         {
             return;
         }
 
-        var recentId = await RecentActivity.GetRecentProjectIdAsync();
-        if (!recentId.HasValue)
+        workedOnProject = null;
+        workedOnProjectAssetId = null;
+        recentlyViewedProjects.Clear();
+
+        var workedOnId = await RecentActivity.GetWorkedOnProjectIdAsync();
+        if (workedOnId.HasValue)
         {
-            var projects = await ApiClient.GetModuleProjectsAsync(ModuleKey, includeArchived: false);
-            recentProject = projects.OrderByDescending(project => project.UpdatedAt).FirstOrDefault();
-        }
-        else
-        {
-            recentProject = await ApiClient.GetModuleProjectAsync(ModuleKey, recentId.Value);
+            workedOnProject = await ApiClient.GetModuleProjectAsync(ModuleKey, workedOnId.Value);
         }
 
-        if (recentProject != null)
+        if (workedOnProject == null)
         {
-            recentProjectAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, "project", recentProject.Id);
+            var projects = await ApiClient.GetModuleProjectsAsync(ModuleKey, includeArchived: false);
+            workedOnProject = projects
+                .OrderByDescending(project => project.Progress)
+                .ThenByDescending(project => project.UpdatedAt)
+                .FirstOrDefault();
+        }
+
+        if (workedOnProject != null)
+        {
+            workedOnProjectAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, "project", workedOnProject.Id);
+        }
+
+        var viewedIds = await RecentActivity.GetRecentlyViewedProjectIdsAsync(workedOnProject?.Id);
+        foreach (var viewedId in viewedIds)
+        {
+            var viewed = await ApiClient.GetModuleProjectAsync(ModuleKey, viewedId);
+            if (viewed != null && !viewed.IsArchived)
+            {
+                recentlyViewedProjects.Add(viewed);
+            }
         }
     }
 }

@@ -122,12 +122,15 @@ builder.Services.AddScoped<IModuleProjectCapabilityResolver, ModuleProjectCapabi
 builder.Services.AddScoped<IModuleInventoryCapabilityResolver, ModuleInventoryCapabilityResolver>();
 builder.Services.AddScoped<IModuleKitCapabilityResolver, ModuleKitCapabilityResolver>();
 builder.Services.AddScoped<IModuleSettingsCapabilityResolver, ModuleSettingsCapabilityResolver>();
+builder.Services.AddScoped<IModuleRecentWorkSummaryResolver, ModuleRecentWorkSummaryResolver>();
+builder.Services.AddScoped<IRecentWorkService, RecentWorkService>();
 builder.Services.AddScoped<IModulePatternCapabilityHandler, KnittingPatternCapabilityHandler>();
 builder.Services.AddScoped<IModuleProjectCapabilityHandler, KnittingProjectCapabilityHandler>();
 builder.Services.AddScoped<IModuleInventoryCapabilityHandler, KnittingInventoryCapabilityHandler>();
 builder.Services.AddScoped<IModuleInventoryCapabilityHandler, PrintingInventoryCapabilityHandler>();
 builder.Services.AddScoped<IModuleKitCapabilityHandler, KnittingKitCapabilityHandler>();
 builder.Services.AddScoped<IModuleSettingsCapabilityHandler, KnittingSettingsCapabilityHandler>();
+builder.Services.AddScoped<IModuleRecentWorkSummaryProvider, KnittingRecentWorkSummaryProvider>();
 
 // Add controllers and OpenAPI
 builder.Services.AddControllers();

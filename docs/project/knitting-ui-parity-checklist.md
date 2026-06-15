@@ -6,7 +6,7 @@ Companion UX spec: `docs/product/ux-reference.md` (YarnProject.pdf wireframes; l
 
 **Scope:** Knitting module only (`/modules/knitting/*`). Crochet/Knit toggle filters from the deck are marked **N/A** where the knitting module is already craft-scoped.
 
-**Last reviewed:** 2026-06-11 (parity completion pass on `working/knitting-settings-ui-pass`; includes Phase K8 `StartedAt` migration)
+**Last reviewed:** 2026-06-11 (`working/knitting-settings-ui-pass`; pushed `5df49e0` + uncommitted UI pass)
 
 ---
 
@@ -28,7 +28,7 @@ Companion UX spec: `docs/product/ux-reference.md` (YarnProject.pdf wireframes; l
 | Area | ✅ | 🟡 | ❌ | ➖ |
 |------|---:|---:|---:|---:|
 | Home / Dashboard | 6 | 0 | 0 | 1 |
-| Settings + Glossary | 7 | 0 | 0 | 0 |
+| Settings + Glossary | 8 | 1 | 0 | 0 |
 | Projects (list + detail) | 23 | 2 | 0 | 1 |
 | Patterns (list + detail) | 13 | 2 | 0 | 1 |
 | Inventory — Yarn | 12 | 2 | 0 | 0 |
@@ -36,16 +36,20 @@ Companion UX spec: `docs/product/ux-reference.md` (YarnProject.pdf wireframes; l
 | Inventory — Notions | 3 | 3 | 0 | 0 |
 | Kits (list + detail + wizard) | 8 | 6 | 0 | 1 |
 | Wizards (project/pattern/kit) | 2 | 10 | 1 | 1 |
-| Cross-cutting | 7 | 0 | 0 | 0 |
-| **Rough totals** | **~86** | **~25** | **~1** | **6** |
+| App shell (host) | 4 | 1 | 0 | 0 |
+| Cross-cutting | 8 | 0 | 0 | 0 |
+| **Rough totals** | **~90** | **~26** | **~1** | **6** |
 
-**Branch / build:** `working/knitting-settings-ui-pass` (working tree uncommitted). Migrations: `PhaseK7_KnittingColorAndYarnRemaining`, `PhaseK8_KnittingProjectStartedAt`. Client + server project builds pass locally.
+**Branch / build:**
 
-**Strongest today:** end-to-end project workspace, wizards with inline step authoring + finalize review, project/pattern color + date started, inventory depth (lot detail, tool size variants, notion bulk-split), list scale (pagination + multi-axis filters on projects/inventory).
+- **Pushed:** `5df49e0` on `working/knitting-settings-ui-pass` (functional parity + Phase K7/K8 migrations).
+- **Uncommitted:** UI pass (horizontal nav, theme, sticky workspace, per-row checks, home worked-on, settings accordion, autocomplete). Client build passes; awaiting real-browser verification.
 
-**Crafter answers (2026-06-11):** See `docs/product/ux-reference.md` § Crafter decisions. Top implementation deltas: per-row checkboxes, sticky timer/progress, dark+warm theme, home “worked on” hero, single Inventory entry, settings accordion, reference autocomplete.
+**Strongest today:** end-to-end workspace with per-row checkboxes + sticky progress/timer; dark warm theme; horizontal nav; inventory depth; list pagination/filters; crafter-aligned home and settings.
 
-**Remaining vs deck:** per-row checkboxes (PD4), sticky workspace chrome, theme/visual lock-in per crafter answers; optional server-side pagination.
+**Crafter answers:** `docs/product/ux-reference.md` § Crafter decisions; `Scratch/ui-discussion/2026-06-11-crafter-answers.md`.
+
+**Remaining vs deck:** wizard slide layout fidelity; pattern/inventory reference autocomplete outside settings; projects list worked-on sort; optional server-side pagination.
 
 ---
 
@@ -63,19 +67,20 @@ Phases A–F from the original plan are **implemented at first-pass level**. Use
 | **F** | Kit workspace parity + archive flow | ✅ First pass |
 
 ### Phase A — Navigation & list polish
-1. Home hero: most recent project + image + one-click open — ✅
+1. Home hero: last worked-on project + image + one-click open — ✅ (uncommitted UI pass)
 2. Card thumbnails on project/pattern/kit/inventory lists — ✅
-3. Project list: sort + filters (theme, color, difficulty, completion, archived, live search, pagination) — ✅
+3. Project list: sort + filters (theme, color, difficulty, completion, archived, live search, pagination) — ✅ (worked-on sort on list still thin; dashboard hero uses worked-on)
 4. Pattern list: sort + filters (theme, color, source, difficulty, live search, pagination) — ✅
 5. Kit list: thumbnail card grid + search/sort + pagination — ✅ (filter depth vs project list still thin)
 
 ### Phase B — Project workspace fidelity
 1. Stitch totals + stitch-driven % — ✅
 2. Per-piece completion % and tracked time in sidebar — ✅
-3. Step range `5–7` format with expanded row chips — 🟡 (chips, not per-row checkboxes)
+3. Step range `5–7` format with per-row checkboxes — ✅ (`KnittingRowProgress`; uncommitted UI pass)
 4. Scrollable pattern step panel — ✅
 5. Difficulty colour-coding (6 levels) — ✅
-6. Theme + color on project header — 🟡 (color displays when set; project create/edit picker still thin)
+6. Sticky workspace chrome (progress %, timer summary) — ✅ (uncommitted UI pass)
+7. Theme + color on project header — ✅
 
 ### Phase C — Creation wizards
 1. New Project wizard — ✅ (`KnittingProjectWizard.razor`)
@@ -108,10 +113,10 @@ Phases A–F from the original plan are **implemented at first-pass level**. Use
 
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
-| H1 | Show most recently opened project name | ✅ | `KnittingRecentActivity` + fallback to most recently updated project |
+| H1 | Show last worked-on project name | ✅ | `RecordProjectWorkedOnAsync`; recently viewed list for view-only opens |
 | H2 | Show image of most recent project | ✅ | `AssetThumbnailImage` on hero card |
 | H3 | “Open Most Recent Project” primary action | ✅ | Direct link to project workspace |
-| H4 | Quick nav: Patterns, Yarns, Tools, Notions, Kits, Settings | ✅ | Stash card links to `inventory?tab=yarn|tools|notions` |
+| H4 | Quick nav: Patterns, Yarns, Tools, Notions, Kits, Settings | ✅ | Single **Inventory** entry on dashboard; tabs inside inventory |
 | H5 | Archive entry point | ✅ | `projects?archived=true` shortcut on dashboard |
 | H6 | Terms link | ✅ | Dedicated `/modules/knitting/glossary` section on dashboard |
 | H7 | Crochet/Knit filter | ➖ | Module-scoped |
@@ -131,6 +136,10 @@ Phases A–F from the original plan are **implemented at first-pass level**. Use
 | S5 | Fiber Type list | ✅ | Settings panel + inventory add-new |
 | S6 | Terms (glossary) | ✅ | `KnittingGlossary.razor` (backed by module settings category `terms`) |
 | S7 | Module behavior defaults | ✅ | Projects, kits, workspace, timers |
+| S8 | Folding / accordion layout | ✅ | `<details>` sections — uncommitted UI pass |
+| S9 | Reference autocomplete on add-new | 🟡 | `ReferenceAutocompleteInput` on theme/brand/etc.; pattern/inventory forms still thin |
+
+**Target files:** `KnittingSettings.razor`, `ReferenceAutocompleteInput.razor`
 
 ---
 
@@ -139,7 +148,7 @@ Phases A–F from the original plan are **implemented at first-pass level**. Use
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
 | PL1 | Card grid with image + title | ✅ | `AssetThumbnailImage` on cards |
-| PL2 | Default sort: most recent | ✅ | “Last opened” sort via `KnittingRecentActivity`; default remains `UpdatedAt` |
+| PL2 | Default sort: most recent progress | 🟡 | “Last opened” sort option; dashboard hero uses worked-on; list default still `UpdatedAt` |
 | PL3 | Sort/filter: theme | ✅ | Theme dropdown filter |
 | PL4 | Sort/filter: main color | ✅ | Color dropdown filter + card badge |
 | PL5 | Sort/filter: difficulty | ✅ | Difficulty filter + badge |
@@ -158,7 +167,7 @@ Phases A–F from the original plan are **implemented at first-pass level**. Use
 | PD1 | Step checkboxes update progress | ✅ | Per-step done toggles |
 | PD2 | Stitch count rolls into completed total | ✅ | Server rollup on `ModuleProjectDto` |
 | PD3 | Completion % from stitches | ✅ | Progress prefers stitch totals when present |
-| PD4 | Row ranges in `5–7` format | 🟡 | Compact range + row chips; not per-row checkboxes |
+| PD4 | Row ranges in `5–7` format | ✅ | Per-row checkboxes; step completes when all rows in range checked |
 | PD5 | Expandable / scrollable pattern box | ✅ | `step-panel-scroll` |
 | PD6 | Timer play/pause | ✅ | Per-step timers |
 | PD7 | Total time on piece | ✅ | Per-piece tracked time in sidebar meta |
@@ -314,51 +323,75 @@ Phases A–F from the original plan are **implemented at first-pass level**. Use
 
 ---
 
+## App shell (host-wide)
+
+| # | Requirement | Status | Notes |
+|---|-------------|--------|-------|
+| S1 | Horizontal top navigation | ✅ | Replaced vertical sidebar (`MainLayout`, `NavMenu`) — uncommitted |
+| S2 | App footer | ✅ | Minimal footer in `MainLayout` — uncommitted |
+| S3 | Dark warm default + light toggle | ✅ | `ThemeService`, `data-theme`, CSS variables — uncommitted |
+| S4 | Nav usable at half-width | 🟡 | Collapsible on narrow; verify in real browser |
+
+---
+
 ## Cross-cutting gaps
 
 | # | Requirement | Status | Notes |
 |---|-------------|--------|-------|
 | X1 | Card thumbnails everywhere | ✅ | Projects, patterns, kits, inventory list cards |
 | X2 | Theme / Source on patterns & projects | ✅ | Settings, forms, wizards, headers |
-| X3 | Main color field | 🟡 | Core color picker on patterns; project header shows color; project create/edit picker still thin |
+| X3 | Main color field | ✅ | Pattern + project pickers/filters (Phase K7 + `5df49e0`) |
 | X4 | Difficulty colour coding (6 levels) | ✅ | `KnittingUi` CSS badges |
 | X5 | Live search on lists / pickers | ✅ | Projects, patterns, inventory, kit list; wizard pattern filter |
 | X6 | Pagination on long lists | ✅ | Client pagination on projects, patterns, kits, and inventory tabs |
-| X7 | Last-opened / recent tracking | ✅ | `KnittingRecentActivity` (localStorage) |
+| X7 | Last-opened / worked-on tracking | ✅ | `KnittingRecentActivity`: opened, worked-on, recently viewed |
+| X8 | Reference autocomplete on add-new | 🟡 | Settings + project wizard theme; pattern/inventory forms still thin |
 
 ---
 
 ## Backend/API gaps still blocking full deck parity
 
-Core CRUD and workspace APIs are in place. Remaining blockers are **deck-specific depth** and **wizard fidelity**:
+Core CRUD and workspace APIs are in place. Remaining blockers are mostly **wizard layout fidelity** and **optional scale**:
 
-| API / behavior | Status | Unblocks |
-|----------------|--------|----------|
-| `ColorId` on pattern/project entities | ✅ Phase K7 | PL4, PD9 project pickers still UI |
-| Yarn remaining + lot remaining edit | ✅ Phase K7 | YV3; YV7 still needs dedicated lot route |
-| Lot detail route | ❌ | YV7 |
-| Notion variant / bulk-split backend | ❌ | NL4, NV2 |
-| Tool size variants | ❌ | TV2 |
-| Server-side `lastOpenedAt` (optional) | ❌ | PL2 server-backed sort (client localStorage today) |
-| Server-side list pagination | ❌ | X6 at scale |
-| Inventory → pattern reverse lookup completeness | 🟡 | TV3, NV3 |
+| API / behavior | Status | Notes |
+|----------------|--------|-------|
+| `ColorId` on pattern/project entities | ✅ Phase K7 | UI wired in `5df49e0` |
+| `StartedAt` on projects | ✅ Phase K8 | Wizard + detail pickers |
+| Yarn remaining + lot remaining edit | ✅ Phase K7 | |
+| Lot detail route | ✅ | `KnittingYarnLotDetail.razor` (`5df49e0`) |
+| Notion bulk-split | ✅ | Client-side split on add (`5df49e0`) |
+| Tool size variants (sibling tools) | ✅ | Tool detail page (`5df49e0`) |
+| Per-row step progress (server) | 🟡 | Row state in client localStorage (`KnittingRowProgress`); step complete when all rows checked |
+| Server-side `lastOpenedAt` / worked-on | ❌ | Optional; client localStorage today |
+| Server-side list pagination | ❌ | Optional at scale |
+| Inventory → pattern reverse lookup | 🟡 | TV3, NV3 |
 
-**Cleared:** typed inventory by-id, stitch rollup, per-piece aggregates, `KnittingRecentActivity`, core reference CRUD (`api/reference/*`), kit archive/reopen, kit child-project workspace aggregation, yarn remaining PUT endpoints.
+**Cleared:** typed inventory by-id, stitch rollup, per-piece aggregates, core reference CRUD, kit archive/reopen, yarn remaining PUT endpoints.
 
 ---
 
-## Verification harness (for parity sign-off)
+## Verification harness — functional parity
 
 Run in a real browser (not IDE embedded browser) as `member@test.com`:
 
-1. **Home** — stash tab deep links; archived projects shortcut; glossary opens `/modules/knitting/glossary`
-2. **Projects** — live search, theme + color filters, pagination; open workspace; header thumbnail + started date
-3. **Project wizard** — finalize summary, supply checkboxes, manual/auto date started; lands in workspace with stitch-based %
-4. **Workspace** — step checks, timers, per-piece stats; theme/color edit; archive stays on page
-5. **Patterns** — live search, color/source/theme filters, pagination; detail metadata + piece X of Y
-6. **Inventory** — fiber filter; brand/weight/type sort-filters; pagination; sectioned add forms; yarn lot detail; notion bulk-split; tool size variants
-7. **Kits** — thumbnail card grid; workspace child progress; archive/reopen
-8. **Settings + Glossary** — add theme/color/source/brand/fiber tag/term; confirm pickers on pattern/project forms
+1. **Home** — last worked-on hero; recently viewed; single Inventory entry; glossary; archived shortcut
+2. **Projects** — live search, theme + color filters, pagination; header thumbnail + started date
+3. **Project wizard** — finalize summary, supply checkboxes, date started; lands in workspace
+4. **Workspace** — per-row checkboxes on ranged steps; timers; per-piece stats; theme/color edit; archive in place
+5. **Patterns** — filters, pagination; detail metadata + piece X of Y
+6. **Inventory** — sectioned add forms; filters/pagination; yarn lot detail; notion comma-split; tool size variants
+7. **Kits** — thumbnail grid; child progress; archive/reopen
+8. **Settings + Glossary** — accordion sections; reference autocomplete; glossary page
+
+## Verification harness — UI pass (uncommitted)
+
+1. **Shell** — horizontal top nav (not sidebar); footer; dark default; light toggle in header
+2. **Theme** — warm dark surfaces on knitting dashboard and project cards; difficulty colors readable
+3. **Home** — “Last Worked On” label (not “most recent opened”); no separate Yarn/Tools/Notions buttons
+4. **Workspace** — sticky bar stays visible while scrolling steps (progress %, tracked time, piece name)
+5. **Row checks** — `5–7` range shows one checkbox per row; all checked marks step complete
+6. **Settings** — folded accordion sections; datalist suggestions when typing new theme/brand
+7. **Half-width** — no horizontal page scroll on inventory/projects at ~50% browser width
 
 Local build:
 
@@ -374,15 +407,10 @@ Optional re-seed: `dotnet run --project Scratch/knitting-seed/SeedKnittingData.c
 
 ## Recommended next work
 
-Functional parity pass complete. Crafter answers in `#ui-discussion` set direction:
-
-1. **Per-row checkboxes** — expand `5–7` ranges to one checkbox per row (crafter must-keep)
-2. **Sticky workspace** — timer + progress % visible while steps scroll
-3. **Theme** — dark default, warm palette, keep difficulty colors
-4. **Home** — last *worked on* hero + single Inventory entry (+ optional recently viewed)
-5. **Settings accordion** + **reference autocomplete** on add-new
-6. **Do not** compact project cards or modal-first pattern edits (crafter preference)
-7. Local sign-off → commit/push when green
+1. Run **both** verification harness sections above in a real browser.
+2. **Commit + push** uncommitted UI pass when green (`dotnet build TankerMade.sln`).
+3. **Polish if needed:** pattern/inventory reference autocomplete; projects list worked-on sort.
+4. Propagate shell + theme to other live modules after knitting sign-off.
 
 ---
 
@@ -397,7 +425,8 @@ Functional parity pass complete. Crafter answers in `#ui-discussion` set directi
 | Kits | `KnittingKits.razor`, `KnittingKitWizard.razor` | `ModuleKitsController` |
 | Settings | `KnittingSettings.razor` | `ModuleSettingsController`, `ReferenceDataController` |
 | Glossary | `KnittingGlossary.razor` | `ModuleSettingsController` (category `terms`) |
-| Shared client | `KnittingUi.cs`, `KnittingCardAssetCache.cs`, `AssetThumbnailImage.razor` | `api/assets/*` |
+| Shared client | `KnittingUi.cs`, `KnittingRecentActivity.cs`, `KnittingRowProgress.cs`, `KnittingCardAssetCache.cs`, `AssetThumbnailImage.razor`, `ReferenceAutocompleteInput.razor` | `api/assets/*` |
+| App shell | `Layout/MainLayout.razor`, `Layout/NavMenu.razor`, `Services/ThemeService.cs`, `wwwroot/css/app.css`, `wwwroot/js/theme.js` | — |
 
 ---
 

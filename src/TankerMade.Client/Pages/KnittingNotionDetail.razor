@@ -21,7 +21,7 @@ else if (!ModuleState.IsActive(ModuleKey))
 {
     <h1>Knitting Notion</h1>
     <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/">Go to Home</a>
+    <a class="btn btn-outline-primary" href="/home">Go to Home</a>
 }
 else if (loading)
 {
@@ -68,7 +68,7 @@ else
                 <section class="project-panel">
                     <h2>Image &amp; Assets</h2>
                     <AssetThumbnailImage AssetId="primaryAssetId"
-                                         SizeKey="detail"
+                                         SizeKey="medium"
                                          AltText="@($"{notion.BrandName} {notion.TypeName}")"
                                          CssClass="asset-thumbnail-image mb-3" />
                     <InputFile OnChange="UploadAssetAsync" disabled="@busy" />

@@ -3,53 +3,44 @@
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @implements IDisposable
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">TankerMade.Client</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
-
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
+<nav class="app-top-nav navbar navbar-expand-md">
+    <a class="navbar-brand app-brand" href="@(AuthSession.IsSignedIn ? "home" : "")">TankerMade</a>
+    <button title="Navigation menu"
+            class="navbar-toggler"
+            type="button"
+            aria-label="Toggle navigation"
+            @onclick="ToggleNavMenu">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="@NavMenuCssClass app-nav-collapse">
+        <div class="app-nav-links">
+            @if (AuthSession.IsSignedIn)
+            {
+                <NavLink class="app-nav-link" href="home">Home</NavLink>
+            }
+            else
+            {
+                <NavLink class="app-nav-link" href="" Match="NavLinkMatch.All">Sign in</NavLink>
+            }
+            @foreach (var module in ModuleState.AvailableModules
+                .Where(module => module.IsActive && !string.IsNullOrWhiteSpace(module.NavigationRoute))
+                .OrderBy(module => module.NavigationOrder)
+                .ThenBy(module => module.Name))
+            {
+                <NavLink class="app-nav-link" href="@module.NavigationRoute">
+                    @(string.IsNullOrWhiteSpace(module.NavigationLabel) ? module.Name : module.NavigationLabel)
+                </NavLink>
+            }
         </div>
-        @if (!AuthSession.IsSignedIn)
-        {
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="login">
-                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Sign in
-                </NavLink>
-            </div>
-        }
-        @foreach (var module in ModuleState.AvailableModules
-            .Where(module => module.IsActive && !string.IsNullOrWhiteSpace(module.NavigationRoute))
-            .OrderBy(module => module.NavigationOrder)
-            .ThenBy(module => module.Name))
-        {
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="@module.NavigationRoute">
-                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> @(string.IsNullOrWhiteSpace(module.NavigationLabel) ? module.Name : module.NavigationLabel)
-                </NavLink>
-            </div>
-        }
-    </nav>
-</div>
+    </div>
+</nav>
 
 @code {
     private bool collapseNavMenu = true;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : "show";
 
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
+    private void ToggleNavMenu() => collapseNavMenu = !collapseNavMenu;
 
     protected override void OnInitialized()
     {

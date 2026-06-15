@@ -27,6 +27,26 @@ Source: TankerMunk answers in Slack `#ui-discussion`; full capture in `Scratch/u
 
 **Revised vs pre-answer engineering backlog:** Deprioritize modal-first pattern/inventory edits and aggressive card compaction; prioritize sticky workspace chrome, per-row checkboxes, dark+warm theme, home “worked on” semantics, settings accordion, reference autocomplete.
 
+### Implementation status (2026-06-11)
+
+Branch `working/knitting-settings-ui-pass`: functional parity pushed (`5df49e0`); crafter-directed UI pass in **uncommitted** working tree (verify → commit).
+
+| Crafter decision | Status |
+|------------------|--------|
+| Dark warm default + light toggle | ✅ `ThemeService`, CSS variables |
+| Horizontal top nav (replaces sidebar) | ✅ `MainLayout` / `NavMenu` |
+| Home: last worked-on hero + recently viewed | ✅ `KnittingRecentActivity` |
+| Single Inventory on home | ✅ `KnittingDashboard` |
+| Sticky timer + progress % in workspace | ✅ `KnittingProjectDetail` |
+| Per-row checkboxes for ranges | ✅ `KnittingRowProgress` (client localStorage) |
+| Large photo project cards | ✅ retained |
+| Settings accordion | ✅ `KnittingSettings` |
+| Reference autocomplete (add-new) | 🟡 settings + project wizard theme only |
+| Inline pattern edits | ✅ pattern detail |
+| One-form yarn add | ✅ inventory |
+
+**PDF vs app (intentional deltas):** PDF Home lists separate Patterns/Yarns/Tools/Notions nav; crafter chose **one Inventory** entry. PDF does not specify shell layout; app uses **horizontal top nav** (not a vertical sidebar). Track parity in `docs/project/knitting-ui-parity-checklist.md`.
+
 The PDF is attached to the Claude Project. Do not remove it — it is the primary UX specification.
 
 ---
@@ -34,8 +54,8 @@ The PDF is attached to the Claude Project. Do not remove it — it is the primar
 ## Screens Documented in the PDF
 
 ### Home Screen
-- Shows image + name of most recently opened project
-- Quick navigation: Patterns, Yarns, Tools, Notions, Kits, Settings
+- Shows image + name of most recently opened project *(crafter: prefer **last worked on** for hero; optional recently viewed list)*
+- Quick navigation: Patterns, Yarns, Tools, Notions, Kits, Settings *(crafter: **single Inventory** on home; stash types inside inventory)*
 - Open Most Recent Project button
 
 ### Project List

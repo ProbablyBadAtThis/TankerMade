@@ -543,6 +543,41 @@ namespace TankerMade.Server.Migrations
                     b.ToTable("UserModuleActivations");
                 });
 
+            modelBuilder.Entity("TankerMade.Core.Entities.UserRecentWorkAccess", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastAccessedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ModuleKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("WorkItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WorkItemType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "LastAccessedAtUtc");
+
+                    b.HasIndex("UserId", "ModuleKey", "WorkItemType", "WorkItemId")
+                        .IsUnique();
+
+                    b.ToTable("CoreUserRecentWorkAccesses", (string)null);
+                });
+
             modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingInventoryPurchase", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3020,6 +3055,15 @@ namespace TankerMade.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("TankerMade.Core.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Core.Entities.UserRecentWorkAccess", b =>
+                {
                     b.HasOne("TankerMade.Core.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")

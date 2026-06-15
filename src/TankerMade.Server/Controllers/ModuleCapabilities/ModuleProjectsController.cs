@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TankerMade.Contracts.DTOs.Dashboard;
 using TankerMade.Contracts.DTOs.ModuleProjects;
 using TankerMade.Contracts.Services;
 using TankerMade.Server.Controllers;
@@ -15,11 +16,16 @@ public class ModuleProjectsController : ControllerBase
     private const int DefaultPageSize = 50;
     private readonly IModuleService _moduleService;
     private readonly IModuleProjectCapabilityResolver _resolver;
+    private readonly IRecentWorkService _recentWorkService;
 
-    public ModuleProjectsController(IModuleService moduleService, IModuleProjectCapabilityResolver resolver)
+    public ModuleProjectsController(
+        IModuleService moduleService,
+        IModuleProjectCapabilityResolver resolver,
+        IRecentWorkService recentWorkService)
     {
         _moduleService = moduleService;
         _resolver = resolver;
+        _recentWorkService = recentWorkService;
     }
 
     [HttpGet]
@@ -61,7 +67,21 @@ public class ModuleProjectsController : ControllerBase
         }
 
         var project = await gate.Handler!.GetByIdAsync(id, gate.UserId!.Value);
-        return project == null ? NotFound() : Ok(project);
+        if (project == null)
+        {
+            return NotFound();
+        }
+
+        await _recentWorkService.RecordAccessAsync(
+            gate.UserId!.Value,
+            new RecordRecentWorkRequest
+            {
+                ModuleKey = moduleKey,
+                WorkItemType = RecentWorkTypes.Project,
+                WorkItemId = id,
+            });
+
+        return Ok(project);
     }
 
     [HttpPost]

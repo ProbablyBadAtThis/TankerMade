@@ -1,0 +1,130 @@
+@page "/home/modules"
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<PageTitle>Modules</PageTitle>
+
+<div class="core-shell">
+    <header class="core-hero">
+        <p class="core-kicker">Core</p>
+        <h1>Module activation</h1>
+        <p>Choose which craft modules are active in your workbench.</p>
+    </header>
+
+    @if (!initialized)
+    {
+        <p>Loading...</p>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <div class="list-group">
+            @foreach (var module in ModuleState.AvailableModules)
+            {
+                var isActive = ModuleState.IsActive(module.ModuleKey);
+
+                <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
+                    <div>
+                        <h2 class="h5 mb-1">@module.Name</h2>
+                        <p class="mb-0">@module.Description</p>
+                    </div>
+                    @if (isActive)
+                    {
+                        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="() => Deactivate(module.ModuleKey)">Deactivate</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-primary" disabled="@busy" @onclick="() => Activate(module.ModuleKey)">Activate</button>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="core-back-link">
+            <a href="/home">Back to dashboard</a>
+        </div>
+    }
+</div>
+
+@code {
+    private bool initialized;
+    private bool busy;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthSession.Changed += HandleAuthChanged;
+        ModuleState.Changed += StateHasChanged;
+        await AuthSession.InitializeAsync();
+
+        if (!AuthSession.IsSignedIn)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        await LoadModulesAsync();
+        initialized = true;
+    }
+
+    private async Task Activate(string moduleKey)
+    {
+        await RunModuleActionAsync(() => ModuleState.ActivateAsync(moduleKey));
+    }
+
+    private async Task Deactivate(string moduleKey)
+    {
+        await RunModuleActionAsync(() => ModuleState.DeactivateAsync(moduleKey));
+    }
+
+    private async Task RunModuleActionAsync(Func<Task> action)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task LoadModulesAsync()
+    {
+        try
+        {
+            await ModuleState.RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private void HandleAuthChanged()
+    {
+        if (!AuthSession.IsSignedIn)
+        {
+            ModuleState.Reset();
+        }
+    }
+
+    public void Dispose()
+    {
+        AuthSession.Changed -= HandleAuthChanged;
+        ModuleState.Changed -= StateHasChanged;
+    }
+}
