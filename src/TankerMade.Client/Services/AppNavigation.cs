@@ -54,6 +54,8 @@ public static class AppNavigation
                 new("Projects", "/modules/knitting/projects", Icons.Material.Filled.Assignment, NavLinkMatch.Prefix),
                 new("Patterns", "/modules/knitting/patterns", Icons.Material.Filled.MenuBook, NavLinkMatch.Prefix),
                 new("Inventory", "/modules/knitting/inventory", Icons.Material.Filled.Inventory2, NavLinkMatch.Prefix),
+                new("Kits", "/modules/knitting/kits", Icons.Material.Filled.Layers, NavLinkMatch.Prefix),
+                new("Glossary", "/modules/knitting/glossary", Icons.Material.Filled.LibraryBooks, NavLinkMatch.All),
                 new("Settings", "/modules/knitting/settings", Icons.Material.Filled.Settings, NavLinkMatch.All),
             ],
             _ => [],

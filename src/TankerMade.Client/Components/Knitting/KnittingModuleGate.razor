@@ -1,0 +1,51 @@
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+
+<MudStack Spacing="3" Class="knitting-shell-mud">
+    @if (!AuthSession.IsSignedIn)
+    {
+        <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.h6">Sign in required</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@SignInMessage</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/login">Sign in</MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+    else if (!ModuleState.IsActive("knitting"))
+    {
+        <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.h6">Module not active</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Activate Knitting from Home to continue.</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/home">Go to Home</MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+    else if (Loading)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="my-2" />
+        @if (!string.IsNullOrWhiteSpace(LoadingMessage))
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@LoadingMessage</MudText>
+        }
+    }
+    else
+    {
+        @ChildContent
+    }
+</MudStack>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public bool Loading { get; set; }
+
+    [Parameter]
+    public string LoadingMessage { get; set; } = "Loading...";
+
+    [Parameter]
+    public string SignInMessage { get; set; } = "Sign in to open this knitting section.";
+}

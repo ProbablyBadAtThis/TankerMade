@@ -14,47 +14,38 @@
 
 <PageTitle>Knitting Project</PageTitle>
 
-@if (!AuthSession.IsSignedIn)
-{
-    <h1>Knitting Project</h1>
-    <p>Sign in to use this module section.</p>
-    <a class="btn btn-primary" href="/login">Sign in</a>
-}
-else if (!ModuleState.IsActive(ModuleKey))
-{
-    <h1>Knitting Project</h1>
-    <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/home">Go to Home</a>
-}
-else if (loading)
-{
-    <h1>Knitting Project</h1>
-    <p>Loading...</p>
-}
-else if (project is null)
-{
-    <h1>Project Not Found</h1>
-    <a class="btn btn-outline-secondary" href="/modules/knitting/projects">Back to Projects</a>
-}
-else
-{
-    <div class="pattern-detail">
-        @if (!string.IsNullOrWhiteSpace(errorMessage))
-        {
-            <div class="alert alert-danger">@errorMessage</div>
-        }
+<KnittingModuleGate Loading="loading" LoadingMessage="Loading project...">
+    @if (project is null)
+    {
+        <MudStack Spacing="3">
+            <KnittingPageHeader Title="Project Not Found"
+                                BackHref="/modules/knitting/projects"
+                                BackLabel="Projects" />
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/modules/knitting/projects">
+                Back to Projects
+            </MudButton>
+        </MudStack>
+    }
+    else
+    {
+        <MudStack Spacing="3" Class="pattern-detail">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+            }
 
-        <div class="pattern-header">
-            <div class="knitting-hero-card pattern-header-main">
-                <AssetThumbnailImage AssetId="projectAssetId"
-                                     AltText="@project.Name"
-                                     CssClass="asset-thumbnail-image" />
-                <div>
-                <a class="pattern-back-link" href="/modules/knitting/projects">Projects</a>
-                <h1>@project.Name</h1>
-                <p>@ProjectHeaderMeta</p>
-                <div class="pattern-card-stats mt-1">
-                    <span class="@KnittingUi.DifficultyCssClass(project.Difficulty)">@KnittingUi.DifficultyLabel(project.Difficulty)</span>
+            <div class="pattern-header">
+                <div class="knitting-hero-card pattern-header-main">
+                    <AssetThumbnailImage AssetId="projectAssetId"
+                                         AltText="@project.Name"
+                                         CssClass="asset-thumbnail-image" />
+                    <div>
+                        <KnittingPageHeader Title="@project.Name"
+                                            Subtitle="@ProjectHeaderMeta"
+                                            BackHref="/modules/knitting/projects"
+                                            BackLabel="Projects" />
+                        <div class="pattern-card-stats mt-1">
+                            <KnittingDifficultyBadge Difficulty="project.Difficulty" />
                     @if (!string.IsNullOrWhiteSpace(project.ThemeName))
                     {
                         <span>@project.ThemeName</span>
@@ -78,7 +69,7 @@ else
                 }
                 @if (project.IsArchived)
                 {
-                    <span class="archive-badge">Archived</span>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Default">Archived</MudChip>
                 }
                 </div>
             </div>
@@ -98,94 +89,79 @@ else
             </div>
         </div>
 
-        <section class="project-panel">
-            <div class="project-panel-header">
-                <h2>Workspace Setup</h2>
-                <a class="btn btn-outline-secondary btn-sm" href="/modules/knitting/patterns">Patterns</a>
-            </div>
-            <EditForm Model="form" OnValidSubmit="SaveAsync" class="project-edit-form">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
-                <div class="form-grid">
-                    <label>
-                        <span>Name</span>
-                        <InputText class="form-control" @bind-Value="form.Name" />
-                    </label>
-                    <label>
-                        <span>Description</span>
-                        <InputTextArea class="form-control" @bind-Value="form.Description" />
-                    </label>
-                    <label>
-                        <span>Pattern</span>
-                        <InputSelect class="form-control" disabled="@PatternSelectionLocked" @bind-Value="form.PatternIdText">
-                            <option value="">No pattern linked</option>
-                            @foreach (var patternOption in patterns)
+        <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+            <MudStack Spacing="2">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                    <MudText Typo="Typo.subtitle1">Workspace Setup</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Href="/modules/knitting/patterns">Patterns</MudButton>
+                </MudStack>
+                <EditForm Model="form" OnValidSubmit="SaveAsync" class="project-edit-form">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <MudStack Spacing="2">
+                        <div class="form-grid">
+                            <MudTextField @bind-Value="form.Name" Label="Name" Variant="Variant.Outlined" Required="true" />
+                            <MudTextField @bind-Value="form.Description" Label="Description" Variant="Variant.Outlined" Lines="3" />
+                            <MudSelect T="string" @bind-Value="form.PatternIdText" Label="Pattern" Variant="Variant.Outlined" Disabled="PatternSelectionLocked">
+                                <MudSelectItem T="string" Value="@string.Empty">No pattern linked</MudSelectItem>
+                                @foreach (var patternOption in patterns)
+                                {
+                                    <MudSelectItem T="string" Value="@patternOption.Id.ToString()">@patternOption.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            @if (PatternSelectionLocked)
                             {
-                                <option value="@patternOption.Id">@patternOption.Name</option>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Pattern changes are locked after progress, timer, or supply-link history exists.</MudText>
                             }
-                        </InputSelect>
-                        @if (PatternSelectionLocked)
-                        {
-                            <small class="muted-copy">Pattern changes are locked after progress, timer, or supply-link history exists.</small>
-                        }
-                    </label>
-                    <label>
-                        <span>Theme</span>
-                        <InputSelect class="form-control" @bind-Value="form.ThemeIdText">
-                            <option value="">None</option>
-                            @foreach (var theme in themes)
+                            <MudSelect T="string" @bind-Value="form.ThemeIdText" Label="Theme" Variant="Variant.Outlined">
+                                <MudSelectItem T="string" Value="@string.Empty">None</MudSelectItem>
+                                @foreach (var theme in themes)
+                                {
+                                    <MudSelectItem T="string" Value="@theme.Id.ToString()">@theme.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect T="string" @bind-Value="form.ColorIdText" Label="Main color" Variant="Variant.Outlined">
+                                <MudSelectItem T="string" Value="@string.Empty">None</MudSelectItem>
+                                @foreach (var color in colors)
+                                {
+                                    <MudSelectItem T="string" Value="@color.Id.ToString()">@color.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect T="int" @bind-Value="form.Difficulty" Label="Difficulty" Variant="Variant.Outlined">
+                                <MudSelectItem T="int" Value="0">Unspecified</MudSelectItem>
+                                <MudSelectItem T="int" Value="1">Beginner</MudSelectItem>
+                                <MudSelectItem T="int" Value="2">Beginner+</MudSelectItem>
+                                <MudSelectItem T="int" Value="3">Intermediate</MudSelectItem>
+                                <MudSelectItem T="int" Value="4">Intermediate+</MudSelectItem>
+                                <MudSelectItem T="int" Value="5">Advanced</MudSelectItem>
+                                <MudSelectItem T="int" Value="6">Advanced+</MudSelectItem>
+                            </MudSelect>
+                            <MudDatePicker @bind-Date="form.StartedAtDate" Label="Date started" Variant="Variant.Outlined" />
+                        </div>
+                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" ButtonType="ButtonType.Submit">Save Project</MudButton>
+                            @if (project.IsArchived)
                             {
-                                <option value="@theme.Id">@theme.Name</option>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Disabled="busy" OnClick="ReopenProjectAsync">Reopen Project</MudButton>
                             }
-                        </InputSelect>
-                    </label>
-                    <label>
-                        <span>Main color</span>
-                        <InputSelect class="form-control" @bind-Value="form.ColorIdText">
-                            <option value="">None</option>
-                            @foreach (var color in colors)
+                            else
                             {
-                                <option value="@color.Id">@color.Name</option>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Disabled="busy" OnClick="ArchiveProjectAsync">Archive Project</MudButton>
                             }
-                        </InputSelect>
-                    </label>
-                    <label>
-                        <span>Difficulty</span>
-                        <InputSelect class="form-control" @bind-Value="form.Difficulty">
-                            <option value="0">Unspecified</option>
-                            <option value="1">Beginner</option>
-                            <option value="2">Beginner+</option>
-                            <option value="3">Intermediate</option>
-                            <option value="4">Intermediate+</option>
-                            <option value="5">Advanced</option>
-                            <option value="6">Advanced+</option>
-                        </InputSelect>
-                    </label>
-                    <label>
-                        <span>Date started</span>
-                        <InputDate class="form-control" @bind-Value="form.StartedAtDate" />
-                    </label>
-                </div>
-                <div class="auth-actions">
-                    <button class="btn btn-primary" disabled="@busy" type="submit">Save Project</button>
-                    @if (project.IsArchived)
-                    {
-                        <button class="btn btn-outline-secondary" type="button" disabled="@busy" @onclick="ReopenProjectAsync">Reopen Project</button>
-                    }
-                    else
-                    {
-                        <button class="btn btn-outline-danger" type="button" disabled="@busy" @onclick="ArchiveProjectAsync">Archive Project</button>
-                    }
-                </div>
-            </EditForm>
-        </section>
+                        </MudStack>
+                    </MudStack>
+                </EditForm>
+            </MudStack>
+        </MudPaper>
 
         @if (pattern is null || pattern.Pieces.Count == 0)
         {
-            <div class="empty-state">
-                <h2>No Pattern Steps</h2>
-                <p>Link a pattern to this project to track steps and timers.</p>
-            </div>
+            <MudPaper Class="pa-6 knitting-panel-mud" Elevation="1">
+                <MudStack Spacing="1" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.h6">No Pattern Steps</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Link a pattern to this project to track steps and timers.</MudText>
+                </MudStack>
+            </MudPaper>
         }
         else
         {
@@ -243,10 +219,12 @@ else
                                             var rowKey = RowKey(step.Id, row);
                                             var rowChecked = rowCheckState.GetValueOrDefault(rowKey);
                                             <label class="step-row-check">
-                                                <input type="checkbox"
-                                                       checked="@rowChecked"
-                                                       disabled="@busy"
-                                                       @onchange="args => ToggleRowAsync(step, row, args)" />
+                                                <MudCheckBox T="bool"
+                                                             Value="rowChecked"
+                                                             ValueChanged="@(async (bool v) => await ToggleRowAsync(step, row, new ChangeEventArgs { Value = v }))"
+                                                             Disabled="busy"
+                                                             Color="Color.Primary"
+                                                             Dense="true" />
                                                 <span>@(row >= 0 ? $"Row {row}" : StepLabel(step))</span>
                                             </label>
                                         }
@@ -254,17 +232,17 @@ else
                                     <div class="step-content">
                                         <div class="step-title-row">
                                             <h3>@StepLabel(step)</h3>
-                                            <div class="auth-actions">
+                                            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
                                                 @if (timer?.IsRunning == true)
                                                 {
-                                                    <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => PauseTimerAsync(step.Id)">Pause</button>
+                                                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="busy" OnClick="@(() => PauseTimerAsync(step.Id))">Pause</MudButton>
                                                 }
                                                 else
                                                 {
-                                                    <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => StartTimerAsync(step.Id)">Start</button>
+                                                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="busy" OnClick="@(() => StartTimerAsync(step.Id))">Start</MudButton>
                                                 }
-                                                <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => OpenTimerEdit(step)">Edit</button>
-                                            </div>
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="busy" OnClick="@(() => OpenTimerEdit(step))">Edit</MudButton>
+                                            </MudStack>
                                         </div>
                                         @if (!string.IsNullOrWhiteSpace(step.Notes))
                                         {
@@ -280,104 +258,103 @@ else
             </div>
         }
 
-        <section class="project-panel mt-3">
-            <h2>Linked Supplies</h2>
-            <div class="form-grid">
-                <label>
-                    <span>Inventory Type</span>
-                    <select class="form-control" @bind="selectedInventoryType" @bind:after="OnInventoryTypeChanged">
-                        <option value="yarn">Yarn</option>
-                        <option value="tool">Tool</option>
-                        <option value="notion">Notion</option>
-                    </select>
-                </label>
-                <label>
-                    <span>Inventory Item</span>
-                    <select class="form-control" @bind="selectedInventoryItemId">
-                        <option value="">Select item</option>
+        <MudPaper Class="pa-4 knitting-panel-mud mt-3" Elevation="1">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.subtitle1">Linked Supplies</MudText>
+                <div class="form-grid">
+                    <MudSelect T="string" @bind-Value="selectedInventoryType" @bind-Value:after="OnInventoryTypeChanged" Label="Inventory Type" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@("yarn")">Yarn</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("tool")">Tool</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("notion")">Notion</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect T="Guid?" @bind-Value="selectedInventoryItemId" Label="Inventory Item" Variant="Variant.Outlined">
+                        <MudSelectItem T="Guid?" Value="@((Guid?)null)">Select item</MudSelectItem>
                         @foreach (var option in inventoryOptions)
                         {
-                            <option value="@option.Id">@option.Label</option>
+                            <MudSelectItem T="Guid?" Value="@option.Id">@option.Label</MudSelectItem>
                         }
-                    </select>
-                </label>
-                <label>
-                    <span>Quantity Planned</span>
-                    <InputNumber class="form-control" @bind-Value="supplyQuantity" />
-                </label>
-                <label>
-                    <span>Notes</span>
-                    <InputText class="form-control" @bind-Value="supplyNotes" />
-                </label>
-            </div>
-            <button class="btn btn-primary" disabled="@busy" @onclick="AddSupplyLinkAsync">Add Supply Link</button>
+                    </MudSelect>
+                    <MudNumericField T="decimal?" @bind-Value="supplyQuantity" Label="Quantity Planned" Variant="Variant.Outlined" />
+                    <MudTextField @bind-Value="supplyNotes" Label="Notes" Variant="Variant.Outlined" />
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" OnClick="AddSupplyLinkAsync">Add Supply Link</MudButton>
 
-            @if (project.InventoryLinks.Count == 0)
-            {
-                <p class="mt-3 mb-0">No supply links yet.</p>
-            }
-            else
-            {
-                <ul class="project-supply-list mt-3">
-                    @foreach (var link in project.InventoryLinks)
-                    {
-                        <li>
-                            <div>
-                                <strong>@link.InventoryItemName</strong>
-                                <span class="text-muted">(@link.InventoryItemType)</span>
-                                <span>@(link.QuantityPlanned?.ToString() ?? "-") planned</span>
-                                @if (!string.IsNullOrWhiteSpace(link.Notes))
+                @if (project.InventoryLinks.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">No supply links yet.</MudText>
+                }
+                else
+                {
+                    <ul class="project-supply-list mt-3">
+                        @foreach (var link in project.InventoryLinks)
+                        {
+                            <li>
+                                <div>
+                                    <strong>@link.InventoryItemName</strong>
+                                    <span class="text-muted">(@link.InventoryItemType)</span>
+                                    <span>@(link.QuantityPlanned?.ToString() ?? "-") planned</span>
+                                    @if (!string.IsNullOrWhiteSpace(link.Notes))
+                                    {
+                                        <small>@link.Notes</small>
+                                    }
+                                </div>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="@(() => RemoveSupplyLinkAsync(link.Id))">
+                                    Remove
+                                </MudButton>
+                            </li>
+                        }
+                    </ul>
+                }
+            </MudStack>
+        </MudPaper>
+
+        <MudPaper Class="pa-4 knitting-panel-mud mt-3" Elevation="1">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.subtitle1">Project Assets</MudText>
+                <InputFile OnChange="UploadProjectAssetAsync" disabled="@busy" />
+                @if (projectAssets.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">No assets attached yet.</MudText>
+                }
+                else
+                {
+                    <ul class="project-supply-list mt-2">
+                        @foreach (var asset in projectAssets)
+                        {
+                            <li>
+                                <div>
+                                    <strong>@asset.OriginalFileName</strong>
+                                    <span>@AssetMeta(asset)</span>
+                                </div>
+                                @if (asset.RecordId == project.Id)
                                 {
-                                    <small>@link.Notes</small>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="@(() => UnassignProjectAssetAsync(asset.Id))">
+                                        Unlink
+                                    </MudButton>
                                 }
-                            </div>
-                            <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => RemoveSupplyLinkAsync(link.Id)">Remove</button>
-                        </li>
-                    }
-                </ul>
-            }
-        </section>
-
-        <section class="project-panel mt-3">
-            <h2>Project Assets</h2>
-            <InputFile OnChange="UploadProjectAssetAsync" disabled="@busy" />
-            @if (projectAssets.Count == 0)
-            {
-                <p class="mt-2 mb-0 muted-copy">No assets attached yet.</p>
-            }
-            else
-            {
-                <ul class="project-supply-list mt-2">
-                    @foreach (var asset in projectAssets)
-                    {
-                        <li>
-                            <div>
-                                <strong>@asset.OriginalFileName</strong>
-                                <span>@AssetMeta(asset)</span>
-                            </div>
-                            @if (asset.RecordId == project.Id)
-                            {
-                                <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => UnassignProjectAssetAsync(asset.Id)">Unlink</button>
-                            }
-                            else
-                            {
-                                <button class="btn btn-outline-primary btn-sm" disabled="@busy" @onclick="() => AssignProjectAssetAsync(asset.Id)">Attach</button>
-                            }
-                        </li>
-                    }
-                </ul>
-            }
-        </section>
-    </div>
-}
+                                else
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="@(() => AssignProjectAssetAsync(asset.Id))">
+                                        Attach
+                                    </MudButton>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </MudStack>
+        </MudPaper>
+        </MudStack>
+    }
+</KnittingModuleGate>
 
 @if (timerEditStep != null)
 {
     <div class="modal-backdrop-panel" role="presentation">
         <div class="timer-dialog" role="dialog" aria-modal="true" aria-labelledby="timer-edit-title">
             <div class="timer-dialog-header">
-                <h2 id="timer-edit-title">Adjust Step Time</h2>
-                <button class="btn btn-outline-secondary btn-sm" type="button" disabled="@busy" @onclick="CloseTimerEdit">Close</button>
+                <MudText Typo="Typo.h6" id="timer-edit-title">Adjust Step Time</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="busy" OnClick="CloseTimerEdit">Close</MudButton>
             </div>
             <div class="timer-dialog-fields">
                 <label>
@@ -386,32 +363,20 @@ else
                 </label>
                 <div class="timer-edit-grid">
                     <span>Elapsed Time</span>
-                    <label>
-                        <span>D</span>
-                        <InputNumber class="form-control" min="0" @bind-Value="timerEditDays" />
-                    </label>
-                    <label>
-                        <span>H</span>
-                        <InputNumber class="form-control" min="0" @bind-Value="timerEditHours" />
-                    </label>
-                    <label>
-                        <span>M</span>
-                        <InputNumber class="form-control" min="0" @bind-Value="timerEditMinutes" />
-                    </label>
-                    <label>
-                        <span>S</span>
-                        <InputNumber class="form-control" min="0" @bind-Value="timerEditSeconds" />
-                    </label>
+                    <MudNumericField T="int" @bind-Value="timerEditDays" Label="D" Variant="Variant.Outlined" Min="0" />
+                    <MudNumericField T="int" @bind-Value="timerEditHours" Label="H" Variant="Variant.Outlined" Min="0" />
+                    <MudNumericField T="int" @bind-Value="timerEditMinutes" Label="M" Variant="Variant.Outlined" Min="0" />
+                    <MudNumericField T="int" @bind-Value="timerEditSeconds" Label="S" Variant="Variant.Outlined" Min="0" />
                 </div>
             </div>
             @if (!IsTimerEditValid)
             {
-                <p class="timer-dialog-error">Use non-negative values for days, hours, minutes, and seconds.</p>
+                <MudAlert Severity="Severity.Error" Dense="true">Use non-negative values for days, hours, minutes, and seconds.</MudAlert>
             }
             <div class="timer-dialog-actions">
-                <button class="btn btn-primary" type="button" disabled="@(busy || !IsTimerEditValid)" @onclick="SaveTimerEditAsync">Save</button>
-                <button class="btn btn-outline-danger" type="button" disabled="@busy" @onclick="ResetTimerFromDialogAsync">Reset</button>
-                <button class="btn btn-outline-secondary" type="button" disabled="@busy" @onclick="CloseTimerEdit">Cancel</button>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(busy || !IsTimerEditValid)" OnClick="SaveTimerEditAsync">Save</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" Disabled="busy" OnClick="ResetTimerFromDialogAsync">Reset</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Disabled="busy" OnClick="CloseTimerEdit">Cancel</MudButton>
             </div>
         </div>
     </div>

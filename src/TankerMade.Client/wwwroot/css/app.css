@@ -1559,17 +1559,231 @@ code {
 }
 
 .core-shell-mud {
-    max-width: 44rem;
+    max-width: min(100%, 42rem);
+    width: 100%;
+}
+
+.core-dashboard-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.core-dashboard-header {
+    width: 100%;
+}
+
+.core-dashboard-header-bar {
+    align-items: flex-start;
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+}
+
+.core-dashboard-header-lead,
+.core-dashboard-header-trail {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.core-dashboard-header-trail {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.core-dashboard-header-center {
+    align-items: center;
+    flex: 0 1 auto;
+    max-width: min(100%, 36rem);
+    min-width: 0;
+    text-align: center;
+}
+
+.core-dashboard-customize-btn {
+    flex: 0 0 auto;
 }
 
 .core-panel-mud {
-    width: fit-content;
-    min-width: min(100%, 28rem);
+    width: 100%;
+    min-width: 0;
+}
+
+.core-dashboard-section {
+    width: 100%;
+    min-width: 0;
+}
+
+.core-dashboard-customize-menu {
+    min-width: 14rem;
+    padding-bottom: 0.5rem;
+}
+
+.core-dashboard-customize-popover {
+    z-index: 1400;
+}
+
+.core-dashboard-activity-summary {
+    width: 100%;
+}
+
+.core-dashboard-columns {
+    display: grid;
+    gap: 1.5rem 2rem;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.core-dashboard-columns.has-sidebar {
+    align-items: start;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.core-dashboard-main {
+    justify-self: start;
+    min-width: 0;
+    width: 100%;
+}
+
+.core-dashboard-columns:not(.has-sidebar) .core-dashboard-main {
+    max-width: 42rem;
+}
+
+.core-dashboard-sidebar {
+    display: flex;
+    justify-content: flex-end;
+    min-width: 0;
+    width: 100%;
+}
+
+.core-dashboard-quick-actions-group + .core-dashboard-quick-actions-group {
+    border-top: 1px solid var(--mud-palette-lines-default, var(--border));
+    margin-top: 0.35rem;
+    padding-top: 0.85rem;
+}
+
+.core-dashboard-engagement-panel {
+    max-width: 22rem;
+    position: sticky;
+    top: 0.75rem;
+    width: 100%;
+}
+
+.core-dashboard-calendar-title {
+    text-align: center;
+}
+
+.core-dashboard-calendar-weekdays,
+.core-dashboard-calendar-grid {
+    display: grid;
+    gap: 0.25rem;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.core-dashboard-calendar-weekday {
+    color: var(--mud-palette-text-secondary, #6b7280);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.core-dashboard-calendar-cell {
+    align-items: center;
+    aspect-ratio: 1;
+    border-radius: 0.45rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 2rem;
+    position: relative;
+}
+
+.core-dashboard-calendar-cell.is-active {
+    background: color-mix(in srgb, var(--mud-palette-primary, #c67b4a) 18%, transparent);
+}
+
+.core-dashboard-calendar-day {
+    font-size: 0.82rem;
+    line-height: 1;
+}
+
+.core-dashboard-calendar-dot {
+    background: var(--mud-palette-primary, #c67b4a);
+    border-radius: 999px;
+    bottom: 0.2rem;
+    height: 0.3rem;
+    position: absolute;
+    width: 0.3rem;
+}
+
+.core-dashboard-due-item {
+    border-color: var(--mud-palette-lines-default, var(--border));
 }
 
 .core-dashboard-recent-panel {
-    max-width: min(100%, 42rem);
-    width: fit-content;
+    width: 100%;
+}
+
+/* Knitting module — MudBlazor shell */
+.knitting-shell-mud {
+    width: 100%;
+}
+
+.knitting-panel-mud {
+    background: color-mix(in srgb, var(--mud-palette-surface) 92%, transparent);
+    border: 1px solid var(--mud-palette-lines-default, var(--border));
+    width: 100%;
+}
+
+.knitting-page-header-mud {
+    margin-bottom: 0.25rem;
+}
+
+.knitting-back-link-mud {
+    align-self: flex-start;
+    margin-left: -0.35rem;
+    text-transform: none;
+}
+
+.knitting-panel-featured {
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 35%, var(--mud-palette-lines-default));
+}
+
+.knitting-panel-accent {
+    border-color: color-mix(in srgb, var(--mud-palette-secondary, var(--mud-palette-primary)) 30%, var(--mud-palette-lines-default));
+}
+
+.knitting-list-toolbar-mud {
+    align-items: end;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+
+.knitting-card-grid-mud {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+
+.knitting-card-mud {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.knitting-card-mud-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+.knitting-card-mud-actions {
+    margin-top: auto;
 }
 
 .core-dashboard-recent-layout {
@@ -1629,10 +1843,79 @@ code {
     .core-dashboard-recent-layout {
         grid-template-columns: 1fr;
     }
+
+    .core-dashboard-columns.has-sidebar {
+        grid-template-columns: 1fr;
+    }
+
+    .core-dashboard-sidebar {
+        justify-content: flex-start;
+    }
+
+    .core-dashboard-engagement-panel {
+        max-width: none;
+        position: static;
+    }
 }
 
 .core-back-link {
     margin-top: 0.5rem;
+}
+
+.core-modules-page {
+    align-items: center;
+    width: 100%;
+}
+
+.core-modules-shell {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: min(100%, 52rem);
+}
+
+.core-modules-header {
+    text-align: center;
+    width: 100%;
+}
+
+.core-modules-loading,
+.core-modules-alert {
+    width: 100%;
+}
+
+.core-modules-list {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+}
+
+.core-module-row {
+    background: color-mix(in srgb, var(--mud-palette-surface) 92%, transparent);
+    border: 1px solid var(--mud-palette-lines-default, var(--border));
+    height: 100%;
+}
+
+.core-module-row-copy {
+    flex: 1;
+    min-width: 0;
+}
+
+.knitting-studio-recent-progress {
+    margin-top: 0.35rem;
+    width: 100%;
+}
+
+.knitting-studio-recent-progress-sidebar {
+    margin-top: 0.25rem;
+}
+
+@media (max-width: 720px) {
+    .core-modules-list {
+        grid-template-columns: 1fr;
+    }
 }
 
 .module-hero h1 {
@@ -1737,12 +2020,6 @@ code {
 
 .module-hero-knitting p {
     color: #425844;
-}
-
-.knitting-highlight-row {
-    display: grid;
-    gap: 0.9rem;
-    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 }
 
 .module-card-knitting-feature {

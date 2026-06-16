@@ -10,580 +10,557 @@
 
 <PageTitle>Knitting Inventory</PageTitle>
 
-@if (!AuthSession.IsSignedIn)
-{
-    <h1>Knitting Inventory</h1>
-    <p>Sign in to use this module section.</p>
-    <a class="btn btn-primary" href="/login">Sign in</a>
-}
-else if (!ModuleState.IsActive("knitting"))
-{
-    <h1>Knitting Inventory</h1>
-    <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/home">Go to Home</a>
-}
-else if (initialLoading)
-{
-    <h1>Knitting Inventory</h1>
-    <p>Loading...</p>
-}
-else
-{
-    <div class="knitting-inventory-page page-heading">
-        <div>
-            <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
-            <h1>Inventory</h1>
-            <p>Yarn, tools, and notions with lots, purchases, and merge rules.</p>
-        </div>
-    </div>
+<KnittingModuleGate Loading="initialLoading" LoadingMessage="Loading inventory...">
+    <MudStack Spacing="3">
+        <KnittingPageHeader Title="Inventory"
+                            Subtitle="Yarn, tools, and notions with lots, purchases, and merge rules." />
 
-    @if (!string.IsNullOrWhiteSpace(errorMessage))
-    {
-        <div class="alert alert-danger">@errorMessage</div>
-    }
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+        }
 
-    <div class="d-flex gap-2 flex-wrap mb-3">
-        <button class="@TabButtonClass("yarn")" @onclick='() => SetTab("yarn")'>Yarn</button>
-        <button class="@TabButtonClass("tools")" @onclick='() => SetTab("tools")'>Tools</button>
-        <button class="@TabButtonClass("notions")" @onclick='() => SetTab("notions")'>Notions</button>
-    </div>
+        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+            <MudButton Variant="@(activeTab == "yarn" ? Variant.Filled : Variant.Outlined)"
+                       Color="Color.Primary"
+                       OnClick='() => SetTab("yarn")'>
+                Yarn
+            </MudButton>
+            <MudButton Variant="@(activeTab == "tools" ? Variant.Filled : Variant.Outlined)"
+                       Color="Color.Primary"
+                       OnClick='() => SetTab("tools")'>
+                Tools
+            </MudButton>
+            <MudButton Variant="@(activeTab == "notions" ? Variant.Filled : Variant.Outlined)"
+                       Color="Color.Primary"
+                       OnClick='() => SetTab("notions")'>
+                Notions
+            </MudButton>
+        </MudStack>
 
-    <label class="knitting-inventory-search d-block mb-3">
-        <span class="form-label">Search</span>
-        <input class="form-control"
-               placeholder="Filter as you type"
-               @bind="search"
-               @bind:event="oninput"
-               @bind:after="ApplyInventorySearch" />
-    </label>
+        <MudTextField @bind-Value="search"
+                      @bind-Value:after="ApplyInventorySearch"
+                      Label="Search"
+                      Variant="Variant.Outlined"
+                      Placeholder="Filter as you type"
+                      Immediate="true"
+                      Class="knitting-inventory-search" />
 
-    <div class="list-toolbar mb-3">
-        <label>
-            <span>Sort</span>
-            <select class="form-control" @bind="inventorySortBy" @bind:after="ApplyInventorySearch">
+        <div class="knitting-list-toolbar-mud">
+            <MudSelect T="string" @bind-Value="inventorySortBy" @bind-Value:after="ApplyInventorySearch" Label="Sort" Variant="Variant.Outlined">
                 @if (activeTab == "yarn")
                 {
-                    <option value="brand">Brand</option>
-                    <option value="color">Color</option>
-                    <option value="weight">Weight</option>
-                    <option value="skeins">Skeins</option>
+                    <MudSelectItem T="string" Value="@("brand")">Brand</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("color")">Color</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("weight")">Weight</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("skeins")">Skeins</MudSelectItem>
                 }
                 else if (activeTab == "tools")
                 {
-                    <option value="brand">Brand</option>
-                    <option value="type">Type</option>
-                    <option value="size">Size</option>
-                    <option value="quantity">Quantity</option>
+                    <MudSelectItem T="string" Value="@("brand")">Brand</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("type")">Type</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("size")">Size</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("quantity")">Quantity</MudSelectItem>
                 }
                 else
                 {
-                    <option value="brand">Brand</option>
-                    <option value="type">Type</option>
-                    <option value="size">Size</option>
-                    <option value="color">Color</option>
+                    <MudSelectItem T="string" Value="@("brand")">Brand</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("type")">Type</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("size")">Size</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("color")">Color</MudSelectItem>
                 }
-            </select>
-        </label>
-        <label>
-            <span>Brand</span>
-            <select class="form-control" @bind="filterBrand" @bind:after="ApplyInventorySearch">
-                <option value="">All brands</option>
+            </MudSelect>
+            <MudSelect T="string" @bind-Value="filterBrand" @bind-Value:after="ApplyInventorySearch" Label="Brand" Variant="Variant.Outlined">
+                <MudSelectItem T="string" Value="@string.Empty">All brands</MudSelectItem>
                 @foreach (var brand in brandFilterOptions)
                 {
-                    <option value="@brand">@brand</option>
+                    <MudSelectItem T="string" Value="@brand">@brand</MudSelectItem>
                 }
-            </select>
-        </label>
-        @if (activeTab == "yarn")
-        {
-            <label>
-                <span>Weight</span>
-                <select class="form-control" @bind="filterWeight" @bind:after="ApplyInventorySearch">
-                    <option value="">All weights</option>
+            </MudSelect>
+            @if (activeTab == "yarn")
+            {
+                <MudSelect T="string" @bind-Value="filterWeight" @bind-Value:after="ApplyInventorySearch" Label="Weight" Variant="Variant.Outlined">
+                    <MudSelectItem T="string" Value="@string.Empty">All weights</MudSelectItem>
                     @foreach (var weight in weightFilterOptions)
                     {
-                        <option value="@weight">@weight</option>
+                        <MudSelectItem T="string" Value="@weight">@weight</MudSelectItem>
                     }
-                </select>
-            </label>
-        }
-        @if (activeTab == "tools" || activeTab == "notions")
-        {
-            <label>
-                <span>Type</span>
-                <select class="form-control" @bind="filterType" @bind:after="ApplyInventorySearch">
-                    <option value="">All types</option>
+                </MudSelect>
+            }
+            @if (activeTab == "tools" || activeTab == "notions")
+            {
+                <MudSelect T="string" @bind-Value="filterType" @bind-Value:after="ApplyInventorySearch" Label="Type" Variant="Variant.Outlined">
+                    <MudSelectItem T="string" Value="@string.Empty">All types</MudSelectItem>
                     @foreach (var type in typeFilterOptions)
                     {
-                        <option value="@type">@type</option>
+                        <MudSelectItem T="string" Value="@type">@type</MudSelectItem>
                     }
-                </select>
-            </label>
-        }
-        @if (activeTab == "notions")
-        {
-            <label>
-                <span>Size</span>
-                <select class="form-control" @bind="filterSize" @bind:after="ApplyInventorySearch">
-                    <option value="">All sizes</option>
+                </MudSelect>
+            }
+            @if (activeTab == "notions")
+            {
+                <MudSelect T="string" @bind-Value="filterSize" @bind-Value:after="ApplyInventorySearch" Label="Size" Variant="Variant.Outlined">
+                    <MudSelectItem T="string" Value="@string.Empty">All sizes</MudSelectItem>
                     @foreach (var size in sizeFilterOptions)
                     {
-                        <option value="@size">@size</option>
+                        <MudSelectItem T="string" Value="@size">@size</MudSelectItem>
                     }
-                </select>
-            </label>
-            <label>
-                <span>Color</span>
-                <select class="form-control" @bind="filterColor" @bind:after="ApplyInventorySearch">
-                    <option value="">All colors</option>
+                </MudSelect>
+                <MudSelect T="string" @bind-Value="filterColor" @bind-Value:after="ApplyInventorySearch" Label="Color" Variant="Variant.Outlined">
+                    <MudSelectItem T="string" Value="@string.Empty">All colors</MudSelectItem>
                     @foreach (var color in colorFilterOptions)
                     {
-                        <option value="@color">@color</option>
+                        <MudSelectItem T="string" Value="@color">@color</MudSelectItem>
                     }
-                </select>
-            </label>
-        }
-    </div>
-
-    @if (activeTab == "yarn")
-    {
-        <div class="d-flex gap-2 flex-wrap mb-3">
-            <button class="@FiberFilterButtonClass(string.Empty)" disabled="@busy" @onclick='() => SetFiberFilterAsync(string.Empty)'>All</button>
-            <button class="@FiberFilterButtonClass("Synthetic")" disabled="@busy" @onclick='() => SetFiberFilterAsync("Synthetic")'>Synthetic</button>
-            <button class="@FiberFilterButtonClass("Natural")" disabled="@busy" @onclick='() => SetFiberFilterAsync("Natural")'>Natural</button>
-            <button class="@FiberFilterButtonClass("Blended")" disabled="@busy" @onclick='() => SetFiberFilterAsync("Blended")'>Blended</button>
+                </MudSelect>
+            }
         </div>
 
-        <div class="row g-4 knitting-inventory-layout">
-            <div class="col-12 col-lg-5 col-xl-4">
-                <section class="project-panel knitting-inventory-form-panel">
-                    <h2>Add Yarn</h2>
-                    <p class="muted-copy mb-0">Merge adds to an existing brand + color match.</p>
+        @if (activeTab == "yarn")
+        {
+            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                <MudButton Size="Size.Small"
+                           Variant="@(string.IsNullOrEmpty(fiberTag) ? Variant.Filled : Variant.Outlined)"
+                           Color="Color.Primary"
+                           Disabled="busy"
+                           OnClick='() => SetFiberFilterAsync(string.Empty)'>
+                    All
+                </MudButton>
+                <MudButton Size="Size.Small"
+                           Variant="@(fiberTag == "Synthetic" ? Variant.Filled : Variant.Outlined)"
+                           Color="Color.Primary"
+                           Disabled="busy"
+                           OnClick='() => SetFiberFilterAsync("Synthetic")'>
+                    Synthetic
+                </MudButton>
+                <MudButton Size="Size.Small"
+                           Variant="@(fiberTag == "Natural" ? Variant.Filled : Variant.Outlined)"
+                           Color="Color.Primary"
+                           Disabled="busy"
+                           OnClick='() => SetFiberFilterAsync("Natural")'>
+                    Natural
+                </MudButton>
+                <MudButton Size="Size.Small"
+                           Variant="@(fiberTag == "Blended" ? Variant.Filled : Variant.Outlined)"
+                           Color="Color.Primary"
+                           Disabled="busy"
+                           OnClick='() => SetFiberFilterAsync("Blended")'>
+                    Blended
+                </MudButton>
+            </MudStack>
 
-                    <div class="knitting-inventory-form-section">
-                        <h3>Basics</h3>
-                        <div class="knitting-inventory-field-grid">
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Brand</span>
-                                <input class="form-control" @bind="yarnForm.BrandName" />
-                            </label>
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Color name</span>
-                                <input class="form-control" @bind="yarnForm.ColorName" />
-                            </label>
-                            <label class="knitting-inventory-field knitting-inventory-field-full">
-                                <span class="form-label">Main color</span>
-                                <input class="form-control" @bind="yarnForm.MainColor" />
-                            </label>
-                        </div>
-                    </div>
+            <MudGrid Spacing="4" Class="knitting-inventory-layout">
+                <MudItem xs="12" lg="5" xl="4">
+                    <MudPaper Class="pa-4 knitting-panel-mud knitting-inventory-form-panel" Elevation="1">
+                        <h2>Add Yarn</h2>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-0">Merge adds to an existing brand + color match.</MudText>
 
-                    <div class="knitting-inventory-form-section">
-                        <h3>Yarn details</h3>
-                        <div class="knitting-inventory-field-grid">
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Weight</span>
-                                <select class="form-select" @bind="yarnForm.WeightName">
-                                    <option value="">Select weight</option>
-                                    @foreach (var option in yarnWeightOptions)
-                                    {
-                                        <option value="@option">@option</option>
-                                    }
-                                </select>
-                            </label>
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Fiber tag</span>
-                                <select class="form-select" @bind="yarnForm.FiberTag">
-                                    <option value="">Select fiber tag</option>
-                                    @foreach (var option in fiberTagOptions)
-                                    {
-                                        <option value="@option">@option</option>
-                                    }
-                                </select>
-                            </label>
-                            <div class="knitting-inventory-inline-add">
-                                <span class="form-label">New weight option</span>
-                                <div class="input-group">
-                                    <input class="form-control" placeholder="Add new weight" @bind="newYarnWeightName" />
-                                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddYarnWeightOptionAsync">Add</button>
-                                </div>
-                            </div>
-                            <div class="knitting-inventory-inline-add">
-                                <span class="form-label">New fiber tag</span>
-                                <div class="input-group">
-                                    <input class="form-control" placeholder="Add new fiber tag" @bind="newFiberTagName" />
-                                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddFiberTagOptionAsync">Add</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="knitting-inventory-form-section">
-                        <h3>Purchase</h3>
-                        <div class="knitting-inventory-field-grid">
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Skeins</span>
-                                <input class="form-control" type="number" step="0.01" @bind="yarnForm.Skeins" />
-                            </label>
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Lot number</span>
-                                <input class="form-control" @bind="yarnForm.LotNumber" />
-                            </label>
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Source</span>
-                                <input class="form-control" @bind="yarnForm.SourceName" />
-                            </label>
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Price</span>
-                                <input class="form-control" type="number" step="0.01" @bind="yarnForm.Price" />
-                            </label>
-                            <label class="knitting-inventory-field knitting-inventory-field-full form-check">
-                                <input class="form-check-input" type="checkbox" @bind="yarnForm.IsSalePrice" />
-                                <span class="form-check-label">Sale price</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="knitting-inventory-form-actions">
-                        <button class="btn btn-primary" disabled="@busy" @onclick="SaveYarnAsync">Add / Merge</button>
-                        <a class="btn btn-outline-secondary" href="/modules/knitting/inventory?tab=yarn">Finish</a>
-                    </div>
-                </section>
-            </div>
-            <div class="col-12 col-lg-7 col-xl-8">
-                <div class="knitting-inventory-list-panel inventory-list-panel @(listBusy ? "is-refreshing" : string.Empty)">
-                @if (listBusy)
-                {
-                    <p class="inventory-list-status muted-copy">Updating list…</p>
-                }
-                <div class="pattern-card-grid knitting-inventory-card-grid">
-                    @foreach (var yarn in pagedYarns)
-                    {
-                        var assetId = yarnAssetIds.GetValueOrDefault(yarn.Id);
-                        <div class="pattern-card pattern-card-with-image @(selectedItemId == yarn.Id ? "printing-material-card-active" : string.Empty)">
-                            <AssetThumbnailImage AssetId="assetId" AltText="@($"{yarn.BrandName} {yarn.ColorName}")" />
-                            <div>
-                            <a class="pattern-card-link" href="/modules/knitting/inventory/yarn/@yarn.Id">
-                                <h2>@yarn.BrandName</h2>
-                                <p>@yarn.ColorName</p>
-                                <div class="pattern-card-stats">
-                                    <span>@yarn.TotalSkeins skeins</span>
-                                    <span>@yarn.WeightName</span>
-                                    <span>@yarn.FiberTag</span>
-                                </div>
-                                <p>@PurchaseSummary(yarn.Purchases)</p>
-                            </a>
-                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => SelectItemForAssetsAsync(yarn.Id, YarnRecordType)">
-                                Manage Assets
-                            </button>
-                            </div>
-                        </div>
-                    }
-                </div>
-                @if (yarns.Count > inventoryPageSize)
-                {
-                    <div class="auth-actions mt-3">
-                        <button class="btn btn-outline-secondary btn-sm" disabled="@(inventoryPage <= 1 || busy)" @onclick="PreviousInventoryPage">Previous</button>
-                        <span class="muted-copy align-self-center">Page @inventoryPage of @InventoryPageCount</span>
-                        <button class="btn btn-outline-secondary btn-sm" disabled="@(inventoryPage >= InventoryPageCount || busy)" @onclick="NextInventoryPage">Next</button>
-                    </div>
-                }
-                </div>
-            </div>
-        </div>
-    }
-    else if (activeTab == "tools")
-    {
-        <div class="row g-4 knitting-inventory-layout">
-            <div class="col-12 col-lg-5 col-xl-4">
-                <section class="project-panel knitting-inventory-form-panel">
-                    <h2>Add Tool</h2>
-                    <p class="muted-copy mb-0">Merge adds to an existing brand + type match.</p>
-
-                    <div class="knitting-inventory-form-section">
-                        <h3>Basics</h3>
-                        <div class="knitting-inventory-field-grid">
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Brand</span>
-                                <input class="form-control" @bind="toolForm.BrandName" />
-                            </label>
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Size</span>
-                                <input class="form-control" @bind="toolForm.Size" />
-                            </label>
-                            <label class="knitting-inventory-field knitting-inventory-field-full">
-                                <span class="form-label">Type</span>
-                                <select class="form-select" @bind="toolForm.TypeName">
-                                    <option value="">Select type</option>
-                                    @foreach (var option in toolTypeOptions)
-                                    {
-                                        <option value="@option">@option</option>
-                                    }
-                                </select>
-                            </label>
-                            <div class="knitting-inventory-inline-add">
-                                <span class="form-label">New tool type</span>
-                                <div class="input-group">
-                                    <input class="form-control" placeholder="Add new tool type" @bind="newToolTypeName" />
-                                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddToolTypeOptionAsync">Add</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="knitting-inventory-form-section">
-                        <h3>Purchase</h3>
-                        <div class="knitting-inventory-field-grid">
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Quantity</span>
-                                <input class="form-control" type="number" @bind="toolForm.Quantity" />
-                            </label>
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Price</span>
-                                <input class="form-control" type="number" step="0.01" @bind="toolForm.Price" />
-                            </label>
-                            <label class="knitting-inventory-field knitting-inventory-field-full">
-                                <span class="form-label">Source</span>
-                                <input class="form-control" @bind="toolForm.SourceName" />
-                            </label>
-                            <label class="knitting-inventory-field knitting-inventory-field-full form-check">
-                                <input class="form-check-input" type="checkbox" @bind="toolForm.IsSalePrice" />
-                                <span class="form-check-label">Sale price</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="knitting-inventory-form-actions">
-                        <button class="btn btn-primary" disabled="@busy" @onclick="SaveToolAsync">Add / Merge</button>
-                        <a class="btn btn-outline-secondary" href="/modules/knitting/inventory?tab=tools">Finish</a>
-                    </div>
-                </section>
-            </div>
-            <div class="col-12 col-lg-7 col-xl-8">
-                <div class="knitting-inventory-list-panel inventory-list-panel @(listBusy ? "is-refreshing" : string.Empty)">
-                @if (listBusy)
-                {
-                    <p class="inventory-list-status muted-copy">Updating list…</p>
-                }
-                <div class="pattern-card-grid knitting-inventory-card-grid">
-                    @foreach (var tool in pagedTools)
-                    {
-                        var assetId = toolAssetIds.GetValueOrDefault(tool.Id);
-                        <div class="pattern-card pattern-card-with-image @(selectedItemId == tool.Id ? "printing-material-card-active" : string.Empty)">
-                            <AssetThumbnailImage AssetId="assetId" AltText="@($"{tool.BrandName} {tool.TypeName}")" />
-                            <div>
-                            <a class="pattern-card-link" href="/modules/knitting/inventory/tool/@tool.Id">
-                                <h2>@tool.TypeName</h2>
-                                <p>@tool.BrandName</p>
-                                <div class="pattern-card-stats">
-                                    <span>@tool.Quantity owned</span>
-                                    <span>@tool.Size</span>
-                                </div>
-                                <p>@PurchaseSummary(tool.Purchases)</p>
-                            </a>
-                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => SelectItemForAssetsAsync(tool.Id, ToolRecordType)">
-                                Manage Assets
-                            </button>
-                            </div>
-                        </div>
-                    }
-                </div>
-                @if (tools.Count > inventoryPageSize)
-                {
-                    <div class="auth-actions mt-3">
-                        <button class="btn btn-outline-secondary btn-sm" disabled="@(inventoryPage <= 1 || busy)" @onclick="PreviousInventoryPage">Previous</button>
-                        <span class="muted-copy align-self-center">Page @inventoryPage of @InventoryPageCount</span>
-                        <button class="btn btn-outline-secondary btn-sm" disabled="@(inventoryPage >= InventoryPageCount || busy)" @onclick="NextInventoryPage">Next</button>
-                    </div>
-                }
-                </div>
-            </div>
-        </div>
-    }
-    else
-    {
-        <div class="row g-4 knitting-inventory-layout">
-            <div class="col-12 col-lg-5 col-xl-4">
-                <section class="project-panel knitting-inventory-form-panel">
-                    <h2>Add Notion</h2>
-                    <p class="muted-copy mb-0">Merge adds to an existing brand + type match.</p>
-
-                    <div class="knitting-inventory-form-section">
-                        <h3>Basics</h3>
-                        <div class="knitting-inventory-field-grid">
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Brand</span>
-                                <input class="form-control" @bind="notionForm.BrandName" />
-                            </label>
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Color</span>
-                                <input class="form-control" @bind="notionForm.ColorName" />
-                            </label>
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Size</span>
-                                <input class="form-control" @bind="notionForm.Size" />
-                            </label>
-                            <label class="knitting-inventory-field knitting-inventory-field-full">
-                                <span class="form-label">Type</span>
-                                <select class="form-select" @bind="notionForm.TypeName">
-                                    <option value="">Select type</option>
-                                    @foreach (var option in notionTypeOptions)
-                                    {
-                                        <option value="@option">@option</option>
-                                    }
-                                </select>
-                            </label>
-                            <div class="knitting-inventory-inline-add">
-                                <span class="form-label">New notion type</span>
-                                <div class="input-group">
-                                    <input class="form-control" placeholder="Add new notion type" @bind="newNotionTypeName" />
-                                    <button class="btn btn-outline-secondary" disabled="@busy" @onclick="AddNotionTypeOptionAsync">Add</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="knitting-inventory-form-section">
-                        <h3>Purchase</h3>
-                        <div class="knitting-inventory-field-grid">
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Quantity</span>
-                                <input class="form-control" type="number" @bind="notionForm.Quantity" />
-                            </label>
-                            <label class="knitting-inventory-field">
-                                <span class="form-label">Price</span>
-                                <input class="form-control" type="number" step="0.01" @bind="notionForm.Price" />
-                            </label>
-                            <label class="knitting-inventory-field knitting-inventory-field-full">
-                                <span class="form-label">Source</span>
-                                <input class="form-control" @bind="notionForm.SourceName" />
-                            </label>
-                            <label class="knitting-inventory-field knitting-inventory-field-full form-check">
-                                <input class="form-check-input" type="checkbox" @bind="notionForm.IsSalePrice" />
-                                <span class="form-check-label">Sale price</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    @if (notionSplitPreview.Count > 0)
-                    {
                         <div class="knitting-inventory-form-section">
-                            <h3>Split preview</h3>
-                            <p class="muted-copy">Multiple size/color values will create separate listings.</p>
-                            <ul class="project-supply-list">
-                                @foreach (var entry in notionSplitPreview)
-                                {
-                                    <li>
-                                        <div>
-                                            <strong>@entry.TypeName</strong>
-                                            <span>@entry.BrandName</span>
-                                            <span>Size: @entry.Size</span>
-                                            <span>Color: @entry.ColorName</span>
-                                        </div>
-                                    </li>
-                                }
-                            </ul>
-                            <div class="auth-actions">
-                                <button class="btn btn-primary" disabled="@busy" @onclick="ConfirmNotionSplitAsync">Create @notionSplitPreview.Count listings</button>
-                                <button class="btn btn-outline-secondary" disabled="@busy" @onclick="CancelNotionSplit">Cancel</button>
-                            </div>
-                        </div>
-                    }
-
-                    <div class="knitting-inventory-form-actions">
-                        <button class="btn btn-primary" disabled="@busy" @onclick="SaveNotionAsync">Add / Merge</button>
-                        <a class="btn btn-outline-secondary" href="/modules/knitting/inventory?tab=notions">Finish</a>
-                    </div>
-                    <p class="muted-copy mt-2 mb-0">Tip: enter comma-separated sizes or colors (e.g. S, M, L) to split into separate listings.</p>
-                </section>
-            </div>
-            <div class="col-12 col-lg-7 col-xl-8">
-                <div class="knitting-inventory-list-panel inventory-list-panel @(listBusy ? "is-refreshing" : string.Empty)">
-                @if (listBusy)
-                {
-                    <p class="inventory-list-status muted-copy">Updating list…</p>
-                }
-                <div class="pattern-card-grid knitting-inventory-card-grid">
-                    @foreach (var notion in pagedNotions)
-                    {
-                        var assetId = notionAssetIds.GetValueOrDefault(notion.Id);
-                        <div class="pattern-card pattern-card-with-image @(selectedItemId == notion.Id ? "printing-material-card-active" : string.Empty)">
-                            <AssetThumbnailImage AssetId="assetId" AltText="@($"{notion.BrandName} {notion.TypeName}")" />
-                            <div>
-                            <a class="pattern-card-link" href="/modules/knitting/inventory/notion/@notion.Id">
-                                <h2>@notion.TypeName</h2>
-                                <p>@notion.BrandName</p>
-                                <div class="pattern-card-stats">
-                                    <span>@notion.Quantity owned</span>
-                                    <span>@notion.Size</span>
-                                    <span>@notion.ColorName</span>
+                            <h3>Basics</h3>
+                            <div class="knitting-inventory-field-grid">
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="yarnForm.BrandName" Label="Brand" Variant="Variant.Outlined" />
                                 </div>
-                                <p>@PurchaseSummary(notion.Purchases)</p>
-                            </a>
-                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => SelectItemForAssetsAsync(notion.Id, NotionRecordType)">
-                                Manage Assets
-                            </button>
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="yarnForm.ColorName" Label="Color name" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field knitting-inventory-field-full">
+                                    <MudTextField @bind-Value="yarnForm.MainColor" Label="Main color" Variant="Variant.Outlined" />
+                                </div>
                             </div>
                         </div>
-                    }
-                </div>
-                @if (notions.Count > inventoryPageSize)
-                {
-                    <div class="auth-actions mt-3">
-                        <button class="btn btn-outline-secondary btn-sm" disabled="@(inventoryPage <= 1 || busy)" @onclick="PreviousInventoryPage">Previous</button>
-                        <span class="muted-copy align-self-center">Page @inventoryPage of @InventoryPageCount</span>
-                        <button class="btn btn-outline-secondary btn-sm" disabled="@(inventoryPage >= InventoryPageCount || busy)" @onclick="NextInventoryPage">Next</button>
-                    </div>
-                }
-                </div>
-            </div>
-        </div>
-    }
 
-    @if (selectedItemId.HasValue)
-    {
-        <section class="printing-panel printing-assets-panel mt-3">
-            <h2>Item Assets</h2>
-            <InputFile OnChange="UploadItemAssetAsync" disabled="@busy" />
-            <p class="muted-copy">Upload stores the file in Knitting assets. Attach to the selected item with one click.</p>
-
-            @if (selectedItemAssets.Count == 0)
-            {
-                <p class="muted-copy">No assets found for the selected item yet.</p>
-            }
-            else
-            {
-                <ul class="project-supply-list">
-                    @foreach (var asset in selectedItemAssets)
-                    {
-                        <li>
-                            <div>
-                                <strong>@asset.OriginalFileName</strong>
-                                <span>@AssetMeta(asset)</span>
+                        <div class="knitting-inventory-form-section">
+                            <h3>Yarn details</h3>
+                            <div class="knitting-inventory-field-grid">
+                                <div class="knitting-inventory-field">
+                                    <MudSelect T="string" @bind-Value="yarnForm.WeightName" Label="Weight" Variant="Variant.Outlined">
+                                        <MudSelectItem T="string" Value="@string.Empty">Select weight</MudSelectItem>
+                                        @foreach (var option in yarnWeightOptions)
+                                        {
+                                            <MudSelectItem T="string" Value="@option">@option</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudSelect T="string" @bind-Value="yarnForm.FiberTag" Label="Fiber tag" Variant="Variant.Outlined">
+                                        <MudSelectItem T="string" Value="@string.Empty">Select fiber tag</MudSelectItem>
+                                        @foreach (var option in fiberTagOptions)
+                                        {
+                                            <MudSelectItem T="string" Value="@option">@option</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </div>
+                                <div class="knitting-inventory-inline-add">
+                                    <MudText Typo="Typo.caption">New weight option</MudText>
+                                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                        <MudTextField @bind-Value="newYarnWeightName" Placeholder="Add new weight" Variant="Variant.Outlined" Class="flex-grow-1" />
+                                        <MudButton Variant="Variant.Outlined" Disabled="busy" OnClick="AddYarnWeightOptionAsync">Add</MudButton>
+                                    </MudStack>
+                                </div>
+                                <div class="knitting-inventory-inline-add">
+                                    <MudText Typo="Typo.caption">New fiber tag</MudText>
+                                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                        <MudTextField @bind-Value="newFiberTagName" Placeholder="Add new fiber tag" Variant="Variant.Outlined" Class="flex-grow-1" />
+                                        <MudButton Variant="Variant.Outlined" Disabled="busy" OnClick="AddFiberTagOptionAsync">Add</MudButton>
+                                    </MudStack>
+                                </div>
                             </div>
-                            @if (asset.RecordId == selectedItemId)
+                        </div>
+
+                        <div class="knitting-inventory-form-section">
+                            <h3>Purchase</h3>
+                            <div class="knitting-inventory-field-grid">
+                                <div class="knitting-inventory-field">
+                                    <MudNumericField T="decimal" @bind-Value="yarnForm.Skeins" Label="Skeins" Variant="Variant.Outlined" Min="0" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="yarnForm.LotNumber" Label="Lot number" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="yarnForm.SourceName" Label="Source" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudNumericField T="decimal?" @bind-Value="yarnForm.Price" Label="Price" Variant="Variant.Outlined" Min="0" />
+                                </div>
+                                <div class="knitting-inventory-field knitting-inventory-field-full">
+                                    <MudCheckBox @bind-Value="yarnForm.IsSalePrice" Label="Sale price" Color="Color.Primary" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="knitting-inventory-form-actions">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" OnClick="SaveYarnAsync">Add / Merge</MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/modules/knitting/inventory?tab=yarn">Finish</MudButton>
+                        </div>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" lg="7" xl="8">
+                    <MudPaper Class="@($"pa-4 knitting-inventory-list-panel inventory-list-panel{(listBusy ? " is-refreshing" : "")}")" Elevation="1">
+                        @if (listBusy)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="inventory-list-status">Updating list…</MudText>
+                        }
+                        <div class="knitting-card-grid-mud knitting-inventory-card-grid">
+                            @foreach (var yarn in pagedYarns)
                             {
-                                <button class="btn btn-outline-danger btn-sm"
-                                        disabled="@busy"
-                                        @onclick="() => UnassignItemAssetAsync(asset.Id)">
-                                    Unlink
-                                </button>
+                                var assetId = yarnAssetIds.GetValueOrDefault(yarn.Id);
+                                <MudPaper Class="@($"knitting-card-mud pattern-card-with-image{(selectedItemId == yarn.Id ? " printing-material-card-active" : "")}")" Elevation="1">
+                                    <AssetThumbnailImage AssetId="assetId" AltText="@($"{yarn.BrandName} {yarn.ColorName}")" />
+                                    <div class="pa-3 knitting-card-mud-body">
+                                        <MudLink Href="@($"/modules/knitting/inventory/yarn/{yarn.Id}")" Underline="Underline.None" Class="pattern-card-link">
+                                            <MudText Typo="Typo.h6">@yarn.BrandName</MudText>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">@yarn.ColorName</MudText>
+                                            <div class="pattern-card-stats">
+                                                <span>@yarn.TotalSkeins skeins</span>
+                                                <span>@yarn.WeightName</span>
+                                                <span>@yarn.FiberTag</span>
+                                            </div>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">@PurchaseSummary(yarn.Purchases)</MudText>
+                                        </MudLink>
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="@(() => SelectItemForAssetsAsync(yarn.Id, YarnRecordType))">
+                                            Manage Assets
+                                        </MudButton>
+                                    </div>
+                                </MudPaper>
                             }
-                            else
+                        </div>
+                        @if (yarns.Count > inventoryPageSize)
+                        {
+                            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mt-3">
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(inventoryPage <= 1 || busy)" OnClick="PreviousInventoryPage">Previous</MudButton>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Page @inventoryPage of @InventoryPageCount</MudText>
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(inventoryPage >= InventoryPageCount || busy)" OnClick="NextInventoryPage">Next</MudButton>
+                            </MudStack>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        }
+        else if (activeTab == "tools")
+        {
+            <MudGrid Spacing="4" Class="knitting-inventory-layout">
+                <MudItem xs="12" lg="5" xl="4">
+                    <MudPaper Class="pa-4 knitting-panel-mud knitting-inventory-form-panel" Elevation="1">
+                        <h2>Add Tool</h2>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-0">Merge adds to an existing brand + type match.</MudText>
+
+                        <div class="knitting-inventory-form-section">
+                            <h3>Basics</h3>
+                            <div class="knitting-inventory-field-grid">
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="toolForm.BrandName" Label="Brand" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="toolForm.Size" Label="Size" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field knitting-inventory-field-full">
+                                    <MudSelect T="string" @bind-Value="toolForm.TypeName" Label="Type" Variant="Variant.Outlined">
+                                        <MudSelectItem T="string" Value="@string.Empty">Select type</MudSelectItem>
+                                        @foreach (var option in toolTypeOptions)
+                                        {
+                                            <MudSelectItem T="string" Value="@option">@option</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </div>
+                                <div class="knitting-inventory-inline-add">
+                                    <MudText Typo="Typo.caption">New tool type</MudText>
+                                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                        <MudTextField @bind-Value="newToolTypeName" Placeholder="Add new tool type" Variant="Variant.Outlined" Class="flex-grow-1" />
+                                        <MudButton Variant="Variant.Outlined" Disabled="busy" OnClick="AddToolTypeOptionAsync">Add</MudButton>
+                                    </MudStack>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="knitting-inventory-form-section">
+                            <h3>Purchase</h3>
+                            <div class="knitting-inventory-field-grid">
+                                <div class="knitting-inventory-field">
+                                    <MudNumericField T="int" @bind-Value="toolForm.Quantity" Label="Quantity" Variant="Variant.Outlined" Min="0" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudNumericField T="decimal?" @bind-Value="toolForm.Price" Label="Price" Variant="Variant.Outlined" Min="0" />
+                                </div>
+                                <div class="knitting-inventory-field knitting-inventory-field-full">
+                                    <MudTextField @bind-Value="toolForm.SourceName" Label="Source" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field knitting-inventory-field-full">
+                                    <MudCheckBox @bind-Value="toolForm.IsSalePrice" Label="Sale price" Color="Color.Primary" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="knitting-inventory-form-actions">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" OnClick="SaveToolAsync">Add / Merge</MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/modules/knitting/inventory?tab=tools">Finish</MudButton>
+                        </div>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" lg="7" xl="8">
+                    <MudPaper Class="@($"pa-4 knitting-inventory-list-panel inventory-list-panel{(listBusy ? " is-refreshing" : "")}")" Elevation="1">
+                        @if (listBusy)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="inventory-list-status">Updating list…</MudText>
+                        }
+                        <div class="knitting-card-grid-mud knitting-inventory-card-grid">
+                            @foreach (var tool in pagedTools)
                             {
-                                <button class="btn btn-outline-primary btn-sm"
-                                        disabled="@busy"
-                                        @onclick="() => AssignItemAssetAsync(asset.Id)">
-                                    Attach
-                                </button>
+                                var assetId = toolAssetIds.GetValueOrDefault(tool.Id);
+                                <MudPaper Class="@($"knitting-card-mud pattern-card-with-image{(selectedItemId == tool.Id ? " printing-material-card-active" : "")}")" Elevation="1">
+                                    <AssetThumbnailImage AssetId="assetId" AltText="@($"{tool.BrandName} {tool.TypeName}")" />
+                                    <div class="pa-3 knitting-card-mud-body">
+                                        <MudLink Href="@($"/modules/knitting/inventory/tool/{tool.Id}")" Underline="Underline.None" Class="pattern-card-link">
+                                            <MudText Typo="Typo.h6">@tool.TypeName</MudText>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">@tool.BrandName</MudText>
+                                            <div class="pattern-card-stats">
+                                                <span>@tool.Quantity owned</span>
+                                                <span>@tool.Size</span>
+                                            </div>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">@PurchaseSummary(tool.Purchases)</MudText>
+                                        </MudLink>
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="@(() => SelectItemForAssetsAsync(tool.Id, ToolRecordType))">
+                                            Manage Assets
+                                        </MudButton>
+                                    </div>
+                                </MudPaper>
                             }
-                        </li>
-                    }
-                </ul>
-            }
-        </section>
-    }
-}
+                        </div>
+                        @if (tools.Count > inventoryPageSize)
+                        {
+                            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mt-3">
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(inventoryPage <= 1 || busy)" OnClick="PreviousInventoryPage">Previous</MudButton>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Page @inventoryPage of @InventoryPageCount</MudText>
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(inventoryPage >= InventoryPageCount || busy)" OnClick="NextInventoryPage">Next</MudButton>
+                            </MudStack>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        }
+        else
+        {
+            <MudGrid Spacing="4" Class="knitting-inventory-layout">
+                <MudItem xs="12" lg="5" xl="4">
+                    <MudPaper Class="pa-4 knitting-panel-mud knitting-inventory-form-panel" Elevation="1">
+                        <h2>Add Notion</h2>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-0">Merge adds to an existing brand + type match.</MudText>
+
+                        <div class="knitting-inventory-form-section">
+                            <h3>Basics</h3>
+                            <div class="knitting-inventory-field-grid">
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="notionForm.BrandName" Label="Brand" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="notionForm.ColorName" Label="Color" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="notionForm.Size" Label="Size" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field knitting-inventory-field-full">
+                                    <MudSelect T="string" @bind-Value="notionForm.TypeName" Label="Type" Variant="Variant.Outlined">
+                                        <MudSelectItem T="string" Value="@string.Empty">Select type</MudSelectItem>
+                                        @foreach (var option in notionTypeOptions)
+                                        {
+                                            <MudSelectItem T="string" Value="@option">@option</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </div>
+                                <div class="knitting-inventory-inline-add">
+                                    <MudText Typo="Typo.caption">New notion type</MudText>
+                                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                        <MudTextField @bind-Value="newNotionTypeName" Placeholder="Add new notion type" Variant="Variant.Outlined" Class="flex-grow-1" />
+                                        <MudButton Variant="Variant.Outlined" Disabled="busy" OnClick="AddNotionTypeOptionAsync">Add</MudButton>
+                                    </MudStack>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="knitting-inventory-form-section">
+                            <h3>Purchase</h3>
+                            <div class="knitting-inventory-field-grid">
+                                <div class="knitting-inventory-field">
+                                    <MudNumericField T="int" @bind-Value="notionForm.Quantity" Label="Quantity" Variant="Variant.Outlined" Min="0" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudNumericField T="decimal?" @bind-Value="notionForm.Price" Label="Price" Variant="Variant.Outlined" Min="0" />
+                                </div>
+                                <div class="knitting-inventory-field knitting-inventory-field-full">
+                                    <MudTextField @bind-Value="notionForm.SourceName" Label="Source" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field knitting-inventory-field-full">
+                                    <MudCheckBox @bind-Value="notionForm.IsSalePrice" Label="Sale price" Color="Color.Primary" />
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (notionSplitPreview.Count > 0)
+                        {
+                            <div class="knitting-inventory-form-section">
+                                <h3>Split preview</h3>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Multiple size/color values will create separate listings.</MudText>
+                                <MudStack Spacing="1">
+                                    @foreach (var entry in notionSplitPreview)
+                                    {
+                                        <MudPaper Class="pa-2" Outlined="true">
+                                            <MudStack Spacing="0">
+                                                <MudText Typo="Typo.subtitle2">@entry.TypeName</MudText>
+                                                <MudText Typo="Typo.body2" Color="Color.Secondary">@entry.BrandName · Size: @entry.Size · Color: @entry.ColorName</MudText>
+                                            </MudStack>
+                                        </MudPaper>
+                                    }
+                                </MudStack>
+                                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mt-2">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" OnClick="ConfirmNotionSplitAsync">
+                                        Create @notionSplitPreview.Count listings
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="busy" OnClick="CancelNotionSplit">Cancel</MudButton>
+                                </MudStack>
+                            </div>
+                        }
+
+                        <div class="knitting-inventory-form-actions">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" OnClick="SaveNotionAsync">Add / Merge</MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/modules/knitting/inventory?tab=notions">Finish</MudButton>
+                        </div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2 mb-0">
+                            Tip: enter comma-separated sizes or colors (e.g. S, M, L) to split into separate listings.
+                        </MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" lg="7" xl="8">
+                    <MudPaper Class="@($"pa-4 knitting-inventory-list-panel inventory-list-panel{(listBusy ? " is-refreshing" : "")}")" Elevation="1">
+                        @if (listBusy)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="inventory-list-status">Updating list…</MudText>
+                        }
+                        <div class="knitting-card-grid-mud knitting-inventory-card-grid">
+                            @foreach (var notion in pagedNotions)
+                            {
+                                var assetId = notionAssetIds.GetValueOrDefault(notion.Id);
+                                <MudPaper Class="@($"knitting-card-mud pattern-card-with-image{(selectedItemId == notion.Id ? " printing-material-card-active" : "")}")" Elevation="1">
+                                    <AssetThumbnailImage AssetId="assetId" AltText="@($"{notion.BrandName} {notion.TypeName}")" />
+                                    <div class="pa-3 knitting-card-mud-body">
+                                        <MudLink Href="@($"/modules/knitting/inventory/notion/{notion.Id}")" Underline="Underline.None" Class="pattern-card-link">
+                                            <MudText Typo="Typo.h6">@notion.TypeName</MudText>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">@notion.BrandName</MudText>
+                                            <div class="pattern-card-stats">
+                                                <span>@notion.Quantity owned</span>
+                                                <span>@notion.Size</span>
+                                                <span>@notion.ColorName</span>
+                                            </div>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">@PurchaseSummary(notion.Purchases)</MudText>
+                                        </MudLink>
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="@(() => SelectItemForAssetsAsync(notion.Id, NotionRecordType))">
+                                            Manage Assets
+                                        </MudButton>
+                                    </div>
+                                </MudPaper>
+                            }
+                        </div>
+                        @if (notions.Count > inventoryPageSize)
+                        {
+                            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mt-3">
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(inventoryPage <= 1 || busy)" OnClick="PreviousInventoryPage">Previous</MudButton>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Page @inventoryPage of @InventoryPageCount</MudText>
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(inventoryPage >= InventoryPageCount || busy)" OnClick="NextInventoryPage">Next</MudButton>
+                            </MudStack>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        }
+
+        @if (selectedItemId.HasValue)
+        {
+            <MudPaper Class="pa-4 knitting-panel-mud printing-assets-panel mt-3" Elevation="1">
+                <MudText Typo="Typo.h6">Item Assets</MudText>
+                <InputFile OnChange="UploadItemAssetAsync" disabled="@busy" />
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Upload stores the file in Knitting assets. Attach to the selected item with one click.
+                </MudText>
+
+                @if (selectedItemAssets.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">No assets found for the selected item yet.</MudText>
+                }
+                else
+                {
+                    <MudStack Spacing="1">
+                        @foreach (var asset in selectedItemAssets)
+                        {
+                            <MudPaper Class="pa-2" Outlined="true">
+                                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                    <MudStack Spacing="0">
+                                        <MudText Typo="Typo.subtitle2">@asset.OriginalFileName</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@AssetMeta(asset)</MudText>
+                                    </MudStack>
+                                    @if (asset.RecordId == selectedItemId)
+                                    {
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                                   Disabled="busy"
+                                                   OnClick="@(() => UnassignItemAssetAsync(asset.Id))">
+                                            Unlink
+                                        </MudButton>
+                                    }
+                                    else
+                                    {
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                                   Disabled="busy"
+                                                   OnClick="@(() => AssignItemAssetAsync(asset.Id))">
+                                            Attach
+                                        </MudButton>
+                                    }
+                                </MudStack>
+                            </MudPaper>
+                        }
+                    </MudStack>
+                }
+            </MudPaper>
+        }
+    </MudStack>
+</KnittingModuleGate>
 
 @code {
     private const string ModuleKey = "knitting";
@@ -1287,18 +1264,6 @@ else
         {
             busy = false;
         }
-    }
-
-    private string TabButtonClass(string tab)
-    {
-        return activeTab == tab ? "btn btn-primary" : "btn btn-outline-secondary";
-    }
-
-    private string FiberFilterButtonClass(string tag)
-    {
-        return string.Equals(fiberTag, tag, StringComparison.OrdinalIgnoreCase)
-            ? "btn btn-primary btn-sm"
-            : "btn btn-outline-secondary btn-sm";
     }
 
     private async Task SetFiberFilterAsync(string tag)

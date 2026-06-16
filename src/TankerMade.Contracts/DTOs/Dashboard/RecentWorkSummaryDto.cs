@@ -10,4 +10,7 @@ public sealed class RecentWorkSummaryDto
     public string? ThumbnailFallbackPath { get; set; }
     public DateTime LastAccessedAtUtc { get; set; }
     public string NavigationPath { get; set; } = string.Empty;
+
+    /// <summary>Optional module-populated completion percent (0–100) for studio cards.</summary>
+    public int? ProgressPercent { get; set; }
 }

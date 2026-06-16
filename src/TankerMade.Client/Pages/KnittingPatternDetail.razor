@@ -9,53 +9,44 @@
 
 <PageTitle>Knitting Pattern</PageTitle>
 
-@if (!AuthSession.IsSignedIn)
-{
-    <h1>Knitting Pattern</h1>
-    <p>Sign in to use this module section.</p>
-    <a class="btn btn-primary" href="/login">Sign in</a>
-}
-else if (!ModuleState.IsActive("knitting"))
-{
-    <h1>Knitting Pattern</h1>
-    <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/home">Go to Home</a>
-}
-else if (loading)
-{
-    <h1>Knitting Pattern</h1>
-    <p>Loading...</p>
-}
-else if (pattern is null)
-{
-    <h1>Pattern Not Found</h1>
-    <a class="btn btn-outline-secondary" href="/modules/knitting/patterns">Back to Patterns</a>
-}
-else
-{
-    <div class="pattern-detail">
-        @if (!string.IsNullOrWhiteSpace(errorMessage))
-        {
-            <div class="alert alert-danger">@errorMessage</div>
-        }
+<KnittingModuleGate Loading="loading" LoadingMessage="Loading pattern...">
+    @if (pattern is null)
+    {
+        <MudStack Spacing="3">
+            <KnittingPageHeader Title="Pattern Not Found"
+                                BackHref="/modules/knitting/patterns"
+                                BackLabel="Patterns" />
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/modules/knitting/patterns">
+                Back to Patterns
+            </MudButton>
+        </MudStack>
+    }
+    else
+    {
+        <MudStack Spacing="3" Class="pattern-detail">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+            }
 
-        <div class="pattern-header">
-            <div class="knitting-hero-card pattern-header-main">
-                <AssetThumbnailImage AssetId="headerAssetId"
-                                     AltText="@pattern.Name"
-                                     CssClass="asset-thumbnail-image" />
-                <div>
-                <a class="pattern-back-link" href="/modules/knitting/patterns">Patterns</a>
-                <h1>@pattern.Name</h1>
-                <p>@DisplayMetadata(pattern)</p>
-                <div class="pattern-card-stats mt-2">
-                    <span class="@KnittingUi.DifficultyCssClass(pattern.Difficulty)">@(string.IsNullOrWhiteSpace(pattern.Difficulty) ? "Unspecified" : pattern.Difficulty)</span>
-                    <span>@(string.IsNullOrWhiteSpace(pattern.ThemeName) ? "No theme" : pattern.ThemeName)</span>
-                    <span>@(string.IsNullOrWhiteSpace(pattern.ColorName) ? "No color" : pattern.ColorName)</span>
-                    <span>@(string.IsNullOrWhiteSpace(pattern.SourceName) ? "No source" : pattern.SourceName)</span>
+            <div class="pattern-header">
+                <div class="knitting-hero-card pattern-header-main">
+                    <AssetThumbnailImage AssetId="headerAssetId"
+                                         AltText="@pattern.Name"
+                                         CssClass="asset-thumbnail-image" />
+                    <div>
+                        <KnittingPageHeader Title="@pattern.Name"
+                                            Subtitle="@DisplayMetadata(pattern)"
+                                            BackHref="/modules/knitting/patterns"
+                                            BackLabel="Patterns" />
+                        <div class="pattern-card-stats mt-2">
+                            <KnittingDifficultyBadge DifficultyText="@(string.IsNullOrWhiteSpace(pattern.Difficulty) ? "Unspecified" : pattern.Difficulty)" />
+                            <span>@(string.IsNullOrWhiteSpace(pattern.ThemeName) ? "No theme" : pattern.ThemeName)</span>
+                            <span>@(string.IsNullOrWhiteSpace(pattern.ColorName) ? "No color" : pattern.ColorName)</span>
+                            <span>@(string.IsNullOrWhiteSpace(pattern.SourceName) ? "No source" : pattern.SourceName)</span>
+                        </div>
+                    </div>
                 </div>
-                </div>
-            </div>
             <div class="pattern-stats" aria-label="Pattern summary">
                 <div>
                     <strong>@pattern.PieceCount</strong>
@@ -68,136 +59,127 @@ else
             </div>
         </div>
 
-        <section class="project-panel mb-3">
-            <h2>Supply Metadata</h2>
-            <EditForm Model="metadataForm" OnValidSubmit="SaveMetadataAsync" class="project-edit-form">
-                <div class="form-grid">
-                    <label>
-                        <span>Theme</span>
-                        <select class="form-control" @bind="metadataForm.ThemeIdText">
-                            <option value="">No theme</option>
-                            @foreach (var theme in themes)
-                            {
-                                <option value="@theme.Id">@theme.Name</option>
-                            }
-                        </select>
-                    </label>
-                    <label>
-                        <span>Main color</span>
-                        <select class="form-control" @bind="metadataForm.ColorIdText">
-                            <option value="">No color</option>
-                            @foreach (var color in colors)
-                            {
-                                <option value="@color.Id">@color.Name</option>
-                            }
-                        </select>
-                    </label>
-                    <label>
-                        <span>Source</span>
-                        <select class="form-control" @bind="metadataForm.SourceIdText">
-                            <option value="">No source</option>
-                            @foreach (var source in sources)
-                            {
-                                <option value="@source.Id">@source.Name</option>
-                            }
-                        </select>
-                    </label>
-                    <label>
-                        <span>Suggested yarn weight</span>
-                        <InputText class="form-control" @bind-Value="metadataForm.SuggestedYarnWeight" />
-                    </label>
-                    <label>
-                        <span>Suggested needle sizes</span>
-                        <InputText class="form-control" @bind-Value="metadataForm.SuggestedNeedleSizes" />
-                    </label>
-                    <label>
-                        <span>Required notions</span>
-                        <InputText class="form-control" @bind-Value="metadataForm.RequiredNotions" />
-                    </label>
-                </div>
-                <button class="btn btn-primary btn-sm" disabled="@busy" type="submit">Save Metadata</button>
-            </EditForm>
-        </section>
+        <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.subtitle1">Supply Metadata</MudText>
+                <EditForm Model="metadataForm" OnValidSubmit="SaveMetadataAsync" class="project-edit-form">
+                    <MudStack Spacing="2">
+                        <div class="form-grid">
+                            <MudSelect T="string" @bind-Value="metadataForm.ThemeIdText" Label="Theme" Variant="Variant.Outlined">
+                                <MudSelectItem T="string" Value="@string.Empty">No theme</MudSelectItem>
+                                @foreach (var theme in themes)
+                                {
+                                    <MudSelectItem T="string" Value="@theme.Id.ToString()">@theme.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect T="string" @bind-Value="metadataForm.ColorIdText" Label="Main color" Variant="Variant.Outlined">
+                                <MudSelectItem T="string" Value="@string.Empty">No color</MudSelectItem>
+                                @foreach (var color in colors)
+                                {
+                                    <MudSelectItem T="string" Value="@color.Id.ToString()">@color.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect T="string" @bind-Value="metadataForm.SourceIdText" Label="Source" Variant="Variant.Outlined">
+                                <MudSelectItem T="string" Value="@string.Empty">No source</MudSelectItem>
+                                @foreach (var source in sources)
+                                {
+                                    <MudSelectItem T="string" Value="@source.Id.ToString()">@source.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudTextField @bind-Value="metadataForm.SuggestedYarnWeight" Label="Suggested yarn weight" Variant="Variant.Outlined" />
+                            <MudTextField @bind-Value="metadataForm.SuggestedNeedleSizes" Label="Suggested needle sizes" Variant="Variant.Outlined" />
+                            <MudTextField @bind-Value="metadataForm.RequiredNotions" Label="Required notions" Variant="Variant.Outlined" />
+                        </div>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" ButtonType="ButtonType.Submit">
+                            Save Metadata
+                        </MudButton>
+                    </MudStack>
+                </EditForm>
+            </MudStack>
+        </MudPaper>
 
-        <section class="project-panel mb-3">
-            <h2>Pattern Supplies</h2>
-            <div class="form-grid">
-                <label>
-                    <span>Supply type</span>
-                    <select class="form-control" @bind="supplyForm.SupplyType" @bind:after="OnSupplyTypeChanged">
-                        <option value="yarn">Yarn</option>
-                        <option value="tool">Tool</option>
-                        <option value="notion">Notion</option>
-                    </select>
-                </label>
-                <label>
-                    <span>Inventory item (optional)</span>
-                    <select class="form-control" @bind="selectedSupplyInventoryId" @bind:after="OnSupplyInventoryChanged">
-                        <option value="">Manual name</option>
+        <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.subtitle1">Pattern Supplies</MudText>
+                <div class="form-grid">
+                    <MudSelect T="string" @bind-Value="supplyForm.SupplyType" @bind-Value:after="OnSupplyTypeChanged" Label="Supply type" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@("yarn")">Yarn</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("tool")">Tool</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("notion")">Notion</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect T="Guid?" @bind-Value="selectedSupplyInventoryId" @bind-Value:after="OnSupplyInventoryChanged" Label="Inventory item (optional)" Variant="Variant.Outlined">
+                        <MudSelectItem T="Guid?" Value="@((Guid?)null)">Manual name</MudSelectItem>
                         @foreach (var option in supplyInventoryOptions)
                         {
-                            <option value="@option.Id">@option.Label</option>
+                            <MudSelectItem T="Guid?" Value="@option.Id">@option.Label</MudSelectItem>
                         }
-                    </select>
-                </label>
-                <label>
-                    <span>Name</span>
-                    <InputText class="form-control" @bind-Value="supplyForm.Name" />
-                </label>
-            </div>
-            <button class="btn btn-primary btn-sm" disabled="@busy" @onclick="AddPatternSupplyAsync">Add Supply</button>
+                    </MudSelect>
+                    <MudTextField @bind-Value="supplyForm.Name" Label="Name" Variant="Variant.Outlined" />
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="AddPatternSupplyAsync">
+                    Add Supply
+                </MudButton>
 
-            @if (pattern.Supplies.Count == 0)
-            {
-                <p class="mt-3 mb-0">No supplies listed yet.</p>
-            }
-            else
-            {
-                <ul class="project-supply-list mt-3">
-                    @foreach (var supply in pattern.Supplies.OrderBy(item => item.SortOrder))
-                    {
-                        <li>
-                            <div>
-                                <strong>@supply.Name</strong>
-                                <span class="text-muted">(@supply.SupplyType)</span>
-                            </div>
-                            <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeletePatternSupplyAsync(supply.Id)">Remove</button>
-                        </li>
-                    }
-                </ul>
-            }
-        </section>
+                @if (pattern.Supplies.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">No supplies listed yet.</MudText>
+                }
+                else
+                {
+                    <ul class="project-supply-list mt-3">
+                        @foreach (var supply in pattern.Supplies.OrderBy(item => item.SortOrder))
+                        {
+                            <li>
+                                <div>
+                                    <strong>@supply.Name</strong>
+                                    <span class="text-muted">(@supply.SupplyType)</span>
+                                </div>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="@(() => DeletePatternSupplyAsync(supply.Id))">
+                                    Remove
+                                </MudButton>
+                            </li>
+                        }
+                    </ul>
+                }
+            </MudStack>
+        </MudPaper>
 
-        <section class="project-panel mb-3">
-            <h2>Pattern Assets</h2>
-            <InputFile OnChange="UploadPatternAssetAsync" disabled="@busy" />
-            @if (patternAssets.Count == 0)
-            {
-                <p class="mt-2 mb-0 muted-copy">No assets attached yet.</p>
-            }
-            else
-            {
-                <ul class="project-supply-list mt-2">
-                    @foreach (var asset in patternAssets)
-                    {
-                        <li>
-                            <div>
-                                <strong>@asset.OriginalFileName</strong>
-                                <span>@AssetMeta(asset)</span>
-                            </div>
-                            @if (asset.RecordId == pattern.Id)
-                            {
-                                <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => UnassignPatternAssetAsync(asset.Id)">Unlink</button>
-                            }
-                            else
-                            {
-                                <button class="btn btn-outline-primary btn-sm" disabled="@busy" @onclick="() => AssignPatternAssetAsync(asset.Id)">Attach</button>
-                            }
-                        </li>
-                    }
-                </ul>
-            }
-        </section>
+        <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.subtitle1">Pattern Assets</MudText>
+                <InputFile OnChange="UploadPatternAssetAsync" disabled="@busy" />
+                @if (patternAssets.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">No assets attached yet.</MudText>
+                }
+                else
+                {
+                    <ul class="project-supply-list mt-2">
+                        @foreach (var asset in patternAssets)
+                        {
+                            <li>
+                                <div>
+                                    <strong>@asset.OriginalFileName</strong>
+                                    <span>@AssetMeta(asset)</span>
+                                </div>
+                                @if (asset.RecordId == pattern.Id)
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="@(() => UnassignPatternAssetAsync(asset.Id))">
+                                        Unlink
+                                    </MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="@(() => AssignPatternAssetAsync(asset.Id))">
+                                        Attach
+                                    </MudButton>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </MudStack>
+        </MudPaper>
 
         <div class="pattern-workspace">
             <aside class="piece-list" aria-label="Pieces">
@@ -207,16 +189,17 @@ else
                 }
                 <EditForm Model="pieceForm" OnValidSubmit="AddPieceAsync" class="piece-create-form">
                     <DataAnnotationsValidator />
-                    <label>
-                        <span>New Piece</span>
-                        <InputText class="form-control" @bind-Value="pieceForm.Name" />
-                    </label>
-                    <button class="btn btn-primary" disabled="@busy" type="submit">Add Piece</button>
+                    <MudStack Spacing="2">
+                        <MudTextField @bind-Value="pieceForm.Name" Label="New Piece" Variant="Variant.Outlined" />
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" ButtonType="ButtonType.Submit">
+                            Add Piece
+                        </MudButton>
+                    </MudStack>
                 </EditForm>
 
                 @if (pattern.Pieces.Count == 0)
                 {
-                    <p class="muted-copy">No pieces yet.</p>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">No pieces yet.</MudText>
                 }
                 else
                 {
@@ -228,8 +211,8 @@ else
                                 <small>@piece.StepCount steps</small>
                             </button>
                             <div class="piece-order-actions">
-                                <button class="btn btn-outline-secondary btn-sm" disabled="@(busy || IsFirstPiece(piece.Id))" @onclick="() => MovePieceAsync(piece.Id, -1)">Up</button>
-                                <button class="btn btn-outline-secondary btn-sm" disabled="@(busy || IsLastPiece(piece.Id))" @onclick="() => MovePieceAsync(piece.Id, 1)">Down</button>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="@(busy || IsFirstPiece(piece.Id))" OnClick="@(() => MovePieceAsync(piece.Id, -1))">Up</MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="@(busy || IsLastPiece(piece.Id))" OnClick="@(() => MovePieceAsync(piece.Id, 1))">Down</MudButton>
                             </div>
                         </div>
                     }
@@ -248,57 +231,43 @@ else
                             <h2>@selectedPiece.Name</h2>
                             <p>@selectedPiece.StepCount steps</p>
                         </div>
-                        <div class="auth-actions">
-                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="StartPieceRename">Rename</button>
-                            <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="DeletePieceAsync">Delete</button>
-                        </div>
+                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="busy" OnClick="StartPieceRename">Rename</MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="DeletePieceAsync">Delete</MudButton>
+                        </MudStack>
                     </div>
 
                     @if (editingPiece)
                     {
                         <EditForm Model="renamePieceForm" OnValidSubmit="RenamePieceAsync" class="piece-edit-form">
                             <DataAnnotationsValidator />
-                            <label>
-                                <span>Piece Name</span>
-                                <InputText class="form-control" @bind-Value="renamePieceForm.Name" />
-                            </label>
-                            <div class="auth-actions">
-                                <button class="btn btn-primary btn-sm" disabled="@busy" type="submit">Save</button>
-                                <button class="btn btn-outline-secondary btn-sm" disabled="@busy" type="button" @onclick="CancelPieceRename">Cancel</button>
-                            </div>
+                            <MudStack Spacing="2">
+                                <MudTextField @bind-Value="renamePieceForm.Name" Label="Piece Name" Variant="Variant.Outlined" />
+                                <MudStack Row="true" Spacing="1">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" ButtonType="ButtonType.Submit">Save</MudButton>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="busy" OnClick="CancelPieceRename">Cancel</MudButton>
+                                </MudStack>
+                            </MudStack>
                         </EditForm>
                     }
 
                     <EditForm Model="stepForm" OnValidSubmit="AddStepAsync" class="step-form">
                         <DataAnnotationsValidator />
-                        <div class="form-grid">
-                            <label>
-                                <span>Range Start</span>
-                                <InputNumber class="form-control" @bind-Value="stepForm.StartIndex" />
-                            </label>
-                            <label>
-                                <span>Range End</span>
-                                <InputNumber class="form-control" @bind-Value="stepForm.EndIndex" />
-                            </label>
-                            <label>
-                                <span>Label</span>
-                                <InputText class="form-control" @bind-Value="stepForm.Label" />
-                            </label>
-                            <label>
-                                <span>Stitch Count</span>
-                                <InputNumber class="form-control" @bind-Value="stepForm.StitchCount" />
-                            </label>
-                        </div>
-                        <label>
-                            <span>Notes</span>
-                            <InputTextArea class="form-control" @bind-Value="stepForm.Notes" />
-                        </label>
-                        <button class="btn btn-primary" disabled="@busy" type="submit">Add Step</button>
+                        <MudStack Spacing="2">
+                            <div class="form-grid">
+                                <MudNumericField T="int?" @bind-Value="stepForm.StartIndex" Label="Range Start" Variant="Variant.Outlined" />
+                                <MudNumericField T="int?" @bind-Value="stepForm.EndIndex" Label="Range End" Variant="Variant.Outlined" />
+                                <MudTextField @bind-Value="stepForm.Label" Label="Label" Variant="Variant.Outlined" />
+                                <MudNumericField T="int?" @bind-Value="stepForm.StitchCount" Label="Stitch Count" Variant="Variant.Outlined" />
+                            </div>
+                            <MudTextField @bind-Value="stepForm.Notes" Label="Notes" Variant="Variant.Outlined" Lines="3" />
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" ButtonType="ButtonType.Submit">Add Step</MudButton>
+                        </MudStack>
                     </EditForm>
 
                     @if (selectedPiece.Steps.Count == 0)
                     {
-                        <p class="muted-copy">No steps yet.</p>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">No steps yet.</MudText>
                     }
                     else
                     {
@@ -310,12 +279,12 @@ else
                                     <div class="step-content">
                                         <div class="step-title-row">
                                             <h3>@step.Label</h3>
-                                            <div class="auth-actions">
-                                                <button class="btn btn-outline-secondary btn-sm" disabled="@(busy || IsFirstStep(step.Id))" @onclick="() => MoveStepAsync(step.Id, -1)">Up</button>
-                                                <button class="btn btn-outline-secondary btn-sm" disabled="@(busy || IsLastStep(step.Id))" @onclick="() => MoveStepAsync(step.Id, 1)">Down</button>
-                                                <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => StartStepEdit(step)">Edit</button>
-                                                <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeleteStepAsync(step.Id)">Delete</button>
-                                            </div>
+                                            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="@(busy || IsFirstStep(step.Id))" OnClick="@(() => MoveStepAsync(step.Id, -1))">Up</MudButton>
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="@(busy || IsLastStep(step.Id))" OnClick="@(() => MoveStepAsync(step.Id, 1))">Down</MudButton>
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="busy" OnClick="@(() => StartStepEdit(step))">Edit</MudButton>
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="@(() => DeleteStepAsync(step.Id))">Delete</MudButton>
+                                            </MudStack>
                                         </div>
                                         <p>@step.Notes</p>
 
@@ -323,32 +292,19 @@ else
                                         {
                                             <EditForm Model="editStepForm" OnValidSubmit="SaveStepEditAsync" class="step-form">
                                                 <DataAnnotationsValidator />
-                                                <div class="form-grid">
-                                                    <label>
-                                                        <span>Range Start</span>
-                                                        <InputNumber class="form-control" @bind-Value="editStepForm.StartIndex" />
-                                                    </label>
-                                                    <label>
-                                                        <span>Range End</span>
-                                                        <InputNumber class="form-control" @bind-Value="editStepForm.EndIndex" />
-                                                    </label>
-                                                    <label>
-                                                        <span>Label</span>
-                                                        <InputText class="form-control" @bind-Value="editStepForm.Label" />
-                                                    </label>
-                                                    <label>
-                                                        <span>Stitch Count</span>
-                                                        <InputNumber class="form-control" @bind-Value="editStepForm.StitchCount" />
-                                                    </label>
-                                                </div>
-                                                <label>
-                                                    <span>Notes</span>
-                                                    <InputTextArea class="form-control" @bind-Value="editStepForm.Notes" />
-                                                </label>
-                                                <div class="auth-actions">
-                                                    <button class="btn btn-primary btn-sm" disabled="@busy" type="submit">Save</button>
-                                                    <button class="btn btn-outline-secondary btn-sm" disabled="@busy" type="button" @onclick="CancelStepEdit">Cancel</button>
-                                                </div>
+                                                <MudStack Spacing="2">
+                                                    <div class="form-grid">
+                                                        <MudNumericField T="int?" @bind-Value="editStepForm.StartIndex" Label="Range Start" Variant="Variant.Outlined" />
+                                                        <MudNumericField T="int?" @bind-Value="editStepForm.EndIndex" Label="Range End" Variant="Variant.Outlined" />
+                                                        <MudTextField @bind-Value="editStepForm.Label" Label="Label" Variant="Variant.Outlined" />
+                                                        <MudNumericField T="int?" @bind-Value="editStepForm.StitchCount" Label="Stitch Count" Variant="Variant.Outlined" />
+                                                    </div>
+                                                    <MudTextField @bind-Value="editStepForm.Notes" Label="Notes" Variant="Variant.Outlined" Lines="3" />
+                                                    <MudStack Row="true" Spacing="1">
+                                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" ButtonType="ButtonType.Submit">Save</MudButton>
+                                                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="busy" OnClick="CancelStepEdit">Cancel</MudButton>
+                                                    </MudStack>
+                                                </MudStack>
                                             </EditForm>
                                         }
                                     </div>
@@ -359,8 +315,9 @@ else
                 }
             </section>
         </div>
-    </div>
-}
+        </MudStack>
+    }
+</KnittingModuleGate>
 
 @code {
     [Parameter] public Guid PatternId { get; set; }

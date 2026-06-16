@@ -6,105 +6,93 @@
 
 <PageTitle>Knitting Glossary</PageTitle>
 
-@if (!AuthSession.IsSignedIn)
-{
-    <h1>Knitting Glossary</h1>
-    <p>Sign in to use this module section.</p>
-    <a class="btn btn-primary" href="/login">Sign in</a>
-}
-else if (!ModuleState.IsActive("knitting"))
-{
-    <h1>Knitting Glossary</h1>
-    <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/home">Go to Home</a>
-}
-else if (loading)
-{
-    <h1>Knitting Glossary</h1>
-    <p>Loading...</p>
-}
-else
-{
-    <div class="page-heading">
-        <div>
-            <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
-            <h1>Glossary</h1>
-            <p>Stitch terms, abbreviations, and definitions you can reference while knitting.</p>
-        </div>
-    </div>
+<KnittingModuleGate Loading="loading">
+    <MudStack Spacing="3">
+        <KnittingPageHeader Title="Glossary"
+                            Subtitle="Stitch terms, abbreviations, and definitions you can reference while knitting." />
 
-    @if (!string.IsNullOrWhiteSpace(errorMessage))
-    {
-        <div class="alert alert-danger">@errorMessage</div>
-    }
-
-    @if (!string.IsNullOrWhiteSpace(successMessage))
-    {
-        <div class="alert alert-success">@successMessage</div>
-    }
-
-    <section class="project-panel">
-        <h2>@(editingTermKey == null ? "Add Term" : "Edit Term")</h2>
-        <EditForm Model="termForm" OnValidSubmit="SaveTermAsync" class="project-edit-form">
-            <DataAnnotationsValidator />
-            <div class="form-grid">
-                <label>
-                    <span>Term</span>
-                    <InputText class="form-control" @bind-Value="termForm.Term" disabled="@(editingTermKey != null)" />
-                </label>
-                <label>
-                    <span>Definition</span>
-                    <InputTextArea class="form-control" rows="3" @bind-Value="termForm.Definition" />
-                </label>
-            </div>
-            <div class="auth-actions">
-                <button class="btn btn-primary btn-sm" disabled="@busy" type="submit">@(editingTermKey == null ? "Add Term" : "Save Term")</button>
-                @if (editingTermKey != null)
-                {
-                    <button class="btn btn-outline-secondary btn-sm" disabled="@busy" type="button" @onclick="CancelTermEdit">Cancel</button>
-                }
-            </div>
-        </EditForm>
-    </section>
-
-    <section class="project-panel">
-        <div class="project-panel-header">
-            <h2>Terms</h2>
-            <span class="muted-copy">@filteredTerms.Count of @allTerms.Count</span>
-        </div>
-        <label class="knitting-inventory-search d-block mb-3">
-            <span class="form-label">Search terms</span>
-            <input class="form-control"
-                   placeholder="Filter as you type"
-                   @bind="termSearch"
-                   @bind:event="oninput"
-                   @bind:after="ApplyTermFilter" />
-        </label>
-
-        @if (filteredTerms.Count == 0)
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
         {
-            <p class="mb-0">@(allTerms.Count == 0 ? "No terms yet. Add your first abbreviation or stitch definition above." : "No terms match your search.")</p>
+            <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
         }
-        else
+
+        @if (!string.IsNullOrWhiteSpace(successMessage))
         {
-            <ul class="project-supply-list">
-                @foreach (var term in filteredTerms)
-                {
-                    <li>
-                        <div>
-                            <strong>@term.Key</strong>
-                            <p class="mb-0">@term.Value</p>
-                        </div>
-                        <div class="auth-actions">
-                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => EditTerm(term)">Edit</button>
-                            <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeleteTermAsync(term.Key)">Delete</button>
-                        </div>
-                    </li>
-                }
-            </ul>
+            <MudAlert Severity="Severity.Success">@successMessage</MudAlert>
         }
-    </section>
-}
+
+        <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.subtitle1">@(editingTermKey == null ? "Add Term" : "Edit Term")</MudText>
+                <EditForm Model="termForm" OnValidSubmit="SaveTermAsync">
+                    <DataAnnotationsValidator />
+                    <MudStack Spacing="2">
+                        <MudTextField @bind-Value="termForm.Term"
+                                      Label="Term"
+                                      Variant="Variant.Outlined"
+                                      Disabled="@(editingTermKey != null)"
+                                      Required="true" />
+                        <MudTextField @bind-Value="termForm.Definition"
+                                      Label="Definition"
+                                      Variant="Variant.Outlined"
+                                      Lines="3" />
+                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="busy">
+                                @(editingTermKey == null ? "Add Term" : "Save Term")
+                            </MudButton>
+                            @if (editingTermKey != null)
+                            {
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="busy" OnClick="CancelTermEdit">Cancel</MudButton>
+                            }
+                        </MudStack>
+                    </MudStack>
+                </EditForm>
+            </MudStack>
+        </MudPaper>
+
+        <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+            <MudStack Spacing="2">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.subtitle1">Terms</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@filteredTerms.Count of @allTerms.Count</MudText>
+                </MudStack>
+                <MudTextField @bind-Value="termSearch"
+                              @bind-Value:after="ApplyTermFilter"
+                              Label="Search terms"
+                              Variant="Variant.Outlined"
+                              Placeholder="Filter as you type"
+                              Immediate="true" />
+
+                @if (filteredTerms.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        @(allTerms.Count == 0 ? "No terms yet. Add your first abbreviation or stitch definition above." : "No terms match your search.")
+                    </MudText>
+                }
+                else
+                {
+                    <MudStack Spacing="1">
+                        @foreach (var term in filteredTerms)
+                        {
+                            <MudPaper Class="pa-3 knitting-term-row" Elevation="0" Outlined="true">
+                                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Wrap="Wrap.Wrap" Spacing="2">
+                                    <MudStack Spacing="0">
+                                        <MudText Typo="Typo.subtitle2">@term.Key</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">@term.Value</MudText>
+                                    </MudStack>
+                                    <MudStack Row="true" Spacing="1">
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="@(() => EditTerm(term))">Edit</MudButton>
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="@(() => DeleteTermAsync(term.Key))">Delete</MudButton>
+                                    </MudStack>
+                                </MudStack>
+                            </MudPaper>
+                        }
+                    </MudStack>
+                }
+            </MudStack>
+        </MudPaper>
+    </MudStack>
+</KnittingModuleGate>
 
 @code {
     private const string ModuleKey = "knitting";

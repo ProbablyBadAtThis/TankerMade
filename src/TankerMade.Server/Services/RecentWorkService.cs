@@ -76,6 +76,7 @@ public class RecentWorkService : IRecentWorkService
     public async Task<IReadOnlyList<RecentWorkSummaryDto>> GetRecentAsync(
         Guid userId,
         int limit = 5,
+        string? moduleKey = null,
         CancellationToken cancellationToken = default)
     {
         if (limit <= 0)
@@ -92,9 +93,22 @@ public class RecentWorkService : IRecentWorkService
             return [];
         }
 
-        var ledgerEntries = await _context.UserRecentWorkAccesses
+        var ledgerQuery = _context.UserRecentWorkAccesses
             .AsNoTracking()
-            .Where(entry => entry.UserId == userId && activeModuleKeys.Contains(entry.ModuleKey))
+            .Where(entry => entry.UserId == userId && activeModuleKeys.Contains(entry.ModuleKey));
+
+        if (!string.IsNullOrWhiteSpace(moduleKey))
+        {
+            var normalizedModuleKey = moduleKey.Trim();
+            if (!activeModuleKeys.Contains(normalizedModuleKey))
+            {
+                return [];
+            }
+
+            ledgerQuery = ledgerQuery.Where(entry => entry.ModuleKey == normalizedModuleKey);
+        }
+
+        var ledgerEntries = await ledgerQuery
             .OrderByDescending(entry => entry.LastAccessedAtUtc)
             .Take(MaxStoredEntriesPerUser)
             .ToListAsync(cancellationToken);

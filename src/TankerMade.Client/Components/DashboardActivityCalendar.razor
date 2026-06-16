@@ -1,0 +1,99 @@
+@using System.Globalization
+
+<div class="core-dashboard-calendar">
+    <MudText Typo="Typo.subtitle2" Class="core-dashboard-calendar-title">@_monthTitle</MudText>
+    <div class="core-dashboard-calendar-weekdays" aria-hidden="true">
+        @foreach (var label in _weekdayLabels)
+        {
+            <span class="core-dashboard-calendar-weekday">@label</span>
+        }
+    </div>
+    <div class="core-dashboard-calendar-grid" role="grid" aria-label="@_monthTitle activity calendar">
+        @foreach (var cell in _cells)
+        {
+            @if (cell.IsPadding)
+            {
+                <div class="core-dashboard-calendar-cell is-padding" role="presentation"></div>
+            }
+            else
+            {
+                <div class="core-dashboard-calendar-cell @(cell.IsActive ? "is-active" : null)"
+                     role="gridcell"
+                     aria-label="@cell.AriaLabel">
+                    <span class="core-dashboard-calendar-day">@cell.Day</span>
+                    @if (cell.IsActive)
+                    {
+                        <span class="core-dashboard-calendar-dot" aria-hidden="true"></span>
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<string> ActiveLocalDates { get; set; } = [];
+
+    [Parameter]
+    public DateOnly? DisplayMonth { get; set; }
+
+    private string _monthTitle = string.Empty;
+    private IReadOnlyList<string> _weekdayLabels = [];
+    private IReadOnlyList<CalendarCell> _cells = [];
+
+    protected override void OnParametersSet()
+    {
+        var month = DisplayMonth ?? DateOnly.FromDateTime(DateTime.Today);
+        var monthStart = new DateOnly(month.Year, month.Month, 1);
+        var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+        var activeDates = ActiveLocalDates
+            .Select(ParseDate)
+            .Where(date => date.HasValue)
+            .Select(date => date!.Value)
+            .ToHashSet();
+
+        _monthTitle = monthStart.ToString("MMMM yyyy", CultureInfo.CurrentCulture);
+        _weekdayLabels = WeekdayLabels;
+
+        var leadingPadding = (int)monthStart.DayOfWeek;
+        var cells = new List<CalendarCell>();
+
+        for (var index = 0; index < leadingPadding; index++)
+        {
+            cells.Add(CalendarCell.Padding);
+        }
+
+        for (var day = monthStart; day <= monthEnd; day = day.AddDays(1))
+        {
+            var isActive = activeDates.Contains(day);
+            cells.Add(new CalendarCell
+            {
+                Day = day.Day,
+                IsActive = isActive,
+                AriaLabel = isActive
+                    ? $"{day.ToString("D", CultureInfo.CurrentCulture)}, active"
+                    : day.ToString("D", CultureInfo.CurrentCulture),
+            });
+        }
+
+        _cells = cells;
+    }
+
+    private static DateOnly? ParseDate(string value)
+        => DateOnly.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+            ? date
+            : null;
+
+    private static readonly string[] WeekdayLabels = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+    private sealed class CalendarCell
+    {
+        public int Day { get; init; }
+        public bool IsActive { get; init; }
+        public string AriaLabel { get; init; } = string.Empty;
+        public bool IsPadding { get; init; }
+
+        public static CalendarCell Padding { get; } = new() { IsPadding = true };
+    }
+}

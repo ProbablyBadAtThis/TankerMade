@@ -28,10 +28,20 @@ public class TankerMadeApiClient
         return await _http.GetFromJsonAsync<IReadOnlyList<ModuleDto>>("api/modules") ?? [];
     }
 
-    public async Task<IReadOnlyList<RecentWorkSummaryDto>> GetRecentWorkAsync(int limit = 5)
+    public async Task<IReadOnlyList<RecentWorkSummaryDto>> GetRecentWorkAsync(int limit = 5, string? moduleKey = null)
     {
-        var url = BuildUrl("api/dashboard/recent-work", ("limit", limit.ToString()));
+        var url = BuildUrl(
+            "api/dashboard/recent-work",
+            ("limit", limit.ToString()),
+            ("moduleKey", moduleKey ?? string.Empty));
         return await _http.GetFromJsonAsync<IReadOnlyList<RecentWorkSummaryDto>>(url) ?? [];
+    }
+
+    public async Task<DashboardOverviewDto> GetDashboardOverviewAsync(string? moduleKey = null)
+    {
+        var url = BuildUrl("api/dashboard/overview", ("moduleKey", moduleKey ?? string.Empty));
+        return await _http.GetFromJsonAsync<DashboardOverviewDto>(url)
+            ?? new DashboardOverviewDto();
     }
 
     public async Task RecordRecentWorkAsync(RecordRecentWorkRequest request)

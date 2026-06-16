@@ -9,272 +9,250 @@
 
 <PageTitle>Knitting Settings</PageTitle>
 
-@if (!AuthSession.IsSignedIn)
-{
-    <h1>Knitting Settings</h1>
-    <p>Sign in to use this module section.</p>
-    <a class="btn btn-primary" href="/login">Sign in</a>
-}
-else if (!ModuleState.IsActive("knitting"))
-{
-    <h1>Knitting Settings</h1>
-    <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/home">Go to Home</a>
-}
-else if (loading)
-{
-    <h1>Knitting Settings</h1>
-    <p>Loading...</p>
-}
-else
-{
-    <div class="page-heading">
-        <div>
-            <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
-            <h1>Settings</h1>
-            <p>Set module behavior defaults for projects, kits, workspace, and timers.</p>
-        </div>
-    </div>
+<KnittingModuleGate Loading="loading" LoadingMessage="Loading settings...">
+    <MudStack Spacing="3">
+        <KnittingPageHeader Title="Settings"
+                            Subtitle="Set module behavior defaults for projects, kits, workspace, and timers." />
 
-    @if (!string.IsNullOrWhiteSpace(errorMessage))
-    {
-        <div class="alert alert-danger">@errorMessage</div>
-    }
-    @if (!string.IsNullOrWhiteSpace(successMessage))
-    {
-        <div class="alert alert-success">@successMessage</div>
-    }
-
-    <details class="settings-accordion" open>
-        <summary>Reference Data</summary>
-        <div class="settings-accordion-body">
-            <p class="muted-copy">Manage shared lists used across patterns, projects, and inventory. Type to see existing names before adding.</p>
-            <div class="settings-grid">
-                <article class="pattern-card">
-                    <h3>Themes</h3>
-                    <ul class="reference-chip-list">
-                        @foreach (var item in themes)
-                        {
-                            <li>@item.Name</li>
-                        }
-                    </ul>
-                    <div class="auth-actions mt-2">
-                        <ReferenceAutocompleteInput Label="New theme"
-                                                    Placeholder="New theme"
-                                                    Options="themeNames"
-                                                    @bind-Value="newThemeName" />
-                        <button class="btn btn-primary btn-sm" disabled="@busy" @onclick='() => AddCoreReferenceAsync("themes", newThemeName, () => newThemeName = string.Empty, themes)'>Add</button>
-                    </div>
-                </article>
-                <article class="pattern-card">
-                    <h3>Colors</h3>
-                    <ul class="reference-chip-list">
-                        @foreach (var item in colors)
-                        {
-                            <li>@item.Name</li>
-                        }
-                    </ul>
-                    <div class="auth-actions mt-2">
-                        <ReferenceAutocompleteInput Label="New color"
-                                                    Placeholder="New color"
-                                                    Options="colorNames"
-                                                    @bind-Value="newColorName" />
-                        <button class="btn btn-primary btn-sm" disabled="@busy" @onclick='() => AddCoreReferenceAsync("colors", newColorName, () => newColorName = string.Empty, colors)'>Add</button>
-                    </div>
-                </article>
-                <article class="pattern-card">
-                    <h3>Sources</h3>
-                    <ul class="reference-chip-list">
-                        @foreach (var item in sources)
-                        {
-                            <li>@item.Name</li>
-                        }
-                    </ul>
-                    <div class="auth-actions mt-2">
-                        <ReferenceAutocompleteInput Label="New source"
-                                                    Placeholder="New source"
-                                                    Options="sourceNames"
-                                                    @bind-Value="newSourceName" />
-                        <button class="btn btn-primary btn-sm" disabled="@busy" @onclick='() => AddCoreReferenceAsync("sources", newSourceName, () => newSourceName = string.Empty, sources)'>Add</button>
-                    </div>
-                </article>
-                <article class="pattern-card">
-                    <h3>Brands</h3>
-                    <ul class="reference-chip-list">
-                        @foreach (var item in brands)
-                        {
-                            <li>@item.Name</li>
-                        }
-                    </ul>
-                    <div class="auth-actions mt-2">
-                        <ReferenceAutocompleteInput Label="New brand"
-                                                    Placeholder="New brand"
-                                                    Options="brandNames"
-                                                    @bind-Value="newBrandName" />
-                        <button class="btn btn-primary btn-sm" disabled="@busy" @onclick='() => AddCoreReferenceAsync("brands", newBrandName, () => newBrandName = string.Empty, brands)'>Add</button>
-                    </div>
-                </article>
-                <article class="pattern-card">
-                    <h3>Fiber Tags</h3>
-                    <ul class="reference-chip-list">
-                        @foreach (var item in fiberTags)
-                        {
-                            <li>@item.Name</li>
-                        }
-                    </ul>
-                    <div class="auth-actions mt-2">
-                        <ReferenceAutocompleteInput Label="New fiber tag"
-                                                    Placeholder="New fiber tag"
-                                                    Options="fiberTagNames"
-                                                    @bind-Value="newFiberTagName" />
-                        <button class="btn btn-primary btn-sm" disabled="@busy" @onclick="AddFiberTagAsync">Add</button>
-                    </div>
-                </article>
-            </div>
-        </div>
-    </details>
-
-    @foreach (var category in CategoryOrder)
-    {
-        var definitions = knownSettingDefinitions.Where(definition => definition.Category == category).ToList();
-        if (definitions.Count == 0)
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
         {
-            continue;
+            <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+        }
+        @if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            <MudAlert Severity="Severity.Success">@successMessage</MudAlert>
         }
 
-        <details class="settings-accordion" open>
-            <summary>@CategoryLabel(category)</summary>
-            <div class="settings-accordion-body">
-            <div class="project-panel-header mb-2">
-                <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => ResetCategoryDefaultsAsync(category)">Reset Category</button>
-            </div>
-            <div class="settings-grid">
-                @foreach (var definition in definitions)
-                {
-                    var key = definition.Key;
-                    var item = storedByKey.TryGetValue(key, out var existingItem) ? existingItem : null;
-                    <article class="pattern-card">
-                        <h3>@definition.Label</h3>
-                        <p>@definition.Description</p>
-                        <small class="muted-copy">@definition.Key</small>
-
-                        @if (definition.Kind == SettingKind.Boolean)
-                        {
-                            <label class="archive-toggle mt-2">
-                                <input type="checkbox"
-                                       checked="@GetBoolSetting(definition)"
-                                       @onchange="args => SetBoolSetting(definition, args)" />
-                                Enabled
-                            </label>
-                        }
-                        else if (definition.Kind == SettingKind.Integer)
-                        {
-                            <label class="mt-2">
-                                <span>Value</span>
-                                <input class="form-control"
-                                       type="number"
-                                       min="@definition.MinValue"
-                                       max="@definition.MaxValue"
-                                       value="@GetIntValue(definition)"
-                                       @onchange="args => SetIntValue(definition, args)" />
-                            </label>
-                        }
-                        else if (definition.Kind == SettingKind.Option)
-                        {
-                            <label class="mt-2">
-                                <span>Value</span>
-                                <select class="form-control"
-                                        value="@GetStringValue(definition)"
-                                        @onchange="args => SetStringValue(definition, args)">
-                                    @foreach (var option in definition.Options)
+        <MudExpansionPanels MultiExpansion="true">
+            <MudExpansionPanel Text="Reference Data" Expanded="true">
+                <MudStack Spacing="2" Class="pt-2">
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Manage shared lists used across patterns, projects, and inventory. Type to see existing names before adding.
+                    </MudText>
+                    <div class="settings-grid">
+                        <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.subtitle1">Themes</MudText>
+                                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                    @foreach (var item in themes)
                                     {
-                                        <option value="@option.Value">@option.Label</option>
+                                        <MudChip T="string" Size="Size.Small">@item.Name</MudChip>
                                     }
-                                </select>
-                            </label>
-                        }
-                        else
-                        {
-                            <label class="mt-2">
-                                <span>Value</span>
-                                <input class="form-control"
-                                       type="text"
-                                       value="@GetStringValue(definition)"
-                                       @onchange="args => SetStringValue(definition, args)" />
-                            </label>
-                        }
+                                </MudStack>
+                                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.End" Wrap="Wrap.Wrap">
+                                    <ReferenceAutocompleteInput Label="New theme"
+                                                                Placeholder="New theme"
+                                                                Options="themeNames"
+                                                                @bind-Value="newThemeName" />
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick='() => AddCoreReferenceAsync("themes", newThemeName, () => newThemeName = string.Empty, themes)'>Add</MudButton>
+                                </MudStack>
+                            </MudStack>
+                        </MudPaper>
+                        <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.subtitle1">Colors</MudText>
+                                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                    @foreach (var item in colors)
+                                    {
+                                        <MudChip T="string" Size="Size.Small">@item.Name</MudChip>
+                                    }
+                                </MudStack>
+                                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.End" Wrap="Wrap.Wrap">
+                                    <ReferenceAutocompleteInput Label="New color"
+                                                                Placeholder="New color"
+                                                                Options="colorNames"
+                                                                @bind-Value="newColorName" />
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick='() => AddCoreReferenceAsync("colors", newColorName, () => newColorName = string.Empty, colors)'>Add</MudButton>
+                                </MudStack>
+                            </MudStack>
+                        </MudPaper>
+                        <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.subtitle1">Sources</MudText>
+                                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                    @foreach (var item in sources)
+                                    {
+                                        <MudChip T="string" Size="Size.Small">@item.Name</MudChip>
+                                    }
+                                </MudStack>
+                                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.End" Wrap="Wrap.Wrap">
+                                    <ReferenceAutocompleteInput Label="New source"
+                                                                Placeholder="New source"
+                                                                Options="sourceNames"
+                                                                @bind-Value="newSourceName" />
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick='() => AddCoreReferenceAsync("sources", newSourceName, () => newSourceName = string.Empty, sources)'>Add</MudButton>
+                                </MudStack>
+                            </MudStack>
+                        </MudPaper>
+                        <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.subtitle1">Brands</MudText>
+                                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                    @foreach (var item in brands)
+                                    {
+                                        <MudChip T="string" Size="Size.Small">@item.Name</MudChip>
+                                    }
+                                </MudStack>
+                                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.End" Wrap="Wrap.Wrap">
+                                    <ReferenceAutocompleteInput Label="New brand"
+                                                                Placeholder="New brand"
+                                                                Options="brandNames"
+                                                                @bind-Value="newBrandName" />
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick='() => AddCoreReferenceAsync("brands", newBrandName, () => newBrandName = string.Empty, brands)'>Add</MudButton>
+                                </MudStack>
+                            </MudStack>
+                        </MudPaper>
+                        <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.subtitle1">Fiber Tags</MudText>
+                                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                    @foreach (var item in fiberTags)
+                                    {
+                                        <MudChip T="string" Size="Size.Small">@item.Name</MudChip>
+                                    }
+                                </MudStack>
+                                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.End" Wrap="Wrap.Wrap">
+                                    <ReferenceAutocompleteInput Label="New fiber tag"
+                                                                Placeholder="New fiber tag"
+                                                                Options="fiberTagNames"
+                                                                @bind-Value="newFiberTagName" />
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="AddFiberTagAsync">Add</MudButton>
+                                </MudStack>
+                            </MudStack>
+                        </MudPaper>
+                    </div>
+                </MudStack>
+            </MudExpansionPanel>
 
-                        <div class="auth-actions mt-2">
-                            <button class="btn btn-primary btn-sm" disabled="@busy" @onclick="() => SaveKnownSettingAsync(definition)">Save</button>
-                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => ResetKnownSettingAsync(definition)">Reset</button>
-                            @if (item != null)
+            @foreach (var category in CategoryOrder)
+            {
+                var definitions = knownSettingDefinitions.Where(definition => definition.Category == category).ToList();
+                if (definitions.Count == 0)
+                {
+                    continue;
+                }
+
+                <MudExpansionPanel Text="@CategoryLabel(category)" Expanded="true">
+                    <MudStack Spacing="2" Class="pt-2">
+                        <MudStack Row="true" Justify="Justify.FlexEnd">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="() => ResetCategoryDefaultsAsync(category)">Reset Category</MudButton>
+                        </MudStack>
+                        <div class="settings-grid">
+                            @foreach (var definition in definitions)
                             {
-                                <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeleteKnownSettingAsync(definition)">Delete Override</button>
+                                var key = definition.Key;
+                                var item = storedByKey.TryGetValue(key, out var existingItem) ? existingItem : null;
+                                <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                                    <MudStack Spacing="2">
+                                        <MudText Typo="Typo.subtitle1">@definition.Label</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">@definition.Description</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@definition.Key</MudText>
+
+                                        @if (definition.Kind == SettingKind.Boolean)
+                                        {
+                                            <MudCheckBox T="bool"
+                                                         Value="GetBoolSetting(definition)"
+                                                         ValueChanged="@(v => SetBoolSetting(definition, v))"
+                                                         Label="Enabled"
+                                                         Color="Color.Primary" />
+                                        }
+                                        else if (definition.Kind == SettingKind.Integer)
+                                        {
+                                            <MudNumericField T="int"
+                                                             Value="@GetIntSetting(definition)"
+                                                             ValueChanged="@(v => SetIntValue(definition, v))"
+                                                             Label="Value"
+                                                             Variant="Variant.Outlined" />
+                                        }
+                                        else if (definition.Kind == SettingKind.Option)
+                                        {
+                                            <MudSelect T="string"
+                                                       Value="GetStringValue(definition)"
+                                                       ValueChanged="@(v => SetStringValue(definition, v))"
+                                                       Label="Value"
+                                                       Variant="Variant.Outlined">
+                                                @foreach (var option in definition.Options)
+                                                {
+                                                    <MudSelectItem T="string" Value="@option.Value">@option.Label</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        }
+                                        else
+                                        {
+                                            <MudTextField T="string"
+                                                          Value="GetStringValue(definition)"
+                                                          ValueChanged="@(v => SetStringValue(definition, v))"
+                                                          Label="Value"
+                                                          Variant="Variant.Outlined" />
+                                        }
+
+                                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="() => SaveKnownSettingAsync(definition)">Save</MudButton>
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="() => ResetKnownSettingAsync(definition)">Reset</MudButton>
+                                            @if (item != null)
+                                            {
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="() => DeleteKnownSettingAsync(definition)">Delete Override</MudButton>
+                                            }
+                                        </MudStack>
+                                    </MudStack>
+                                </MudPaper>
                             }
                         </div>
-                    </article>
-                }
-            </div>
-            </div>
-        </details>
-    }
+                    </MudStack>
+                </MudExpansionPanel>
+            }
 
-    <details class="settings-accordion">
-        <summary>Advanced Settings</summary>
-        <div class="settings-accordion-body">
-        <div class="project-panel-header mb-2">
-            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="ClearCustomForm">Clear Form</button>
-        </div>
-        <p class="muted-copy">Use this for custom module values not covered above.</p>
-        <EditForm Model="customForm" OnValidSubmit="SaveCustomSettingAsync" class="project-edit-form">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-            <div class="form-grid">
-                <label>
-                    <span>Category</span>
-                    <InputText class="form-control" @bind-Value="customForm.Category" />
-                </label>
-                <label>
-                    <span>Key</span>
-                    <InputText class="form-control" @bind-Value="customForm.Key" />
-                </label>
-                <label>
-                    <span>Value</span>
-                    <InputText class="form-control" @bind-Value="customForm.Value" />
-                </label>
-            </div>
-            <button class="btn btn-primary" disabled="@busy" type="submit">Save Custom Setting</button>
-        </EditForm>
+            <MudExpansionPanel Text="Advanced Settings">
+                <MudStack Spacing="2" Class="pt-2">
+                    <MudStack Row="true" Justify="Justify.FlexEnd">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="ClearCustomForm">Clear Form</MudButton>
+                    </MudStack>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Use this for custom module values not covered above.</MudText>
+                    <EditForm Model="customForm" OnValidSubmit="SaveCustomSettingAsync">
+                        <DataAnnotationsValidator />
+                        <MudStack Spacing="2">
+                            <div class="knitting-list-toolbar-mud">
+                                <MudTextField @bind-Value="customForm.Category" Label="Category" Variant="Variant.Outlined" Required="true" />
+                                <MudTextField @bind-Value="customForm.Key" Label="Key" Variant="Variant.Outlined" Required="true" />
+                                <MudTextField @bind-Value="customForm.Value" Label="Value" Variant="Variant.Outlined" />
+                            </div>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="busy">Save Custom Setting</MudButton>
+                        </MudStack>
+                    </EditForm>
 
-        @if (customSettings.Count == 0)
-        {
-            <div class="empty-state">
-                <h2>No Custom Settings</h2>
-                <p>Custom keys outside predefined knitting controls will appear here.</p>
-            </div>
-        }
-        else
-        {
-            <div class="pattern-card-grid">
-                @foreach (var item in customSettings)
-                {
-                    <article class="pattern-card">
-                        <h2>@item.Key</h2>
-                        <p>@item.Category</p>
-                        <div class="pattern-card-stats">
-                            <span>@item.Value</span>
+                    @if (customSettings.Count == 0)
+                    {
+                        <MudPaper Class="pa-6 knitting-panel-mud" Elevation="1">
+                            <MudStack Spacing="1" AlignItems="AlignItems.Center">
+                                <MudText Typo="Typo.h6">No Custom Settings</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Custom keys outside predefined knitting controls will appear here.</MudText>
+                            </MudStack>
+                        </MudPaper>
+                    }
+                    else
+                    {
+                        <div class="knitting-card-grid-mud">
+                            @foreach (var item in customSettings)
+                            {
+                                <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                                    <MudStack Spacing="2">
+                                        <MudText Typo="Typo.h6">@item.Key</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">@item.Category</MudText>
+                                        <MudText Typo="Typo.body2">@item.Value</MudText>
+                                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="() => EditCustomSetting(item)">Edit</MudButton>
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="() => DeleteSettingAsync(item.Key)">Delete</MudButton>
+                                        </MudStack>
+                                    </MudStack>
+                                </MudPaper>
+                            }
                         </div>
-                        <div class="auth-actions">
-                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => EditCustomSetting(item)">Edit</button>
-                            <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeleteSettingAsync(item.Key)">Delete</button>
-                        </div>
-                    </article>
-                }
-            </div>
-        }
-        </div>
-    </details>
-}
+                    }
+                </MudStack>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    </MudStack>
+</KnittingModuleGate>
 
 @code {
     private static readonly IReadOnlyList<KnownSettingDefinition> knownSettingDefinitions =
@@ -657,9 +635,8 @@ else
         return TryParseBool(value, out var parsed) && parsed;
     }
 
-    private void SetBoolSetting(KnownSettingDefinition definition, ChangeEventArgs args)
+    private void SetBoolSetting(KnownSettingDefinition definition, bool isEnabled)
     {
-        var isEnabled = args.Value is bool value && value;
         settingValues[definition.Key] = isEnabled ? "true" : "false";
     }
 
@@ -743,18 +720,17 @@ else
         };
     }
 
-    private string GetIntValue(KnownSettingDefinition definition)
+    private int GetIntSetting(KnownSettingDefinition definition)
     {
         var value = intValues.TryGetValue(definition.Key, out var stored)
             ? stored
             : ParseIntValue(definition, definition.DefaultValue);
-        return (value ?? 0).ToString(CultureInfo.InvariantCulture);
+        return value ?? 0;
     }
 
-    private void SetIntValue(KnownSettingDefinition definition, ChangeEventArgs args)
+    private void SetIntValue(KnownSettingDefinition definition, int value)
     {
-        var raw = args.Value?.ToString() ?? definition.DefaultValue;
-        var parsed = ParseIntValue(definition, raw);
+        var parsed = ParseIntValue(definition, value.ToString(CultureInfo.InvariantCulture));
         intValues[definition.Key] = parsed;
         settingValues[definition.Key] = (parsed ?? 0).ToString(CultureInfo.InvariantCulture);
     }
@@ -770,9 +746,9 @@ else
         return value;
     }
 
-    private void SetStringValue(KnownSettingDefinition definition, ChangeEventArgs args)
+    private void SetStringValue(KnownSettingDefinition definition, string? value)
     {
-        settingValues[definition.Key] = args.Value?.ToString() ?? definition.DefaultValue;
+        settingValues[definition.Key] = value ?? definition.DefaultValue;
     }
 
     private void EnsureKnownSettingState()

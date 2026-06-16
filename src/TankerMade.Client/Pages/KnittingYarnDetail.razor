@@ -11,276 +11,274 @@
 
 <PageTitle>Knitting Yarn</PageTitle>
 
-@if (!AuthSession.IsSignedIn)
-{
-    <h1>Knitting Yarn</h1>
-    <p>Sign in to use this module section.</p>
-    <a class="btn btn-primary" href="/login">Sign in</a>
-}
-else if (!ModuleState.IsActive(ModuleKey))
-{
-    <h1>Knitting Yarn</h1>
-    <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/home">Go to Home</a>
-}
-else if (loading)
-{
-    <h1>Knitting Yarn</h1>
-    <p>Loading...</p>
-}
-else if (yarn is null)
-{
-    <h1>Yarn Not Found</h1>
-    <a class="btn btn-outline-secondary" href="/modules/knitting/inventory">Back to Inventory</a>
-}
-else
-{
-    <div class="pattern-detail">
-        @if (!string.IsNullOrWhiteSpace(errorMessage))
-        {
-            <div class="alert alert-danger">@errorMessage</div>
-        }
+<KnittingModuleGate Loading="loading" LoadingMessage="Loading yarn...">
+    @if (yarn is null)
+    {
+        <MudStack Spacing="3">
+            <KnittingPageHeader Title="Yarn Not Found"
+                                BackHref="/modules/knitting/inventory"
+                                BackLabel="Inventory" />
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/modules/knitting/inventory">
+                Back to Inventory
+            </MudButton>
+        </MudStack>
+    }
+    else
+    {
+        <MudStack Spacing="3" Class="pattern-detail">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+            }
 
-        <div class="pattern-header">
-            <div>
-                <a class="pattern-back-link" href="/modules/knitting/inventory">Inventory</a>
-                <h1>@yarn.BrandName</h1>
-                <p>@yarn.ColorName</p>
-            </div>
-            <div class="pattern-stats" aria-label="Yarn summary">
-                <div>
-                    <strong>@yarn.TotalSkeins</strong>
-                    <span>Skeins</span>
-                </div>
-                <div>
-                    <strong>@DisplayLength(yarn.EstimatedRemainingLength, yarn.LengthUnit)</strong>
-                    <span>Est. remaining</span>
-                </div>
-                <div>
-                    <strong>@yarn.Lots.Count</strong>
-                    <span>Lots</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-3">
-            <div class="col-lg-4">
-                <section class="project-panel">
-                    <h2>Image &amp; Assets</h2>
-                    <AssetThumbnailImage AssetId="primaryAssetId"
-                                         SizeKey="medium"
-                                         AltText="@($"{yarn.BrandName} {yarn.ColorName}")"
-                                         CssClass="asset-thumbnail-image mb-3" />
-                    <InputFile OnChange="UploadAssetAsync" disabled="@busy" />
-                    <p class="muted-copy mt-2">Upload and attach images for this yarn.</p>
-
-                    @if (itemAssets.Count == 0)
-                    {
-                        <p class="muted-copy mb-0">No assets attached yet.</p>
-                    }
-                    else
-                    {
-                        <ul class="project-supply-list mt-2">
-                            @foreach (var asset in itemAssets)
-                            {
-                                <li>
-                                    <div>
-                                        <strong>@asset.OriginalFileName</strong>
-                                        <span>@AssetMeta(asset)</span>
-                                    </div>
-                                    @if (asset.RecordId == yarn.Id)
-                                    {
-                                        <button class="btn btn-outline-danger btn-sm"
-                                                disabled="@busy"
-                                                @onclick="() => UnassignAssetAsync(asset.Id)">
-                                            Unlink
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <button class="btn btn-outline-primary btn-sm"
-                                                disabled="@busy"
-                                                @onclick="() => AssignAssetAsync(asset.Id)">
-                                            Attach
-                                        </button>
-                                    }
-                                </li>
-                            }
-                        </ul>
-                    }
-                </section>
-            </div>
-
-            <div class="col-lg-8">
-                <section class="project-panel mb-3">
-                    <h2>Details</h2>
-                    <div class="inventory-detail-grid">
-                        <div>
-                            <strong>Brand</strong>
-                            <div>@yarn.BrandName</div>
-                        </div>
-                        <div>
-                            <strong>Color name</strong>
-                            <div>@yarn.ColorName</div>
-                        </div>
-                        <div>
-                            <strong>Main color</strong>
-                            <div>@DisplayValue(yarn.MainColor)</div>
-                        </div>
-                        <div>
-                            <strong>Weight</strong>
-                            <div>@DisplayValue(yarn.WeightName)</div>
-                        </div>
-                        <div>
-                            <strong>Fiber tag</strong>
-                            <div>@DisplayValue(yarn.FiberTag)</div>
-                        </div>
-                        <div>
-                            <strong>Fiber content</strong>
-                            <div>@DisplayValue(yarn.FiberContent)</div>
-                        </div>
-                        <div>
-                            <strong>Total skeins</strong>
-                            <div>@yarn.TotalSkeins</div>
-                        </div>
-                        <div>
-                            <strong>Estimated remaining length</strong>
-                            <div>@DisplayLength(yarn.EstimatedRemainingLength, yarn.LengthUnit)</div>
-                        </div>
-                        <div>
-                            <strong>Current weight</strong>
-                            <div>@DisplayWeight(yarn.CurrentWeight)</div>
-                        </div>
-                        <div>
-                            <strong>Regular price</strong>
-                            <div>@DisplayPrice(yarn.RegularPrice)</div>
-                        </div>
+            <div class="pattern-header">
+                <KnittingPageHeader Title="@yarn.BrandName"
+                                    Subtitle="@yarn.ColorName"
+                                    BackHref="/modules/knitting/inventory"
+                                    BackLabel="Inventory" />
+                <div class="pattern-stats" aria-label="Yarn summary">
+                    <div>
+                        <strong>@yarn.TotalSkeins</strong>
+                        <span>Skeins</span>
                     </div>
-                </section>
-
-                <section class="project-panel mb-3">
-                    <h2>Update Remaining</h2>
-                    <EditForm Model="remainingForm" OnValidSubmit="SaveRemainingAsync" class="project-edit-form">
-                        <div class="form-grid">
-                            <label>
-                                <span>Estimated remaining length</span>
-                                <InputNumber class="form-control" @bind-Value="remainingForm.EstimatedRemainingLength" />
-                            </label>
-                            <label>
-                                <span>Length unit</span>
-                                <InputText class="form-control" @bind-Value="remainingForm.LengthUnit" />
-                            </label>
-                            <label>
-                                <span>Current weight (g)</span>
-                                <InputNumber class="form-control" @bind-Value="remainingForm.CurrentWeight" />
-                            </label>
-                        </div>
-                        <button class="btn btn-primary btn-sm" disabled="@busy" type="submit">Save Remaining</button>
-                    </EditForm>
-                </section>
-
-                <section class="project-panel mb-3">
-                    <h2>Lots</h2>
-                    @if (yarn.Lots.Count == 0)
-                    {
-                        <p class="mb-0 muted-copy">No lots recorded yet.</p>
-                    }
-                    else
-                    {
-                        <ul class="project-supply-list">
-                            @foreach (var lot in yarn.Lots)
-                            {
-                                <li>
-                                    <div>
-                                        <strong>Lot @DisplayValue(lot.LotNumber)</strong>
-                                        <span>@lot.Skeins skeins</span>
-                                        <span>Remaining: @DisplayLength(lot.RemainingLength, yarn.LengthUnit)</span>
-                                        <span>Weight: @DisplayWeight(lot.CurrentWeight)</span>
-                                    </div>
-                                    @if (editingLotId == lot.Id)
-                                    {
-                                        <div class="form-grid mt-2">
-                                            <label>
-                                                <span>Remaining length</span>
-                                                <InputNumber class="form-control" @bind-Value="lotEditForm.RemainingLength" />
-                                            </label>
-                                            <label>
-                                                <span>Weight (g)</span>
-                                                <InputNumber class="form-control" @bind-Value="lotEditForm.CurrentWeight" />
-                                            </label>
-                                        </div>
-                                        <div class="auth-actions mt-2">
-                                            <button class="btn btn-primary btn-sm" disabled="@busy" @onclick="() => SaveLotRemainingAsync(lot.Id)">Save Lot</button>
-                                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="CancelLotEdit">Cancel</button>
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <a class="btn btn-outline-primary btn-sm" href="/modules/knitting/inventory/yarn/@YarnId/lots/@lot.Id">View Lot</a>
-                                        <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => StartLotEdit(lot)">Edit</button>
-                                    }
-                                </li>
-                            }
-                        </ul>
-                    }
-                </section>
-
-                <section class="project-panel mb-3">
-                    <h2>Purchase History</h2>
-                    @if (yarn.Purchases.Count == 0)
-                    {
-                        <p class="mb-0 muted-copy">No purchases recorded yet.</p>
-                    }
-                    else
-                    {
-                        <ul class="project-supply-list">
-                            @foreach (var purchase in yarn.Purchases)
-                            {
-                                <li>
-                                    <div>
-                                        <strong>@purchase.SourceName</strong>
-                                        <span>@DisplayPurchasePrice(purchase.Price, purchase.IsSalePrice)</span>
-                                        <span>@DisplayDate(purchase.PurchasedAt ?? purchase.CreatedAt)</span>
-                                    </div>
-                                </li>
-                            }
-                        </ul>
-                    }
-                </section>
-
-                <section class="project-panel mb-3">
-                    <h2>Projects</h2>
-                    <div class="form-grid">
-                        <label>
-                            <span>Projects Active</span>
-                            <select class="form-control" @onchange="OpenActiveProject">
-                                <option value="">Select active project...</option>
-                                @foreach (var project in activeLinkedProjects)
-                                {
-                                    <option value="@project.Id">@project.Name</option>
-                                }
-                            </select>
-                        </label>
-                        <label>
-                            <span>Project History</span>
-                            <select class="form-control" @onchange="OpenArchivedProject">
-                                <option value="">Select archived project...</option>
-                                @foreach (var project in archivedLinkedProjects)
-                                {
-                                    <option value="@project.Id">@project.Name</option>
-                                }
-                            </select>
-                        </label>
+                    <div>
+                        <strong>@DisplayLength(yarn.EstimatedRemainingLength, yarn.LengthUnit)</strong>
+                        <span>Est. remaining</span>
                     </div>
-                    @if (activeLinkedProjects.Count == 0 && archivedLinkedProjects.Count == 0)
-                    {
-                        <p class="mb-0 mt-2 muted-copy">No projects link to this yarn yet.</p>
-                    }
-                </section>
+                    <div>
+                        <strong>@yarn.Lots.Count</strong>
+                        <span>Lots</span>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-}
+
+            <div class="row g-3">
+                <div class="col-lg-4">
+                    <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle1">Image &amp; Assets</MudText>
+                            <AssetThumbnailImage AssetId="primaryAssetId"
+                                                 SizeKey="medium"
+                                                 AltText="@($"{yarn.BrandName} {yarn.ColorName}")"
+                                                 CssClass="asset-thumbnail-image mb-3" />
+                            <InputFile OnChange="UploadAssetAsync" disabled="@busy" />
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Upload and attach images for this yarn.</MudText>
+
+                            @if (itemAssets.Count == 0)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No assets attached yet.</MudText>
+                            }
+                            else
+                            {
+                                <ul class="project-supply-list mt-2">
+                                    @foreach (var asset in itemAssets)
+                                    {
+                                        <li>
+                                            <div>
+                                                <strong>@asset.OriginalFileName</strong>
+                                                <span>@AssetMeta(asset)</span>
+                                            </div>
+                                            @if (asset.RecordId == yarn.Id)
+                                            {
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                                           Disabled="busy"
+                                                           OnClick="@(() => UnassignAssetAsync(asset.Id))">
+                                                    Unlink
+                                                </MudButton>
+                                            }
+                                            else
+                                            {
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                                           Disabled="busy"
+                                                           OnClick="@(() => AssignAssetAsync(asset.Id))">
+                                                    Attach
+                                                </MudButton>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                </div>
+
+                <div class="col-lg-8">
+                    <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle1">Details</MudText>
+                            <div class="inventory-detail-grid">
+                                <div>
+                                    <strong>Brand</strong>
+                                    <div>@yarn.BrandName</div>
+                                </div>
+                                <div>
+                                    <strong>Color name</strong>
+                                    <div>@yarn.ColorName</div>
+                                </div>
+                                <div>
+                                    <strong>Main color</strong>
+                                    <div>@DisplayValue(yarn.MainColor)</div>
+                                </div>
+                                <div>
+                                    <strong>Weight</strong>
+                                    <div>@DisplayValue(yarn.WeightName)</div>
+                                </div>
+                                <div>
+                                    <strong>Fiber tag</strong>
+                                    <div>@DisplayValue(yarn.FiberTag)</div>
+                                </div>
+                                <div>
+                                    <strong>Fiber content</strong>
+                                    <div>@DisplayValue(yarn.FiberContent)</div>
+                                </div>
+                                <div>
+                                    <strong>Total skeins</strong>
+                                    <div>@yarn.TotalSkeins</div>
+                                </div>
+                                <div>
+                                    <strong>Estimated remaining length</strong>
+                                    <div>@DisplayLength(yarn.EstimatedRemainingLength, yarn.LengthUnit)</div>
+                                </div>
+                                <div>
+                                    <strong>Current weight</strong>
+                                    <div>@DisplayWeight(yarn.CurrentWeight)</div>
+                                </div>
+                                <div>
+                                    <strong>Regular price</strong>
+                                    <div>@DisplayPrice(yarn.RegularPrice)</div>
+                                </div>
+                            </div>
+                        </MudStack>
+                    </MudPaper>
+
+                    <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle1">Update Remaining</MudText>
+                            <EditForm Model="remainingForm" OnValidSubmit="SaveRemainingAsync" class="project-edit-form">
+                                <MudStack Spacing="2">
+                                    <div class="form-grid">
+                                        <MudNumericField T="decimal?" @bind-Value="remainingForm.EstimatedRemainingLength" Label="Estimated remaining length" Variant="Variant.Outlined" />
+                                        <MudTextField @bind-Value="remainingForm.LengthUnit" Label="Length unit" Variant="Variant.Outlined" />
+                                        <MudNumericField T="decimal?" @bind-Value="remainingForm.CurrentWeight" Label="Current weight (g)" Variant="Variant.Outlined" />
+                                    </div>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" ButtonType="ButtonType.Submit">
+                                        Save Remaining
+                                    </MudButton>
+                                </MudStack>
+                            </EditForm>
+                        </MudStack>
+                    </MudPaper>
+
+                    <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle1">Lots</MudText>
+                            @if (yarn.Lots.Count == 0)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No lots recorded yet.</MudText>
+                            }
+                            else
+                            {
+                                <ul class="project-supply-list">
+                                    @foreach (var lot in yarn.Lots)
+                                    {
+                                        <li>
+                                            <div>
+                                                <strong>Lot @DisplayValue(lot.LotNumber)</strong>
+                                                <span>@lot.Skeins skeins</span>
+                                                <span>Remaining: @DisplayLength(lot.RemainingLength, yarn.LengthUnit)</span>
+                                                <span>Weight: @DisplayWeight(lot.CurrentWeight)</span>
+                                            </div>
+                                            @if (editingLotId == lot.Id)
+                                            {
+                                                <div class="form-grid mt-2">
+                                                    <MudNumericField T="decimal?" @bind-Value="lotEditForm.RemainingLength" Label="Remaining length" Variant="Variant.Outlined" />
+                                                    <MudNumericField T="decimal?" @bind-Value="lotEditForm.CurrentWeight" Label="Weight (g)" Variant="Variant.Outlined" />
+                                                </div>
+                                                <MudStack Row="true" Spacing="1" Class="mt-2">
+                                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="@(() => SaveLotRemainingAsync(lot.Id))">
+                                                        Save Lot
+                                                    </MudButton>
+                                                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="busy" OnClick="CancelLotEdit">
+                                                        Cancel
+                                                    </MudButton>
+                                                </MudStack>
+                                            }
+                                            else
+                                            {
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                                           Href="@($"/modules/knitting/inventory/yarn/{YarnId}/lots/{lot.Id}")">
+                                                    View Lot
+                                                </MudButton>
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="busy" OnClick="@(() => StartLotEdit(lot))">
+                                                    Edit
+                                                </MudButton>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </MudStack>
+                    </MudPaper>
+
+                    <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle1">Purchase History</MudText>
+                            @if (yarn.Purchases.Count == 0)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No purchases recorded yet.</MudText>
+                            }
+                            else
+                            {
+                                <ul class="project-supply-list">
+                                    @foreach (var purchase in yarn.Purchases)
+                                    {
+                                        <li>
+                                            <div>
+                                                <strong>@purchase.SourceName</strong>
+                                                <span>@DisplayPurchasePrice(purchase.Price, purchase.IsSalePrice)</span>
+                                                <span>@DisplayDate(purchase.PurchasedAt ?? purchase.CreatedAt)</span>
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </MudStack>
+                    </MudPaper>
+
+                    <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle1">Projects</MudText>
+                            <div class="form-grid">
+                                <MudSelect T="string" Label="Projects Active" Variant="Variant.Outlined"
+                                           Value="@string.Empty"
+                                           ValueChanged="@((string v) => OpenProject(v))">
+                                    <MudSelectItem T="string" Value="@string.Empty">Select active project...</MudSelectItem>
+                                    @foreach (var project in activeLinkedProjects)
+                                    {
+                                        <MudSelectItem T="string" Value="@project.Id.ToString()">@project.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                                <MudSelect T="string" Label="Project History" Variant="Variant.Outlined"
+                                           Value="@string.Empty"
+                                           ValueChanged="@((string v) => OpenProject(v))">
+                                    <MudSelectItem T="string" Value="@string.Empty">Select archived project...</MudSelectItem>
+                                    @foreach (var project in archivedLinkedProjects)
+                                    {
+                                        <MudSelectItem T="string" Value="@project.Id.ToString()">@project.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </div>
+                            @if (activeLinkedProjects.Count == 0 && archivedLinkedProjects.Count == 0)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No projects link to this yarn yet.</MudText>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                </div>
+            </div>
+        </MudStack>
+    }
+</KnittingModuleGate>
 
 @code {
     private const string ModuleKey = "knitting";

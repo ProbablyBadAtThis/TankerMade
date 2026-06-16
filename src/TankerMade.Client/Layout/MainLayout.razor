@@ -6,15 +6,6 @@
 @implements IDisposable
 
 <MudLayout Class="notebook-layout">
-    <MudAppBar Elevation="0" Dense="true" Class="notebook-top-bar">
-        <MudText Typo="Typo.h6" Class="notebook-brand">TankerMade</MudText>
-        <MudSpacer />
-        @if (!AuthSession.IsSignedIn)
-        {
-            <MudButton Variant="Variant.Text" Size="Size.Small" Href="/">Sign in</MudButton>
-        }
-    </MudAppBar>
-
     <MudMainContent Class="notebook-main-content">
         <div class="notebook-page">
             @Body

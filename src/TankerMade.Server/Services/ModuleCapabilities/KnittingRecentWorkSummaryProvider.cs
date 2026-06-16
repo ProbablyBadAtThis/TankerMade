@@ -41,8 +41,8 @@ public class KnittingRecentWorkSummaryProvider : IModuleRecentWorkSummaryProvide
         var projectIds = projectRefs.Select(item => item.WorkItemId).Distinct().ToList();
         var projects = await _context.KnittingProjects
             .AsNoTracking()
-            .Where(project => project.UserId == userId && projectIds.Contains(project.Id))
-            .Select(project => new { project.Id, project.Name })
+            .Where(project => project.UserId == userId && projectIds.Contains(project.Id) && !project.IsArchived)
+            .Select(project => new { project.Id, project.Name, project.Progress })
             .ToDictionaryAsync(project => project.Id, cancellationToken);
 
         var thumbnailAssets = await _context.AssetRecords
@@ -83,6 +83,7 @@ public class KnittingRecentWorkSummaryProvider : IModuleRecentWorkSummaryProvide
                 ThumbnailFallbackPath = KnittingModule.DefaultProjectThumbnailPath,
                 LastAccessedAtUtc = itemRef.LastAccessedAtUtc,
                 NavigationPath = $"/modules/knitting/projects/{itemRef.WorkItemId}",
+                ProgressPercent = project.Progress,
             });
         }
 

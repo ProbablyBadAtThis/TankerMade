@@ -22,6 +22,7 @@ public class RecentWorkController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<RecentWorkSummaryDto>>> GetRecent(
         [FromQuery] int limit = 5,
+        [FromQuery] string? moduleKey = null,
         CancellationToken cancellationToken = default)
     {
         var userId = User.GetUserId();
@@ -31,7 +32,11 @@ public class RecentWorkController : ControllerBase
         }
 
         var normalizedLimit = Math.Clamp(limit, 1, MaxLimit);
-        var summaries = await _recentWorkService.GetRecentAsync(userId.Value, normalizedLimit, cancellationToken);
+        var summaries = await _recentWorkService.GetRecentAsync(
+            userId.Value,
+            normalizedLimit,
+            moduleKey,
+            cancellationToken);
         return Ok(summaries);
     }
 

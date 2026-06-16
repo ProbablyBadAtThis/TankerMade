@@ -21,5 +21,6 @@ builder.Services.AddScoped<KnittingRecentActivity>();
 builder.Services.AddScoped<KnittingRowProgress>();
 builder.Services.AddScoped<KnittingCardAssetCache>();
 builder.Services.AddScoped<ThemeService>();
+builder.Services.AddScoped<DashboardLayoutPreferences>();
 
 await builder.Build().RunAsync();

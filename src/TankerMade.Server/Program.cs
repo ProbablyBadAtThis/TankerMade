@@ -123,7 +123,9 @@ builder.Services.AddScoped<IModuleInventoryCapabilityResolver, ModuleInventoryCa
 builder.Services.AddScoped<IModuleKitCapabilityResolver, ModuleKitCapabilityResolver>();
 builder.Services.AddScoped<IModuleSettingsCapabilityResolver, ModuleSettingsCapabilityResolver>();
 builder.Services.AddScoped<IModuleRecentWorkSummaryResolver, ModuleRecentWorkSummaryResolver>();
+builder.Services.AddScoped<IModuleDashboardContributionResolver, ModuleDashboardContributionResolver>();
 builder.Services.AddScoped<IRecentWorkService, RecentWorkService>();
+builder.Services.AddScoped<IDashboardOverviewService, DashboardOverviewService>();
 builder.Services.AddScoped<IModulePatternCapabilityHandler, KnittingPatternCapabilityHandler>();
 builder.Services.AddScoped<IModuleProjectCapabilityHandler, KnittingProjectCapabilityHandler>();
 builder.Services.AddScoped<IModuleInventoryCapabilityHandler, KnittingInventoryCapabilityHandler>();
@@ -131,6 +133,7 @@ builder.Services.AddScoped<IModuleInventoryCapabilityHandler, PrintingInventoryC
 builder.Services.AddScoped<IModuleKitCapabilityHandler, KnittingKitCapabilityHandler>();
 builder.Services.AddScoped<IModuleSettingsCapabilityHandler, KnittingSettingsCapabilityHandler>();
 builder.Services.AddScoped<IModuleRecentWorkSummaryProvider, KnittingRecentWorkSummaryProvider>();
+builder.Services.AddScoped<IModuleDashboardContributionProvider, KnittingDashboardContributionProvider>();
 
 // Add controllers and OpenAPI
 builder.Services.AddControllers();

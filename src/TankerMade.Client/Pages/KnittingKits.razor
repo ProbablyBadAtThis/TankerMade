@@ -8,398 +8,387 @@
 
 <PageTitle>Knitting Kits</PageTitle>
 
-@if (!AuthSession.IsSignedIn)
-{
-    <h1>Knitting Kits</h1>
-    <p>Sign in to use this module section.</p>
-    <a class="btn btn-primary" href="/login">Sign in</a>
-}
-else if (!ModuleState.IsActive("knitting"))
-{
-    <h1>Knitting Kits</h1>
-    <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/home">Go to Home</a>
-}
-else if (loading)
-{
-    <h1>Knitting Kits</h1>
-    <p>Loading...</p>
-}
-else
-{
-    <div class="page-heading">
-        <div>
-            <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
-            <h1>Kits</h1>
-            <p>Module-owned planning kits with pieces, supplies, and project handoff.</p>
-        </div>
-    </div>
+<KnittingModuleGate Loading="loading" LoadingMessage="Loading kits...">
+    <MudStack Spacing="3">
+        <KnittingPageHeader Title="Kits"
+                            Subtitle="Module-owned planning kits with pieces, supplies, and project handoff." />
 
-    @if (!string.IsNullOrWhiteSpace(errorMessage))
-    {
-        <div class="alert alert-danger">@errorMessage</div>
-    }
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+        }
 
-    <div class="auth-actions mb-3">
-        <a class="btn btn-primary" href="/modules/knitting/kits/new">New Kit Wizard</a>
-    </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/modules/knitting/kits/new">
+            New Kit Wizard
+        </MudButton>
 
-    <div class="row g-3">
-        <div class="col-lg-4">
-            <div class="project-panel">
-                <h2>Quick Create</h2>
-                <EditForm Model="kitForm" OnValidSubmit="CreateKitAsync" class="project-edit-form">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary />
+        <MudGrid Spacing="3">
+            <MudItem xs="12" lg="4">
+                <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.subtitle1">Quick Create</MudText>
+                        <EditForm Model="kitForm" OnValidSubmit="CreateKitAsync">
+                            <DataAnnotationsValidator />
+                            <MudStack Spacing="2">
+                                <MudTextField @bind-Value="kitForm.Name" Label="Name" Variant="Variant.Outlined" Required="true" />
+                                <MudTextField @bind-Value="kitForm.Description" Label="Description" Variant="Variant.Outlined" Lines="3" />
+                                <MudTextField @bind-Value="kitForm.Type" Label="Type" Variant="Variant.Outlined" />
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="busy">
+                                    Create Kit
+                                </MudButton>
+                            </MudStack>
+                        </EditForm>
+                    </MudStack>
+                </MudPaper>
 
-                    <label>
-                        <span>Name</span>
-                        <InputText class="form-control" @bind-Value="kitForm.Name" />
-                    </label>
-                    <label>
-                        <span>Description</span>
-                        <InputTextArea class="form-control" rows="3" @bind-Value="kitForm.Description" />
-                    </label>
-                    <label>
-                        <span>Type</span>
-                        <InputText class="form-control" @bind-Value="kitForm.Type" />
-                    </label>
+                <MudPaper Class="pa-4 knitting-panel-mud mt-3" Elevation="1">
+                    <MudStack Spacing="2">
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                            <MudText Typo="Typo.subtitle1">Kits</MudText>
+                            <MudCheckBox T="bool" Value="showArchived" ValueChanged="OnShowArchivedChanged" Label="Show archived" Color="Color.Primary" />
+                        </MudStack>
 
-                    <button class="btn btn-primary" disabled="@busy" type="submit">Create Kit</button>
-                </EditForm>
-            </div>
-
-            <div class="project-panel mt-3">
-                <div class="project-panel-header">
-                    <h2>Kits</h2>
-                    <label class="archive-toggle">
-                        <input type="checkbox" @bind="showArchived" @bind:after="LoadKitsAsync" />
-                        Show archived
-                    </label>
-                </div>
-                <div class="list-toolbar mb-2">
-                    <label>
-                        <span>Search</span>
-                        <input class="form-control" @bind="kitSearch" @bind:event="oninput" @bind:after="ApplyKitFilters" />
-                    </label>
-                    <label>
-                        <span>Sort</span>
-                        <select class="form-control" @bind="kitSortBy" @bind:after="ApplyKitFilters">
-                            <option value="recent">Most recent</option>
-                            <option value="name">Name</option>
-                        </select>
-                    </label>
-                </div>
-                @if (filteredKits.Count == 0)
-                {
-                    <p class="mb-0">No kits yet.</p>
-                }
-                else
-                {
-                    <div class="pattern-card-grid knitting-kit-list-grid">
-                        @foreach (var kit in pagedKits)
-                        {
-                            var assetId = kitAssetIds.GetValueOrDefault(kit.Id);
-                            <article class="pattern-card kit-card-with-image @(selectedKitId == kit.Id ? "printing-material-card-active" : string.Empty)">
-                                <AssetThumbnailImage AssetId="assetId" AltText="@kit.Name" />
-                                <div>
-                                    <h2>@kit.Name</h2>
-                                    <p>@(string.IsNullOrWhiteSpace(kit.Description) ? "No description" : kit.Description)</p>
-                                    @if (kit.IsArchived)
-                                    {
-                                        <span class="archive-badge">Archived</span>
-                                    }
-                                    <div class="pattern-card-stats">
-                                        <span>@kit.Pieces.Count pieces</span>
-                                        <span>@(string.IsNullOrWhiteSpace(kit.Type) ? "No type" : kit.Type)</span>
-                                    </div>
-                                    <button class="btn btn-primary btn-sm mt-2"
-                                            disabled="@busy"
-                                            @onclick="() => SelectKitAsync(kit.Id)">
-                                        @(selectedKitId == kit.Id ? "Selected" : "Open")
-                                    </button>
-                                </div>
-                            </article>
-                        }
-                    </div>
-                    @if (filteredKits.Count > kitPageSize)
-                    {
-                        <div class="auth-actions mt-2">
-                            <button class="btn btn-outline-secondary btn-sm" disabled="@(kitPage <= 1 || busy)" @onclick="PreviousKitPage">Previous</button>
-                            <span class="muted-copy align-self-center">Page @kitPage of @KitPageCount</span>
-                            <button class="btn btn-outline-secondary btn-sm" disabled="@(kitPage >= KitPageCount || busy)" @onclick="NextKitPage">Next</button>
+                        <div class="knitting-list-toolbar-mud">
+                            <MudTextField @bind-Value="kitSearch"
+                                          @bind-Value:after="ApplyKitFilters"
+                                          Label="Search"
+                                          Variant="Variant.Outlined"
+                                          Placeholder="Filter as you type"
+                                          Immediate="true" />
+                            <MudSelect T="string" @bind-Value="kitSortBy" @bind-Value:after="ApplyKitFilters" Label="Sort" Variant="Variant.Outlined">
+                                <MudSelectItem T="string" Value="@("recent")">Most recent</MudSelectItem>
+                                <MudSelectItem T="string" Value="@("name")">Name</MudSelectItem>
+                            </MudSelect>
                         </div>
-                    }
-                }
-            </div>
-        </div>
 
-        <div class="col-lg-8">
-            @if (selectedKit == null)
-            {
-                <div class="project-panel">
-                    <h2>Kit Details</h2>
-                    <p class="mb-0">Select a kit to manage pieces and supplies.</p>
-                </div>
-            }
-            else
-            {
-                <div class="project-panel mb-3">
-                    <h2>@selectedKit.Name</h2>
-                    <p class="mb-1">@selectedKit.Description</p>
-                    <p class="mb-0 text-muted">@selectedKit.Type</p>
-                    @if (selectedKit.IsArchived)
-                    {
-                        <span class="archive-badge mt-2">Archived</span>
-                    }
-                    <div class="auth-actions mt-2">
-                        <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => OpenKitEdit(selectedKit)">Edit Details</button>
-                        @if (selectedKit.IsArchived)
+                        @if (filteredKits.Count == 0)
                         {
-                            <button class="btn btn-outline-primary btn-sm" disabled="@busy" @onclick="ReopenKitAsync">Reopen Kit</button>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No kits yet.</MudText>
                         }
                         else
                         {
-                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="ArchiveKitAsync">Archive Kit</button>
-                        }
-                        <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="DeleteKitAsync">Delete Kit</button>
-                    </div>
-                </div>
-
-                <section class="project-panel mb-3">
-                    <h2>Kit Workspace</h2>
-                    <div class="pattern-card-stats mb-2">
-                        <span>@KitOverallProgress% complete</span>
-                        <span>@KitCompletedStitches / @KitTotalStitches stitches</span>
-                        <span>@KnittingUi.FormatDurationCompact(KitTotalTrackedSeconds) tracked</span>
-                        <span>@KitLinkedProjectCount / @selectedKit.Pieces.Count pieces started</span>
-                    </div>
-                    @if (selectedKit.Pieces.Count == 0)
-                    {
-                        <p class="mb-0">Add pieces to track kit progress.</p>
-                    }
-                    else
-                    {
-                        @foreach (var piece in selectedKit.Pieces.OrderBy(piece => piece.SortOrder))
-                        {
-                            var childProject = piece.ProjectId.HasValue
-                                ? kitChildProjects.GetValueOrDefault(piece.ProjectId.Value)
-                                : null;
-                            <div class="border rounded p-2 mb-2">
-                                <strong>@piece.Name</strong>
-                                @if (childProject == null)
+                            <div class="knitting-card-grid-mud knitting-kit-list-grid">
+                                @foreach (var kit in pagedKits)
                                 {
-                                    <p class="mb-2 text-muted">No linked project yet.</p>
+                                    var assetId = kitAssetIds.GetValueOrDefault(kit.Id);
+                                    <MudPaper Class="@($"knitting-card-mud kit-card-with-image {(selectedKitId == kit.Id ? "printing-material-card-active" : string.Empty)}")"
+                                              Elevation="1">
+                                        <AssetThumbnailImage AssetId="assetId" AltText="@kit.Name" />
+                                        <div class="pa-3 knitting-card-mud-body">
+                                            <MudText Typo="Typo.h6">@kit.Name</MudText>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                                @(string.IsNullOrWhiteSpace(kit.Description) ? "No description" : kit.Description)
+                                            </MudText>
+                                            @if (kit.IsArchived)
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Default">Archived</MudChip>
+                                            }
+                                            <div class="pattern-card-stats">
+                                                <span>@kit.Pieces.Count pieces</span>
+                                                <span>@(string.IsNullOrWhiteSpace(kit.Type) ? "No type" : kit.Type)</span>
+                                            </div>
+                                            <MudButton Variant="Variant.Filled"
+                                                       Color="Color.Primary"
+                                                       Size="Size.Small"
+                                                       Disabled="busy"
+                                                       OnClick="@(() => SelectKitAsync(kit.Id))">
+                                                @(selectedKitId == kit.Id ? "Selected" : "Open")
+                                            </MudButton>
+                                        </div>
+                                    </MudPaper>
+                                }
+                            </div>
+                            @if (filteredKits.Count > kitPageSize)
+                            {
+                                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                                    <MudButton Variant="Variant.Outlined" Disabled="@(kitPage <= 1 || busy)" OnClick="PreviousKitPage">Previous</MudButton>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Page @kitPage of @KitPageCount</MudText>
+                                    <MudButton Variant="Variant.Outlined" Disabled="@(kitPage >= KitPageCount || busy)" OnClick="NextKitPage">Next</MudButton>
+                                </MudStack>
+                            }
+                        }
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" lg="8">
+                @if (selectedKit == null)
+                {
+                    <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.subtitle1">Kit Details</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Select a kit to manage pieces and supplies.</MudText>
+                        </MudStack>
+                    </MudPaper>
+                }
+                else
+                {
+                    <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.h6">@selectedKit.Name</MudText>
+                            <MudText Typo="Typo.body2">@selectedKit.Description</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@selectedKit.Type</MudText>
+                            @if (selectedKit.IsArchived)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Default">Archived</MudChip>
+                            }
+                            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="busy" OnClick="@(() => OpenKitEdit(selectedKit))">Edit Details</MudButton>
+                                @if (selectedKit.IsArchived)
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="ReopenKitAsync">Reopen Kit</MudButton>
                                 }
                                 else
                                 {
-                                    <div class="pattern-card-stats mt-1">
-                                        <span class="@KnittingUi.DifficultyCssClass(childProject.Difficulty)">@KnittingUi.DifficultyLabel(childProject.Difficulty)</span>
-                                        <span>@childProject.Progress% complete</span>
-                                        <span>@childProject.CompletedStitchCount / @childProject.TotalStitchCount stitches</span>
-                                        <span>@KnittingUi.FormatDurationCompact(childProject.TotalTrackedSeconds) tracked</span>
-                                        @if (childProject.TimerRunning)
-                                        {
-                                            <span>Timer running</span>
-                                        }
-                                    </div>
+                                    <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="busy" OnClick="ArchiveKitAsync">Archive Kit</MudButton>
                                 }
-                                <div class="auth-actions mt-2">
-                                    @if (childProject != null)
-                                    {
-                                        <a class="btn btn-sm btn-outline-primary" href="@($"/modules/knitting/projects/{childProject.Id}")">Open Workspace</a>
-                                    }
-                                    else
-                                    {
-                                        <button class="btn btn-sm btn-outline-primary"
-                                                disabled="@busy"
-                                                @onclick="() => CreateProjectForPieceAsync(piece.Id)">
-                                            Create Project
-                                        </button>
-                                    }
-                                </div>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="DeleteKitAsync">Delete Kit</MudButton>
+                            </MudStack>
+                        </MudStack>
+                    </MudPaper>
+
+                    <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle1">Kit Workspace</MudText>
+                            <div class="pattern-card-stats">
+                                <span>@KitOverallProgress% complete</span>
+                                <span>@KitCompletedStitches / @KitTotalStitches stitches</span>
+                                <span>@KnittingUi.FormatDurationCompact(KitTotalTrackedSeconds) tracked</span>
+                                <span>@KitLinkedProjectCount / @selectedKit.Pieces.Count pieces started</span>
                             </div>
-                        }
-                    }
-                </section>
-
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="project-panel">
-                            <h2>@(editingPieceId == null ? "Add Piece" : "Update Piece")</h2>
-                            <EditForm Model="pieceForm" OnValidSubmit="AddPieceAsync" class="project-edit-form">
-                                <DataAnnotationsValidator />
-                                <ValidationSummary />
-                                <label>
-                                    <span>Piece Name</span>
-                                    <InputText class="form-control" @bind-Value="pieceForm.Name" />
-                                </label>
-                                <label>
-                                    <span>Notes</span>
-                                    <InputText class="form-control" @bind-Value="pieceForm.Notes" />
-                                </label>
-                                <div class="auth-actions">
-                                    <button class="btn btn-primary" disabled="@busy" type="submit">@(editingPieceId == null ? "Add Piece" : "Save Piece")</button>
-                                    @if (editingPieceId != null)
-                                    {
-                                        <button class="btn btn-outline-secondary" disabled="@busy" type="button" @onclick="CancelPieceEdit">Cancel</button>
-                                    }
-                                </div>
-                            </EditForm>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="project-panel">
-                            <h2>@(editingSupplyId == null ? "Add Supply" : "Update Supply")</h2>
-                            <EditForm Model="supplyForm" OnValidSubmit="AddSupplyAsync" class="project-edit-form">
-                                <DataAnnotationsValidator />
-                                <ValidationSummary />
-                                <label>
-                                    <span>Supply Type</span>
-                                    <select class="form-control" @bind="supplyForm.SupplyType" @bind:after="OnKitSupplyTypeChanged">
-                                        <option value="yarn">Yarn</option>
-                                        <option value="tool">Tool</option>
-                                        <option value="notion">Notion</option>
-                                    </select>
-                                </label>
-                                <label>
-                                    <span>Inventory item (optional)</span>
-                                    <select class="form-control" @bind="selectedKitInventoryId" @bind:after="OnKitSupplyInventoryChanged">
-                                        <option value="">Manual name</option>
-                                        @foreach (var option in kitInventoryOptions)
-                                        {
-                                            <option value="@option.Id">@option.Label</option>
-                                        }
-                                    </select>
-                                </label>
-                                <label>
-                                    <span>Name</span>
-                                    <InputText class="form-control" @bind-Value="supplyForm.Name" />
-                                </label>
-                                <label>
-                                    <span>Quantity</span>
-                                    <InputNumber class="form-control" @bind-Value="supplyForm.Quantity" />
-                                </label>
-                                <div class="auth-actions">
-                                    <button class="btn btn-primary" disabled="@busy" type="submit">@(editingSupplyId == null ? "Add Supply" : "Save Supply")</button>
-                                    @if (editingSupplyId != null)
-                                    {
-                                        <button class="btn btn-outline-secondary" disabled="@busy" type="button" @onclick="CancelSupplyEdit">Cancel</button>
-                                    }
-                                </div>
-                            </EditForm>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row g-3 mt-1">
-                    <div class="col-md-6">
-                        <div class="project-panel">
-                            <h2>Pieces</h2>
                             @if (selectedKit.Pieces.Count == 0)
                             {
-                                <p class="mb-0">No pieces yet.</p>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Add pieces to track kit progress.</MudText>
                             }
                             else
                             {
                                 @foreach (var piece in selectedKit.Pieces.OrderBy(piece => piece.SortOrder))
                                 {
-                                    <div class="border rounded p-2 mb-2">
-                                        <strong>@piece.Name</strong>
-                                        @if (!string.IsNullOrWhiteSpace(piece.Notes))
-                                        {
-                                            <p class="mb-2">@piece.Notes</p>
-                                        }
-                                        <div class="auth-actions">
-                                            <button class="btn btn-sm btn-outline-primary"
-                                                    disabled="@busy"
-                                                    @onclick="() => CreateProjectForPieceAsync(piece.Id)">
-                                                @(piece.ProjectId.HasValue ? "Open Project" : "Create Project")
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-secondary"
-                                                    disabled="@busy"
-                                                    @onclick="() => StartPieceEdit(piece)">
-                                                Edit
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger"
-                                                    disabled="@busy"
-                                                    @onclick="() => DeletePieceAsync(piece.Id)">
-                                                Delete
-                                            </button>
-                                            @if (piece.ProjectId.HasValue)
+                                    var childProject = piece.ProjectId.HasValue
+                                        ? kitChildProjects.GetValueOrDefault(piece.ProjectId.Value)
+                                        : null;
+                                    <MudPaper Class="pa-2 mb-2" Elevation="0" Outlined="true">
+                                        <MudStack Spacing="1">
+                                            <MudText Typo="Typo.subtitle2">@piece.Name</MudText>
+                                            @if (childProject == null)
                                             {
-                                                <a class="btn btn-sm btn-outline-secondary"
-                                                   href="@($"/modules/knitting/projects/{piece.ProjectId.Value}")">
-                                                    Go
-                                                </a>
+                                                <MudText Typo="Typo.body2" Color="Color.Secondary">No linked project yet.</MudText>
                                             }
-                                        </div>
-                                    </div>
+                                            else
+                                            {
+                                                <div class="pattern-card-stats">
+                                                    <KnittingDifficultyBadge Difficulty="childProject.Difficulty" />
+                                                    <span>@childProject.Progress% complete</span>
+                                                    <span>@childProject.CompletedStitchCount / @childProject.TotalStitchCount stitches</span>
+                                                    <span>@KnittingUi.FormatDurationCompact(childProject.TotalTrackedSeconds) tracked</span>
+                                                    @if (childProject.TimerRunning)
+                                                    {
+                                                        <span>Timer running</span>
+                                                    }
+                                                </div>
+                                            }
+                                            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                                @if (childProject != null)
+                                                {
+                                                    <MudButton Variant="Variant.Outlined"
+                                                               Color="Color.Primary"
+                                                               Size="Size.Small"
+                                                               Href="@($"/modules/knitting/projects/{childProject.Id}")">
+                                                        Open Workspace
+                                                    </MudButton>
+                                                }
+                                                else
+                                                {
+                                                    <MudButton Variant="Variant.Outlined"
+                                                               Color="Color.Primary"
+                                                               Size="Size.Small"
+                                                               Disabled="busy"
+                                                               OnClick="@(() => CreateProjectForPieceAsync(piece.Id))">
+                                                        Create Project
+                                                    </MudButton>
+                                                }
+                                            </MudStack>
+                                        </MudStack>
+                                    </MudPaper>
                                 }
                             }
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="project-panel">
-                            <h2>Supplies</h2>
-                            @if (selectedKit.Supplies.Count == 0)
-                            {
-                                <p class="mb-0">No supplies yet.</p>
-                            }
-                            else
-                            {
-                                @foreach (var supply in selectedKit.Supplies.OrderBy(supply => supply.SortOrder))
-                                {
-                                    <div class="border rounded p-2 mb-2">
-                                        <strong>@supply.SupplyType:</strong> @supply.Name
-                                        @if (supply.Quantity.HasValue)
+                        </MudStack>
+                    </MudPaper>
+
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" md="6">
+                            <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                                <MudStack Spacing="2">
+                                    <MudText Typo="Typo.subtitle1">@(editingPieceId == null ? "Add Piece" : "Update Piece")</MudText>
+                                    <EditForm Model="pieceForm" OnValidSubmit="AddPieceAsync">
+                                        <DataAnnotationsValidator />
+                                        <MudStack Spacing="2">
+                                            <MudTextField @bind-Value="pieceForm.Name" Label="Piece Name" Variant="Variant.Outlined" Required="true" />
+                                            <MudTextField @bind-Value="pieceForm.Notes" Label="Notes" Variant="Variant.Outlined" />
+                                            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                                <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="busy">
+                                                    @(editingPieceId == null ? "Add Piece" : "Save Piece")
+                                                </MudButton>
+                                                @if (editingPieceId != null)
+                                                {
+                                                    <MudButton Variant="Variant.Outlined" Disabled="busy" OnClick="CancelPieceEdit">Cancel</MudButton>
+                                                }
+                                            </MudStack>
+                                        </MudStack>
+                                    </EditForm>
+                                </MudStack>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                                <MudStack Spacing="2">
+                                    <MudText Typo="Typo.subtitle1">@(editingSupplyId == null ? "Add Supply" : "Update Supply")</MudText>
+                                    <EditForm Model="supplyForm" OnValidSubmit="AddSupplyAsync">
+                                        <DataAnnotationsValidator />
+                                        <MudStack Spacing="2">
+                                            <MudSelect T="string" @bind-Value="supplyForm.SupplyType" @bind-Value:after="OnKitSupplyTypeChanged" Label="Supply Type" Variant="Variant.Outlined">
+                                                <MudSelectItem T="string" Value="@("yarn")">Yarn</MudSelectItem>
+                                                <MudSelectItem T="string" Value="@("tool")">Tool</MudSelectItem>
+                                                <MudSelectItem T="string" Value="@("notion")">Notion</MudSelectItem>
+                                            </MudSelect>
+                                            <MudSelect T="Guid?" @bind-Value="selectedKitInventoryId" @bind-Value:after="OnKitSupplyInventoryChanged" Label="Inventory item (optional)" Variant="Variant.Outlined">
+                                                <MudSelectItem T="Guid?" Value="@((Guid?)null)">Manual name</MudSelectItem>
+                                                @foreach (var option in kitInventoryOptions)
+                                                {
+                                                    <MudSelectItem T="Guid?" Value="@option.Id">@option.Label</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                            <MudTextField @bind-Value="supplyForm.Name" Label="Name" Variant="Variant.Outlined" Required="true" />
+                                            <MudNumericField T="decimal?" @bind-Value="supplyForm.Quantity" Label="Quantity" Variant="Variant.Outlined" Min="0.01m" Max="999999m" />
+                                            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                                <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="busy">
+                                                    @(editingSupplyId == null ? "Add Supply" : "Save Supply")
+                                                </MudButton>
+                                                @if (editingSupplyId != null)
+                                                {
+                                                    <MudButton Variant="Variant.Outlined" Disabled="busy" OnClick="CancelSupplyEdit">Cancel</MudButton>
+                                                }
+                                            </MudStack>
+                                        </MudStack>
+                                    </EditForm>
+                                </MudStack>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudGrid Spacing="3" Class="mt-1">
+                        <MudItem xs="12" md="6">
+                            <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                                <MudStack Spacing="2">
+                                    <MudText Typo="Typo.subtitle1">Pieces</MudText>
+                                    @if (selectedKit.Pieces.Count == 0)
+                                    {
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">No pieces yet.</MudText>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var piece in selectedKit.Pieces.OrderBy(piece => piece.SortOrder))
                                         {
-                                            <span> (@supply.Quantity)</span>
+                                            <MudPaper Class="pa-2 mb-2" Elevation="0" Outlined="true">
+                                                <MudStack Spacing="1">
+                                                    <MudText Typo="Typo.subtitle2">@piece.Name</MudText>
+                                                    @if (!string.IsNullOrWhiteSpace(piece.Notes))
+                                                    {
+                                                        <MudText Typo="Typo.body2">@piece.Notes</MudText>
+                                                    }
+                                                    <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                                        <MudButton Variant="Variant.Outlined"
+                                                                   Color="Color.Primary"
+                                                                   Size="Size.Small"
+                                                                   Disabled="busy"
+                                                                   OnClick="@(() => CreateProjectForPieceAsync(piece.Id))">
+                                                            @(piece.ProjectId.HasValue ? "Open Project" : "Create Project")
+                                                        </MudButton>
+                                                        <MudButton Variant="Variant.Outlined"
+                                                                   Size="Size.Small"
+                                                                   Disabled="busy"
+                                                                   OnClick="@(() => StartPieceEdit(piece))">
+                                                            Edit
+                                                        </MudButton>
+                                                        <MudButton Variant="Variant.Outlined"
+                                                                   Color="Color.Error"
+                                                                   Size="Size.Small"
+                                                                   Disabled="busy"
+                                                                   OnClick="@(() => DeletePieceAsync(piece.Id))">
+                                                            Delete
+                                                        </MudButton>
+                                                        @if (piece.ProjectId.HasValue)
+                                                        {
+                                                            <MudButton Variant="Variant.Outlined"
+                                                                       Size="Size.Small"
+                                                                       Href="@($"/modules/knitting/projects/{piece.ProjectId.Value}")">
+                                                                Go
+                                                            </MudButton>
+                                                        }
+                                                    </MudStack>
+                                                </MudStack>
+                                            </MudPaper>
                                         }
-                                        <div class="auth-actions mt-2">
-                                            <button class="btn btn-sm btn-outline-secondary" disabled="@busy" @onclick="() => StartSupplyEdit(supply)">Edit</button>
-                                            <button class="btn btn-sm btn-outline-danger" disabled="@busy" @onclick="() => DeleteSupplyAsync(supply.Id)">Delete</button>
-                                        </div>
-                                    </div>
-                                }
-                            }
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
-    </div>
-}
+                                    }
+                                </MudStack>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                                <MudStack Spacing="2">
+                                    <MudText Typo="Typo.subtitle1">Supplies</MudText>
+                                    @if (selectedKit.Supplies.Count == 0)
+                                    {
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">No supplies yet.</MudText>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var supply in selectedKit.Supplies.OrderBy(supply => supply.SortOrder))
+                                        {
+                                            <MudPaper Class="pa-2 mb-2" Elevation="0" Outlined="true">
+                                                <MudStack Spacing="1">
+                                                    <MudText Typo="Typo.body2"><strong>@supply.SupplyType:</strong> @supply.Name@if (supply.Quantity.HasValue){<text> (@supply.Quantity)</text>}</MudText>
+                                                    <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                                        <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="busy" OnClick="@(() => StartSupplyEdit(supply))">Edit</MudButton>
+                                                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="@(() => DeleteSupplyAsync(supply.Id))">Delete</MudButton>
+                                                    </MudStack>
+                                                </MudStack>
+                                            </MudPaper>
+                                        }
+                                    }
+                                </MudStack>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                }
+            </MudItem>
+        </MudGrid>
+    </MudStack>
+</KnittingModuleGate>
 
 @if (showKitEditModal)
 {
     <div class="modal-backdrop-panel" role="presentation">
-        <div class="timer-dialog kit-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="kit-edit-title">
-            <div class="timer-dialog-header">
-                <h2 id="kit-edit-title">Edit Kit Details</h2>
-                <button class="btn btn-outline-secondary btn-sm" type="button" disabled="@busy" @onclick="CloseKitEdit">Close</button>
-            </div>
-            <EditForm Model="kitEditForm" OnValidSubmit="SaveKitDetailsAsync" class="project-edit-form">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
-                <label>
-                    <span>Name</span>
-                    <InputText class="form-control" @bind-Value="kitEditForm.Name" />
-                </label>
-                <label>
-                    <span>Description</span>
-                    <InputTextArea class="form-control" rows="3" @bind-Value="kitEditForm.Description" />
-                </label>
-                <label>
-                    <span>Type</span>
-                    <InputText class="form-control" @bind-Value="kitEditForm.Type" />
-                </label>
-                <div class="timer-dialog-actions">
-                    <button class="btn btn-primary" disabled="@busy" type="submit">Save Details</button>
-                    <button class="btn btn-outline-secondary" disabled="@busy" type="button" @onclick="CloseKitEdit">Cancel</button>
-                </div>
-            </EditForm>
-        </div>
+        <MudPaper Class="pa-4 kit-edit-dialog" Elevation="8" role="dialog" aria-modal="true" aria-labelledby="kit-edit-title">
+            <MudStack Spacing="2">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.h6" id="kit-edit-title">Edit Kit Details</MudText>
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="busy" OnClick="CloseKitEdit">Close</MudButton>
+                </MudStack>
+                <EditForm Model="kitEditForm" OnValidSubmit="SaveKitDetailsAsync">
+                    <DataAnnotationsValidator />
+                    <MudStack Spacing="2">
+                        <MudTextField @bind-Value="kitEditForm.Name" Label="Name" Variant="Variant.Outlined" Required="true" />
+                        <MudTextField @bind-Value="kitEditForm.Description" Label="Description" Variant="Variant.Outlined" Lines="3" />
+                        <MudTextField @bind-Value="kitEditForm.Type" Label="Type" Variant="Variant.Outlined" />
+                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="busy">Save Details</MudButton>
+                            <MudButton Variant="Variant.Outlined" Disabled="busy" OnClick="CloseKitEdit">Cancel</MudButton>
+                        </MudStack>
+                    </MudStack>
+                </EditForm>
+            </MudStack>
+        </MudPaper>
     </div>
 }
 
@@ -440,6 +429,12 @@ else
             await ModuleState.RefreshAsync();
         }
 
+        await LoadKitsAsync();
+    }
+
+    private async Task OnShowArchivedChanged(bool value)
+    {
+        showArchived = value;
         await LoadKitsAsync();
     }
 

@@ -10,127 +10,78 @@
 
 <PageTitle>New Knitting Kit</PageTitle>
 
-@if (!sessionReady)
-{
-    <p>Loading...</p>
-}
-else if (!AuthSession.IsSignedIn)
-{
-    <h1>New Kit</h1>
-    <p>Sign in to use this module section.</p>
-    <a class="btn btn-primary" href="/login">Sign in</a>
-}
-else if (!ModuleState.IsActive(ModuleKey))
-{
-    <h1>New Kit</h1>
-    <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/home">Go to Home</a>
-}
-else
-{
-    <div class="page-heading">
-        <div>
-            <a class="pattern-back-link" href="/modules/knitting/kits">Kits</a>
-            <h1>New Kit</h1>
-            <p>Plan kit pieces, supplies, and metadata before saving.</p>
-        </div>
-    </div>
+<KnittingModuleGate Loading="!sessionReady" LoadingMessage="Loading...">
+    <MudStack Spacing="3">
+        <KnittingPageHeader Title="New Kit"
+                            Subtitle="Plan kit pieces, supplies, and metadata before saving."
+                            BackHref="/modules/knitting/kits"
+                            BackLabel="Kits" />
 
-    @if (!string.IsNullOrWhiteSpace(errorMessage))
-    {
-        <div class="alert alert-danger">@errorMessage</div>
-    }
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+        }
 
-    <div class="wizard-shell">
-        <nav class="wizard-steps" aria-label="Wizard steps">
-            @foreach (var (step, label, index) in VisibleSteps.Select((entry, index) => (entry.Step, entry.Label, index)))
-            {
-                var pillClass = step == currentStep ? "wizard-step-pill active" : index < CurrentStepPosition ? "wizard-step-pill complete" : "wizard-step-pill";
-                <span class="@pillClass">@label</span>
-            }
-        </nav>
+        <div class="wizard-shell">
+            <nav class="wizard-steps" aria-label="Wizard steps">
+                @foreach (var (step, label, index) in VisibleSteps.Select((entry, index) => (entry.Step, entry.Label, index)))
+                {
+                    var pillClass = step == currentStep ? "wizard-step-pill active" : index < CurrentStepPosition ? "wizard-step-pill complete" : "wizard-step-pill";
+                    <span class="@pillClass">@label</span>
+                }
+            </nav>
 
-        <section class="project-panel">
+            <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
             @if (currentStep == KitWizardStep.Setup)
             {
-                <h2>Kit Setup</h2>
-                <label>
-                    <span>Kit name</span>
-                    <InputText class="form-control" @bind-Value="kitName" />
-                </label>
+                <MudText Typo="Typo.subtitle1">Kit Setup</MudText>
+                <MudTextField @bind-Value="kitName" Label="Kit name" Variant="Variant.Outlined" />
 
                 <div class="list-toolbar mt-3">
-                    <label>
-                        <span>Type</span>
-                        <select class="form-control" @bind="typeFilter" @bind:after="ApplyPatternFilters">
-                            <option value="">Any</option>
-                            <option value="Knit">Knit</option>
-                            <option value="Crochet">Crochet</option>
-                        </select>
-                    </label>
-                    <label>
-                        <span>Form</span>
-                        <select class="form-control" @bind="formFilter" @bind:after="ApplyPatternFilters">
-                            <option value="">Any</option>
-                            <option value="2D">2D</option>
-                            <option value="3D">3D</option>
-                        </select>
-                    </label>
-                    <label>
-                        <span>Theme</span>
-                        <select class="form-control" @bind="themeFilterIdText" @bind:after="ApplyPatternFilters">
-                            <option value="">Any theme</option>
-                            @foreach (var theme in themes)
-                            {
-                                <option value="@theme.Id">@theme.Name</option>
-                            }
-                        </select>
-                    </label>
-                    <label>
-                        <span>Search patterns</span>
-                        <InputText class="form-control" @bind-Value="patternSearch" @bind-Value:after="ApplyPatternFilters" />
-                    </label>
+                    <MudSelect T="string" @bind-Value="typeFilter" @bind-Value:after="ApplyPatternFilters" Label="Type" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@string.Empty">Any</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Knit")">Knit</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Crochet")">Crochet</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect T="string" @bind-Value="formFilter" @bind-Value:after="ApplyPatternFilters" Label="Form" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@string.Empty">Any</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("2D")">2D</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("3D")">3D</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect T="string" @bind-Value="themeFilterIdText" @bind-Value:after="ApplyPatternFilters" Label="Theme" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@string.Empty">Any theme</MudSelectItem>
+                        @foreach (var theme in themes)
+                        {
+                            <MudSelectItem T="string" Value="@theme.Id.ToString()">@theme.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudTextField @bind-Value="patternSearch" @bind-Value:after="ApplyPatternFilters" Label="Search patterns" Variant="Variant.Outlined" />
                 </div>
 
-                <label class="archive-toggle mb-3">
-                    <input type="checkbox" @bind="createNewPattern" @bind:after="OnCreateNewPatternChanged" />
-                    Create a new pattern for inline steps
-                </label>
+                <MudCheckBox T="bool" @bind-Value="createNewPattern" @bind-Value:after="OnCreateNewPatternChanged" Label="Create a new pattern for inline steps" Color="Color.Primary" Class="mb-3" />
 
                 @if (createNewPattern)
                 {
                     <div class="form-grid">
-                        <label>
-                            <span>New pattern name</span>
-                            <InputText class="form-control" @bind-Value="newPatternName" />
-                        </label>
-                        <label>
-                            <span>Type</span>
-                            <InputText class="form-control" @bind-Value="newPatternType" />
-                        </label>
-                        <label>
-                            <span>Form</span>
-                            <InputText class="form-control" @bind-Value="newPatternForm" />
-                        </label>
+                        <MudTextField @bind-Value="newPatternName" Label="New pattern name" Variant="Variant.Outlined" />
+                        <MudTextField @bind-Value="newPatternType" Label="Type" Variant="Variant.Outlined" />
+                        <MudTextField @bind-Value="newPatternForm" Label="Form" Variant="Variant.Outlined" />
                     </div>
                 }
                 else
                 {
-                    <label>
-                        <span>Reference pattern (optional)</span>
-                        <select class="form-control" @bind="selectedPatternIdText" @bind:after="OnReferencePatternChanged">
-                            <option value="">None</option>
-                            @foreach (var pattern in filteredPatterns)
-                            {
-                                <option value="@pattern.Id">@pattern.Name</option>
-                            }
-                        </select>
-                    </label>
+                    <MudSelect T="string" @bind-Value="selectedPatternIdText" @bind-Value:after="OnReferencePatternChanged" Label="Reference pattern (optional)" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@string.Empty">None</MudSelectItem>
+                        @foreach (var pattern in filteredPatterns)
+                        {
+                            <MudSelectItem T="string" Value="@pattern.Id.ToString()">@pattern.Name</MudSelectItem>
+                        }
+                    </MudSelect>
                 }
             }
             else if (currentStep == KitWizardStep.Pieces)
             {
-                <h2>Kit Pieces</h2>
+                <MudText Typo="Typo.subtitle1">Kit Pieces</MudText>
 
                 @if (draftPieces.Count > 0)
                 {
@@ -155,74 +106,44 @@ else
                 }
 
                 <div class="form-grid">
-                    <label>
-                        <span>Piece name</span>
-                        <InputText class="form-control" @bind-Value="draftPieceName" />
-                    </label>
-                    <label>
-                        <span>Notes</span>
-                        <InputText class="form-control" @bind-Value="draftPieceNotes" />
-                    </label>
+                    <MudTextField @bind-Value="draftPieceName" Label="Piece name" Variant="Variant.Outlined" />
+                    <MudTextField @bind-Value="draftPieceNotes" Label="Notes" Variant="Variant.Outlined" />
                 </div>
-                <button class="btn btn-outline-primary mt-2" type="button" disabled="@busy" @onclick="AddDraftPiece">Add Piece</button>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-2" Disabled="busy" OnClick="AddDraftPiece">Add Piece</MudButton>
 
                 @if (createNewPattern)
                 {
                     <hr />
-                    <h3>Inline Pattern Steps</h3>
+                    <MudText Typo="Typo.subtitle2">Inline Pattern Steps</MudText>
                     <div class="form-grid">
-                        <label>
-                            <span>Step label</span>
-                            <InputText class="form-control" @bind-Value="draftStepLabel" />
-                        </label>
-                        <label>
-                            <span>Row start</span>
-                            <InputNumber class="form-control" @bind-Value="draftStartIndex" />
-                        </label>
-                        <label>
-                            <span>Row end</span>
-                            <InputNumber class="form-control" @bind-Value="draftEndIndex" />
-                        </label>
-                        <label>
-                            <span>Stitch count</span>
-                            <InputNumber class="form-control" @bind-Value="draftStitchCount" />
-                        </label>
+                        <MudTextField @bind-Value="draftStepLabel" Label="Step label" Variant="Variant.Outlined" />
+                        <MudNumericField T="int?" @bind-Value="draftStartIndex" Label="Row start" Variant="Variant.Outlined" />
+                        <MudNumericField T="int?" @bind-Value="draftEndIndex" Label="Row end" Variant="Variant.Outlined" />
+                        <MudNumericField T="int?" @bind-Value="draftStitchCount" Label="Stitch count" Variant="Variant.Outlined" />
                     </div>
-                    <button class="btn btn-outline-secondary mt-2" type="button" disabled="@busy" @onclick="AddDraftStep">Add Step to Last Piece</button>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Class="mt-2" Disabled="busy" OnClick="AddDraftStep">Add Step to Last Piece</MudButton>
                 }
             }
             else if (currentStep == KitWizardStep.Supplies)
             {
-                <h2>Supplies</h2>
+                <MudText Typo="Typo.subtitle1">Supplies</MudText>
                 <div class="form-grid">
-                    <label>
-                        <span>Supply type</span>
-                        <select class="form-control" @bind="supplyType" @bind:after="LoadSupplyInventoryOptionsAsync">
-                            <option value="yarn">Yarn</option>
-                            <option value="tool">Tool</option>
-                            <option value="notion">Notion</option>
-                        </select>
-                    </label>
-                    <label>
-                        <span>Name</span>
-                        <InputText class="form-control" @bind-Value="supplyName" />
-                    </label>
-                    <label>
-                        <span>Inventory item (optional)</span>
-                        <select class="form-control" @bind="selectedSupplyInventoryIdText" @bind:after="OnSupplyInventoryChanged">
-                            <option value="">Manual name only</option>
-                            @foreach (var option in supplyInventoryOptions)
-                            {
-                                <option value="@option.Id">@option.Label</option>
-                            }
-                        </select>
-                    </label>
-                    <label>
-                        <span>Quantity</span>
-                        <InputNumber class="form-control" @bind-Value="supplyQuantity" />
-                    </label>
+                    <MudSelect T="string" @bind-Value="supplyType" @bind-Value:after="LoadSupplyInventoryOptionsAsync" Label="Supply type" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@("yarn")">Yarn</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("tool")">Tool</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("notion")">Notion</MudSelectItem>
+                    </MudSelect>
+                    <MudTextField @bind-Value="supplyName" Label="Name" Variant="Variant.Outlined" />
+                    <MudSelect T="string" @bind-Value="selectedSupplyInventoryIdText" @bind-Value:after="OnSupplyInventoryChanged" Label="Inventory item (optional)" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@string.Empty">Manual name only</MudSelectItem>
+                        @foreach (var option in supplyInventoryOptions)
+                        {
+                            <MudSelectItem T="string" Value="@option.Id.ToString()">@option.Label</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudNumericField T="decimal?" @bind-Value="supplyQuantity" Label="Quantity" Variant="Variant.Outlined" />
                 </div>
-                <button class="btn btn-outline-primary mt-2" type="button" disabled="@busy" @onclick="AddDraftSupply">Add Supply</button>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-2" Disabled="busy" OnClick="AddDraftSupply">Add Supply</MudButton>
 
                 @if (draftSupplies.Count > 0)
                 {
@@ -234,7 +155,7 @@ else
                                     <strong>@supply.Name</strong>
                                     <span class="text-muted">(@supply.SupplyType)</span>
                                 </div>
-                                <button class="btn btn-outline-danger btn-sm" type="button" disabled="@busy" @onclick="() => draftSupplies.Remove(supply)">Remove</button>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="@(() => draftSupplies.Remove(supply))">Remove</MudButton>
                             </li>
                         }
                     </ul>
@@ -242,7 +163,7 @@ else
             }
             else if (currentStep == KitWizardStep.Metadata)
             {
-                <h2>Kit Metadata</h2>
+                <MudText Typo="Typo.subtitle1">Kit Metadata</MudText>
                 <div class="knitting-hero-card mb-3">
                     @if (uploadedAssetId.HasValue)
                     {
@@ -253,24 +174,19 @@ else
                         <div class="asset-thumbnail-placeholder">No image yet</div>
                     }
                     <div>
-                        <label>
-                            <span>Kit image</span>
-                            <InputFile OnChange="UploadKitImageAsync" disabled="@busy" />
-                        </label>
+                        <MudText Typo="Typo.body2">Kit image</MudText>
+                        <InputFile OnChange="UploadKitImageAsync" disabled="@busy" />
                     </div>
                 </div>
-                <label>
-                    <span>Description</span>
-                    <InputTextArea class="form-control" rows="3" @bind-Value="kitDescription" />
-                </label>
+                <MudTextField @bind-Value="kitDescription" Label="Description" Variant="Variant.Outlined" Lines="3" />
                 <div class="mt-3">
-                    <span>Difficulty</span>
+                    <MudText Typo="Typo.body2">Difficulty</MudText>
                     <DifficultyPicker @bind-Value="kitDifficulty" Disabled="busy" />
                 </div>
             }
             else
             {
-                <h2>Finalize Kit</h2>
+                <MudText Typo="Typo.subtitle1">Finalize Kit</MudText>
                 <article class="project-card kit-card-with-image">
                     @if (uploadedAssetId.HasValue)
                     {
@@ -282,33 +198,34 @@ else
                     }
                     <div>
                         <h3>@kitName</h3>
-                        <p><span class="@KnittingUi.DifficultyCssClass(kitDifficulty)">@KnittingUi.DifficultyLabel(kitDifficulty)</span></p>
+                        <p><KnittingDifficultyBadge Difficulty="kitDifficulty" /></p>
                         <p class="mb-1"><strong>Pieces:</strong> @draftPieces.Count</p>
                         <p class="mb-0"><strong>Supplies:</strong> @draftSupplies.Count</p>
                     </div>
                 </article>
-                <button class="btn btn-primary mt-3" type="button" disabled="@busy" @onclick="FinalizeKitAsync">Create Kit</button>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" Disabled="busy" OnClick="FinalizeKitAsync">Create Kit</MudButton>
             }
 
             @if (currentStep != KitWizardStep.Finalize)
             {
-                <div class="auth-actions mt-3">
+                <MudStack Row="true" Spacing="1" Class="mt-3">
                     @if (CurrentStepPosition > 0)
                     {
-                        <button class="btn btn-outline-secondary" type="button" disabled="@busy" @onclick="PreviousStep">Back</button>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Disabled="busy" OnClick="PreviousStep">Back</MudButton>
                     }
-                    <button class="btn btn-primary" type="button" disabled="@busy" @onclick="NextStep">Next</button>
-                </div>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" OnClick="NextStep">Next</MudButton>
+                </MudStack>
             }
             else if (CurrentStepPosition > 0)
             {
-                <div class="auth-actions mt-3">
-                    <button class="btn btn-outline-secondary" type="button" disabled="@busy" @onclick="PreviousStep">Back</button>
-                </div>
+                <MudStack Row="true" Spacing="1" Class="mt-3">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Disabled="busy" OnClick="PreviousStep">Back</MudButton>
+                </MudStack>
             }
-        </section>
-    </div>
-}
+            </MudPaper>
+        </div>
+    </MudStack>
+</KnittingModuleGate>
 
 @code {
     private const string ModuleKey = "knitting";

@@ -6,50 +6,65 @@
 
 <PageTitle>Modules</PageTitle>
 
-<div class="core-shell">
-    <header class="core-hero">
-        <p class="core-kicker">Core</p>
-        <h1>Module activation</h1>
-        <p>Choose which craft modules are active in your workbench.</p>
-    </header>
+<div class="core-dashboard-page core-modules-page">
+    <div class="core-modules-shell">
+        <MudStack Spacing="1" Class="core-modules-header" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.h4" Align="Align.Center">Module activation</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Align="Align.Center">
+                Choose which craft modules are active in your workbench.
+            </MudText>
+        </MudStack>
 
-    @if (!initialized)
-    {
-        <p>Loading...</p>
-    }
-    else
-    {
-        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        @if (!initialized)
         {
-            <div class="alert alert-danger">@errorMessage</div>
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="core-modules-loading" />
         }
-
-        <div class="list-group">
-            @foreach (var module in ModuleState.AvailableModules)
+        else
+        {
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
             {
-                var isActive = ModuleState.IsActive(module.ModuleKey);
-
-                <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
-                    <div>
-                        <h2 class="h5 mb-1">@module.Name</h2>
-                        <p class="mb-0">@module.Description</p>
-                    </div>
-                    @if (isActive)
-                    {
-                        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="() => Deactivate(module.ModuleKey)">Deactivate</button>
-                    }
-                    else
-                    {
-                        <button class="btn btn-primary" disabled="@busy" @onclick="() => Activate(module.ModuleKey)">Activate</button>
-                    }
-                </div>
+                <MudAlert Severity="Severity.Error" Class="core-modules-alert">@errorMessage</MudAlert>
             }
-        </div>
 
-        <div class="core-back-link">
-            <a href="/home">Back to dashboard</a>
-        </div>
-    }
+            <div class="core-modules-list">
+                @foreach (var module in ModuleState.AvailableModules)
+                {
+                    var isActive = ModuleState.IsActive(module.ModuleKey);
+
+                    <MudPaper Class="pa-4 core-panel-mud core-module-row" Elevation="1">
+                        <MudStack Row="true"
+                                  Justify="Justify.SpaceBetween"
+                                  AlignItems="AlignItems.Center"
+                                  Wrap="Wrap.Wrap"
+                                  Spacing="2">
+                            <MudStack Spacing="0" Class="core-module-row-copy">
+                                <MudText Typo="Typo.subtitle1">@module.Name</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">@module.Description</MudText>
+                            </MudStack>
+                            @if (isActive)
+                            {
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Primary"
+                                           Disabled="busy"
+                                           OnClick="@(() => Deactivate(module.ModuleKey))">
+                                    Deactivate
+                                </MudButton>
+                            }
+                            else
+                            {
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           Disabled="busy"
+                                           OnClick="@(() => Activate(module.ModuleKey))">
+                                    Activate
+                                </MudButton>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                }
+            </div>
+        }
+    </div>
 </div>
 
 @code {

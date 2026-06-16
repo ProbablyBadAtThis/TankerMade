@@ -2,19 +2,82 @@
 @using TankerMade.Contracts.DTOs.Dashboard
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
-@inject TankerMade.Client.Services.CoreRecentModule CoreRecentModule
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject TankerMade.Client.Services.DashboardLayoutPreferences LayoutPreferences
 @inject NavigationManager Navigation
-@implements IDisposable
 
 <PageTitle>Dashboard</PageTitle>
 
-<MudStack Spacing="3" Class="core-shell-mud">
-    <MudStack Spacing="1">
-        <MudText Typo="Typo.overline" Color="Color.Primary">TankerMade</MudText>
-        <MudText Typo="Typo.h4">Dashboard</MudText>
-        <MudText Typo="Typo.body1" Color="Color.Secondary">Your local-first maker workbench.</MudText>
-    </MudStack>
+<div class="core-dashboard-page">
+    <header class="core-dashboard-header">
+        <div class="core-dashboard-header-bar">
+            <div class="core-dashboard-header-lead"></div>
+
+            <MudStack Spacing="1" Class="core-dashboard-header-center">
+                <MudText Typo="Typo.h4">@GetGreeting()</MudText>
+                <MudText Typo="Typo.body1" Color="Color.Secondary">Your local-first maker workbench.</MudText>
+                @if (initialized && LayoutPreferences.ShowActivitySummary && overview != null && HasActiveModules)
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="core-dashboard-activity-summary">
+                        @FormatActivitySummary(overview.Activity)
+                    </MudText>
+                }
+            </MudStack>
+
+            <div class="core-dashboard-header-trail">
+                @if (initialized)
+                {
+                    <MudMenu AnchorOrigin="Origin.BottomRight"
+                             TransformOrigin="Origin.TopRight"
+                             PopoverClass="core-dashboard-customize-popover">
+                        <ActivatorContent>
+                            <MudButton Variant="Variant.Text"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.Tune"
+                                       Class="core-dashboard-customize-btn"
+                                       OnClick="@context.ToggleAsync">
+                                Customize
+                            </MudButton>
+                        </ActivatorContent>
+                        <ChildContent>
+                            <MudStack Spacing="0" Class="core-dashboard-customize-menu" @onclick:stopPropagation="true">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="px-3 pt-2 pb-1">Show sections</MudText>
+                                <MudSwitch T="bool"
+                                           Label="Activity summary"
+                                           Color="Color.Primary"
+                                           Value="@LayoutPreferences.ShowActivitySummary"
+                                           ValueChanged="LayoutPreferences.SetShowActivitySummaryAsync" />
+                                <MudSwitch T="bool"
+                                           Label="Quick actions"
+                                           Color="Color.Primary"
+                                           Value="@LayoutPreferences.ShowQuickActions"
+                                           ValueChanged="LayoutPreferences.SetShowQuickActionsAsync" />
+                                <MudSwitch T="bool"
+                                           Label="Due soon"
+                                           Color="Color.Primary"
+                                           Value="@LayoutPreferences.ShowDueSoon"
+                                           ValueChanged="LayoutPreferences.SetShowDueSoonAsync" />
+                                <MudSwitch T="bool"
+                                           Label="Engagement"
+                                           Color="Color.Primary"
+                                           Value="@LayoutPreferences.ShowEngagement"
+                                           ValueChanged="LayoutPreferences.SetShowEngagementAsync" />
+                                @if (IsAdmin)
+                                {
+                                    <MudSwitch T="bool"
+                                               Label="Admin health"
+                                               Color="Color.Primary"
+                                               Value="@LayoutPreferences.ShowAdminHealth"
+                                               ValueChanged="LayoutPreferences.SetShowAdminHealthAsync" />
+                                }
+                            </MudStack>
+                        </ChildContent>
+                    </MudMenu>
+                }
+            </div>
+        </div>
+    </header>
 
     @if (!initialized)
     {
@@ -27,277 +90,182 @@
             <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
         }
 
-        <MudPaper Class="pa-4 core-panel-mud core-dashboard-recent-panel" Elevation="1">
-            <MudStack Spacing="2">
-                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Recent projects</MudText>
+        <div class="core-dashboard-columns @(ShowEngagementSidebar ? "has-sidebar" : null)">
+            <MudStack Spacing="3" Class="core-dashboard-main">
+                <MudPaper Class="pa-4 core-panel-mud core-dashboard-recent-panel core-dashboard-section" Elevation="1">
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Recent projects</MudText>
 
-                @if (featuredRecentWork != null)
-                {
-                    <div class="core-dashboard-recent-layout">
-                        <MudPaper Class="pa-3 core-dashboard-recent-featured"
-                                  Elevation="0"
-                                  Outlined="true">
-                            <MudLink Href="@featuredRecentWork.NavigationPath" Underline="Underline.None" Class="core-dashboard-recent-link">
-                                <div class="core-dashboard-recent-featured-inner">
-                                    <AssetThumbnailImage AssetId="featuredRecentWork.ThumbnailAssetId"
-                                                         FallbackSrc="@GetThumbnailFallback(featuredRecentWork)"
-                                                         AltText="@featuredRecentWork.Title"
-                                                         SizeKey="medium"
-                                                         CssClass="core-dashboard-recent-thumb core-dashboard-recent-thumb-featured"
-                                                         ShowPlaceholder="false" />
-                                    <MudStack Spacing="1" Class="core-dashboard-recent-copy">
-                                        <MudText Typo="Typo.subtitle1">@featuredRecentWork.Title</MudText>
-                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                            @FormatLastActive(featuredRecentWork.LastAccessedAtUtc)
-                                        </MudText>
-                                    </MudStack>
-                                </div>
-                            </MudLink>
-                        </MudPaper>
-
-                        @if (sidebarRecentWork.Count > 0)
+                        @if (featuredRecentWork != null)
                         {
-                            <MudStack Spacing="1" Class="core-dashboard-recent-sidebar">
-                                @foreach (var item in sidebarRecentWork)
+                            <div class="core-dashboard-recent-layout">
+                                <MudPaper Class="pa-3 core-dashboard-recent-featured"
+                                          Elevation="0"
+                                          Outlined="true">
+                                    <MudLink Href="@featuredRecentWork.NavigationPath" Underline="Underline.None" Class="core-dashboard-recent-link">
+                                        <div class="core-dashboard-recent-featured-inner">
+                                            <AssetThumbnailImage AssetId="featuredRecentWork.ThumbnailAssetId"
+                                                                 FallbackSrc="@GetThumbnailFallback(featuredRecentWork)"
+                                                                 AltText="@featuredRecentWork.Title"
+                                                                 SizeKey="medium"
+                                                                 CssClass="core-dashboard-recent-thumb core-dashboard-recent-thumb-featured"
+                                                                 ShowPlaceholder="false" />
+                                            <MudStack Spacing="1" Class="core-dashboard-recent-copy">
+                                                <MudText Typo="Typo.subtitle1">@featuredRecentWork.Title</MudText>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                    @GetModuleName(featuredRecentWork.ModuleKey) · @FormatLastActive(featuredRecentWork.LastAccessedAtUtc)
+                                                </MudText>
+                                            </MudStack>
+                                        </div>
+                                    </MudLink>
+                                </MudPaper>
+
+                                @if (sidebarRecentWork.Count > 0)
                                 {
-                                    <MudPaper Class="pa-2 core-dashboard-recent-sidebar-item"
-                                              Elevation="0"
-                                              Outlined="true">
-                                        <MudLink Href="@item.NavigationPath" Underline="Underline.None" Class="core-dashboard-recent-link">
-                                            <div class="core-dashboard-recent-sidebar-inner">
-                                                <AssetThumbnailImage AssetId="item.ThumbnailAssetId"
-                                                                     FallbackSrc="@GetThumbnailFallback(item)"
-                                                                     AltText="@item.Title"
-                                                                     SizeKey="small"
-                                                                     CssClass="core-dashboard-recent-thumb core-dashboard-recent-thumb-sidebar"
-                                                                     ShowPlaceholder="false" />
-                                                <MudStack Spacing="0" Class="core-dashboard-recent-copy">
-                                                    <MudText Typo="Typo.body2">@item.Title</MudText>
-                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                                        @FormatLastActive(item.LastAccessedAtUtc)
-                                                    </MudText>
-                                                </MudStack>
-                                            </div>
-                                        </MudLink>
-                                    </MudPaper>
+                                    <MudStack Spacing="1" Class="core-dashboard-recent-sidebar">
+                                        @foreach (var item in sidebarRecentWork)
+                                        {
+                                            <MudPaper Class="pa-2 core-dashboard-recent-sidebar-item"
+                                                      Elevation="0"
+                                                      Outlined="true">
+                                                <MudLink Href="@item.NavigationPath" Underline="Underline.None" Class="core-dashboard-recent-link">
+                                                    <div class="core-dashboard-recent-sidebar-inner">
+                                                        <AssetThumbnailImage AssetId="item.ThumbnailAssetId"
+                                                                             FallbackSrc="@GetThumbnailFallback(item)"
+                                                                             AltText="@item.Title"
+                                                                             SizeKey="small"
+                                                                             CssClass="core-dashboard-recent-thumb core-dashboard-recent-thumb-sidebar"
+                                                                             ShowPlaceholder="false" />
+                                                        <MudStack Spacing="0" Class="core-dashboard-recent-copy">
+                                                            <MudText Typo="Typo.body2">@item.Title</MudText>
+                                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                                @GetModuleName(item.ModuleKey) · @FormatLastActive(item.LastAccessedAtUtc)
+                                                            </MudText>
+                                                        </MudStack>
+                                                    </div>
+                                                </MudLink>
+                                            </MudPaper>
+                                        }
+                                    </MudStack>
+                                }
+                            </div>
+                        }
+                        else if (!HasActiveModules)
+                        {
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.subtitle1">Get started</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    Activate a craft module to begin tracking projects.
+                                </MudText>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           Href="/home/modules"
+                                           StartIcon="@Icons.Material.Filled.Extension">
+                                    Activate modules
+                                </MudButton>
+                            </MudStack>
+                        }
+                        else
+                        {
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    No recent projects yet. Open a project in an active module to see it here.
+                                </MudText>
+                                @if (activeModules.Count > 0)
+                                {
+                                    <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                        @foreach (var module in activeModules)
+                                        {
+                                            <MudButton Variant="Variant.Outlined"
+                                                       Color="Color.Primary"
+                                                       Size="Size.Small"
+                                                       Href="@GetModuleRoute(module)">
+                                                Open @module.Name
+                                            </MudButton>
+                                        }
+                                    </MudStack>
                                 }
                             </MudStack>
                         }
-                    </div>
-                }
-                else
+                    </MudStack>
+                </MudPaper>
+
+                @if (LayoutPreferences.ShowQuickActions && GetQuickActionGroups().Count > 0)
                 {
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        Open a project in an active module to see it here.
-                    </MudText>
-                }
-            </MudStack>
-        </MudPaper>
-
-        <MudPaper Class="pa-4 core-panel-mud" Elevation="1" MaxWidth="MaxWidth.Small">
-            <MudStack Spacing="3">
-                <MudStack Spacing="1">
-                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Most recent module</MudText>
-                    @if (recentModule != null)
-                    {
-                        <MudButton Variant="Variant.Outlined"
-                                   Color="Color.Primary"
-                                   Href="@recentModule.NavigationRoute"
-                                   Class="core-module-btn-recent">
-                            @recentModule.Name
-                        </MudButton>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">No recents</MudText>
-                    }
-                </MudStack>
-
-                <MudStack Spacing="1">
-                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">All active</MudText>
-                    @if (activeModules.Count > 0)
-                    {
-                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
-                            @foreach (var module in activeModules)
+                    <MudPaper Class="pa-4 core-panel-mud core-dashboard-section" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Quick actions</MudText>
+                            @foreach (var group in GetQuickActionGroups())
                             {
-                                var isRecent = module.ModuleKey == recentModuleKey;
-
-                                <MudButton Variant="Variant.Outlined"
-                                           Color="Color.Primary"
-                                           Href="@module.NavigationRoute"
-                                           Class="@(isRecent ? "core-module-btn-recent" : null)">
-                                    @module.Name
-                                </MudButton>
+                                <MudStack Spacing="1" Class="core-dashboard-quick-actions-group">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@group.ModuleName</MudText>
+                                    <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                        @foreach (var action in group.Actions)
+                                        {
+                                            <MudButton Variant="Variant.Outlined"
+                                                       Color="Color.Primary"
+                                                       Size="Size.Small"
+                                                       Href="@action.NavigationPath">
+                                                @action.Label
+                                            </MudButton>
+                                        }
+                                    </MudStack>
+                                </MudStack>
                             }
                         </MudStack>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">None active</MudText>
-                    }
-                </MudStack>
+                    </MudPaper>
+                }
+
+                @if (LayoutPreferences.ShowDueSoon && overview?.DueSoonItems.Count > 0)
+                {
+                    <MudPaper Class="pa-4 core-panel-mud core-dashboard-section" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Due soon</MudText>
+                            @foreach (var item in overview.DueSoonItems)
+                            {
+                                <MudPaper Class="pa-2 core-dashboard-due-item" Elevation="0" Outlined="true">
+                                    <MudLink Href="@item.NavigationPath" Underline="Underline.None" Class="core-dashboard-recent-link">
+                                        <MudStack Spacing="0">
+                                            <MudText Typo="Typo.body2">@item.Title</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                @item.ModuleName · @FormatDueAt(item.DueAtUtc)
+                                            </MudText>
+                                        </MudStack>
+                                    </MudLink>
+                                </MudPaper>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                }
+
+                @if (IsAdmin && LayoutPreferences.ShowAdminHealth)
+                {
+                    <MudPaper Class="pa-4 core-panel-mud core-dashboard-section" Elevation="1">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Workbench health</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Database backups are manual today. Copy <code>App_Data/tankermade.db</code> before major changes or upgrades.
+                            </MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                See deployment and export/import guidance in project docs for restore steps.
+                            </MudText>
+                        </MudStack>
+                    </MudPaper>
+                }
             </MudStack>
-        </MudPaper>
 
-        <MudPaper Class="pa-4 core-panel-mud" Elevation="1" MaxWidth="MaxWidth.Small">
-            <MudStack Spacing="2">
-                <MudText Typo="Typo.h6">Module activation</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">Choose which craft modules are active in your workbench.</MudText>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/home/modules">Manage modules</MudButton>
-            </MudStack>
-        </MudPaper>
-    }
-</MudStack>
-
-@code {
-    private bool initialized;
-    private string errorMessage = string.Empty;
-    private string? recentModuleKey;
-    private ClientModuleSummary? recentModule;
-    private IReadOnlyList<ClientModuleSummary> activeModules = [];
-    private RecentWorkSummaryDto? featuredRecentWork;
-    private IReadOnlyList<RecentWorkSummaryDto> sidebarRecentWork = [];
-    private bool _loadInProgress;
-
-    protected override async Task OnInitializedAsync()
-    {
-        AuthSession.Changed += HandleAuthChanged;
-        ModuleState.Changed += HandleModuleStateChanged;
-        Navigation.LocationChanged += OnLocationChanged;
-        await AuthSession.InitializeAsync();
-
-        if (!AuthSession.IsSignedIn)
-        {
-            Navigation.NavigateTo("/");
-            return;
-        }
-
-        await LoadDashboardAsync(refreshModules: true);
-        initialized = true;
-    }
-
-    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-    {
-        if (!Navigation.ToBaseRelativePath(e.Location).TrimEnd('/').Equals("home", StringComparison.OrdinalIgnoreCase))
-        {
-            return;
-        }
-
-        await LoadDashboardAsync(refreshModules: true);
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private async void HandleModuleStateChanged()
-    {
-        if (!initialized)
-        {
-            return;
-        }
-
-        await LoadDashboardAsync(refreshModules: false);
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task LoadDashboardAsync(bool refreshModules)
-    {
-        if (_loadInProgress)
-        {
-            return;
-        }
-
-        _loadInProgress = true;
-        errorMessage = string.Empty;
-        recentModule = null;
-        featuredRecentWork = null;
-        sidebarRecentWork = [];
-
-        try
-        {
-            if (refreshModules)
+            @if (ShowEngagementSidebar)
             {
-                await ModuleState.RefreshAsync();
+                <aside class="core-dashboard-sidebar">
+                    <MudPaper Class="pa-4 core-panel-mud core-dashboard-section core-dashboard-engagement-panel" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Engagement</MudText>
+                            <MudText Typo="Typo.body2">@GetEngagementCopy()</MudText>
+                            <DashboardActivityCalendar ActiveLocalDates="overview!.Activity.ActiveLocalDates" />
+                        </MudStack>
+                    </MudPaper>
+                </aside>
             }
-
-            recentModuleKey = await CoreRecentModule.GetRecentModuleKeyAsync();
-
-            activeModules = ModuleState.AvailableModules
-                .Where(module => ModuleState.IsActive(module.ModuleKey))
-                .OrderBy(module => module.NavigationOrder)
-                .ThenBy(module => module.Name)
-                .ToList();
-
-            if (!string.IsNullOrWhiteSpace(recentModuleKey) && ModuleState.IsActive(recentModuleKey))
-            {
-                recentModule = activeModules.FirstOrDefault(module => module.ModuleKey == recentModuleKey);
-            }
-
-            var recentWork = await ApiClient.GetRecentWorkAsync(limit: 5);
-            featuredRecentWork = recentWork.FirstOrDefault();
-            sidebarRecentWork = recentWork.Skip(1).ToList();
-        }
-        catch (Exception ex)
-        {
-            errorMessage = ex.Message;
-            activeModules = [];
-        }
-        finally
-        {
-            _loadInProgress = false;
-        }
+        </div>
     }
-
-    private static string? GetThumbnailFallback(RecentWorkSummaryDto item)
-        => string.IsNullOrWhiteSpace(item.ThumbnailFallbackPath)
-            ? null
-            : item.ThumbnailFallbackPath;
-
-    private static string FormatLastActive(DateTime lastAccessedAtUtc)
-    {
-        var local = lastAccessedAtUtc.ToLocalTime();
-        var delta = DateTime.Now - local;
-        if (delta.TotalMinutes < 1)
-        {
-            return "Active just now";
-        }
-
-        if (delta.TotalHours < 1)
-        {
-            var minutes = Math.Max(1, (int)delta.TotalMinutes);
-            return $"Active {minutes} min ago";
-        }
-
-        if (delta.TotalDays < 1)
-        {
-            var hours = Math.Max(1, (int)delta.TotalHours);
-            return $"Active {hours} hr ago";
-        }
-
-        if (delta.TotalDays < 7)
-        {
-            var days = Math.Max(1, (int)delta.TotalDays);
-            return $"Active {days} day{(days == 1 ? string.Empty : "s")} ago";
-        }
-
-        return $"Active {local:g}";
-    }
-
-    private void HandleAuthChanged()
-    {
-        if (!AuthSession.IsSignedIn)
-        {
-            ModuleState.Reset();
-            recentModuleKey = null;
-            recentModule = null;
-            activeModules = [];
-            featuredRecentWork = null;
-            sidebarRecentWork = [];
-        }
-    }
-
-    public void Dispose()
-    {
-        AuthSession.Changed -= HandleAuthChanged;
-        ModuleState.Changed -= HandleModuleStateChanged;
-        Navigation.LocationChanged -= OnLocationChanged;
-    }
-}
+</div>

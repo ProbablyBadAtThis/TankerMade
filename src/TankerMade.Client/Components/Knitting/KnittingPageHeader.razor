@@ -1,0 +1,29 @@
+<MudStack Spacing="1" Class="knitting-page-header-mud">
+    <MudButton Variant="Variant.Text"
+               Color="Color.Primary"
+               Size="Size.Small"
+               Href="@BackHref"
+               StartIcon="@Icons.Material.Filled.ArrowBack"
+               Class="knitting-back-link-mud">
+        @BackLabel
+    </MudButton>
+    <MudText Typo="Typo.h4">@Title</MudText>
+    @if (!string.IsNullOrWhiteSpace(Subtitle))
+    {
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@Subtitle</MudText>
+    }
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public string BackHref { get; set; } = "/modules/knitting";
+
+    [Parameter]
+    public string BackLabel { get; set; } = "Knitting";
+}

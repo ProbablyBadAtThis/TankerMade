@@ -10,219 +10,165 @@
 
 <PageTitle>Knitting Projects</PageTitle>
 
-@if (!sessionReady)
-{
-    <div class="page-heading">
-        <div>
-            <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
-            <h1>Projects</h1>
-            <p>Loading...</p>
-        </div>
-    </div>
-}
-else if (!AuthSession.IsSignedIn)
-{
-    <h1>Knitting Projects</h1>
-    <p>Sign in to use this module section.</p>
-    <a class="btn btn-primary" href="/login">Sign in</a>
-}
-else if (!ModuleState.IsActive("knitting"))
-{
-    <h1>Knitting Projects</h1>
-    <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/home">Go to Home</a>
-}
-else
-{
-    <div class="page-heading">
-        <div>
-            <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
-            <h1>Projects</h1>
-            <p>@(loading ? "Loading..." : "Module-owned knitting projects via core extension-point APIs.")</p>
-        </div>
-    </div>
+<KnittingModuleGate Loading="loading" LoadingMessage="Loading projects...">
+    <MudStack Spacing="3">
+        <KnittingPageHeader Title="Projects"
+                            Subtitle="Module-owned knitting projects via core extension-point APIs." />
 
-    @if (!string.IsNullOrWhiteSpace(errorMessage))
-    {
-        <div class="alert alert-danger">@errorMessage</div>
-    }
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+        }
 
-    <div class="auth-actions mb-3">
-        <a class="btn btn-primary" href="/modules/knitting/projects/new">New Project Wizard</a>
-    </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/modules/knitting/projects/new">
+            New Project Wizard
+        </MudButton>
 
-    <section class="project-panel">
-        <h2>Quick Create</h2>
-        <EditForm Model="form" OnValidSubmit="CreateProjectAsync" class="project-edit-form">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-            <div class="form-grid">
-                <label>
-                    <span>Name</span>
-                    <InputText class="form-control" @bind-Value="form.Name" />
-                </label>
-                <label>
-                    <span>Description</span>
-                    <InputText class="form-control" @bind-Value="form.Description" />
-                </label>
-                <label>
-                    <span>Difficulty</span>
-                    <InputSelect class="form-control" @bind-Value="form.Difficulty">
-                        <option value="0">Unspecified</option>
-                        <option value="1">Beginner</option>
-                        <option value="2">Beginner+</option>
-                        <option value="3">Intermediate</option>
-                        <option value="4">Intermediate+</option>
-                        <option value="5">Advanced</option>
-                        <option value="6">Advanced+</option>
-                    </InputSelect>
-                </label>
-                <label>
-                    <span>Pattern</span>
-                    <InputSelect class="form-control" @bind-Value="form.PatternIdText">
-                        <option value="">No pattern linked</option>
-                        @foreach (var pattern in patterns)
-                        {
-                            <option value="@pattern.Id">@pattern.Name</option>
-                        }
-                    </InputSelect>
-                </label>
-                <label>
-                    <span>Main color</span>
-                    <InputSelect class="form-control" @bind-Value="form.ColorIdText">
-                        <option value="">None</option>
-                        @foreach (var color in colors)
-                        {
-                            <option value="@color.Id">@color.Name</option>
-                        }
-                    </InputSelect>
-                </label>
-            </div>
-            <button class="btn btn-primary" disabled="@busy" type="submit">Create Project</button>
-        </EditForm>
-    </section>
+        <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.subtitle1">Quick Create</MudText>
+                <EditForm Model="form" OnValidSubmit="CreateProjectAsync">
+                    <DataAnnotationsValidator />
+                    <MudStack Spacing="2">
+                        <div class="knitting-list-toolbar-mud">
+                            <MudTextField @bind-Value="form.Name" Label="Name" Variant="Variant.Outlined" Required="true" />
+                            <MudTextField @bind-Value="form.Description" Label="Description" Variant="Variant.Outlined" />
+                            <MudSelect T="int" @bind-Value="form.Difficulty" Label="Difficulty" Variant="Variant.Outlined">
+                                <MudSelectItem T="int" Value="0">Unspecified</MudSelectItem>
+                                <MudSelectItem T="int" Value="1">Beginner</MudSelectItem>
+                                <MudSelectItem T="int" Value="2">Beginner+</MudSelectItem>
+                                <MudSelectItem T="int" Value="3">Intermediate</MudSelectItem>
+                                <MudSelectItem T="int" Value="4">Intermediate+</MudSelectItem>
+                                <MudSelectItem T="int" Value="5">Advanced</MudSelectItem>
+                                <MudSelectItem T="int" Value="6">Advanced+</MudSelectItem>
+                            </MudSelect>
+                            <MudSelect T="string" @bind-Value="form.PatternIdText" Label="Pattern" Variant="Variant.Outlined">
+                                <MudSelectItem T="string" Value="@string.Empty">No pattern linked</MudSelectItem>
+                                @foreach (var pattern in patterns)
+                                {
+                                    <MudSelectItem T="string" Value="@pattern.Id.ToString()">@pattern.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect T="string" @bind-Value="form.ColorIdText" Label="Main color" Variant="Variant.Outlined">
+                                <MudSelectItem T="string" Value="@string.Empty">None</MudSelectItem>
+                                @foreach (var color in colors)
+                                {
+                                    <MudSelectItem T="string" Value="@color.Id.ToString()">@color.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </div>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="busy">
+                            Create Project
+                        </MudButton>
+                    </MudStack>
+                </EditForm>
+            </MudStack>
+        </MudPaper>
 
-    <div class="list-toolbar">
-        <label>
-            <span>Search</span>
-            <input class="form-control"
-                   placeholder="Filter as you type"
-                   @bind="search"
-                   @bind:event="oninput"
-                   @bind:after="ApplyFiltersAsync" />
-        </label>
-        <label>
-            <span>Sort</span>
-            <select class="form-control" @bind="sortBy" @bind:after="ApplyFiltersAsync">
-                <option value="recent">Most recent</option>
-                <option value="lastopened">Last opened</option>
-                <option value="name">Name</option>
-                <option value="progress">Progress</option>
-                <option value="difficulty">Difficulty</option>
-            </select>
-        </label>
-        <label>
-            <span>Theme</span>
-            <select class="form-control" @bind="filterThemeId" @bind:after="ApplyFiltersAsync">
-                <option value="">All themes</option>
+        <div class="knitting-list-toolbar-mud">
+            <MudTextField @bind-Value="search"
+                          @bind-Value:after="ApplyFiltersAsync"
+                          Label="Search"
+                          Variant="Variant.Outlined"
+                          Placeholder="Filter as you type"
+                          Immediate="true" />
+            <MudSelect T="string" @bind-Value="sortBy" @bind-Value:after="ApplyFiltersAsync" Label="Sort" Variant="Variant.Outlined">
+                <MudSelectItem T="string" Value="@("recent")">Most recent</MudSelectItem>
+                <MudSelectItem T="string" Value="@("lastopened")">Last opened</MudSelectItem>
+                <MudSelectItem T="string" Value="@("name")">Name</MudSelectItem>
+                <MudSelectItem T="string" Value="@("progress")">Progress</MudSelectItem>
+                <MudSelectItem T="string" Value="@("difficulty")">Difficulty</MudSelectItem>
+            </MudSelect>
+            <MudSelect T="string" @bind-Value="filterThemeId" @bind-Value:after="ApplyFiltersAsync" Label="Theme" Variant="Variant.Outlined">
+                <MudSelectItem T="string" Value="@string.Empty">All themes</MudSelectItem>
                 @foreach (var theme in themes)
                 {
-                    <option value="@theme.Id">@theme.Name</option>
+                    <MudSelectItem T="string" Value="@theme.Id.ToString()">@theme.Name</MudSelectItem>
                 }
-            </select>
-        </label>
-        <label>
-            <span>Color</span>
-            <select class="form-control" @bind="filterColorId" @bind:after="ApplyFiltersAsync">
-                <option value="">All colors</option>
+            </MudSelect>
+            <MudSelect T="string" @bind-Value="filterColorId" @bind-Value:after="ApplyFiltersAsync" Label="Color" Variant="Variant.Outlined">
+                <MudSelectItem T="string" Value="@string.Empty">All colors</MudSelectItem>
                 @foreach (var color in colors)
                 {
-                    <option value="@color.Id">@color.Name</option>
+                    <MudSelectItem T="string" Value="@color.Id.ToString()">@color.Name</MudSelectItem>
                 }
-            </select>
-        </label>
-        <label>
-            <span>Difficulty</span>
-            <select class="form-control" @bind="filterDifficulty" @bind:after="ApplyFiltersAsync">
-                <option value="">All</option>
-                <option value="1">Beginner</option>
-                <option value="2">Beginner+</option>
-                <option value="3">Intermediate</option>
-                <option value="4">Intermediate+</option>
-                <option value="5">Advanced</option>
-                <option value="6">Advanced+</option>
-            </select>
-        </label>
-        <label>
-            <span>Completion</span>
-            <select class="form-control" @bind="filterCompletion" @bind:after="ApplyFiltersAsync">
-                <option value="">All</option>
-                <option value="active">In progress</option>
-                <option value="complete">100% complete</option>
-            </select>
-        </label>
-        <label class="archive-toggle">
-            <input type="checkbox" @bind="showArchived" @bind:after="LoadProjectsAsync" />
-            Show archived
-        </label>
-    </div>
+            </MudSelect>
+            <MudSelect T="string" @bind-Value="filterDifficulty" @bind-Value:after="ApplyFiltersAsync" Label="Difficulty" Variant="Variant.Outlined">
+                <MudSelectItem T="string" Value="@string.Empty">All</MudSelectItem>
+                <MudSelectItem T="string" Value="@("1")">Beginner</MudSelectItem>
+                <MudSelectItem T="string" Value="@("2")">Beginner+</MudSelectItem>
+                <MudSelectItem T="string" Value="@("3")">Intermediate</MudSelectItem>
+                <MudSelectItem T="string" Value="@("4")">Intermediate+</MudSelectItem>
+                <MudSelectItem T="string" Value="@("5")">Advanced</MudSelectItem>
+                <MudSelectItem T="string" Value="@("6")">Advanced+</MudSelectItem>
+            </MudSelect>
+            <MudSelect T="string" @bind-Value="filterCompletion" @bind-Value:after="ApplyFiltersAsync" Label="Completion" Variant="Variant.Outlined">
+                <MudSelectItem T="string" Value="@string.Empty">All</MudSelectItem>
+                <MudSelectItem T="string" Value="@("active")">In progress</MudSelectItem>
+                <MudSelectItem T="string" Value="@("complete")">100% complete</MudSelectItem>
+            </MudSelect>
+            <MudCheckBox T="bool" Value="showArchived" ValueChanged="@(async (bool v) => await OnShowArchivedChanged(v))" Label="Show archived" Color="Color.Primary" />
+        </div>
 
-    @if (pagedProjects.Count == 0 && filteredProjects.Count == 0)
-    {
-        <div class="empty-state">
-            <h2>No Projects Yet</h2>
-            <p>Create your first knitting project to start tracking work.</p>
-        </div>
-    }
-    else
-    {
-        <div class="project-card-grid">
-            @foreach (var project in pagedProjects)
-            {
-                var assetId = projectAssetIds.GetValueOrDefault(project.Id);
-                <article class="project-card project-card-with-image">
-                    <AssetThumbnailImage AssetId="assetId" AltText="@project.Name" />
-                    <div>
-                        <h2>@project.Name</h2>
-                        <p>@project.Description</p>
-                        @if (project.IsArchived)
-                        {
-                            <span class="archive-badge">Archived</span>
-                        }
-                    <div class="pattern-card-stats">
-                        <span class="@KnittingUi.DifficultyCssClass(project.Difficulty)">@KnittingUi.DifficultyLabel(project.Difficulty)</span>
-                        <span>@project.Progress%</span>
-                        <span>@(project.TotalStitchCount > 0 ? $"{project.CompletedStitchCount}/{project.TotalStitchCount} stitches" : $"{project.CompletedStepCount}/{project.TotalStepCount} steps")</span>
-                        <span>@(string.IsNullOrWhiteSpace(project.ThemeName) ? "No theme" : project.ThemeName)</span>
-                        <span>@(string.IsNullOrWhiteSpace(project.ColorName) ? "No color" : project.ColorName)</span>
-                        <span>@(string.IsNullOrWhiteSpace(project.PatternName) ? "No pattern" : project.PatternName)</span>
-                    </div>
-                    <div class="auth-actions">
-                        <a class="btn btn-primary btn-sm" href="@($"/modules/knitting/projects/{project.Id}")">Open</a>
-                        @if (project.IsArchived)
-                        {
-                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => ReopenProjectAsync(project.Id)">Reopen</button>
-                        }
-                        else
-                        {
-                            <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => ArchiveProjectAsync(project.Id)">Archive</button>
-                        }
-                        <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeleteProjectAsync(project.Id)">Delete</button>
-                    </div>
-                    </div>
-                </article>
-            }
-        </div>
-        @if (filteredProjects.Count > projectPageSize)
+        @if (pagedProjects.Count == 0 && filteredProjects.Count == 0)
         {
-            <div class="auth-actions mt-3">
-                <button class="btn btn-outline-secondary btn-sm" disabled="@(projectPage <= 1 || busy)" @onclick="PreviousProjectPage">Previous</button>
-                <span class="muted-copy align-self-center">Page @projectPage of @ProjectPageCount</span>
-                <button class="btn btn-outline-secondary btn-sm" disabled="@(projectPage >= ProjectPageCount || busy)" @onclick="NextProjectPage">Next</button>
-            </div>
+            <MudPaper Class="pa-6 knitting-panel-mud" Elevation="1">
+                <MudStack Spacing="1" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.h6">No Projects Yet</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Create your first knitting project to start tracking work.</MudText>
+                </MudStack>
+            </MudPaper>
         }
-    }
-}
+        else
+        {
+            <div class="knitting-card-grid-mud">
+                @foreach (var project in pagedProjects)
+                {
+                    var assetId = projectAssetIds.GetValueOrDefault(project.Id);
+                    <MudPaper Class="knitting-card-mud project-card-with-image" Elevation="1">
+                        <AssetThumbnailImage AssetId="assetId" AltText="@project.Name" />
+                        <div class="pa-3 knitting-card-mud-body">
+                            <MudText Typo="Typo.h6">@project.Name</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@project.Description</MudText>
+                            @if (project.IsArchived)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Default">Archived</MudChip>
+                            }
+                            <div class="pattern-card-stats">
+                                <KnittingDifficultyBadge Difficulty="project.Difficulty" />
+                                <span>@project.Progress%</span>
+                                <span>@(project.TotalStitchCount > 0 ? $"{project.CompletedStitchCount}/{project.TotalStitchCount} stitches" : $"{project.CompletedStepCount}/{project.TotalStepCount} steps")</span>
+                                <span>@(string.IsNullOrWhiteSpace(project.ThemeName) ? "No theme" : project.ThemeName)</span>
+                                <span>@(string.IsNullOrWhiteSpace(project.ColorName) ? "No color" : project.ColorName)</span>
+                                <span>@(string.IsNullOrWhiteSpace(project.PatternName) ? "No pattern" : project.PatternName)</span>
+                            </div>
+                            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="knitting-card-mud-actions">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Href="@($"/modules/knitting/projects/{project.Id}")">Open</MudButton>
+                                @if (project.IsArchived)
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="@(() => ReopenProjectAsync(project.Id))">Reopen</MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="@(() => ArchiveProjectAsync(project.Id))">Archive</MudButton>
+                                }
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="@(() => DeleteProjectAsync(project.Id))">Delete</MudButton>
+                            </MudStack>
+                        </div>
+                    </MudPaper>
+                }
+            </div>
+            @if (filteredProjects.Count > projectPageSize)
+            {
+                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                    <MudButton Variant="Variant.Outlined" Disabled="@(projectPage <= 1 || busy)" OnClick="PreviousProjectPage">Previous</MudButton>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Page @projectPage of @ProjectPageCount</MudText>
+                    <MudButton Variant="Variant.Outlined" Disabled="@(projectPage >= ProjectPageCount || busy)" OnClick="NextProjectPage">Next</MudButton>
+                </MudStack>
+            }
+        }
+    </MudStack>
+</KnittingModuleGate>
 
 @code {
     private const string ModuleKey = "knitting";
@@ -248,7 +194,6 @@ else
     private ProjectFormModel form = new();
     private bool showArchived;
     private bool loading = true;
-    private bool sessionReady;
     private bool settingsInitialized;
     private bool busy;
     private string errorMessage = string.Empty;
@@ -269,7 +214,12 @@ else
             showArchived = true;
         }
 
-        sessionReady = true;
+        await LoadProjectsAsync();
+    }
+
+    private async Task OnShowArchivedChanged(bool value)
+    {
+        showArchived = value;
         await LoadProjectsAsync();
     }
 

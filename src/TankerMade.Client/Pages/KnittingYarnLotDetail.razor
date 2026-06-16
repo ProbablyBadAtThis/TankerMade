@@ -7,121 +7,115 @@
 
 <PageTitle>Knitting Yarn Lot</PageTitle>
 
-@if (!AuthSession.IsSignedIn)
-{
-    <h1>Yarn Lot</h1>
-    <p>Sign in to use this module section.</p>
-    <a class="btn btn-primary" href="/login">Sign in</a>
-}
-else if (!ModuleState.IsActive(ModuleKey))
-{
-    <h1>Yarn Lot</h1>
-    <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/home">Go to Home</a>
-}
-else if (loading)
-{
-    <h1>Yarn Lot</h1>
-    <p>Loading...</p>
-}
-else if (yarn is null || lot is null)
-{
-    <h1>Lot Not Found</h1>
-    <a class="btn btn-outline-secondary" href="/modules/knitting/inventory/yarn/@YarnId">Back to Yarn</a>
-}
-else
-{
-    <div class="pattern-detail">
-        @if (!string.IsNullOrWhiteSpace(errorMessage))
-        {
-            <div class="alert alert-danger">@errorMessage</div>
-        }
+<KnittingModuleGate Loading="loading" LoadingMessage="Loading lot...">
+    @if (yarn is null || lot is null)
+    {
+        <MudStack Spacing="3">
+            <KnittingPageHeader Title="Lot Not Found"
+                                BackHref="@($"/modules/knitting/inventory/yarn/{YarnId}")"
+                                BackLabel="Back to Yarn" />
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="@($"/modules/knitting/inventory/yarn/{YarnId}")">
+                Back to Yarn
+            </MudButton>
+        </MudStack>
+    }
+    else
+    {
+        <MudStack Spacing="3" Class="pattern-detail">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+            }
 
-        <div class="pattern-header">
-            <div>
-                <a class="pattern-back-link" href="/modules/knitting/inventory/yarn/@YarnId">@yarn.BrandName — @yarn.ColorName</a>
-                <h1>Lot @DisplayValue(lot.LotNumber)</h1>
-                <p>@yarn.WeightName · @yarn.FiberTag</p>
-            </div>
-            <div class="pattern-stats" aria-label="Lot summary">
-                <div>
-                    <strong>@lot.Skeins</strong>
-                    <span>Skeins</span>
-                </div>
-                <div>
-                    <strong>@DisplayLength(lot.RemainingLength, yarn.LengthUnit)</strong>
-                    <span>Remaining</span>
-                </div>
-                <div>
-                    <strong>@DisplayWeight(lot.CurrentWeight)</strong>
-                    <span>Weight (g)</span>
-                </div>
-            </div>
-        </div>
-
-        <section class="project-panel mb-3">
-            <h2>Lot Details</h2>
-            <div class="inventory-detail-grid">
-                <div>
-                    <strong>Lot number</strong>
-                    <div>@DisplayValue(lot.LotNumber)</div>
-                </div>
-                <div>
-                    <strong>Skeins in lot</strong>
-                    <div>@lot.Skeins</div>
-                </div>
-                <div>
-                    <strong>Created</strong>
-                    <div>@DisplayDate(lot.CreatedAt)</div>
-                </div>
-                <div>
-                    <strong>Last updated</strong>
-                    <div>@DisplayDate(lot.UpdatedAt)</div>
-                </div>
-            </div>
-        </section>
-
-        <section class="project-panel mb-3">
-            <h2>Update Remaining</h2>
-            <EditForm Model="lotEditForm" OnValidSubmit="SaveLotRemainingAsync" class="project-edit-form">
-                <div class="form-grid">
-                    <label>
-                        <span>Remaining length</span>
-                        <InputNumber class="form-control" @bind-Value="lotEditForm.RemainingLength" />
-                    </label>
-                    <label>
+            <div class="pattern-header">
+                <KnittingPageHeader Title="@($"Lot {DisplayValue(lot.LotNumber)}")"
+                                    Subtitle="@($"{yarn.WeightName} · {yarn.FiberTag}")"
+                                    BackHref="@($"/modules/knitting/inventory/yarn/{YarnId}")"
+                                    BackLabel="@($"{yarn.BrandName} — {yarn.ColorName}")" />
+                <div class="pattern-stats" aria-label="Lot summary">
+                    <div>
+                        <strong>@lot.Skeins</strong>
+                        <span>Skeins</span>
+                    </div>
+                    <div>
+                        <strong>@DisplayLength(lot.RemainingLength, yarn.LengthUnit)</strong>
+                        <span>Remaining</span>
+                    </div>
+                    <div>
+                        <strong>@DisplayWeight(lot.CurrentWeight)</strong>
                         <span>Weight (g)</span>
-                        <InputNumber class="form-control" @bind-Value="lotEditForm.CurrentWeight" />
-                    </label>
+                    </div>
                 </div>
-                <button class="btn btn-primary btn-sm" disabled="@busy" type="submit">Save Lot</button>
-            </EditForm>
-        </section>
+            </div>
 
-        <section class="project-panel">
-            <h2>Purchase History</h2>
-            @if (yarn.Purchases.Count == 0)
-            {
-                <p class="mb-0 muted-copy">No purchases recorded for this yarn yet.</p>
-            }
-            else
-            {
-                <ul class="project-supply-list">
-                    @foreach (var purchase in yarn.Purchases)
-                    {
-                        <li>
-                            <div>
-                                <strong>@purchase.SourceName</strong>
-                                <span>@DisplayPurchasePrice(purchase.Price, purchase.IsSalePrice)</span>
-                                <span>@DisplayDate(purchase.PurchasedAt ?? purchase.CreatedAt)</span>
+            <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.subtitle1">Lot Details</MudText>
+                    <div class="inventory-detail-grid">
+                        <div>
+                            <strong>Lot number</strong>
+                            <div>@DisplayValue(lot.LotNumber)</div>
+                        </div>
+                        <div>
+                            <strong>Skeins in lot</strong>
+                            <div>@lot.Skeins</div>
+                        </div>
+                        <div>
+                            <strong>Created</strong>
+                            <div>@DisplayDate(lot.CreatedAt)</div>
+                        </div>
+                        <div>
+                            <strong>Last updated</strong>
+                            <div>@DisplayDate(lot.UpdatedAt)</div>
+                        </div>
+                    </div>
+                </MudStack>
+            </MudPaper>
+
+            <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.subtitle1">Update Remaining</MudText>
+                    <EditForm Model="lotEditForm" OnValidSubmit="SaveLotRemainingAsync" class="project-edit-form">
+                        <MudStack Spacing="2">
+                            <div class="form-grid">
+                                <MudNumericField T="decimal?" @bind-Value="lotEditForm.RemainingLength" Label="Remaining length" Variant="Variant.Outlined" />
+                                <MudNumericField T="decimal?" @bind-Value="lotEditForm.CurrentWeight" Label="Weight (g)" Variant="Variant.Outlined" />
                             </div>
-                        </li>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" ButtonType="ButtonType.Submit">
+                                Save Lot
+                            </MudButton>
+                        </MudStack>
+                    </EditForm>
+                </MudStack>
+            </MudPaper>
+
+            <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.subtitle1">Purchase History</MudText>
+                    @if (yarn.Purchases.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">No purchases recorded for this yarn yet.</MudText>
                     }
-                </ul>
-            }
-        </section>
-    </div>
-}
+                    else
+                    {
+                        <ul class="project-supply-list">
+                            @foreach (var purchase in yarn.Purchases)
+                            {
+                                <li>
+                                    <div>
+                                        <strong>@purchase.SourceName</strong>
+                                        <span>@DisplayPurchasePrice(purchase.Price, purchase.IsSalePrice)</span>
+                                        <span>@DisplayDate(purchase.PurchasedAt ?? purchase.CreatedAt)</span>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </MudStack>
+            </MudPaper>
+        </MudStack>
+    }
+</KnittingModuleGate>
 
 @code {
     private const string ModuleKey = "knitting";

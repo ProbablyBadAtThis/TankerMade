@@ -9,5 +9,6 @@ public interface IRecentWorkService
     Task<IReadOnlyList<RecentWorkSummaryDto>> GetRecentAsync(
         Guid userId,
         int limit = 5,
+        string? moduleKey = null,
         CancellationToken cancellationToken = default);
 }
