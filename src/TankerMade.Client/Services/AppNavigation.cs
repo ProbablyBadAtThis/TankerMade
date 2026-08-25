@@ -14,7 +14,9 @@ public sealed record AppNavItem(
     string Label,
     string Href,
     string Icon,
-    NavLinkMatch Match = NavLinkMatch.Prefix);
+    NavLinkMatch Match = NavLinkMatch.Prefix,
+    KnittingWizardKind? Wizard = null,
+    string? WizardLabel = null);
 
 public static class AppNavigation
 {
@@ -51,10 +53,10 @@ public static class AppNavigation
             AppNavigationScope.Knitting =>
             [
                 new("Home", "/modules/knitting", Icons.Material.Filled.Dashboard, NavLinkMatch.All),
-                new("Projects", "/modules/knitting/projects", Icons.Material.Filled.Assignment, NavLinkMatch.Prefix),
-                new("Patterns", "/modules/knitting/patterns", Icons.Material.Filled.MenuBook, NavLinkMatch.Prefix),
+                new("Projects", "/modules/knitting/projects", Icons.Material.Filled.Assignment, NavLinkMatch.Prefix, KnittingWizardKind.Project, "Project Wizard"),
+                new("Patterns", "/modules/knitting/patterns", Icons.Material.Filled.MenuBook, NavLinkMatch.Prefix, KnittingWizardKind.Pattern, "Pattern Wizard"),
+                new("Kits", "/modules/knitting/kits", Icons.Material.Filled.Layers, NavLinkMatch.Prefix, KnittingWizardKind.Kit, "Kit Wizard"),
                 new("Inventory", "/modules/knitting/inventory", Icons.Material.Filled.Inventory2, NavLinkMatch.Prefix),
-                new("Kits", "/modules/knitting/kits", Icons.Material.Filled.Layers, NavLinkMatch.Prefix),
                 new("Glossary", "/modules/knitting/glossary", Icons.Material.Filled.LibraryBooks, NavLinkMatch.All),
                 new("Settings", "/modules/knitting/settings", Icons.Material.Filled.Settings, NavLinkMatch.All),
             ],

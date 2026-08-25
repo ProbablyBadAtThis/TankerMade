@@ -220,8 +220,9 @@ static void ValidateJwtSettings(JwtSettingsOptions settings)
         throw new InvalidOperationException($"Missing {JwtSettingsOptions.SectionName}:Audience.");
     }
 
-    if (settings.ExpirationMinutes <= 0)
+    if (settings.ExpirationDays <= 0 && settings.ExpirationMinutes <= 0)
     {
-        throw new InvalidOperationException($"{JwtSettingsOptions.SectionName}:ExpirationMinutes must be greater than 0.");
+        throw new InvalidOperationException(
+            $"{JwtSettingsOptions.SectionName} must set ExpirationDays or ExpirationMinutes to a value greater than 0.");
     }
 }

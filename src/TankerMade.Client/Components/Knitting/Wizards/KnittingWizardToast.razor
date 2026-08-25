@@ -1,0 +1,63 @@
+@if (!string.IsNullOrWhiteSpace(_message))
+{
+    <div class="knitting-wizard-toast @(_isHiding ? "is-hiding" : "is-showing")" role="alert" aria-live="assertive">
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="knitting-wizard-toast-alert">
+            @_message
+        </MudAlert>
+    </div>
+}
+
+@implements IDisposable
+
+@code {
+    private const int LiveDurationMs = 3000;
+    private const int FadeDurationMs = 280;
+
+    private string? _message;
+    private bool _isHiding;
+    private CancellationTokenSource? _hideCts;
+
+    public void ShowError(string message)
+    {
+        _hideCts?.Cancel();
+        _hideCts?.Dispose();
+        _isHiding = false;
+        _message = message;
+        _hideCts = new CancellationTokenSource();
+        _ = HideAfterDelayAsync(_hideCts.Token);
+        StateHasChanged();
+    }
+
+    public void Clear()
+    {
+        _hideCts?.Cancel();
+        _hideCts?.Dispose();
+        _hideCts = null;
+        _isHiding = false;
+        _message = null;
+        StateHasChanged();
+    }
+
+    private async Task HideAfterDelayAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(LiveDurationMs, token);
+            _isHiding = true;
+            await InvokeAsync(StateHasChanged);
+            await Task.Delay(FadeDurationMs, token);
+            _message = null;
+            _isHiding = false;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    public void Dispose()
+    {
+        _hideCts?.Cancel();
+        _hideCts?.Dispose();
+    }
+}

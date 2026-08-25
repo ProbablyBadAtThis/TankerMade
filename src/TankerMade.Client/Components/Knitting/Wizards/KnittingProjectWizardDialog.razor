@@ -1,0 +1,841 @@
+@using TankerMade.Contracts.DTOs.Assets
+@using TankerMade.Contracts.DTOs.ModulePatterns
+@using TankerMade.Contracts.DTOs.ModuleProjects
+@using TankerMade.Contracts.DTOs.Reference
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@implements IDisposable
+
+<MudDialog Class="knitting-wizard-dialog" DefaultFocus="DefaultFocus.FirstChild">
+    <TitleContent>
+        <MudStack Spacing="0" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.h6" Align="Align.Center">New Project</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center">Walk through pattern selection, supplies, and project details.</MudText>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <div class="knitting-wizard-dialog-body">
+        <KnittingWizardToast @ref="toast" />
+        @if (!sessionReady)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="my-2" />
+        }
+        else if (!AuthSession.IsSignedIn || !ModuleState.IsActive(ModuleKey))
+        {
+            <MudAlert Severity="Severity.Warning">Sign in and activate Knitting to create a project.</MudAlert>
+        }
+        else
+        {
+            <div class="knitting-wizard-dialog-step-area">
+            <div class="wizard-shell">
+            <nav class="wizard-steps" aria-label="Wizard steps">
+                @foreach (var (step, label, index) in VisibleSteps.Select((entry, index) => (entry.Step, entry.Label, index)))
+                {
+                    var pillClass = step == currentStep ? "wizard-step-pill active" : index < CurrentStepPosition ? "wizard-step-pill complete" : "wizard-step-pill";
+                    <span class="@pillClass">@label</span>
+                }
+            </nav>
+
+            <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+            @if (currentStep == ProjectWizardStep.Pattern)
+            {
+                <MudText Typo="Typo.subtitle1">Pattern</MudText>
+                <div class="list-toolbar">
+                    <MudSelect T="string" @bind-Value="typeFilter" @bind-Value:after="ApplyPatternFilters" Label="Type" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@string.Empty">Any</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Knit")">Knit</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Crochet")">Crochet</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect T="string" @bind-Value="formFilter" @bind-Value:after="ApplyPatternFilters" Label="Form" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@string.Empty">Any</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("2D")">2D</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("3D")">3D</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect T="string" @bind-Value="themeFilterIdText" @bind-Value:after="ApplyPatternFilters" Label="Theme" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@string.Empty">Any theme</MudSelectItem>
+                        @foreach (var theme in themes)
+                        {
+                            <MudSelectItem T="string" Value="@theme.Id.ToString()">@theme.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudTextField @bind-Value="patternSearch" @bind-Value:after="ApplyPatternFilters" Label="Search patterns" Variant="Variant.Outlined" />
+                </div>
+
+                <MudCheckBox T="bool" @bind-Value="createNewPattern" @bind-Value:after="OnCreateNewPatternChanged" Label="Create a new pattern instead of selecting one" Color="Color.Primary" Class="mb-3" />
+
+                @if (createNewPattern)
+                {
+                    <div class="form-grid">
+                        <MudTextField @bind-Value="newPatternName" Label="New pattern name" Variant="Variant.Outlined" />
+                        <MudTextField @bind-Value="newPatternType" Label="Type" Variant="Variant.Outlined" />
+                        <MudTextField @bind-Value="newPatternForm" Label="Form" Variant="Variant.Outlined" />
+                        <MudSelect T="string" @bind-Value="newPatternThemeIdText" Label="Theme" Variant="Variant.Outlined">
+                            <MudSelectItem T="string" Value="@string.Empty">None</MudSelectItem>
+                            @foreach (var theme in themes)
+                            {
+                                <MudSelectItem T="string" Value="@theme.Id.ToString()">@theme.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </div>
+                    <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mt-2">
+                        <ReferenceAutocompleteInput Label="New theme name"
+                                                    Placeholder="New theme name"
+                                                    Options="themeNameOptions"
+                                                    Disabled="busy"
+                                                    @bind-Value="newThemeName" />
+                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="busy" OnClick="CreateThemeAsync">Add Theme</MudButton>
+                    </MudStack>
+                }
+                else
+                {
+                    <MudSelect T="string" @bind-Value="selectedPatternIdText" Label="Pattern" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@string.Empty">Select a pattern</MudSelectItem>
+                        @foreach (var pattern in filteredPatterns)
+                        {
+                            <MudSelectItem T="string" Value="@pattern.Id.ToString()">@pattern.Name (@pattern.PieceCount pieces)</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+            }
+            else if (currentStep == ProjectWizardStep.Steps)
+            {
+                <MudText Typo="Typo.subtitle1">Pattern Steps</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Add pieces and row/stitch steps for your new pattern.</MudText>
+
+                @if (draftPieces.Count > 0)
+                {
+                    <ul class="project-supply-list mb-3">
+                        @foreach (var (piece, pieceIndex) in draftPieces.Select((piece, index) => (piece, index)))
+                        {
+                            <li>
+                                <div>
+                                    <strong>@piece.Name</strong>
+                                    <span class="text-muted">(@piece.Steps.Count steps)</span>
+                                </div>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="busy" OnClick="@(() => SelectDraftPiece(pieceIndex))">Edit</MudButton>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                <div class="form-grid">
+                    <MudTextField @bind-Value="draftPieceName" Label="@(ActiveDraftPiece == null ? "Piece name" : $"Piece: {ActiveDraftPiece.Name}")" Variant="Variant.Outlined" />
+                    <MudTextField @bind-Value="draftStepLabel" Label="Step label" Placeholder="e.g. Body rows" Variant="Variant.Outlined" />
+                    <MudNumericField T="int?" @bind-Value="draftStartIndex" Label="Row start" Variant="Variant.Outlined" />
+                    <MudNumericField T="int?" @bind-Value="draftEndIndex" Label="Row end" Variant="Variant.Outlined" />
+                    <MudNumericField T="int?" @bind-Value="draftStitchCount" Label="Stitch count" Variant="Variant.Outlined" />
+                </div>
+                <MudStack Row="true" Spacing="1" Class="mt-2">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="busy" OnClick="AddDraftStepAsync">Add Row</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Disabled="busy" OnClick="StartNewDraftPiece">New Piece</MudButton>
+                </MudStack>
+            }
+            else if (currentStep == ProjectWizardStep.Supplies)
+            {
+                <MudText Typo="Typo.subtitle1">Supplies</MudText>
+                <div class="form-grid">
+                    <MudSelect T="string" @bind-Value="supplyType" @bind-Value:after="LoadSupplyInventoryOptionsAsync" Label="Supply type" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@("yarn")">Yarn</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("tool")">Tool</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("notion")">Notion</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect T="string" @bind-Value="selectedSupplyInventoryIdText" @bind-Value:after="OnSupplyInventoryChanged" Label="Inventory item" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@string.Empty">Select item</MudSelectItem>
+                        @foreach (var option in supplyInventoryOptions)
+                        {
+                            <MudSelectItem T="string" Value="@option.Id.ToString()">@option.Label</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudNumericField T="decimal?" @bind-Value="supplyQuantity" Label="Quantity planned" Variant="Variant.Outlined" />
+                </div>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-2" Disabled="busy" OnClick="AddPendingSupply">Add Supply Link</MudButton>
+
+                @if (pendingSupplies.Count > 0)
+                {
+                    <ul class="project-supply-list mt-3">
+                        @foreach (var supply in pendingSupplies)
+                        {
+                            <li>
+                                <MudCheckBox T="bool" @bind-Value="supply.Include" Color="Color.Primary">
+                                    <strong>@supply.Label</strong>
+                                    <span class="text-muted">(@supply.InventoryItemType)</span>
+                                </MudCheckBox>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="@(() => RemovePendingSupply(supply))">Remove</MudButton>
+                            </li>
+                        }
+                    </ul>
+                }
+            }
+            else if (currentStep == ProjectWizardStep.Metadata)
+            {
+                <MudText Typo="Typo.subtitle1">Project Details</MudText>
+                <div class="knitting-hero-card mb-3">
+                    @if (uploadedAssetId.HasValue)
+                    {
+                        <AssetThumbnailImage AssetId="uploadedAssetId" AltText="Project image preview" />
+                    }
+                    else
+                    {
+                        <div class="asset-thumbnail-placeholder">No image yet</div>
+                    }
+                    <div>
+                        <MudText Typo="Typo.body2">Project image</MudText>
+                        <InputFile OnChange="UploadProjectImageAsync" disabled="@busy" />
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <MudTextField @bind-Value="projectTitle" Label="Project title" Variant="Variant.Outlined" />
+                    <MudSelect T="string" @bind-Value="projectThemeIdText" Label="Theme" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@string.Empty">None</MudSelectItem>
+                        @foreach (var theme in themes)
+                        {
+                            <MudSelectItem T="string" Value="@theme.Id.ToString()">@theme.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSelect T="string" @bind-Value="projectColorIdText" Label="Main color" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@string.Empty">None</MudSelectItem>
+                        @foreach (var color in colors)
+                        {
+                            <MudSelectItem T="string" Value="@color.Id.ToString()">@color.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+                <div class="mt-3">
+                    <MudText Typo="Typo.body2">Difficulty</MudText>
+                    <DifficultyPicker @bind-Value="projectDifficulty" Disabled="busy" />
+                </div>
+            }
+            else
+            {
+                <MudText Typo="Typo.subtitle1">Ready to Start</MudText>
+                <div class="form-grid mb-3">
+                    <MudCheckBox T="bool" @bind-Value="useAutoStartDate" Label="Use today's date as start date" Color="Color.Primary" />
+                    @if (!useAutoStartDate)
+                    {
+                        <MudDatePicker @bind-Date="manualStartDate" Label="Date started" Variant="Variant.Outlined" />
+                    }
+                </div>
+                <article class="project-card project-card-with-image">
+                    @if (uploadedAssetId.HasValue)
+                    {
+                        <AssetThumbnailImage AssetId="uploadedAssetId" AltText="Project preview" />
+                    }
+                    else
+                    {
+                        <div class="asset-thumbnail-placeholder">No image</div>
+                    }
+                    <div>
+                        <h3>@(string.IsNullOrWhiteSpace(projectTitle) ? "Untitled project" : projectTitle)</h3>
+                        <p><KnittingDifficultyBadge Difficulty="projectDifficulty" /></p>
+                        <p class="mb-1"><strong>Pattern:</strong> @SummaryPatternName</p>
+                        <p class="mb-1"><strong>Theme:</strong> @SummaryThemeName</p>
+                        <p class="mb-1"><strong>Color:</strong> @SummaryColorName</p>
+                        <p class="mb-1"><strong>Start date:</strong> @SummaryStartDate</p>
+                        <p class="mb-1"><strong>Supplies:</strong> @pendingSupplies.Count(s => s.Include) selected</p>
+                        @if (createNewPattern)
+                        {
+                            <p class="mb-0"><strong>New pattern pieces:</strong> @draftPieces.Count</p>
+                        }
+                    </div>
+                </article>
+                @if (pendingSupplies.Count > 0)
+                {
+                    <ul class="project-supply-list mt-3">
+                        @foreach (var supply in pendingSupplies)
+                        {
+                            <li>
+                                <MudCheckBox T="bool" @bind-Value="supply.Include" Color="Color.Primary">
+                                    <strong>@supply.Label</strong>
+                                    <span class="text-muted">(@supply.InventoryItemType)</span>
+                                </MudCheckBox>
+                            </li>
+                        }
+                    </ul>
+                }
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" Disabled="busy" OnClick="FinalizeProjectAsync">Start Project</MudButton>
+            }
+
+            @if (currentStep != ProjectWizardStep.Finalize)
+            {
+                <MudStack Row="true" Spacing="1" Class="mt-3">
+                    @if (CurrentStepPosition > 0)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Disabled="busy" OnClick="PreviousStep">Back</MudButton>
+                    }
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" OnClick="NextStep">Next</MudButton>
+                </MudStack>
+            }
+            else if (CurrentStepPosition > 0)
+            {
+                <MudStack Row="true" Spacing="1" Class="mt-3">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Disabled="busy" OnClick="PreviousStep">Back</MudButton>
+                </MudStack>
+            }
+            </MudPaper>
+        </div>
+            </div>
+        }
+        </div>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private KnittingWizardToast? toast;
+    private const string ModuleKey = "knitting";
+    private const string ProjectRecordType = "project";
+
+    private enum ProjectWizardStep
+    {
+        Pattern,
+        Steps,
+        Supplies,
+        Metadata,
+        Finalize
+    }
+
+    private readonly List<ModulePatternDto> allPatterns = [];
+    private readonly List<ModulePatternDto> filteredPatterns = [];
+    private readonly List<CoreReferenceItemDto> themes = [];
+    private readonly List<CoreReferenceItemDto> colors = [];
+    private readonly List<DraftPiece> draftPieces = [];
+    private readonly List<PendingSupply> pendingSupplies = [];
+    private readonly List<InventoryOption> supplyInventoryOptions = [];
+
+    private ProjectWizardStep currentStep = ProjectWizardStep.Pattern;
+    private bool sessionReady;
+    private bool busy;
+    private bool createNewPattern;
+    private string typeFilter = string.Empty;
+    private string formFilter = string.Empty;
+    private string themeFilterIdText = string.Empty;
+    private string patternSearch = string.Empty;
+    private string selectedPatternIdText = string.Empty;
+    private string newPatternName = string.Empty;
+    private string newPatternType = "Knit";
+    private string newPatternForm = "2D";
+    private string newPatternThemeIdText = string.Empty;
+    private string newThemeName = string.Empty;
+    private string draftPieceName = string.Empty;
+    private string draftStepLabel = string.Empty;
+    private int? draftStartIndex;
+    private int? draftEndIndex;
+    private int? draftStitchCount;
+    private int? activeDraftPieceIndex;
+    private string supplyType = "yarn";
+    private string selectedSupplyInventoryIdText = string.Empty;
+    private decimal? supplyQuantity;
+    private string projectTitle = string.Empty;
+    private string projectThemeIdText = string.Empty;
+    private string projectColorIdText = string.Empty;
+    private int projectDifficulty = 1;
+    private bool useAutoStartDate = true;
+    private DateTime? manualStartDate = DateTime.Today;
+    private Guid? uploadedAssetId;
+
+    private IReadOnlyList<string> themeNameOptions => themes.Select(theme => theme.Name).ToList();
+
+    private IEnumerable<(ProjectWizardStep Step, string Label)> VisibleSteps
+    {
+        get
+        {
+            yield return (ProjectWizardStep.Pattern, "Pattern");
+            if (createNewPattern)
+            {
+                yield return (ProjectWizardStep.Steps, "Steps");
+            }
+
+            yield return (ProjectWizardStep.Supplies, "Supplies");
+            yield return (ProjectWizardStep.Metadata, "Details");
+            yield return (ProjectWizardStep.Finalize, "Start");
+        }
+    }
+
+    private int CurrentStepPosition => VisibleSteps.ToList().FindIndex(entry => entry.Step == currentStep);
+
+    private DraftPiece? ActiveDraftPiece =>
+        activeDraftPieceIndex.HasValue && activeDraftPieceIndex.Value >= 0 && activeDraftPieceIndex.Value < draftPieces.Count
+            ? draftPieces[activeDraftPieceIndex.Value]
+            : null;
+
+    private string SummaryPatternName =>
+        createNewPattern
+            ? (string.IsNullOrWhiteSpace(newPatternName) ? "New pattern" : newPatternName)
+            : filteredPatterns.FirstOrDefault(pattern => pattern.Id.ToString() == selectedPatternIdText)?.Name ?? "Selected pattern";
+
+    private string SummaryThemeName =>
+        themes.FirstOrDefault(theme => theme.Id.ToString() == projectThemeIdText)?.Name
+        ?? (createNewPattern
+            ? themes.FirstOrDefault(theme => theme.Id.ToString() == newPatternThemeIdText)?.Name
+            : filteredPatterns.FirstOrDefault(pattern => pattern.Id.ToString() == selectedPatternIdText)?.ThemeName)
+        ?? "None";
+
+    private string SummaryColorName =>
+        colors.FirstOrDefault(color => color.Id.ToString() == projectColorIdText)?.Name ?? "None";
+
+    private string SummaryStartDate =>
+        (useAutoStartDate ? DateTime.Today : manualStartDate ?? DateTime.Today).ToString("MMM d, yyyy");
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        sessionReady = true;
+        await LoadReferenceDataAsync();
+        await LoadPatternsAsync();
+    }
+
+    private async Task LoadReferenceDataAsync()
+    {
+        themes.Clear();
+        themes.AddRange(await ApiClient.GetCoreReferenceItemsAsync("themes"));
+        colors.Clear();
+        colors.AddRange(await ApiClient.GetCoreReferenceItemsAsync("colors"));
+    }
+
+    private async Task LoadPatternsAsync()
+    {
+        try
+        {
+            allPatterns.Clear();
+            allPatterns.AddRange(await ApiClient.GetModulePatternsAsync(ModuleKey));
+            ApplyPatternFilters();
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex.Message);
+        }
+    }
+
+    private void ApplyPatternFilters()
+    {
+        filteredPatterns.Clear();
+        Guid? themeFilterId = Guid.TryParse(themeFilterIdText, out var parsedThemeId) ? parsedThemeId : null;
+
+        filteredPatterns.AddRange(allPatterns.Where(pattern =>
+            (string.IsNullOrWhiteSpace(typeFilter) || pattern.Type.Equals(typeFilter, StringComparison.OrdinalIgnoreCase))
+            && (string.IsNullOrWhiteSpace(formFilter) || pattern.Form.Equals(formFilter, StringComparison.OrdinalIgnoreCase))
+            && (!themeFilterId.HasValue || pattern.ThemeId == themeFilterId)
+            && (string.IsNullOrWhiteSpace(patternSearch)
+                || pattern.Name.Contains(patternSearch, StringComparison.OrdinalIgnoreCase))));
+    }
+
+    private void OnCreateNewPatternChanged()
+    {
+        if (createNewPattern && currentStep == ProjectWizardStep.Pattern && draftPieces.Count == 0)
+        {
+            draftPieceName = "Piece 1";
+        }
+
+        if (!createNewPattern && currentStep == ProjectWizardStep.Steps)
+        {
+            currentStep = ProjectWizardStep.Supplies;
+        }
+    }
+
+    private async Task CreateThemeAsync()
+    {
+        if (string.IsNullOrWhiteSpace(newThemeName))
+        {
+            return;
+        }
+
+        busy = true;
+        ClearError();
+
+        try
+        {
+            var created = await ApiClient.CreateCoreReferenceItemAsync("themes", new CreateCoreReferenceItemRequest
+            {
+                Name = newThemeName.Trim()
+            });
+            themes.Add(created);
+            newPatternThemeIdText = created.Id.ToString();
+            newThemeName = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex.Message);
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void StartNewDraftPiece()
+    {
+        activeDraftPieceIndex = null;
+        draftPieceName = $"Piece {draftPieces.Count + 1}";
+        draftStepLabel = string.Empty;
+        draftStartIndex = null;
+        draftEndIndex = null;
+        draftStitchCount = null;
+    }
+
+    private void SelectDraftPiece(int pieceIndex)
+    {
+        activeDraftPieceIndex = pieceIndex;
+        draftPieceName = draftPieces[pieceIndex].Name;
+    }
+
+    private Task AddDraftStepAsync()
+    {
+        ClearError();
+
+        if (string.IsNullOrWhiteSpace(draftPieceName))
+        {
+            ShowError("Enter a piece name before adding steps.");
+            return Task.CompletedTask;
+        }
+
+        if (activeDraftPieceIndex == null)
+        {
+            draftPieces.Add(new DraftPiece { Name = draftPieceName.Trim() });
+            activeDraftPieceIndex = draftPieces.Count - 1;
+        }
+        else
+        {
+            draftPieces[activeDraftPieceIndex.Value].Name = draftPieceName.Trim();
+        }
+
+        draftPieces[activeDraftPieceIndex.Value].Steps.Add(new DraftStep
+        {
+            Label = string.IsNullOrWhiteSpace(draftStepLabel) ? "Step" : draftStepLabel.Trim(),
+            StartIndex = draftStartIndex,
+            EndIndex = draftEndIndex,
+            StitchCount = draftStitchCount
+        });
+
+        draftStepLabel = string.Empty;
+        draftStartIndex = null;
+        draftEndIndex = null;
+        draftStitchCount = null;
+        return Task.CompletedTask;
+    }
+
+    private async Task LoadSupplyInventoryOptionsAsync()
+    {
+        supplyInventoryOptions.Clear();
+        selectedSupplyInventoryIdText = string.Empty;
+
+        switch (supplyType)
+        {
+            case "tool":
+                foreach (var tool in await ApiClient.GetModuleToolsAsync(ModuleKey))
+                {
+                    supplyInventoryOptions.Add(new InventoryOption(tool.Id, "tool", $"{tool.BrandName} - {tool.TypeName}"));
+                }
+
+                break;
+            case "notion":
+                foreach (var notion in await ApiClient.GetModuleNotionsAsync(ModuleKey))
+                {
+                    supplyInventoryOptions.Add(new InventoryOption(notion.Id, "notion", $"{notion.BrandName} - {notion.TypeName}"));
+                }
+
+                break;
+            default:
+                foreach (var yarn in await ApiClient.GetModuleYarnsAsync(ModuleKey))
+                {
+                    supplyInventoryOptions.Add(new InventoryOption(yarn.Id, "yarn", $"{yarn.BrandName} - {yarn.ColorName}"));
+                }
+
+                break;
+        }
+    }
+
+    private void OnSupplyInventoryChanged()
+    {
+        if (!Guid.TryParse(selectedSupplyInventoryIdText, out var inventoryId))
+        {
+            return;
+        }
+
+        var selected = supplyInventoryOptions.FirstOrDefault(option => option.Id == inventoryId);
+        if (selected != null)
+        {
+            supplyType = selected.InventoryItemType;
+        }
+    }
+
+    private void AddPendingSupply()
+    {
+        if (!Guid.TryParse(selectedSupplyInventoryIdText, out var inventoryId))
+        {
+            ShowError("Select an inventory item to link.");
+            return;
+        }
+
+        var selected = supplyInventoryOptions.FirstOrDefault(option => option.Id == inventoryId);
+        if (selected == null)
+        {
+            ShowError("Select an inventory item to link.");
+            return;
+        }
+
+        pendingSupplies.Add(new PendingSupply
+        {
+            InventoryItemType = selected.InventoryItemType,
+            InventoryItemId = selected.Id,
+            Label = selected.Label,
+            QuantityPlanned = supplyQuantity,
+            Include = true
+        });
+
+        selectedSupplyInventoryIdText = string.Empty;
+        supplyQuantity = null;
+        ClearError();
+    }
+
+    private void RemovePendingSupply(PendingSupply supply) => pendingSupplies.Remove(supply);
+
+    private async Task UploadProjectImageAsync(InputFileChangeEventArgs args)
+    {
+        busy = true;
+        ClearError();
+
+        try
+        {
+            var asset = await ApiClient.UploadAssetAsync(ModuleKey, args.File);
+            uploadedAssetId = asset.Id;
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex.Message);
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void NextStep()
+    {
+        if (!ValidateCurrentStep())
+        {
+            return;
+        }
+
+        var steps = VisibleSteps.ToList();
+        var index = steps.FindIndex(entry => entry.Step == currentStep);
+        if (index >= 0 && index < steps.Count - 1)
+        {
+            currentStep = steps[index + 1].Step;
+            ClearError();
+
+            if (currentStep == ProjectWizardStep.Supplies && supplyInventoryOptions.Count == 0)
+            {
+                _ = LoadSupplyInventoryOptionsAsync();
+            }
+        }
+    }
+
+    private void PreviousStep()
+    {
+        var steps = VisibleSteps.ToList();
+        var index = steps.FindIndex(entry => entry.Step == currentStep);
+        if (index > 0)
+        {
+            currentStep = steps[index - 1].Step;
+            ClearError();
+        }
+    }
+
+    private bool ValidateCurrentStep()
+    {
+        ClearError();
+
+        switch (currentStep)
+        {
+            case ProjectWizardStep.Pattern:
+                if (createNewPattern)
+                {
+                    if (string.IsNullOrWhiteSpace(newPatternName))
+                    {
+                        ShowError("Enter a name for the new pattern.");
+                        return false;
+                    }
+                }
+                else if (!Guid.TryParse(selectedPatternIdText, out _))
+                {
+                    ShowError("Select a pattern or choose to create a new one.");
+                    return false;
+                }
+
+                return true;
+            case ProjectWizardStep.Steps:
+                if (draftPieces.Count == 0 || draftPieces.All(piece => piece.Steps.Count == 0))
+                {
+                    ShowError("Add at least one piece with one step.");
+                    return false;
+                }
+
+                return true;
+            case ProjectWizardStep.Metadata:
+                if (string.IsNullOrWhiteSpace(projectTitle))
+                {
+                    ShowError("Enter a project title.");
+                    return false;
+                }
+
+                return true;
+            default:
+                return true;
+        }
+    }
+
+    private async Task FinalizeProjectAsync()
+    {
+        if (!ValidateCurrentStep())
+        {
+            return;
+        }
+
+        busy = true;
+        ClearError();
+
+        try
+        {
+            Guid? patternId = null;
+            Guid? themeId = null;
+
+            if (createNewPattern)
+            {
+                if (Guid.TryParse(newPatternThemeIdText, out var parsedThemeId))
+                {
+                    themeId = parsedThemeId;
+                }
+
+                var createdPattern = await ApiClient.CreateModulePatternAsync(ModuleKey, new CreateModulePatternRequest
+                {
+                    Name = newPatternName.Trim(),
+                    Type = newPatternType.Trim(),
+                    Form = newPatternForm.Trim(),
+                    Difficulty = KnittingUi.DifficultyLabel(projectDifficulty),
+                    ThemeId = themeId
+                });
+
+                patternId = createdPattern.Id;
+
+                foreach (var draftPiece in draftPieces)
+                {
+                    var piece = await ApiClient.AddModulePatternPieceAsync(ModuleKey, createdPattern.Id, new CreateModulePatternPieceRequest
+                    {
+                        Name = draftPiece.Name
+                    });
+
+                    if (piece == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var step in draftPiece.Steps)
+                    {
+                        await ApiClient.AddModulePatternStepAsync(ModuleKey, createdPattern.Id, piece.Id, new CreateModulePatternStepRequest
+                        {
+                            Label = step.Label,
+                            StartIndex = step.StartIndex,
+                            EndIndex = step.EndIndex,
+                            StitchCount = step.StitchCount
+                        });
+                    }
+                }
+            }
+            else if (Guid.TryParse(selectedPatternIdText, out var selectedPatternId))
+            {
+                patternId = selectedPatternId;
+                var selectedPattern = filteredPatterns.FirstOrDefault(pattern => pattern.Id == selectedPatternId);
+                themeId = selectedPattern?.ThemeId;
+            }
+
+            if (Guid.TryParse(projectThemeIdText, out var parsedProjectThemeId))
+            {
+                themeId = parsedProjectThemeId;
+            }
+
+            Guid? colorId = Guid.TryParse(projectColorIdText, out var parsedColorId) ? parsedColorId : null;
+            var startedAt = useAutoStartDate
+                ? DateTime.UtcNow
+                : DateTime.SpecifyKind((manualStartDate ?? DateTime.Today).Date, DateTimeKind.Utc);
+
+            var project = await ApiClient.CreateModuleProjectAsync(ModuleKey, new CreateModuleProjectRequest
+            {
+                Name = projectTitle.Trim(),
+                PatternId = patternId,
+                ThemeId = themeId,
+                ColorId = colorId,
+                Difficulty = projectDifficulty,
+                StartedAt = startedAt
+            });
+
+            foreach (var supply in pendingSupplies.Where(item => item.Include))
+            {
+                await ApiClient.AddModuleProjectInventoryLinkAsync(ModuleKey, project.Id, new CreateModuleProjectInventoryLinkRequest
+                {
+                    InventoryItemType = supply.InventoryItemType,
+                    InventoryItemId = supply.InventoryItemId,
+                    QuantityPlanned = supply.QuantityPlanned
+                });
+            }
+
+            if (uploadedAssetId.HasValue)
+            {
+                await ApiClient.AssignAssetAsync(uploadedAssetId.Value, new AssetAssignmentRequest
+                {
+                    ModuleKey = ModuleKey,
+                    RecordType = ProjectRecordType,
+                    RecordId = project.Id
+                });
+            }
+
+            MudDialog.Close(DialogResult.Ok(project.Id));
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex.Message);
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void ShowError(string message) => toast?.ShowError(message);
+
+    private void ClearError() => toast?.Clear();
+
+    public void Dispose() => toast?.Dispose();
+
+    private sealed class DraftPiece
+    {
+        public string Name { get; set; } = string.Empty;
+        public List<DraftStep> Steps { get; } = [];
+    }
+
+    private sealed class DraftStep
+    {
+        public string Label { get; set; } = string.Empty;
+        public int? StartIndex { get; set; }
+        public int? EndIndex { get; set; }
+        public int? StitchCount { get; set; }
+    }
+
+    private sealed class PendingSupply
+    {
+        public string InventoryItemType { get; set; } = string.Empty;
+        public Guid InventoryItemId { get; set; }
+        public string Label { get; set; } = string.Empty;
+        public decimal? QuantityPlanned { get; set; }
+        public bool Include { get; set; }
+    }
+
+    private sealed record InventoryOption(Guid Id, string InventoryItemType, string Label);
+}

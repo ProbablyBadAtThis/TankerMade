@@ -4,6 +4,7 @@
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
 @inject TankerMade.Client.Services.KnittingCardAssetCache CardAssets
+@inject KnittingWizardLauncher KnittingWizards
 
 <PageTitle>Knitting Patterns</PageTitle>
 
@@ -17,7 +18,7 @@
             <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
         }
 
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/modules/knitting/patterns/new">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenPatternWizardAsync">
             New Pattern Wizard
         </MudButton>
 
@@ -197,6 +198,8 @@
 
         await LoadPatternsAsync();
     }
+
+    private Task OpenPatternWizardAsync() => KnittingWizards.OpenPatternWizardAsync();
 
     private async Task LoadPatternsAsync()
     {

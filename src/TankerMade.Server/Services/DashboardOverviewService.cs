@@ -10,6 +10,7 @@ public class DashboardOverviewService : IDashboardOverviewService
 {
     private const int MaxQuickActions = 8;
     private const int MaxDueSoonItems = 5;
+    private const int MaxAttentionItems = 8;
 
     private readonly TankerMadeDbContext _context;
     private readonly IModuleService _moduleService;
@@ -47,6 +48,7 @@ public class DashboardOverviewService : IDashboardOverviewService
         var activeProjectCount = 0;
         var quickActions = new List<DashboardQuickActionDto>();
         var dueSoonItems = new List<DashboardDueSoonItemDto>();
+        var attentionItems = new List<DashboardAttentionItemDto>();
 
         foreach (var module in activeModules)
         {
@@ -67,6 +69,11 @@ public class DashboardOverviewService : IDashboardOverviewService
             foreach (var dueItem in contribution.DueSoonItems)
             {
                 dueSoonItems.Add(EnrichDueSoonItem(dueItem, moduleNames));
+            }
+
+            foreach (var attentionItem in contribution.AttentionItems)
+            {
+                attentionItems.Add(EnrichAttentionItem(attentionItem, moduleNames));
             }
         }
 
@@ -104,7 +111,23 @@ public class DashboardOverviewService : IDashboardOverviewService
                 .OrderBy(item => item.DueAtUtc)
                 .Take(MaxDueSoonItems)
                 .ToList(),
+            AttentionItems = attentionItems
+                .OrderBy(item => item.SortOrder)
+                .ThenBy(item => item.Title, StringComparer.OrdinalIgnoreCase)
+                .Take(MaxAttentionItems)
+                .ToList(),
         };
+    }
+
+    private static DashboardAttentionItemDto EnrichAttentionItem(
+        DashboardAttentionItemDto item,
+        IReadOnlyDictionary<string, string> moduleNames)
+    {
+        item.ModuleName = moduleNames.TryGetValue(item.ModuleKey, out var moduleName)
+            ? moduleName
+            : item.ModuleKey;
+
+        return item;
     }
 
     private static DashboardQuickActionDto EnrichQuickAction(

@@ -2,6 +2,7 @@
 @inject AuthSession AuthSession
 @inject ThemeService ThemeService
 @inject ClientModuleState ModuleState
+@inject KnittingWizardLauncher KnittingWizards
 @implements IDisposable
 
 @if (_items.Count > 0)
@@ -34,18 +35,50 @@
             <div class="notebook-bottom-nav-track">
                 @foreach (var item in _items)
                 {
-                    <NavLink href="@item.Href"
-                             Match="@item.Match"
-                             class="@GetNavClass(item)"
-                             ActiveClass="is-active"
-                             title="@item.Label"
-                             @onmouseenter="() => SetHovered(item.Href)"
-                             @onfocusin="() => SetHovered(item.Href)">
-                        <MudIcon Icon="@item.Icon" Size="Size.Medium" Class="notebook-bottom-nav-icon" />
-                        <span class="notebook-bottom-nav-label-wrap">
-                            <span class="notebook-bottom-nav-label">@item.Label</span>
-                        </span>
-                    </NavLink>
+                    @if (HasWizardMenu(item))
+                    {
+                        <div class="notebook-bottom-nav-item-with-menu @(IsWizardMenuOpen(item) ? "is-open" : null)"
+                             @onmouseenter="() => OnWizardItemEnter(item)"
+                             @onmouseleave="() => OnWizardItemLeave(item)"
+                             @onfocusin="() => OnWizardItemEnter(item)"
+                             @onfocusout="() => OnWizardItemFocusOut(item)">
+                            <NavLink href="@item.Href"
+                                     Match="@item.Match"
+                                     class="@GetNavClass(item)"
+                                     ActiveClass="is-active"
+                                     title="@item.Label"
+                                     @onclick="() => OnWizardNavActivate(item)">
+                                <MudIcon Icon="@item.Icon" Size="Size.Medium" Class="notebook-bottom-nav-icon" />
+                                <span class="notebook-bottom-nav-label-wrap">
+                                    <span class="notebook-bottom-nav-label">@item.Label</span>
+                                </span>
+                            </NavLink>
+                            <div class="notebook-bottom-nav-hover-menu">
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           Class="notebook-bottom-nav-wizard-link"
+                                           OnClick="@(() => OpenWizardAsync(item))">
+                                    @item.WizardLabel
+                                </MudButton>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <NavLink href="@item.Href"
+                                 Match="@item.Match"
+                                 class="@GetNavClass(item)"
+                                 ActiveClass="is-active"
+                                 title="@item.Label"
+                                 @onmouseenter="() => SetHovered(item.Href)"
+                                 @onfocusin="() => SetHovered(item.Href)">
+                            <MudIcon Icon="@item.Icon" Size="Size.Medium" Class="notebook-bottom-nav-icon" />
+                            <span class="notebook-bottom-nav-label-wrap">
+                                <span class="notebook-bottom-nav-label">@item.Label</span>
+                            </span>
+                        </NavLink>
+                    }
                 }
             </div>
 
@@ -97,9 +130,13 @@
 }
 
 @code {
+    private const int WizardMenuCloseDelayMs = 200;
+
     private IReadOnlyList<AppNavItem> _items = [];
     private AppNavItem? _coreDashboardItem;
     private string? _hoveredHref;
+    private string? _openWizardMenuHref;
+    private CancellationTokenSource? _wizardMenuCloseCts;
 
     protected override void OnInitialized()
     {
@@ -112,6 +149,7 @@
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         _hoveredHref = null;
+        CloseWizardMenuImmediate();
         RefreshItems();
         InvokeAsync(StateHasChanged);
     }
@@ -136,19 +174,115 @@
 
     private void ClearHovered()
     {
-        if (_hoveredHref is null)
+        if (_hoveredHref is null && _openWizardMenuHref is null)
         {
             return;
         }
 
         _hoveredHref = null;
+        CloseWizardMenuImmediate();
         StateHasChanged();
     }
+
+    private void OnWizardItemEnter(AppNavItem item)
+    {
+        _wizardMenuCloseCts?.Cancel();
+        _wizardMenuCloseCts = null;
+
+        if (HasWizardMenu(item))
+        {
+            _openWizardMenuHref = item.Href;
+        }
+
+        SetHovered(item.Href);
+    }
+
+    private void OnWizardItemLeave(AppNavItem item)
+    {
+        if (!HasWizardMenu(item) || !IsWizardMenuOpen(item))
+        {
+            return;
+        }
+
+        ScheduleWizardMenuClose(item.Href);
+    }
+
+    private void OnWizardNavActivate(AppNavItem item)
+    {
+        if (!HasWizardMenu(item))
+        {
+            return;
+        }
+
+        ScheduleWizardMenuClose(item.Href);
+    }
+
+    private void OnWizardItemFocusOut(AppNavItem item)
+    {
+        if (!HasWizardMenu(item) || !IsWizardMenuOpen(item))
+        {
+            return;
+        }
+
+        ScheduleWizardMenuClose(item.Href);
+    }
+
+    private void ScheduleWizardMenuClose(string href)
+    {
+        _wizardMenuCloseCts?.Cancel();
+        _wizardMenuCloseCts = new CancellationTokenSource();
+        _ = CloseWizardMenuAfterDelayAsync(href, _wizardMenuCloseCts.Token);
+    }
+
+    private async Task CloseWizardMenuAfterDelayAsync(string href, CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(WizardMenuCloseDelayMs, token);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
+        if (!string.Equals(_openWizardMenuHref, href, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        _openWizardMenuHref = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void CloseWizardMenuImmediate()
+    {
+        _wizardMenuCloseCts?.Cancel();
+        _wizardMenuCloseCts = null;
+        _openWizardMenuHref = null;
+    }
+
+    private bool IsWizardMenuOpen(AppNavItem item)
+        => string.Equals(_openWizardMenuHref, item.Href, StringComparison.OrdinalIgnoreCase);
 
     private string GetNavClass(AppNavItem item)
         => string.Equals(_hoveredHref, item.Href, StringComparison.OrdinalIgnoreCase)
             ? "notebook-bottom-nav-item is-hovered"
             : "notebook-bottom-nav-item";
+
+    private static bool HasWizardMenu(AppNavItem item)
+        => item.Wizard.HasValue && !string.IsNullOrWhiteSpace(item.WizardLabel);
+
+    private async Task OpenWizardAsync(AppNavItem item)
+    {
+        if (!item.Wizard.HasValue)
+        {
+            return;
+        }
+
+        CloseWizardMenuImmediate();
+        _hoveredHref = null;
+        await KnittingWizards.OpenAsync(item.Wizard.Value);
+    }
 
     private async Task SetDarkModeAsync(bool isDarkMode)
     {
@@ -187,5 +321,7 @@
         Navigation.LocationChanged -= OnLocationChanged;
         AuthSession.Changed -= OnSessionChanged;
         ThemeService.Changed -= OnThemeChanged;
+        _wizardMenuCloseCts?.Cancel();
+        _wizardMenuCloseCts?.Dispose();
     }
 }

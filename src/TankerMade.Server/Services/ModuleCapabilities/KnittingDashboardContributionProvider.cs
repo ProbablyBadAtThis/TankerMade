@@ -27,6 +27,8 @@ public class KnittingDashboardContributionProvider : IModuleDashboardContributio
                 project => project.UserId == userId && !project.IsArchived && project.Progress < 100,
                 cancellationToken);
 
+        var attentionItems = await KnittingStudioAttentionBuilder.BuildAsync(_context, userId, cancellationToken);
+
         return new ModuleDashboardContributionDto
         {
             ActiveProjectCount = activeProjectCount,
@@ -55,6 +57,7 @@ public class KnittingDashboardContributionProvider : IModuleDashboardContributio
                 },
             ],
             DueSoonItems = [],
+            AttentionItems = attentionItems,
         };
     }
 }

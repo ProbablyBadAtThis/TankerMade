@@ -5,7 +5,7 @@
 @inject NavigationManager Navigation
 @implements IDisposable
 
-<MudLayout Class="notebook-layout">
+<MudLayout Class="@GetLayoutClass()">
     <MudMainContent Class="notebook-main-content">
         <div class="notebook-page">
             @Body
@@ -48,6 +48,9 @@
         var scope = AppNavigation.GetScope(Navigation.ToBaseRelativePath(Navigation.Uri));
         _showBottomNav = scope is AppNavigationScope.Core or AppNavigationScope.Knitting;
     }
+
+    private string GetLayoutClass()
+        => _showBottomNav ? "notebook-layout has-bottom-nav" : "notebook-layout";
 
     private async Task RecordModuleVisitFromUriAsync(string uri)
     {

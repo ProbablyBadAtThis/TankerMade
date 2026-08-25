@@ -28,8 +28,52 @@
             <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
         }
 
-        <div class="core-dashboard-columns has-sidebar">
-            <MudStack Spacing="3" Class="core-dashboard-main">
+        <div class="knitting-studio-columns">
+            <div class="knitting-studio-col">
+                <MudPaper Class="pa-4 core-panel-mud core-dashboard-section" Elevation="1">
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Needs attention</MudText>
+
+                        @if (attentionItems.Count == 0)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Stash looks good for active projects.
+                            </MudText>
+                        }
+                        else
+                        {
+                            @foreach (var item in attentionItems)
+                            {
+                                <MudPaper Class="pa-2 core-dashboard-due-item" Elevation="0" Outlined="true">
+                                    <MudLink Href="@item.NavigationPath"
+                                             Underline="Underline.None"
+                                             Class="core-dashboard-recent-link">
+                                        <MudStack Spacing="0">
+                                            <MudText Typo="Typo.body2">@item.Title</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@item.Detail</MudText>
+                                        </MudStack>
+                                    </MudLink>
+                                </MudPaper>
+                            }
+                        }
+                    </MudStack>
+                </MudPaper>
+            </div>
+
+            @if (overview != null)
+            {
+                <aside class="core-dashboard-sidebar knitting-studio-calendar-sidebar">
+                    <MudPaper Class="pa-4 core-panel-mud core-dashboard-section core-dashboard-engagement-panel" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Activity</MudText>
+                            <MudText Typo="Typo.body2">@GetEngagementCopy()</MudText>
+                            <DashboardActivityCalendar ActiveLocalDates="overview.Activity.ActiveLocalDates" />
+                        </MudStack>
+                    </MudPaper>
+                </aside>
+            }
+
+            <MudStack Spacing="2" Class="knitting-studio-col knitting-studio-recent-col">
                 <MudPaper Class="pa-4 core-panel-mud core-dashboard-recent-panel core-dashboard-section" Elevation="1">
                     <MudStack Spacing="2">
                         <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Recent projects</MudText>
@@ -124,19 +168,6 @@
                     </MudStack>
                 </MudPaper>
             </MudStack>
-
-            @if (overview != null)
-            {
-                <aside class="core-dashboard-sidebar">
-                    <MudPaper Class="pa-4 core-panel-mud core-dashboard-section core-dashboard-engagement-panel" Elevation="1">
-                        <MudStack Spacing="2">
-                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Engagement</MudText>
-                            <MudText Typo="Typo.body2">@GetEngagementCopy()</MudText>
-                            <DashboardActivityCalendar ActiveLocalDates="overview.Activity.ActiveLocalDates" />
-                        </MudStack>
-                    </MudPaper>
-                </aside>
-            }
         </div>
     </div>
 </KnittingModuleGate>
@@ -145,6 +176,7 @@
     private const string ModuleKey = "knitting";
     private bool loading = true;
     private string errorMessage = string.Empty;
+    private IReadOnlyList<DashboardAttentionItemDto> attentionItems = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -164,6 +196,7 @@
         featuredRecentWork = null;
         sidebarRecentWork = [];
         overview = null;
+        attentionItems = [];
 
         if (!ModuleState.IsActive(ModuleKey))
         {
@@ -180,6 +213,7 @@
             overview = await overviewTask;
             featuredRecentWork = recentWork.FirstOrDefault();
             sidebarRecentWork = recentWork.Skip(1).ToList();
+            attentionItems = overview?.AttentionItems ?? [];
         }
         catch (Exception ex)
         {

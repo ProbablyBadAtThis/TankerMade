@@ -80,7 +80,7 @@ public class AuthController : ControllerBase
             Username = user.Username,
             Email = user.Email,
             Role = user.Role,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes)
+            ExpiresAt = _jwtSettings.GetExpiresAtUtc(DateTime.UtcNow)
         });
     }
 
@@ -122,7 +122,7 @@ public class AuthController : ControllerBase
             Username = user.Username,
             Email = user.Email,
             Role = user.Role,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes)
+            ExpiresAt = _jwtSettings.GetExpiresAtUtc(DateTime.UtcNow)
         });
     }
 }
