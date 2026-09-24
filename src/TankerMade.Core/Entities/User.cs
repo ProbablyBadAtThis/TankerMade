@@ -11,6 +11,7 @@ namespace TankerMade.Core.Entities
         public string Role { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
+        public decimal? TargetHourlyRate { get; set; }
 
         // Protected constructor for Entity Framework
         protected User() { }
@@ -35,6 +36,16 @@ namespace TankerMade.Core.Entities
         public void UpdateRole(string newRole)
         {
             Role = newRole ?? throw new ArgumentNullException(nameof(newRole));
+        }
+
+        public void SetTargetHourlyRate(decimal? rate)
+        {
+            if (rate is < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(rate), "Target hourly rate cannot be negative.");
+            }
+
+            TargetHourlyRate = rate;
         }
     }
 }

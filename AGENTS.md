@@ -70,6 +70,8 @@ Start the Blazor client:
 dotnet run --project src/TankerMade.Client
 ```
 
+The client is http://localhost:5017 and calls the API at http://localhost:5236. When a local UI or browser check is needed, start both if they are not already running. Do not ask first.
+
 Build everything:
 
 ```bash

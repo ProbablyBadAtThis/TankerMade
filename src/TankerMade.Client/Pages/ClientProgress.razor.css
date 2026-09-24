@@ -1,0 +1,73 @@
+.studio-page {
+    max-width: 40rem;
+    margin: 3rem auto;
+    padding: 2rem 1.5rem 4rem;
+    color: #1c2430;
+    background: #f7f5f2;
+    font-family: "Segoe UI", sans-serif;
+}
+
+.studio-page h1,
+.studio-page h2 {
+    font-weight: 500;
+    letter-spacing: 0;
+}
+
+.studio-kicker {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.75rem;
+    color: #5c6778;
+}
+
+.studio-stage {
+    margin: 0.25rem 0 1rem;
+    font-size: 1.25rem;
+}
+
+.studio-summary {
+    font-size: 1.125rem;
+    line-height: 1.5;
+}
+
+.studio-meta {
+    color: #5c6778;
+}
+
+.studio-facts {
+    display: flex;
+    gap: 2rem;
+}
+
+.studio-facts dt {
+    color: #5c6778;
+    font-size: 0.8rem;
+}
+
+.studio-facts dd {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.studio-photos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.studio-photos img {
+    width: 12rem;
+    height: 12rem;
+    object-fit: cover;
+}
+
+.studio-page ol {
+    padding-left: 1.2rem;
+}
+
+.studio-page li {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.75rem;
+}

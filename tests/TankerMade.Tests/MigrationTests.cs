@@ -84,6 +84,9 @@ public class MigrationTests
             Assert.Contains("KnittingPatternSteps", tables);
             Assert.Contains("KnittingProjectStepProgress", tables);
             Assert.Contains("KnittingProjectRowChecks", tables);
+            Assert.Contains("CoreCommissionPublications", tables);
+            Assert.Contains("CoreCommissionRevisions", tables);
+            Assert.Contains("CoreCommissionWorkspaces", tables);
             Assert.Contains("KnittingYarnInventoryItems", tables);
             Assert.Contains("KnittingKits", tables);
             Assert.Contains("PrintingMaterialInventoryItems", tables);

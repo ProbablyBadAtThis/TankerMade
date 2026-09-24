@@ -11,9 +11,9 @@ Fiber commissions only. Knitting is the only module that changes. Finish each st
 
 | | |
 |---|---|
-| Now | Step 2 — projection backend |
-| Done | Step 1 — direction recorded |
-| Stop | Step 5 — browser check, then `dotnet build TankerMade.sln` |
+| Now | Phase J complete |
+| Done | Steps 1–5 |
+| Next | Hosted read-only page of the same snapshot. The home server stays private. |
 
 **Done when:** a signed-in maker publishes a knitting commission and hands someone a local link. The link shows stage, materials safe to show, photos, next step, last updated, and revisions. Revoking the link cuts it off. The maker, only while signed in, sees whether the price beats their rate. No other craft module was changed.
 
@@ -37,60 +37,60 @@ Core owns the commission record and the public snapshot. Knitting owns the sente
 
 **Contracts**
 
-- [ ] Core stage enum: Quote, Accepted, Materials, In progress, Revision, Ready, Delivered
-- [ ] Public snapshot DTO: stage, plain-language summary, safe material lines, photo asset ids, next step, last updated, visible revision history
-- [ ] Workshop-only DTOs: quote price, deposit received, target rate, material dollars, elapsed time, implied net, beats-rate
-- [ ] `IModuleClientStatusProvider` beside the other capability interfaces. Input is the project plus what the maker chose to publish. Output is the public fields. Knitting translates jargon (“Blocking the body” → “Assembling the pieces.”)
+- [x] Core stage enum: Quote, Accepted, Materials, In progress, Revision, Ready, Delivered
+- [x] Public snapshot DTO: stage, plain-language summary, safe material lines, photo asset ids, next step, last updated, visible revision history
+- [x] Workshop-only DTOs: quote price, deposit received, target rate, material dollars, elapsed time, implied net, beats-rate
+- [x] `IModuleClientStatusProvider` beside the other capability interfaces. Input is the project plus what the maker chose to publish. Output is the public fields. Knitting translates jargon (“Blocking the body” → “Assembling the pieces.”)
 
 **Storage** (Core tables, opaque project id, no FK into knitting)
 
-- [ ] Publication: owner, module key, project id, token hash, revoked-at, last published at
-- [ ] Snapshot: one JSON blob of the public DTO, replace on each publish
-- [ ] Revision rows: when, what changed, whether price moved, whether the due date moved
-- [ ] Migration. Historical crafting migrations stay
+- [x] Publication: owner, module key, project id, token hash, revoked-at, last published at
+- [x] Snapshot: one JSON blob of the public DTO, replace on each publish
+- [x] Revision rows: when, what changed, whether price moved, whether the due date moved
+- [x] Migration. Historical crafting migrations stay
 
 **API** (local server only)
 
-- [ ] Signed-in: publish, add revision, revoke, preview (same payload the link returns)
-- [ ] Anonymous: read by token. Read-only. No client account
-- [ ] Anonymous photo route: token + asset id, and only if that id is in the current snapshot
-- [ ] Inactive knitting module cannot publish
-- [ ] Revoked or unknown token does not resolve (same response either way)
-- [ ] Token is unguessable. Store the hash, not the raw token
+- [x] Signed-in: publish, add revision, revoke, preview (same payload the link returns)
+- [x] Anonymous: read by token. Read-only. No client account
+- [x] Anonymous photo route: token + asset id, and only if that id is in the current snapshot
+- [x] Inactive knitting module cannot publish
+- [x] Revoked or unknown token does not resolve (same response either way)
+- [x] Token is unguessable. Store the hash, not the raw token
 
 **Tests**
 
-- [ ] Public DTO has no hours, rate, implied net, private notes, or measurements
-- [ ] A revision records a price change or a due-date change
-- [ ] Inactive knitting module cannot publish
-- [ ] Revoked token does not resolve
-- [ ] Photo id absent from the snapshot does not resolve on the anonymous route
+- [x] Public DTO has no hours, rate, implied net, private notes, or measurements
+- [x] A revision records a price change or a due-date change
+- [x] Inactive knitting module cannot publish
+- [x] Revoked token does not resolve
+- [x] Photo id absent from the snapshot does not resolve on the anonymous route
 
 ### Step 3 — Maker preview and private economics
 
 One knitting project screen. Workshop theme stays. The preview is a separate studio layout with no workshop nav.
 
-- [ ] Core maker rate on the user, not in knitting settings
-- [ ] On the project: quote price, expected window, deposit marked received (no payment processing)
-- [ ] Actions: publish current stage, add a revision, copy preview link, revoke
-- [ ] Preview opens the anonymous payload in the studio layout, signed-in maker included
-- [ ] Private panel on the workshop screen only: linked material cost, timer total, implied net, whether price beats the rate
-- [ ] Knitting supplies the public sentence from the active piece and step. The maker can edit that sentence before publish
+- [x] Core maker rate on the user, not in knitting settings
+- [x] On the project: quote price, expected window, deposit marked received (no payment processing)
+- [x] Actions: publish current stage, add a revision, copy preview link, revoke
+- [x] Preview opens the anonymous payload in the studio layout, signed-in maker included
+- [x] Private panel on the workshop screen only: linked material cost, timer total, implied net, whether price beats the rate
+- [x] Knitting supplies the public sentence from the active piece and step. The maker can edit that sentence before publish
 
 ### Step 4 — Local outbox, no uploader
 
-- [ ] Publish with no hosted target still writes the local snapshot
-- [ ] Last updated is the publish time, so a closed laptop does not look stalled
-- [ ] Snapshot shape is something a later uploader can send unchanged
-- [ ] No cloud client, retry loop, or hosted dashboard in this step
+- [x] Publish with no hosted target still writes the local snapshot
+- [x] Last updated is the publish time, so a closed laptop does not look stalled
+- [x] Snapshot shape is something a later uploader can send unchanged
+- [x] No cloud client, retry loop, or hosted dashboard in this step
 
 ### Step 5 — Stop for a real check
 
 Do not start the next product slice in the same pass.
 
-- [ ] Maker, signed in: open a knitting project, publish, copy the link, revoke, confirm the link dies
-- [ ] Client, signed out: open the link and confirm hours, rate, notes, and measurements are absent; a revision is visible
-- [ ] User runs `dotnet build TankerMade.sln`
+- [x] Maker, signed in: open a knitting project, publish, copy the link, revoke, confirm the link dies
+- [x] Client, signed out: open the link and confirm hours, rate, notes, and measurements are absent; a revision is visible
+- [x] User runs `dotnet build TankerMade.sln`
 
 ### Decide before Step 2 code
 

@@ -22,6 +22,9 @@ public class TankerMadeDbContext : DbContext
     public DbSet<UserRecentWorkAccess> UserRecentWorkAccesses { get; set; }
     public DbSet<AssetRecord> AssetRecords { get; set; }
     public DbSet<AssetThumbnail> AssetThumbnails { get; set; }
+    public DbSet<CommissionPublication> CommissionPublications { get; set; }
+    public DbSet<CommissionRevision> CommissionRevisions { get; set; }
+    public DbSet<CommissionWorkspace> CommissionWorkspaces { get; set; }
 
 
     // Knitting module entities
@@ -69,6 +72,9 @@ public class TankerMadeDbContext : DbContext
         ConfigureUserRecentWorkAccess(modelBuilder);
         ConfigureAssetRecord(modelBuilder);
         ConfigureAssetThumbnail(modelBuilder);
+        ConfigureCommissionPublication(modelBuilder);
+        ConfigureCommissionRevision(modelBuilder);
+        ConfigureCommissionWorkspace(modelBuilder);
         ConfigureKnittingPattern(modelBuilder);
         ConfigureKnittingPatternPiece(modelBuilder);
         ConfigureKnittingPatternStep(modelBuilder);
@@ -120,6 +126,9 @@ public class TankerMadeDbContext : DbContext
             entity.Property(e => e.Role)
                 .IsRequired()
                 .HasMaxLength(50);
+
+            entity.Property(e => e.TargetHourlyRate)
+                .HasPrecision(18, 2);
 
             entity.HasIndex(e => e.Username)
                 .IsUnique();
@@ -438,6 +447,57 @@ public class TankerMadeDbContext : DbContext
             entity.HasIndex(e => new { e.Category, e.SortOrder });
             entity.HasIndex(e => new { e.Category, e.Slug })
                 .IsUnique();
+        });
+    }
+
+    private void ConfigureCommissionPublication(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CommissionPublication>(entity =>
+        {
+            entity.ToTable("CoreCommissionPublications");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ModuleKey).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.TokenHash).IsRequired().HasMaxLength(128);
+            entity.Property(e => e.SnapshotJson).IsRequired();
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.UserId, e.ModuleKey, e.ProjectId }).IsUnique();
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+        });
+    }
+
+    private void ConfigureCommissionRevision(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CommissionRevision>(entity =>
+        {
+            entity.ToTable("CoreCommissionRevisions");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Summary).HasMaxLength(500);
+            entity.Property(e => e.PreviousPrice).HasPrecision(18, 2);
+            entity.Property(e => e.NewPrice).HasPrecision(18, 2);
+            entity.HasOne<CommissionPublication>()
+                .WithMany()
+                .HasForeignKey(e => e.PublicationId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.PublicationId, e.OccurredAt });
+        });
+    }
+
+    private void ConfigureCommissionWorkspace(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CommissionWorkspace>(entity =>
+        {
+            entity.ToTable("CoreCommissionWorkspaces");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ModuleKey).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.QuotePrice).HasPrecision(18, 2);
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.UserId, e.ModuleKey, e.ProjectId }).IsUnique();
         });
     }
 

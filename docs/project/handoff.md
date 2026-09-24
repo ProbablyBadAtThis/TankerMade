@@ -15,7 +15,7 @@ Last updated: 2026-09-24
 | `docs/project/knitting-ui-parity-checklist.md` | Reference only. Not the active plan |
 | `docs/product/ux-reference.md` | Crafter decisions + wireframe reference |
 
-**Do next:** Phase J, Step 2 in `docs/project/roadmap.md`. Do not continue the MudBlazor pass onto other modules.
+**Do next:** Phase J is complete. Next slice: a hosted read-only page of the same public snapshot. Do not expose the home server.
 
 ---
 
@@ -76,10 +76,10 @@ The MudBlazor checklist in `docs/project/knitting-ui-parity-checklist.md` stays 
 The checklist is Phase J in `docs/project/roadmap.md`. Finish each step before the next.
 
 1. **Done.** Direction recorded.
-2. **Now.** Projection backend: contracts, knitting client-status provider, snapshot storage, revision rows, token, publish / revoke / anonymous read.
-3. Maker preview and private economics on one knitting project.
-4. Local outbox. No cloud uploader.
-5. Stop for a browser check. Then the user runs `dotnet build TankerMade.sln`.
+2. **Done.** Projection backend: contracts, knitting client-status provider, snapshot storage, revision rows, token, publish / revoke / anonymous read.
+3. **Done.** Maker preview and private economics on one knitting project.
+4. **Done.** Local outbox. No cloud uploader.
+5. **Done.** Browser check and `dotnet build TankerMade.sln` passed.
 
 ---
 
@@ -107,9 +107,10 @@ The checklist is Phase J in `docs/project/roadmap.md`. Finish each step before t
 
 - `docs/project/roadmap.md` is roadmap source of truth.
 - When the roadmap, current phase, or handoff “do next” changes, update `page/docs` in the same change. That folder is the dev tracker and publishes to Cloudflare Pages on push. Dashboard, phase list, Phase J task list, architecture summary, and footer should stay aligned with the roadmap. Do not leave the page on an older phase.
+- When a local UI or browser check is needed, start the API and the Blazor client if they are not already running. Do not ask first. API: `dotnet run --project src/TankerMade.Server` at http://localhost:5236. Client: `dotnet run --project src/TankerMade.Client` at http://localhost:5017.
 - Do not run full solution builds in Codex sandbox; user runs `dotnet build TankerMade.sln` locally.
 - Do not commit databases, build outputs, or `Scratch/` content.
 
 ## Verification Needed Next
 
-Not yet. Step 2 is backend only. The real-browser check waits until step 5 of `docs/project/direction-brief.md`. The user runs `dotnet build TankerMade.sln` at that stop.
+Phase J is complete. The next slice is a hosted read-only page of the same snapshot. The home server stays private.

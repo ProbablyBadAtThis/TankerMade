@@ -1,0 +1,120 @@
+@page "/client-progress/{Token}"
+@layout EmptyLayout
+@using TankerMade.Contracts.DTOs.ClientProgress
+@using TankerMade.Core.Enums
+@inject TankerMadeApiClient ApiClient
+
+<PageTitle>Commission</PageTitle>
+
+<article class="studio-page">
+    @if (loading)
+    {
+        <p>Loading the latest update.</p>
+    }
+    else if (snapshot is null)
+    {
+        <h1>This link is not available</h1>
+        <p>It may have been revoked, or it was never published.</p>
+    }
+    else
+    {
+        <p class="studio-kicker">Commission</p>
+        @if (!string.IsNullOrWhiteSpace(snapshot.Title))
+        {
+            <h1>@snapshot.Title</h1>
+        }
+        <p class="studio-stage">@StageLabel(snapshot.Stage)</p>
+        <p class="studio-summary">@snapshot.Summary</p>
+        <p class="studio-meta">Updated @snapshot.LastUpdated.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</p>
+
+        @if (snapshot.Price.HasValue || snapshot.DueDate.HasValue)
+        {
+            <dl class="studio-facts">
+                @if (snapshot.Price.HasValue)
+                {
+                    <div>
+                        <dt>Price</dt>
+                        <dd>@snapshot.Price.Value.ToString("C")</dd>
+                    </div>
+                }
+                @if (snapshot.DueDate.HasValue)
+                {
+                    <div>
+                        <dt>Expected</dt>
+                        <dd>@snapshot.DueDate.Value.ToString("MMM d, yyyy")</dd>
+                    </div>
+                }
+            </dl>
+        }
+
+        @if (snapshot.MaterialLines.Count > 0)
+        {
+            <h2>Materials</h2>
+            <ul>
+                @foreach (var line in snapshot.MaterialLines)
+                {
+                    <li>@line.Name</li>
+                }
+            </ul>
+        }
+
+        @if (snapshot.PhotoAssetIds.Count > 0)
+        {
+            <h2>Photos</h2>
+            <div class="studio-photos">
+                @foreach (var assetId in snapshot.PhotoAssetIds)
+                {
+                    <img src="@ApiClient.ClientProgressPhotoUrl(Token, assetId)" alt="Published photo" />
+                }
+            </div>
+        }
+
+        <h2>Next</h2>
+        <p>@snapshot.NextStep</p>
+
+        @if (snapshot.Revisions.Count > 0)
+        {
+            <h2>Revisions</h2>
+            <ol>
+                @foreach (var revision in snapshot.Revisions)
+                {
+                    <li>
+                        <span>@revision.OccurredAt.ToLocalTime().ToString("MMM d, yyyy")</span>
+                        @if (!string.IsNullOrWhiteSpace(revision.Summary))
+                        {
+                            <span>@revision.Summary</span>
+                        }
+                        @if (revision.PriceChanged)
+                        {
+                            <span>Price @revision.PreviousPrice?.ToString("C") to @revision.NewPrice?.ToString("C")</span>
+                        }
+                        @if (revision.DueDateChanged)
+                        {
+                            <span>Window @revision.PreviousDueDate?.ToString("MMM d") to @revision.NewDueDate?.ToString("MMM d, yyyy")</span>
+                        }
+                    </li>
+                }
+            </ol>
+        }
+    }
+</article>
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    private ClientProgressSnapshotDto? snapshot;
+    private bool loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+        snapshot = await ApiClient.GetClientProgressAsync(Token);
+        loading = false;
+    }
+
+    private static string StageLabel(CommissionStage value) => value switch
+    {
+        CommissionStage.InProgress => "In progress",
+        _ => value.ToString()
+    };
+}

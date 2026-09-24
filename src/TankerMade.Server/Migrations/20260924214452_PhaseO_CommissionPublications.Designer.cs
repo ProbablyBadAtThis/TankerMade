@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TankerMade.Server.Data;
 
@@ -10,9 +11,11 @@ using TankerMade.Server.Data;
 namespace TankerMade.Server.Migrations
 {
     [DbContext(typeof(TankerMadeDbContext))]
-    partial class TankerMadeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260924214452_PhaseO_CommissionPublications")]
+    partial class PhaseO_CommissionPublications
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
@@ -248,9 +251,6 @@ namespace TankerMade.Server.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("HostedAt")
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("LastPublishedAt")
                         .HasColumnType("TEXT");
 
@@ -330,44 +330,6 @@ namespace TankerMade.Server.Migrations
                     b.HasIndex("PublicationId", "OccurredAt");
 
                     b.ToTable("CoreCommissionRevisions", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Core.Entities.CommissionWorkspace", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("DepositReceived")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateOnly?>("DueDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ModuleKey")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("QuotePrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "ModuleKey", "ProjectId")
-                        .IsUnique();
-
-                    b.ToTable("CoreCommissionWorkspaces", (string)null);
                 });
 
             modelBuilder.Entity("TankerMade.Core.Entities.ModuleDefinition", b =>
@@ -625,10 +587,6 @@ namespace TankerMade.Server.Migrations
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("TargetHourlyRate")
-                        .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Username")
@@ -2212,15 +2170,6 @@ namespace TankerMade.Server.Migrations
                     b.HasOne("TankerMade.Core.Entities.CommissionPublication", null)
                         .WithMany()
                         .HasForeignKey("PublicationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Core.Entities.CommissionWorkspace", b =>
-                {
-                    b.HasOne("TankerMade.Core.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

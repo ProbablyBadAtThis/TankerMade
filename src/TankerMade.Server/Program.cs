@@ -133,6 +133,8 @@ builder.Services.AddScoped<IModuleInventoryCapabilityHandler, PrintingInventoryC
 builder.Services.AddScoped<IModuleKitCapabilityHandler, KnittingKitCapabilityHandler>();
 builder.Services.AddScoped<IModuleSettingsCapabilityHandler, KnittingSettingsCapabilityHandler>();
 builder.Services.AddScoped<IModuleRecentWorkSummaryProvider, KnittingRecentWorkSummaryProvider>();
+builder.Services.AddScoped<IModuleClientStatusProvider, KnittingClientStatusProvider>();
+builder.Services.AddScoped<ICommissionPublicationService, CommissionPublicationService>();
 builder.Services.AddScoped<IModuleDashboardContributionProvider, KnittingDashboardContributionProvider>();
 
 // Add controllers and OpenAPI

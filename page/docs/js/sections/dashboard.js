@@ -8,12 +8,12 @@ class DashboardSection {
         this.sectionId = 'dashboard';
         this.data = {
             totalTasks: 102,
-            completedTasks: 70,
+            completedTasks: 102,
             currentPhase: {
                 number: "J",
                 title: "Client progress",
-                description: "Knitting commission link. Public snapshot, private economics, local preview. Step 2 is the projection backend.",
-                completed: 3,
+                description: "Knitting commission link. Local publish, preview, revision, and revoke are verified.",
+                completed: 35,
                 total: 35
             }
         };
@@ -121,7 +121,7 @@ class DashboardSection {
                 ${isAuthenticated ? `
                 <div class="dashboard-section-title">
                     <h2>Current Focus</h2>
-                    <p>Phase J, Step 2 is the projection backend. Later steps stay blocked until that lands.</p>
+                    <p>Phase J is complete. Next is a hosted read-only page of the same snapshot.</p>
                 </div>
 
                 <div class="dashboard-focus-panels">
@@ -205,13 +205,10 @@ class DashboardSection {
 
     renderActiveTasks() {
         const tasks = [
-            { title: "Record direction, charter, and handoff", meta: "Phase J • Step 1", status: "completed" },
-            { title: "Stage enum, public snapshot DTO, and workshop-only economics DTOs", meta: "Phase J • Step 2 • Contracts", status: "active" },
-            { title: "IModuleClientStatusProvider; knitting writes the public sentence", meta: "Phase J • Step 2 • Contracts", status: "active" },
-            { title: "Publication, snapshot JSON, and revision rows", meta: "Phase J • Step 2 • Storage", status: "active" },
-            { title: "Publish, revise, revoke, preview, and anonymous read-by-token", meta: "Phase J • Step 2 • API", status: "active" },
-            { title: "Token-scoped photos; revoked token and inactive module do not publish", meta: "Phase J • Step 2 • API", status: "active" },
-            { title: "Tests: private fields absent, revision recorded, revoked token dead", meta: "Phase J • Step 2 • Tests", status: "active" }
+            { title: "Maker preview, private economics, and local snapshot", meta: "Phase J • Steps 3–4", status: "completed" },
+            { title: "Signed-in: publish, copy link, revoke, confirm the link dies", meta: "Phase J • Step 5", status: "completed" },
+            { title: "Signed-out link hides hours, rate, notes, and measurements", meta: "Phase J • Step 5", status: "completed" },
+            { title: "Run dotnet build TankerMade.sln", meta: "Phase J • Step 5", status: "completed" }
         ];
 
         return tasks.map(task => `
@@ -236,7 +233,7 @@ class DashboardSection {
             { number: "G", title: "Images & Assets", completed: 3, total: 3, active: false },
             { number: "H", title: "Performance & Search", completed: 4, total: 4, active: false },
             { number: "I", title: "Security, Ops & Cleanup", completed: 6, total: 6, active: false },
-            { number: "J", title: "Client progress", completed: 3, total: 35, active: true }
+            { number: "J", title: "Client progress", completed: 35, total: 35, active: true }
         ];
 
         return phases.map(phase => {
@@ -278,8 +275,8 @@ class DashboardSection {
 
     renderWeekSummary() {
         const stats = [
-            { value: "70", label: "Done" },
-            { value: "32", label: "Open in Phase J" },
+            { value: "102", label: "Done" },
+            { value: "0", label: "Open in Phase J" },
             { value: "10", label: "Roadmap Phases" }
         ];
 
@@ -293,9 +290,7 @@ class DashboardSection {
 
     renderNextTasks() {
         const tasks = [
-            { title: "Maker preview and private economics on one knitting project", phase: "Phase J • Step 3" },
-            { title: "Local outbox. No cloud uploader", phase: "Phase J • Step 4" },
-            { title: "Browser check, then dotnet build TankerMade.sln", phase: "Phase J • Step 5" }
+            { title: "Hosted read-only page of the same public snapshot", phase: "After Phase J" }
         ];
 
         return tasks.map(task => `
@@ -308,7 +303,7 @@ class DashboardSection {
 
     renderRecentActivity() {
         const activities = [
-            { icon: "", title: "Phase J tracker recorded in the roadmap", time: "Sep 24" },
+            { icon: "", title: "Knitting client-progress projection stored locally", time: "Sep 24" },
             { icon: "", title: "Client progress direction written into the docs", time: "Sep 24" },
             { icon: "", title: "Crafting reference module retired", time: "Sep 24" },
             { icon: "", title: "Knitting row checks stored with the project", time: "Sep 24" }

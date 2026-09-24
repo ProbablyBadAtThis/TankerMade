@@ -208,7 +208,7 @@ class GitHubDataStore {
     getPhaseBaselineCompleted(phaseId) {
         const completed = {
             1: 26, 2: 5, 3: 6, 4: 8, 5: 3,
-            6: 6, 7: 3, 8: 4, 9: 6, 10: 3
+            6: 6, 7: 3, 8: 4, 9: 6, 10: 35
         };
         return completed[phaseId] || 0;
     }

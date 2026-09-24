@@ -10,6 +10,7 @@ using TankerMade.Contracts.DTOs.ModuleInventory;
 using TankerMade.Contracts.DTOs.ModuleProjects;
 using TankerMade.Contracts.DTOs.ModuleKits;
 using TankerMade.Contracts.DTOs.ModuleSettings;
+using TankerMade.Contracts.DTOs.ClientProgress;
 using TankerMade.Contracts.DTOs.Modules;
 
 namespace TankerMade.Client.Services;
@@ -1097,6 +1098,89 @@ public class TankerMadeApiClient
 
         await EnsureSuccessAsync(response);
         return true;
+    }
+
+    public string ClientProgressPhotoUrl(string token, Guid assetId)
+    {
+        return new Uri(_http.BaseAddress!, $"api/client-progress/{Uri.EscapeDataString(token)}/photos/{assetId}").ToString();
+    }
+
+    public async Task<ClientProgressSnapshotDto?> GetClientProgressAsync(string token)
+    {
+        var response = await _http.GetAsync($"api/client-progress/{Uri.EscapeDataString(token)}");
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<ClientProgressSnapshotDto>();
+    }
+
+    public async Task<CommissionWorkshopDto?> GetCommissionWorkshopAsync(string moduleKey, Guid projectId)
+    {
+        var response = await _http.GetAsync(CommissionPath(moduleKey, projectId, "workshop"));
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<CommissionWorkshopDto>();
+    }
+
+    public async Task SaveCommissionTermsAsync(string moduleKey, Guid projectId, UpdateCommissionTermsRequest request)
+    {
+        var response = await _http.PutAsJsonAsync(CommissionPath(moduleKey, projectId, "terms"), request);
+        await EnsureSuccessAsync(response);
+    }
+
+    public async Task<CommissionCommandResult> PublishClientProgressAsync(string moduleKey, Guid projectId, PublishClientProgressRequest request)
+    {
+        var response = await _http.PostAsJsonAsync(CommissionPath(moduleKey, projectId, null), request);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<CommissionCommandResult>()
+            ?? throw new InvalidOperationException("The server returned an empty publish response.");
+    }
+
+    public async Task<CommissionCommandResult> AddClientProgressRevisionAsync(string moduleKey, Guid projectId, AddClientProgressRevisionRequest request)
+    {
+        var response = await _http.PostAsJsonAsync(CommissionPath(moduleKey, projectId, "revisions"), request);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<CommissionCommandResult>()
+            ?? throw new InvalidOperationException("The server returned an empty revision response.");
+    }
+
+    public async Task RevokeClientProgressAsync(string moduleKey, Guid projectId)
+    {
+        var response = await _http.PostAsync(CommissionPath(moduleKey, projectId, "revoke"), null);
+        await EnsureSuccessAsync(response);
+    }
+
+    public async Task<CommissionCommandResult> ReissueClientProgressLinkAsync(string moduleKey, Guid projectId)
+    {
+        var response = await _http.PostAsync(CommissionPath(moduleKey, projectId, "link"), null);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<CommissionCommandResult>()
+            ?? throw new InvalidOperationException("The server returned an empty link response.");
+    }
+
+    public async Task<MakerRateDto> GetMakerRateAsync()
+    {
+        return await _http.GetFromJsonAsync<MakerRateDto>("api/account/maker-rate")
+            ?? new MakerRateDto();
+    }
+
+    public async Task SaveMakerRateAsync(decimal? targetHourlyRate)
+    {
+        var response = await _http.PutAsJsonAsync("api/account/maker-rate", new MakerRateDto { TargetHourlyRate = targetHourlyRate });
+        await EnsureSuccessAsync(response);
+    }
+
+    private static string CommissionPath(string moduleKey, Guid projectId, string? suffix)
+    {
+        var path = $"api/modules/{Uri.EscapeDataString(moduleKey)}/capabilities/projects/{projectId}/client-progress";
+        return string.IsNullOrWhiteSpace(suffix) ? path : $"{path}/{suffix}";
     }
 
     private static string BuildUrl(string path, params (string Name, string Value)[] parameters)
