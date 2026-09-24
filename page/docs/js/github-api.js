@@ -70,9 +70,8 @@ class GitHubDataStore {
             return content;
         } catch (error) {
             if (error.status === 404) {
-                // File doesn't exist, return default
-                const defaultData = { 
-                    completed: 0, 
+                const defaultData = {
+                    completed: this.getPhaseBaselineCompleted(phaseId),
                     total: this.getPhaseTaskCount(phaseId),
                     tasks: {},
                     lastUpdated: new Date().toISOString()
@@ -171,7 +170,7 @@ class GitHubDataStore {
     async getAllPhaseProgress() {
         const phases = [];
 
-        for (let i = 1; i <= 9; i++) {
+        for (let i = 1; i <= 10; i++) {
             try {
                 const progress = await this.getPhaseProgress(i);
                 phases.push({ id: i, ...progress });
@@ -200,10 +199,18 @@ class GitHubDataStore {
     // Get task count for each phase (from existing dev-tracker.js)
     getPhaseTaskCount(phaseId) {
         const taskCounts = {
-            1: 26, 2: 5, 3: 6, 4: 7, 5: 3,
-            6: 5, 7: 3, 8: 4, 9: 6
+            1: 26, 2: 5, 3: 6, 4: 8, 5: 3,
+            6: 6, 7: 3, 8: 4, 9: 6, 10: 35
         };
         return taskCounts[phaseId] || 0;
+    }
+
+    getPhaseBaselineCompleted(phaseId) {
+        const completed = {
+            1: 26, 2: 5, 3: 6, 4: 8, 5: 3,
+            6: 6, 7: 3, 8: 4, 9: 6, 10: 3
+        };
+        return completed[phaseId] || 0;
     }
 
     // Clear cache (useful for testing/debugging)

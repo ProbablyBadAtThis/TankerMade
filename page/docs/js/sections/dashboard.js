@@ -7,14 +7,14 @@ class DashboardSection {
     constructor() {
         this.sectionId = 'dashboard';
         this.data = {
-            totalTasks: 67,
-            completedTasks: 67,
+            totalTasks: 102,
+            completedTasks: 70,
             currentPhase: {
-                number: "I",
-                title: "Security, Ops & Cleanup",
-                description: "Secrets, HTTPS, data protection key persistence, export/import verification, and deployment hardening.",
-                completed: 6,
-                total: 6
+                number: "J",
+                title: "Client progress",
+                description: "Knitting commission link. Public snapshot, private economics, local preview. Step 2 is the projection backend.",
+                completed: 3,
+                total: 35
             }
         };
     }
@@ -48,7 +48,7 @@ class DashboardSection {
                                     </span>
                                     <span class="progress-stat">
                                         <span class="stat-value" id="current-week">Phase ${this.data.currentPhase.number}</span>
-                                        <span class="stat-label">latest complete</span>
+                                        <span class="stat-label">current phase</span>
                                     </span>
                                 </div>
 
@@ -64,7 +64,7 @@ class DashboardSection {
 
                     <div class="card dashboard-card phase-card">
                         <div class="card-header">
-                            <h2>Latest Completed Phase</h2>
+                            <h2>Current Phase</h2>
                         </div>
                         <div class="card-body">
                             <div class="current-phase-info">
@@ -121,7 +121,7 @@ class DashboardSection {
                 ${isAuthenticated ? `
                 <div class="dashboard-section-title">
                     <h2>Current Focus</h2>
-                    <p>Recent completion highlights and next transition planning.</p>
+                    <p>Phase J, Step 2 is the projection backend. Later steps stay blocked until that lands.</p>
                 </div>
 
                 <div class="dashboard-focus-panels">
@@ -192,7 +192,7 @@ class DashboardSection {
                     <h2>Project Glimpse</h2>
                 </div>
                 <div class="card-body">
-                    <p class="text-secondary">TankerMade is a local-first modular maker workbench. Phases A through I are complete, including security and deployment hardening.</p>
+                    <p class="text-secondary">TankerMade is a local-first workshop. Knitting is the live module. Phase J is a client progress link for fiber commissions. Phases A through I are complete.</p>
                     <div class="mt-4">
                         <button class="btn btn-primary" onclick="window.TankerMadeAuth && window.TankerMadeAuth.login()">
                             Sign in with GitHub
@@ -205,17 +205,13 @@ class DashboardSection {
 
     renderActiveTasks() {
         const tasks = [
-            { title: "Add pattern pieces and steps", meta: "Phase B • Crafting module", status: "done" },
-            { title: "Build pattern detail page", meta: "Phase B • Module UI", status: "done" },
-            { title: "Add step range display", meta: "Phase B • UX", status: "done" },
-            { title: "Add progress aggregation and validation", meta: "Phase B • Domain behavior", status: "done" },
-            { title: "Expand module-owned project workspace screens", meta: "Phase B • Projects", status: "done" },
-            { title: "Add module-owned step/checklist progress", meta: "Phase C • Projects", status: "done" },
-            { title: "Add per-step timers, completion, piece selection, archive, and safe edits", meta: "Phase C • Projects", status: "done" },
-            { title: "Complete module-owned inventory and kit backend flows", meta: "Phase D • Modules", status: "done" },
-            { title: "Complete Phase F module platform hardening", meta: "Phase F • Platform", status: "done" },
-            { title: "Complete Phase G images and assets implementation", meta: "Phase G • Assets", status: "done" },
-            { title: "Complete Phase I security, ops, and deployment guidance", meta: "Phase I • Closeout", status: "done" }
+            { title: "Record direction, charter, and handoff", meta: "Phase J • Step 1", status: "completed" },
+            { title: "Stage enum, public snapshot DTO, and workshop-only economics DTOs", meta: "Phase J • Step 2 • Contracts", status: "active" },
+            { title: "IModuleClientStatusProvider; knitting writes the public sentence", meta: "Phase J • Step 2 • Contracts", status: "active" },
+            { title: "Publication, snapshot JSON, and revision rows", meta: "Phase J • Step 2 • Storage", status: "active" },
+            { title: "Publish, revise, revoke, preview, and anonymous read-by-token", meta: "Phase J • Step 2 • API", status: "active" },
+            { title: "Token-scoped photos; revoked token and inactive module do not publish", meta: "Phase J • Step 2 • API", status: "active" },
+            { title: "Tests: private fields absent, revision recorded, revoked token dead", meta: "Phase J • Step 2 • Tests", status: "active" }
         ];
 
         return tasks.map(task => `
@@ -239,7 +235,8 @@ class DashboardSection {
             { number: "F", title: "Module Platform V1", completed: 6, total: 6, active: false },
             { number: "G", title: "Images & Assets", completed: 3, total: 3, active: false },
             { number: "H", title: "Performance & Search", completed: 4, total: 4, active: false },
-            { number: "I", title: "Security, Ops & Cleanup", completed: 6, total: 6, active: false }
+            { number: "I", title: "Security, Ops & Cleanup", completed: 6, total: 6, active: false },
+            { number: "J", title: "Client progress", completed: 3, total: 35, active: true }
         ];
 
         return phases.map(phase => {
@@ -281,9 +278,9 @@ class DashboardSection {
 
     renderWeekSummary() {
         const stats = [
-            { value: "67", label: "Done" },
-            { value: "0", label: "Open in Phase I" },
-            { value: "9", label: "Roadmap Phases" }
+            { value: "70", label: "Done" },
+            { value: "32", label: "Open in Phase J" },
+            { value: "10", label: "Roadmap Phases" }
         ];
 
         return stats.map(stat => `
@@ -296,9 +293,9 @@ class DashboardSection {
 
     renderNextTasks() {
         const tasks = [
-            { title: "Confirm post-Phase-I transition target in roadmap/handoff", phase: "Phase Planning" },
-            { title: "Review deployment runbook against hosting target", phase: "Operations" },
-            { title: "Capture follow-up backlog items from Phase I retro", phase: "Product" }
+            { title: "Maker preview and private economics on one knitting project", phase: "Phase J • Step 3" },
+            { title: "Local outbox. No cloud uploader", phase: "Phase J • Step 4" },
+            { title: "Browser check, then dotnet build TankerMade.sln", phase: "Phase J • Step 5" }
         ];
 
         return tasks.map(task => `
@@ -311,12 +308,10 @@ class DashboardSection {
 
     renderRecentActivity() {
         const activities = [
-            { icon: "", title: "Phase A smoke test passed", time: "Today" },
-            { icon: "", title: "Crafting module activation verified in client", time: "Today" },
-            { icon: "", title: "Pattern and project CRUD verified", time: "Today" },
-            { icon: "", title: "Cross-user ownership check passed", time: "Today" },
-            { icon: "", title: "Module migration metadata repaired", time: "Today" },
-            { icon: "", title: "Phase C project workspace behavior completed", time: "Today" }
+            { icon: "", title: "Phase J tracker recorded in the roadmap", time: "Sep 24" },
+            { icon: "", title: "Client progress direction written into the docs", time: "Sep 24" },
+            { icon: "", title: "Crafting reference module retired", time: "Sep 24" },
+            { icon: "", title: "Knitting row checks stored with the project", time: "Sep 24" }
         ];
 
         return activities.map(activity => `
