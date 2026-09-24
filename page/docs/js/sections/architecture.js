@@ -38,18 +38,17 @@ function loadArchitectureVisualizer() {
                 <div id="visualization-container" class="architecture-canvas">
                     <div>
                         <h3>Entity Relationship Map</h3>
-                        <p>Current model: Users, module definitions, user module activations, Crafting projects/patterns/kits/inventory, 3D printing inventory, project step progress, step timers, Themes, Colors, Sources, and Brands. Phase E focuses on reference data integration.</p>
+                        <p>Knitting is the live module. Crafting is retired. Persisted model: users, modules, activations, knitting projects, patterns, pieces, steps, row checks, timers, inventory, a thin 3D-printing inventory proof, assets, and shared reference data. Phase J will add a public commission snapshot beside those workshop tables.</p>
                         <div class="architecture-mini-map" aria-label="Current entity overview">
                             <span>User</span>
                             <span>Module</span>
-                            <span>Crafting Project</span>
-                            <span>Step Progress</span>
+                            <span>Knitting Project</span>
+                            <span>Row Check</span>
                             <span>Step Timer</span>
-                            <span>Crafting Pattern</span>
-                            <span>Theme</span>
-                            <span>Source</span>
-                            <span>Brand</span>
-                            <span>Color</span>
+                            <span>Knitting Pattern</span>
+                            <span>Inventory</span>
+                            <span>Asset</span>
+                            <span>Reference Data</span>
                         </div>
                     </div>
                 </div>
@@ -86,18 +85,17 @@ function showEntityDiagram() {
         container.innerHTML = `
             <div>
                 <h3>Entity Relationship Map</h3>
-                <p>Current persisted model: Users, module definitions, module activations, Crafting projects/patterns, pieces, steps, project step progress, step timers, and shared reference data. Inventory, kit, and asset entities are still roadmap work.</p>
+                <p>Knitting is the live module. Crafting tables are gone. The model holds knitting projects, patterns, pieces, steps, row checks, timers, inventory links, assets, and shared reference data. A public snapshot is Phase J work, not a live query of these tables.</p>
                 <div class="architecture-mini-map" aria-label="Current entity overview">
                     <span>User</span>
                     <span>Module</span>
-                    <span>Crafting Project</span>
-                    <span>Step Progress</span>
+                    <span>Knitting Project</span>
+                    <span>Row Check</span>
                     <span>Step Timer</span>
-                    <span>Crafting Pattern</span>
-                    <span>Theme</span>
-                    <span>Source</span>
-                    <span>Brand</span>
-                    <span>Color</span>
+                    <span>Knitting Pattern</span>
+                    <span>Inventory</span>
+                    <span>Asset</span>
+                    <span>Reference Data</span>
                 </div>
             </div>
         `;
@@ -112,7 +110,7 @@ function showDataFlow() {
         container.innerHTML = `
             <div>
                 <h3>Current Flow</h3>
-                <p>Blazor WASM client talks to the ASP.NET Core API, which uses application services and EF Core against SQLite. GitHub OAuth is only for this Pages tracker.</p>
+                <p>Blazor WASM client talks to the ASP.NET Core API, which uses application services and EF Core against SQLite. GitHub OAuth is only for this Pages tracker. Phase J adds an anonymous read of a published snapshot. That read does not query workshop tables.</p>
                 <div class="architecture-flow-list">
                     <span>Client</span>
                     <span>API</span>
@@ -133,7 +131,7 @@ function showSystemArchitecture() {
         container.innerHTML = `
             <div>
                 <h3>Solution Shape</h3>
-                <p>Core stays dependency-light and craft-agnostic, Contracts references Core, modules own maker-domain behavior, Server hosts API/EF/auth, and Client loads module-provided surfaces.</p>
+                <p>Core stays dependency-light and craft-agnostic. Contracts references Core. Knitting owns the live maker workflows. Other craft modules are templates. Server hosts the API, EF, and auth. The client loads module-provided surfaces.</p>
                 <div class="architecture-flow-list">
                     <span>Core</span>
                     <span>Contracts</span>

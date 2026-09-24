@@ -7,12 +7,12 @@
 class TankerMadeApp {
   constructor() {
     this.state = {
-      currentPhase:    9,
-      currentPhaseLabel: 'I',
-      totalPhases:     9,
+      currentPhase:    10,
+      currentPhaseLabel: 'J',
+      totalPhases:     10,
       overallProgress: 0,   // always derived, never hardcoded
-      completedTasks:  67,
-      totalTasks:      67,
+      completedTasks:  70,
+      totalTasks:      102,
       openIncidents:   0,
     };
 
@@ -155,8 +155,8 @@ class TankerMadeApp {
       let completedTasks = 0;
       let totalTasks     = 0;
 
-      const phaseCounts = [26, 5, 6, 8, 3, 6, 3, 4, 6];
-      const baselineCompleted = [26, 5, 6, 8, 3, 6, 3, 4, 6];
+      const phaseCounts = [26, 5, 6, 8, 3, 6, 3, 4, 6, 35];
+      const baselineCompleted = [26, 5, 6, 8, 3, 6, 3, 4, 6, 3];
 
       if (this.isAuthenticated && window.TankerMadeData) {
         const phases = await window.TankerMadeData.getAllPhaseProgress();
@@ -196,7 +196,8 @@ class TankerMadeApp {
     const phaseTitles = {
       G: 'Images & Assets',
       H: 'Performance & Search',
-      I: 'Security, Ops & Cleanup'
+      I: 'Security, Ops & Cleanup',
+      J: 'Client progress'
     };
     const title = phaseTitles[this.state.currentPhaseLabel] || 'Roadmap';
     set('current-phase', 'Phase ' + this.state.currentPhaseLabel + ': ' + title);

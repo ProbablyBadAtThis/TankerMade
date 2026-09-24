@@ -9,6 +9,7 @@ This file is the short operational guide for AI assistants working in this repo.
 - Project charter: `docs/project/charter.md`
 - Roadmap and current phase: `docs/project/roadmap.md`
 - Current handoff: `docs/project/handoff.md`
+- Dev tracker: `page/docs` (Cloudflare Pages). Update it in the same change whenever the roadmap or current phase changes.
 - Module inventory pattern: `docs/project/module-inventory-pattern.md`
 - UX reference: `docs/product/ux-reference.md`
 - Original UI idea deck: `docs/product/ui-feature-ideas.pptx`
@@ -108,7 +109,7 @@ http://localhost:5236/scalar/v1
 
 ## Current Roadmap Focus
 
-Use `docs/project/roadmap.md` as the source of truth. As of the current docs, Phase I is complete:
+Use `docs/project/roadmap.md` as the source of truth. Current work is Phase J (client progress) in that file. Phases A–I are complete:
 
 - Knitting is the live fiber module. The earlier Crafting reference module has been retired.
 - Phase C module-owned project workspace behavior is complete: step progress, per-step timers, completion rules, piece selection, archive flow, and non-destructive editing.

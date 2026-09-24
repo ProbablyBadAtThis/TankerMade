@@ -8,18 +8,20 @@ Last updated: 2026-09-24
 
 | Doc | Purpose |
 |-----|---------|
-| `docs/project/direction-brief.md` | Build order. Overrides this file’s older “next work” list |
+| `docs/project/roadmap.md` | Active tracker (Phase J). Overrides this file’s older “next work” list |
+| `page/docs` | Dev tracker published to Cloudflare Pages. Keep it in step with the roadmap |
+| `docs/project/direction-brief.md` | Product direction and build order |
 | `docs/project/client-progress.md` | Two surfaces, lifecycle, private-versus-public rule |
 | `docs/project/knitting-ui-parity-checklist.md` | Reference only. Not the active plan |
 | `docs/product/ux-reference.md` | Crafter decisions + wireframe reference |
 
-**Do next:** Projection and knitting translation, backend first. See Next Work below. Do not continue the MudBlazor pass onto other modules.
+**Do next:** Phase J, Step 2 in `docs/project/roadmap.md`. Do not continue the MudBlazor pass onto other modules.
 
 ---
 
 ## Current State
 
-- Current roadmap phase: Phase I — Security, Ops & Cleanup (complete). Crafting reference module retired (`PhaseN_RetireCraftingModule`).
+- Current roadmap phase: Phase J — Client progress. Tracker: `docs/project/roadmap.md`. Phases A–I are complete. Crafting reference module retired (`PhaseN_RetireCraftingModule`).
 - Knitting is the live fiber module. Per-row checks are stored on the server. Module pages use MudBlazor; inventory detail layouts use `MudGrid`.
 - Crafter direction captured: `docs/product/ux-reference.md` § Crafter decisions; `Scratch/ui-discussion/2026-06-11-crafter-answers.md`.
 - PPT parity rough score: see `docs/project/knitting-ui-parity-checklist.md` (knitting pages unchanged functionally; shell scoring updated).
@@ -71,13 +73,13 @@ The MudBlazor checklist in `docs/project/knitting-ui-parity-checklist.md` stays 
 
 ## Next Work
 
-Finish each step before the next. Source: `docs/project/direction-brief.md`.
+The checklist is Phase J in `docs/project/roadmap.md`. Finish each step before the next.
 
-1. **Done:** direction recorded in this handoff, `docs/project/charter.md`, and `docs/project/client-progress.md`.
-2. **Projection and knitting translation, backend first.** Contracts, knitting capability handler, published snapshot, revision events, and token. Local API: publish, revoke, and anonymous read-by-token. Tests: private fields cannot appear on the public DTO; a revision records a price or date change; an inactive knitting module cannot publish; a revoked token does not resolve.
-3. **Maker preview and private economics** on one knitting project. Quote price, deposit received, publish, revision, and client preview. Private net versus target rate on the same screen. Client preview uses a studio layout.
-4. **Offline queue behavior.** Publishing with no hosted target still saves the local projection. Last-updated is the publish time. Do not build the cloud uploader.
-5. **Stop and ask for a real-browser check.** Then the user runs `dotnet build TankerMade.sln`.
+1. **Done.** Direction recorded.
+2. **Now.** Projection backend: contracts, knitting client-status provider, snapshot storage, revision rows, token, publish / revoke / anonymous read.
+3. Maker preview and private economics on one knitting project.
+4. Local outbox. No cloud uploader.
+5. Stop for a browser check. Then the user runs `dotnet build TankerMade.sln`.
 
 ---
 
@@ -104,6 +106,7 @@ Finish each step before the next. Source: `docs/project/direction-brief.md`.
 ## Working Rules
 
 - `docs/project/roadmap.md` is roadmap source of truth.
+- When the roadmap, current phase, or handoff “do next” changes, update `page/docs` in the same change. That folder is the dev tracker and publishes to Cloudflare Pages on push. Dashboard, phase list, Phase J task list, architecture summary, and footer should stay aligned with the roadmap. Do not leave the page on an older phase.
 - Do not run full solution builds in Codex sandbox; user runs `dotnet build TankerMade.sln` locally.
 - Do not commit databases, build outputs, or `Scratch/` content.
 

@@ -7,23 +7,23 @@ class DevTrackerSection {
     constructor() {
         this.sectionId = 'dev-tracker';
         this.data = {
-            totalTasks: 67,
-            completedTasks: 67,
-            totalPhases: 9,
+            totalTasks: 102,
+            completedTasks: 70,
+            totalPhases: 10,
             completedPhases: 9,
             currentPhase: {
-                number: "I",
-                title: "Security, Ops & Cleanup",
-                description: "Secrets, HTTPS, data protection keys, export/import verification, cleanup, and deployment guidance.",
-                completed: 6,
-                total: 6,
-                color: "#f472b6"
+                number: "J",
+                title: "Client progress",
+                description: "Knitting commission link. Public snapshot, private economics, local preview. Step 2 (projection backend) is next.",
+                completed: 3,
+                total: 35,
+                color: "#fbbf24"
             },
             phases: [
                 {
                     number: "A",
                     title: "Hardening, Module Host & Reference Module",
-                    description: "Completed module-host foundation and bundled Crafting reference module.",
+                    description: "Module-host foundation and the bundled Crafting reference module. Crafting was later retired; knitting is the live vertical.",
                     completed: 26,
                     total: 26,
                     color: "#2dd4bf",
@@ -32,7 +32,7 @@ class DevTrackerSection {
                 {
                     number: "B",
                     title: "Crafting Module V2",
-                    description: "Pattern pieces, steps, reordering, aggregation, validation, and expanded module UI.",
+                    description: "Reference-module pieces, steps, and workspace screens. That behavior now lives in knitting.",
                     completed: 5,
                     total: 5,
                     color: "#60a5fa",
@@ -100,6 +100,15 @@ class DevTrackerSection {
                     total: 6,
                     color: "#f472b6",
                     status: "completed"
+                },
+                {
+                    number: "J",
+                    title: "Client progress",
+                    description: "Fiber commissions only. Publish a knitting snapshot to an unguessable local link. Step 1 is done; Step 2 is the projection backend.",
+                    completed: 3,
+                    total: 35,
+                    color: "#fbbf24",
+                    status: "active"
                 }
             ]
         };
@@ -179,7 +188,8 @@ class DevTrackerSection {
             'current-week-display': `Phase ${this.data.currentPhase.number}`,
             'completed-phases': this.data.completedPhases,
             'total-phases': this.data.totalPhases,
-            'current-phase-progress': `${Math.round((this.data.currentPhase.completed / this.data.currentPhase.total) * 100)}%`
+            'current-phase-progress': `${Math.round((this.data.currentPhase.completed / this.data.currentPhase.total) * 100)}%`,
+            'current-phase-name': `Phase ${this.data.currentPhase.number}: ${this.data.currentPhase.title}`
         };
 
         Object.entries(updates).forEach(([id, value]) => {
@@ -391,6 +401,53 @@ const ROADMAP_PHASE_TASKS = {
         { title: 'Export/import round-trip tested and documented', status: 'done', area: 'Admin' },
         { title: 'Legacy code removal', status: 'done', area: 'Cleanup' },
         { title: 'Deployment guidance', status: 'done', area: 'Docs' }
+    ],
+    J: [
+        { title: 'Record the two surfaces, lifecycle, and private-versus-public rule', status: 'done', area: 'Step 1' },
+        { title: 'Point charter and handoff at the direction brief', status: 'done', area: 'Step 1' },
+        { title: 'Keep scratch patterns and the local workshop photo off the remote', status: 'done', area: 'Step 1' },
+        { title: 'Core stage enum: Quote, Accepted, Materials, In progress, Revision, Ready, Delivered', status: 'open', area: 'Step 2 · Contracts' },
+        { title: 'Public snapshot DTO: stage, plain summary, safe material lines, photo ids, next step, last updated, revisions', status: 'open', area: 'Step 2 · Contracts' },
+        { title: 'Workshop-only DTOs: quote, deposit, rate, material dollars, time, implied net, beats-rate', status: 'open', area: 'Step 2 · Contracts' },
+        { title: 'IModuleClientStatusProvider; knitting translates jargon into the public sentence', status: 'open', area: 'Step 2 · Contracts' },
+        { title: 'Publication row: owner, module key, project id, token hash, revoked-at, last published at', status: 'open', area: 'Step 2 · Storage' },
+        { title: 'Snapshot: one JSON blob of the public DTO, replaced on each publish', status: 'open', area: 'Step 2 · Storage' },
+        { title: 'Revision rows: what changed, and whether price or due date moved', status: 'open', area: 'Step 2 · Storage' },
+        { title: 'Migration. Historical crafting migrations stay', status: 'open', area: 'Step 2 · Storage' },
+        { title: 'Signed-in API: publish, add revision, revoke, preview', status: 'open', area: 'Step 2 · API' },
+        { title: 'Anonymous read by token. Read-only. No client account', status: 'open', area: 'Step 2 · API' },
+        { title: 'Anonymous photo route only for asset ids in the current snapshot', status: 'open', area: 'Step 2 · API' },
+        { title: 'Inactive knitting module cannot publish', status: 'open', area: 'Step 2 · API' },
+        { title: 'Revoked or unknown token does not resolve', status: 'open', area: 'Step 2 · API' },
+        { title: 'Store the token hash, not the raw token', status: 'open', area: 'Step 2 · API' },
+        { title: 'Test: public DTO has no hours, rate, implied net, notes, or measurements', status: 'open', area: 'Step 2 · Tests' },
+        { title: 'Test: a revision records a price change or a due-date change', status: 'open', area: 'Step 2 · Tests' },
+        { title: 'Test: inactive knitting module cannot publish', status: 'open', area: 'Step 2 · Tests' },
+        { title: 'Test: revoked token does not resolve', status: 'open', area: 'Step 2 · Tests' },
+        { title: 'Test: unpublished photo id does not resolve', status: 'open', area: 'Step 2 · Tests' },
+        { title: 'Core maker rate on the user, not in knitting settings', status: 'open', area: 'Step 3' },
+        { title: 'Project fields: quote price, expected window, deposit marked received', status: 'open', area: 'Step 3' },
+        { title: 'Actions: publish, add revision, copy preview link, revoke', status: 'open', area: 'Step 3' },
+        { title: 'Studio preview of the anonymous payload, separate from the workshop theme', status: 'open', area: 'Step 3' },
+        { title: 'Private panel: material cost, timer total, implied net, beats-rate', status: 'open', area: 'Step 3' },
+        { title: 'Knitting public sentence from the active piece and step, editable before publish', status: 'open', area: 'Step 3' },
+        { title: 'Publish with no hosted target still writes the local snapshot', status: 'open', area: 'Step 4' },
+        { title: 'Last updated is the publish time', status: 'open', area: 'Step 4' },
+        { title: 'Snapshot shape can be sent later without reshaping workshop tables', status: 'open', area: 'Step 4' },
+        { title: 'No cloud client, retry loop, or hosted dashboard', status: 'open', area: 'Step 4' },
+        { title: 'Browser: maker publishes, copies the link, revokes, and the link dies', status: 'open', area: 'Step 5' },
+        { title: 'Browser: signed-out link hides hours, rate, notes, and measurements; a revision is visible', status: 'open', area: 'Step 5' },
+        { title: 'User runs dotnet build TankerMade.sln', status: 'open', area: 'Step 5' }
+    ]
+};
+
+const ROADMAP_PHASE_NOTES = {
+    J: [
+        { label: 'Now', value: 'Step 2 — projection backend' },
+        { label: 'Public', value: 'Quote price and due date. Material lines are names.' },
+        { label: 'Private', value: 'Inventory dollars, hours, rate, implied net. Never on the snapshot.' },
+        { label: 'Photos', value: 'Token-scoped asset ids. Not the signed-in asset API.' },
+        { label: 'Out', value: 'Hosted page, payments, client accounts, other craft modules.' }
     ]
 };
 
@@ -411,6 +468,7 @@ function initDevTrackerPhase(params = {}) {
     const phaseNumber = params.phase || params.phaseId || 'A';
     const phase = getRoadmapPhase(phaseNumber);
     const tasks = ROADMAP_PHASE_TASKS[phase.number] || [];
+    const notes = ROADMAP_PHASE_NOTES[phase.number] || [];
     const progressPercent = Math.round((phase.completed / phase.total) * 100);
     const contentContainer = document.getElementById('content-container');
 
@@ -491,6 +549,11 @@ function initDevTrackerPhase(params = {}) {
                             <span class="phase-note-label">Status</span>
                             <span>${phase.status}</span>
                         </div>
+                        ${notes.map(note => `
+                        <div class="phase-note">
+                            <span class="phase-note-label">${note.label}</span>
+                            <span>${note.value}</span>
+                        </div>`).join('')}
                     </div>
                     <button class="btn btn-primary w-full mt-4" onclick="window.TankerMadeRouter.goToSection('workbench')">Open Workbench</button>
                 </aside>
