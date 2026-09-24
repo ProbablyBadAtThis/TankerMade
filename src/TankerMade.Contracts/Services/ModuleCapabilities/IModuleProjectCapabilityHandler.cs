@@ -16,6 +16,7 @@ public interface IModuleProjectCapabilityHandler
     Task<ModuleProjectDto?> ReopenAsync(Guid id, Guid userId);
     Task<bool> DeleteAsync(Guid id, Guid userId);
     Task<ModuleProjectDto?> SetStepProgressAsync(Guid projectId, Guid patternStepId, UpdateModuleProjectStepProgressRequest request, Guid userId);
+    Task<ModuleProjectDto?> SetRowCheckAsync(Guid projectId, Guid patternStepId, int rowNumber, UpdateModuleProjectRowCheckRequest request, Guid userId);
     Task<ModuleProjectDto?> StartTimerAsync(Guid projectId, Guid patternStepId, UpdateModuleProjectTimerRequest request, Guid userId);
     Task<ModuleProjectDto?> PauseTimerAsync(Guid projectId, Guid patternStepId, UpdateModuleProjectTimerRequest request, Guid userId);
     Task<ModuleProjectDto?> SetTimerAsync(Guid projectId, Guid patternStepId, UpdateModuleProjectTimerRequest request, Guid userId);

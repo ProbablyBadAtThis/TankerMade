@@ -1,27 +1,26 @@
 # TankerMade Handoff
 
-Last updated: 2026-06-15
+Last updated: 2026-09-24
 
 ## Pickup summary (new conversation)
 
-**Branch:** `working/knitting-settings-ui-pass`  
-**Latest pushed commit:** `f8dbfd7` — MudBlazor shell, bottom navigation, core dashboard recent-work platform.  
-**Working tree:** clean (pushed).
+**Active plan:** `docs/project/direction-brief.md`. Fiber commissions only. Knitting is the live vertical.
 
 | Doc | Purpose |
 |-----|---------|
-| `docs/project/knitting-ui-parity-checklist.md` | Field-check + verification harness |
+| `docs/project/direction-brief.md` | Build order. Overrides this file’s older “next work” list |
+| `docs/project/client-progress.md` | Two surfaces, lifecycle, private-versus-public rule |
+| `docs/project/knitting-ui-parity-checklist.md` | Reference only. Not the active plan |
 | `docs/product/ux-reference.md` | Crafter decisions + wireframe reference |
-| `Scratch/ui-discussion/2026-06-11-crafter-answers.md` | Full `#ui-discussion` Q&A |
 
-**Do next:** Continue **UI pass** — migrate knitting pages from Bootstrap to MudBlazor; real-browser verification of shell + core dashboard; knitting sign-off; propagate patterns to other live modules.
+**Do next:** Projection and knitting translation, backend first. See Next Work below. Do not continue the MudBlazor pass onto other modules.
 
 ---
 
 ## Current State
 
-- Current roadmap phase: Phase I — Security, Ops & Cleanup (complete).
-- Knitting module on `working/knitting-settings-ui-pass`: **functional parity complete**; **host shell + core dashboard** committed; **knitting module pages still largely Bootstrap** (UI pass in progress).
+- Current roadmap phase: Phase I — Security, Ops & Cleanup (complete). Crafting reference module retired (`PhaseN_RetireCraftingModule`).
+- Knitting is the live fiber module. Per-row checks are stored on the server. Module pages use MudBlazor; inventory detail layouts use `MudGrid`.
 - Crafter direction captured: `docs/product/ux-reference.md` § Crafter decisions; `Scratch/ui-discussion/2026-06-11-crafter-answers.md`.
 - PPT parity rough score: see `docs/project/knitting-ui-parity-checklist.md` (knitting pages unchanged functionally; shell scoring updated).
 
@@ -66,31 +65,26 @@ Last updated: 2026-06-15
 
 **Tests:** `RecentWorkServiceTests` (ledger upsert + inactive-module filter).
 
-### Still thin / not done
-
-- **Knitting pages MudBlazor migration** — most module routes still Bootstrap; shell/auth/home/login use Mud.
-- Pattern wizard + inventory reference autocomplete (settings + project wizard theme only today).
-- Projects list “last worked on” sort (core dashboard + knitting hero use worked-on; list sort still last-opened/updated).
-- Wizard slide **layout** fidelity (cosmetic).
-- Propagate Mud shell patterns to Crochet, Embroidery, Quilting, Sewing, 3D Printing dashboards.
-- `NavMenu.razor` — legacy horizontal Bootstrap nav; superseded by bottom bar (candidate for removal after migration).
-- Real-browser sign-off on new shell + core dashboard recent projects.
+The MudBlazor checklist in `docs/project/knitting-ui-parity-checklist.md` stays as reference. It is not the active plan. Knitting UI changes only where the client-progress brief needs them.
 
 ---
 
 ## Next Work
 
-1. **Continue UI pass** on knitting module pages (MudBlazor components, align with shell aesthetic).
-2. **Verify in real browser:** bottom nav expand/hover, avatar menu, core dashboard recent projects, login/home flows — harness in `docs/project/knitting-ui-parity-checklist.md`.
-3. **Polish** (if verification finds gaps): pattern/inventory wizard autocomplete; projects list worked-on sort.
-4. After knitting sign-off: migrate other live module dashboards + remove legacy `NavMenu` if unused.
+Finish each step before the next. Source: `docs/project/direction-brief.md`.
+
+1. **Done:** direction recorded in this handoff, `docs/project/charter.md`, and `docs/project/client-progress.md`.
+2. **Projection and knitting translation, backend first.** Contracts, knitting capability handler, published snapshot, revision events, and token. Local API: publish, revoke, and anonymous read-by-token. Tests: private fields cannot appear on the public DTO; a revision records a price or date change; an inactive knitting module cannot publish; a revoked token does not resolve.
+3. **Maker preview and private economics** on one knitting project. Quote price, deposit received, publish, revision, and client preview. Private net versus target rate on the same screen. Client preview uses a studio layout.
+4. **Offline queue behavior.** Publishing with no hosted target still saves the local projection. Last-updated is the publish time. Do not build the cloud uploader.
+5. **Stop and ask for a real-browser check.** Then the user runs `dotnet build TankerMade.sln`.
 
 ---
 
 ## Completed Recently (historical context)
 
 - Phases A–I roadmap slices complete per `docs/project/roadmap.md`.
-- Crafting remains reference/template module; live modules: Knitting, Crochet, Embroidery, Quilting, Sewing, 3D Printing.
+- Crafting reference module retired. Knitting is the live fiber module. Other craft modules remain templates.
 - Knitting K5–K8: project workspace, settings, full operational inventory/patterns/kits, color/`StartedAt`.
 - Phase L (client/host): cross-module recent-work ledger + knitting summary provider + core dashboard UI.
 - MudBlazor shell: bottom nav, avatar account menu, EmptyLayout auth, centered login, `/home` core dashboard.
@@ -105,7 +99,7 @@ Last updated: 2026-06-15
 ## Product Input Backlog
 
 - `Scratch/TankerInput.md` — ignored scratch product notes.
-- `Scratch/TankerMade Documentation/Pattern Examples/` — reference-only; never ship or seed.
+- `Scratch/docs/patterns/` — downloaded pattern PDFs and images. Gitignored. Never ship or seed.
 
 ## Working Rules
 
@@ -115,17 +109,4 @@ Last updated: 2026-06-15
 
 ## Verification Needed Next
 
-```bash
-dotnet build TankerMade.sln
-dotnet run --project src/TankerMade.Server
-dotnet run --project src/TankerMade.Client
-```
-
-Run harness sections in `docs/project/knitting-ui-parity-checklist.md`:
-
-1. Functional parity (knitting module — inventory, wizards, filters, workspace)
-2. Host shell (bottom nav, avatar menu, theme toggle, login, core dashboard recent projects)
-
-Sign in as `member@test.com` → `/home` and `/modules/knitting`. Use a real browser, not the IDE embedded browser.
-
-Optional re-seed: `dotnet run --project Scratch/knitting-seed/SeedKnittingData.csproj`
+Not yet. Step 2 is backend only. The real-browser check waits until step 5 of `docs/project/direction-brief.md`. The user runs `dotnet build TankerMade.sln` at that stop.

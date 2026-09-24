@@ -31,7 +31,8 @@
                           Placeholder="Filter as you type"
                           Immediate="true" />
             <MudSelect T="string" @bind-Value="sortBy" @bind-Value:after="ApplyFiltersAsync" Label="Sort" Variant="Variant.Outlined">
-                <MudSelectItem T="string" Value="@("recent")">Most recent</MudSelectItem>
+                <MudSelectItem T="string" Value="@("lastworked")">Last worked on</MudSelectItem>
+                <MudSelectItem T="string" Value="@("recent")">Recently updated</MudSelectItem>
                 <MudSelectItem T="string" Value="@("lastopened")">Last opened</MudSelectItem>
                 <MudSelectItem T="string" Value="@("name")">Name</MudSelectItem>
                 <MudSelectItem T="string" Value="@("progress")">Progress</MudSelectItem>
@@ -150,7 +151,7 @@
     private readonly List<CoreReferenceItemDto> themes = [];
     private readonly List<CoreReferenceItemDto> colors = [];
     private string search = string.Empty;
-    private string sortBy = "recent";
+    private string sortBy = "lastworked";
     private string filterThemeId = string.Empty;
     private string filterColorId = string.Empty;
     private string filterDifficulty = string.Empty;
@@ -158,6 +159,8 @@
     private int projectPage = 1;
     private Guid? lastOpenedProjectId;
     private DateTime? lastOpenedAt;
+    private Guid? lastWorkedProjectId;
+    private DateTime? lastWorkedAt;
     private bool showArchived;
     private bool loading = true;
     private bool listLoading;
@@ -228,6 +231,8 @@
                 colors.AddRange(await ApiClient.GetCoreReferenceItemsAsync("colors"));
                 lastOpenedProjectId = await RecentActivity.GetRecentProjectIdAsync();
                 lastOpenedAt = await RecentActivity.GetRecentProjectOpenedAtAsync();
+                lastWorkedProjectId = await RecentActivity.GetWorkedOnProjectIdAsync();
+                lastWorkedAt = await RecentActivity.GetWorkedOnAtAsync();
             }
 
             await RefreshProjectListAsync();
@@ -356,6 +361,11 @@
                 .OrderByDescending(project => lastOpenedProjectId.HasValue && project.Id == lastOpenedProjectId.Value)
                 .ThenByDescending(project => lastOpenedProjectId.HasValue && project.Id == lastOpenedProjectId.Value
                     ? lastOpenedAt ?? project.UpdatedAt
+                    : project.UpdatedAt),
+            "lastworked" => query
+                .OrderByDescending(project => lastWorkedProjectId.HasValue && project.Id == lastWorkedProjectId.Value)
+                .ThenByDescending(project => lastWorkedProjectId.HasValue && project.Id == lastWorkedProjectId.Value
+                    ? lastWorkedAt ?? project.UpdatedAt
                     : project.UpdatedAt),
             _ => query.OrderByDescending(project => project.UpdatedAt)
         };

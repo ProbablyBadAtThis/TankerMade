@@ -199,7 +199,49 @@ public class KnittingProjectService : IKnittingProjectService
             _context.KnittingProjectStepProgress.Remove(existing);
         }
 
+        await SyncRowChecksForStepAsync(projectId, patternStepId, updateDto.IsComplete);
         project.SetProgress(await CalculateStepCompletionPercentAsync(project));
+        await _context.SaveChangesAsync();
+        return await MapAsync(project);
+    }
+
+    public async Task<KnittingProjectDto?> SetRowCheckAsync(
+        Guid projectId,
+        Guid patternStepId,
+        int rowNumber,
+        UpdateKnittingProjectRowCheckDto updateDto,
+        Guid userId)
+    {
+        var project = await _context.KnittingProjects.SingleOrDefaultAsync(p => p.Id == projectId && p.UserId == userId);
+        if (project == null)
+        {
+            return null;
+        }
+
+        await EnsureStepBelongsToLinkedPatternAsync(project, patternStepId);
+        var allowedRows = await GetStepRowNumbersAsync(patternStepId);
+        if (!allowedRows.Contains(rowNumber))
+        {
+            throw new InvalidOperationException("The selected row is not part of this step.");
+        }
+
+        var existing = await _context.KnittingProjectRowChecks
+            .SingleOrDefaultAsync(check => check.ProjectId == projectId
+                && check.PatternStepId == patternStepId
+                && check.RowNumber == rowNumber);
+
+        if (updateDto.IsChecked)
+        {
+            if (existing == null)
+            {
+                _context.KnittingProjectRowChecks.Add(new KnittingProjectRowCheck(Guid.NewGuid(), projectId, patternStepId, rowNumber));
+            }
+        }
+        else if (existing != null)
+        {
+            _context.KnittingProjectRowChecks.Remove(existing);
+        }
+
         await _context.SaveChangesAsync();
         return await MapAsync(project);
     }
@@ -449,6 +491,7 @@ public class KnittingProjectService : IKnittingProjectService
             TimerRunning = timerDtos.Any(timer => timer.IsRunning),
             TimerStartedAt = timerDtos.FirstOrDefault(timer => timer.IsRunning)?.StartedAt,
             StepProgress = stepProgress,
+            RowChecks = await MapRowChecksAsync(project.Id, patternStepIds),
             Timers = timerDtos,
             InventoryLinks = inventoryLinks,
             UserId = project.UserId,
@@ -643,6 +686,87 @@ public class KnittingProjectService : IKnittingProjectService
         {
             throw new InvalidOperationException("The selected pattern is not available for this project.");
         }
+    }
+
+    private async Task SyncRowChecksForStepAsync(Guid projectId, Guid patternStepId, bool isComplete)
+    {
+        var existing = await _context.KnittingProjectRowChecks
+            .Where(check => check.ProjectId == projectId && check.PatternStepId == patternStepId)
+            .ToListAsync();
+
+        if (!isComplete)
+        {
+            _context.KnittingProjectRowChecks.RemoveRange(existing);
+            return;
+        }
+
+        var rows = await GetStepRowNumbersAsync(patternStepId);
+        var present = existing.Select(check => check.RowNumber).ToHashSet();
+        foreach (var row in rows)
+        {
+            if (!present.Contains(row))
+            {
+                _context.KnittingProjectRowChecks.Add(new KnittingProjectRowCheck(Guid.NewGuid(), projectId, patternStepId, row));
+            }
+        }
+
+        foreach (var extra in existing.Where(check => !rows.Contains(check.RowNumber)))
+        {
+            _context.KnittingProjectRowChecks.Remove(extra);
+        }
+    }
+
+    private async Task<IReadOnlyList<KnittingProjectRowCheckDto>> MapRowChecksAsync(Guid projectId, IReadOnlyList<Guid> patternStepIds)
+    {
+        if (patternStepIds.Count == 0)
+        {
+            return [];
+        }
+
+        var stepIdSet = patternStepIds.ToHashSet();
+        var checks = await _context.KnittingProjectRowChecks
+            .Where(check => check.ProjectId == projectId)
+            .OrderBy(check => check.RowNumber)
+            .ToListAsync();
+
+        return checks
+            .Where(check => stepIdSet.Contains(check.PatternStepId))
+            .Select(check => new KnittingProjectRowCheckDto
+            {
+                ProjectId = check.ProjectId,
+                PatternStepId = check.PatternStepId,
+                RowNumber = check.RowNumber
+            })
+            .ToList();
+    }
+
+    private async Task<IReadOnlyList<int>> GetStepRowNumbersAsync(Guid patternStepId)
+    {
+        var step = await _context.KnittingPatternSteps.SingleAsync(existing => existing.Id == patternStepId);
+        return ExpandRowNumbers(step.RangeStart, step.RangeEnd);
+    }
+
+    private static IReadOnlyList<int> ExpandRowNumbers(int? start, int? end)
+    {
+        if (start == null && end == null)
+        {
+            return [-1];
+        }
+
+        var rangeStart = start ?? end!.Value;
+        var rangeEnd = end ?? start!.Value;
+        if (rangeStart > rangeEnd)
+        {
+            (rangeStart, rangeEnd) = (rangeEnd, rangeStart);
+        }
+
+        var rows = new List<int>(rangeEnd - rangeStart + 1);
+        for (var value = rangeStart; value <= rangeEnd; value++)
+        {
+            rows.Add(value);
+        }
+
+        return rows;
     }
 
     private async Task EnsureStepBelongsToLinkedPatternAsync(KnittingProject project, Guid patternStepId)

@@ -4,6 +4,8 @@ This file is the short operational guide for AI assistants working in this repo.
 
 ## Read First
 
+- Direction brief: `docs/project/direction-brief.md` (overrides the handoff “next work” list)
+- Client progress: `docs/project/client-progress.md`
 - Project charter: `docs/project/charter.md`
 - Roadmap and current phase: `docs/project/roadmap.md`
 - Current handoff: `docs/project/handoff.md`
@@ -12,11 +14,11 @@ This file is the short operational guide for AI assistants working in this repo.
 - Original UI idea deck: `docs/product/ui-feature-ideas.pptx`
 
 Local, ignored scratch material may exist in `Scratch/`. Treat it as temporary or session-specific unless the user says otherwise.
-`Scratch/TankerMade Documentation/Pattern Examples/` contains real downloaded pattern files kept only as guidance/reference material; they must not be included, referenced, seeded, packaged, published, or redistributed as project content.
+`Scratch/docs/patterns/` contains real downloaded pattern files and images kept only as guidance. They must not be included, referenced, seeded, packaged, published, or redistributed as project content.
 
 ## Project Shape
 
-TankerMade is a local-first modular maker workbench. The primary program is a core host/shell; craft and maker workflows are supplied by separately loaded modules. Crafting should be an installable/loadable module, and 3D printing should be another module.
+TankerMade is a local-first modular maker workbench. The primary program is a core host/shell; craft and maker workflows are supplied by separately loaded modules. Knitting is the live vertical. Other craft modules are templates to copy later.
 
 Current stack:
 
@@ -108,7 +110,7 @@ http://localhost:5236/scalar/v1
 
 Use `docs/project/roadmap.md` as the source of truth. As of the current docs, Phase I is complete:
 
-- Keep `TankerMade.Modules.Crafting` as a reference/template module, not the eventual production catch-all for knitting, crochet, sewing, or another niche.
+- Knitting is the live fiber module. The earlier Crafting reference module has been retired.
 - Phase C module-owned project workspace behavior is complete: step progress, per-step timers, completion rules, piece selection, archive flow, and non-destructive editing.
 - Phase D is complete: module-owned inventory, reference data, project/inventory linking, kit/grouping backend, and kit-to-project backend flows are verified.
 - Phase E is complete: Core neutral reference categories are wired into module extension points, module-owned category boundaries are enforced, and module add/new option flows are in place.

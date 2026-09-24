@@ -25,6 +25,7 @@ public class ModuleProjectDto
     public bool TimerRunning { get; set; }
     public DateTime? TimerStartedAt { get; set; }
     public IReadOnlyList<ModuleProjectStepProgressDto> StepProgress { get; set; } = [];
+    public IReadOnlyList<ModuleProjectRowCheckDto> RowChecks { get; set; } = [];
     public IReadOnlyList<ModuleProjectTimerDto> Timers { get; set; } = [];
     public IReadOnlyList<ModuleProjectInventoryLinkDto> InventoryLinks { get; set; } = [];
     public Guid UserId { get; set; }

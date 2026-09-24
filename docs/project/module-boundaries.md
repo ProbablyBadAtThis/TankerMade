@@ -69,9 +69,9 @@ Phase A proved the module-host boundary with a bundled `Crafting` reference modu
 
 ## Reference Module vs. Golive Modules
 
-`TankerMade.Modules.Crafting` is the reference/template module used to prove platform behavior and provide an implementation pattern for future modules. It may include neutral sample workflows such as patterns, pieces, steps, ordering, and progress aggregation, but it should stay niche-neutral.
+`TankerMade.Modules.Knitting` is the live fiber module and the implementation to copy. The earlier Crafting reference module has been retired; its tables are dropped by `PhaseN_RetireCraftingModule`.
 
-Production golive modules should be specific maker domains, for example knitting, crochet, sewing, quilting, or 3D printing. Domain-specific language, validation, supplies, progress rules, and UI belong in those dedicated modules rather than being folded into the reference Crafting module.
+Production modules should be specific maker domains, for example knitting, crochet, sewing, quilting, or 3D printing. Domain-specific language, validation, supplies, progress rules, and UI belong in those dedicated modules rather than being folded into the reference Crafting module.
 
 ## Module Boundary Guardrails
 

@@ -16,7 +16,14 @@
 # Development overrides
 **/dev-overrides.js
 docs_old/
+
+# Local-only reference. Downloaded pattern PDFs, pattern images, screenshots,
+# and scratch notes stay on this machine. Do not force-add this folder.
 Scratch/
+
+# Stock photo used as a local workshop background. Not product content.
+# App icons and the knitting default-project.svg stay tracked.
+src/TankerMade.Client/wwwroot/images/
 
 # macOS
 .DS_Store

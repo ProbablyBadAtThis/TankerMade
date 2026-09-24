@@ -175,6 +175,30 @@ public class ModuleProjectsController : ControllerBase
         }
     }
 
+    [HttpPut("{id:guid}/steps/{stepId:guid}/rows")]
+    public async Task<ActionResult<ModuleProjectDto>> SetRowCheck(
+        string moduleKey,
+        Guid id,
+        Guid stepId,
+        UpdateModuleProjectRowCheckRequest request)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed)
+        {
+            return gate.Result!;
+        }
+
+        try
+        {
+            var project = await gate.Handler!.SetRowCheckAsync(id, stepId, request.RowNumber, request, gate.UserId!.Value);
+            return project == null ? NotFound() : Ok(project);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     [HttpPut("{id:guid}/steps/{stepId:guid}/timer/start")]
     public async Task<ActionResult<ModuleProjectDto>> StartTimer(
         string moduleKey,

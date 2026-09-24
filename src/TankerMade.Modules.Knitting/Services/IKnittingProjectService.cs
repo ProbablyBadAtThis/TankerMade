@@ -13,6 +13,7 @@ public interface IKnittingProjectService
     Task<KnittingProjectDto?> ReopenAsync(Guid id, Guid userId);
     Task<bool> DeleteAsync(Guid id, Guid userId);
     Task<KnittingProjectDto?> SetStepProgressAsync(Guid projectId, Guid patternStepId, UpdateKnittingProjectStepProgressDto updateDto, Guid userId);
+    Task<KnittingProjectDto?> SetRowCheckAsync(Guid projectId, Guid patternStepId, int rowNumber, UpdateKnittingProjectRowCheckDto updateDto, Guid userId);
     Task<KnittingProjectDto?> StartTimerAsync(Guid projectId, Guid patternStepId, UpdateKnittingProjectTimerDto updateDto, Guid userId);
     Task<KnittingProjectDto?> PauseTimerAsync(Guid projectId, Guid patternStepId, UpdateKnittingProjectTimerDto updateDto, Guid userId);
     Task<KnittingProjectDto?> SetTimerAsync(Guid projectId, Guid patternStepId, UpdateKnittingProjectTimerDto updateDto, Guid userId);

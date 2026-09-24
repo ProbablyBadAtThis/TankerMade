@@ -85,6 +85,16 @@ public class KnittingProjectCapabilityHandler : IModuleProjectCapabilityHandler
         return project == null ? null : Map(project);
     }
 
+    public async Task<ModuleProjectDto?> SetRowCheckAsync(Guid projectId, Guid patternStepId, int rowNumber, UpdateModuleProjectRowCheckRequest request, Guid userId)
+    {
+        var project = await _service.SetRowCheckAsync(projectId, patternStepId, rowNumber, new UpdateKnittingProjectRowCheckDto
+        {
+            IsChecked = request.IsChecked
+        }, userId);
+
+        return project == null ? null : Map(project);
+    }
+
     public async Task<ModuleProjectDto?> StartTimerAsync(Guid projectId, Guid patternStepId, UpdateModuleProjectTimerRequest request, Guid userId)
     {
         var project = await _service.StartTimerAsync(projectId, patternStepId, new UpdateKnittingProjectTimerDto
@@ -169,6 +179,12 @@ public class KnittingProjectCapabilityHandler : IModuleProjectCapabilityHandler
                 PatternStepId = progress.PatternStepId,
                 IsComplete = progress.IsComplete,
                 CompletedAt = progress.CompletedAt
+            }).ToList(),
+            RowChecks = source.RowChecks.Select(check => new ModuleProjectRowCheckDto
+            {
+                ProjectId = check.ProjectId,
+                PatternStepId = check.PatternStepId,
+                RowNumber = check.RowNumber
             }).ToList(),
             Timers = source.Timers.Select(timer => new ModuleProjectTimerDto
             {

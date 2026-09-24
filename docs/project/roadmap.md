@@ -54,7 +54,7 @@ Phase I cleanup now includes neutralizing module API surfaces so module-specific
 
 ## Phase B — Crafting Module V2
 
-Phase B continues to treat `TankerMade.Modules.Crafting` as a reference/template module for development and platform proving. It should demonstrate module patterns that future golive niche modules can copy, but it should not become the production catch-all for knitting, crochet, sewing, or other specific crafts. Niche-specific rules belong in future dedicated modules unless represented here as neutral sample behavior.
+Phase B treated `TankerMade.Modules.Crafting` as a reference module. That module is retired. Knitting is the live fiber implementation to copy. Niche-specific rules belong in dedicated modules.
 
 - [x] Full CRUD + reorder for module-owned pattern pieces and steps
 - [x] Pattern detail page in module UI

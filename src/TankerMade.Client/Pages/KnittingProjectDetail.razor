@@ -9,7 +9,6 @@
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
 @inject TankerMade.Client.Services.KnittingRecentActivity RecentActivity
-@inject TankerMade.Client.Services.KnittingRowProgress RowProgress
 @inject TankerMade.Client.Services.KnittingCardAssetCache CardAssets
 
 <PageTitle>Knitting Project</PageTitle>
@@ -547,7 +546,7 @@
                 .Select(progress => progress.PatternStepId)
                 .ToHashSet() ?? [];
 
-            await LoadRowCheckStateAsync();
+            LoadRowCheckState();
             await LoadInventoryOptionsAsync();
             EnsureSelectedInventoryItem();
             await LoadProjectAssetsAsync();
@@ -676,7 +675,7 @@
 
     private static string RowKey(Guid stepId, int row) => $"{stepId:N}:{row}";
 
-    private async Task LoadRowCheckStateAsync()
+    private void LoadRowCheckState()
     {
         rowCheckState.Clear();
         if (project == null || pattern == null)
@@ -684,22 +683,19 @@
             return;
         }
 
+        var checkedKeys = project.RowChecks
+            .Select(check => RowKey(check.PatternStepId, check.RowNumber))
+            .ToHashSet();
+
         foreach (var piece in pattern.Pieces)
         {
             foreach (var step in piece.Steps)
             {
-                var rows = GetStepRows(step);
                 var serverComplete = completedStepIds.Contains(step.Id);
-                if (serverComplete)
-                {
-                    await RowProgress.SyncStepCompletionAsync(project.Id, step.Id, rows.Where(row => row >= 0), true);
-                }
-
-                foreach (var row in rows)
+                foreach (var row in GetStepRows(step))
                 {
                     var key = RowKey(step.Id, row);
-                    rowCheckState[key] = serverComplete
-                        || await RowProgress.IsRowCheckedAsync(project.Id, step.Id, row);
+                    rowCheckState[key] = serverComplete || checkedKeys.Contains(key);
                 }
             }
         }
@@ -714,7 +710,11 @@
 
         var isChecked = args.Value is bool value && value;
         rowCheckState[RowKey(step.Id, row)] = isChecked;
-        await RowProgress.SetRowCheckedAsync(project.Id, step.Id, row, isChecked);
+        var updated = await ApiClient.SetModuleProjectRowCheckAsync(ModuleKey, project.Id, step.Id, row, isChecked);
+        if (updated != null)
+        {
+            project = updated;
+        }
 
         var rows = GetStepRows(step);
         var allChecked = rows.All(entry => rowCheckState.GetValueOrDefault(RowKey(step.Id, entry)));
@@ -723,6 +723,7 @@
 
         if (shouldComplete == currentlyComplete)
         {
+            LoadRowCheckState();
             await RecentActivity.RecordProjectWorkedOnAsync(project.Id);
             return;
         }
@@ -764,13 +765,7 @@
                 .Select(progress => progress.PatternStepId)
                 .ToHashSet();
 
-            var step = pattern?.Pieces.SelectMany(piece => piece.Steps).FirstOrDefault(entry => entry.Id == stepId);
-            if (step != null)
-            {
-                var rows = GetStepRows(step).Where(entry => entry >= 0);
-                await RowProgress.SyncStepCompletionAsync(project.Id, stepId, rows, isComplete);
-                await LoadRowCheckStateAsync();
-            }
+            LoadRowCheckState();
 
             await RecentActivity.RecordProjectWorkedOnAsync(project.Id);
         });

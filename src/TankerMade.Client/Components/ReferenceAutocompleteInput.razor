@@ -1,21 +1,15 @@
-<label class="reference-autocomplete">
-    @if (!string.IsNullOrWhiteSpace(Label))
-    {
-        <span class="form-label">@Label</span>
-    }
-    <input class="form-control"
-           list="@ListId"
-           placeholder="@Placeholder"
-           value="@Value"
-           disabled="@Disabled"
-           @oninput="OnInput" />
-    <datalist id="@ListId">
-        @foreach (var option in Options)
-        {
-            <option value="@option"></option>
-        }
-    </datalist>
-</label>
+<MudAutocomplete T="string"
+                 Label="@Label"
+                 Placeholder="@Placeholder"
+                 Text="@Value"
+                 TextChanged="OnTextChanged"
+                 SearchFunc="SearchAsync"
+                 Variant="Variant.Outlined"
+                 Disabled="@Disabled"
+                 Strict="false"
+                 CoerceText="true"
+                 ResetValueOnEmptyText="true"
+                 MaxItems="12" />
 
 @code {
     [Parameter] public string Label { get; set; } = string.Empty;
@@ -25,11 +19,20 @@
     [Parameter] public IReadOnlyList<string> Options { get; set; } = [];
     [Parameter] public bool Disabled { get; set; }
 
-    private string ListId { get; } = $"ref-ac-{Guid.NewGuid():N}";
-
-    private async Task OnInput(ChangeEventArgs args)
+    private Task OnTextChanged(string value)
     {
-        Value = args.Value?.ToString() ?? string.Empty;
-        await ValueChanged.InvokeAsync(Value);
+        Value = value ?? string.Empty;
+        return ValueChanged.InvokeAsync(Value);
+    }
+
+    private Task<IEnumerable<string>> SearchAsync(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return Task.FromResult(Options.AsEnumerable());
+        }
+
+        return Task.FromResult(Options.Where(option =>
+            option.Contains(value, StringComparison.OrdinalIgnoreCase)));
     }
 }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TankerMade.Server.Data;
 
@@ -10,9 +11,11 @@ using TankerMade.Server.Data;
 namespace TankerMade.Server.Migrations
 {
     [DbContext(typeof(TankerMadeDbContext))]
-    partial class TankerMadeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260924200128_PhaseM_KnittingProjectRowChecks")]
+    partial class PhaseM_KnittingProjectRowChecks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
@@ -576,6 +579,1020 @@ namespace TankerMade.Server.Migrations
                         .IsUnique();
 
                     b.ToTable("CoreUserRecentWorkAccesses", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingInventoryPurchase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsSalePrice")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PurchasedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("YarnInventoryItemId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("YarnInventoryItemId");
+
+                    b.ToTable("CraftingInventoryPurchases", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingInventoryReferenceItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(170)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("Category", "Slug")
+                        .IsUnique();
+
+                    b.HasIndex("Category", "SortOrder");
+
+                    b.ToTable("CraftingInventoryReferenceItems", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-666666666601"),
+                            Category = "yarn-weight",
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Lace",
+                            Slug = "lace",
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-666666666602"),
+                            Category = "yarn-weight",
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Fingering",
+                            Slug = "fingering",
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-666666666603"),
+                            Category = "yarn-weight",
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "DK",
+                            Slug = "dk",
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-666666666604"),
+                            Category = "yarn-weight",
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Worsted",
+                            Slug = "worsted",
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-666666666605"),
+                            Category = "yarn-weight",
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Bulky",
+                            Slug = "bulky",
+                            SortOrder = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-666666666606"),
+                            Category = "fiber-tag",
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Synthetic",
+                            Slug = "synthetic",
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-666666666607"),
+                            Category = "fiber-tag",
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Natural",
+                            Slug = "natural",
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-666666666608"),
+                            Category = "fiber-tag",
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Blended",
+                            Slug = "blended",
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-666666666609"),
+                            Category = "tool-type",
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Hook",
+                            Slug = "hook",
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-66666666660a"),
+                            Category = "tool-type",
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Needle",
+                            Slug = "needle",
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-66666666660b"),
+                            Category = "tool-type",
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Gauge Ruler",
+                            Slug = "gauge-ruler",
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-66666666660c"),
+                            Category = "tool-type",
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Stitch Holder",
+                            Slug = "stitch-holder",
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-66666666660d"),
+                            Category = "notion-type",
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Button",
+                            Slug = "button",
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-66666666660e"),
+                            Category = "notion-type",
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Stitch Marker",
+                            Slug = "stitch-marker",
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-66666666660f"),
+                            Category = "notion-type",
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Tapestry Needle",
+                            Slug = "tapestry-needle",
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-666666666610"),
+                            Category = "notion-type",
+                            CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Zipper",
+                            Slug = "zipper",
+                            SortOrder = 4
+                        });
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingKit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ArchivedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Difficulty")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Progress")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(220)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ThemeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsArchived");
+
+                    b.HasIndex("Slug");
+
+                    b.HasIndex("ThemeId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "IsArchived", "Name");
+
+                    b.ToTable("CraftingKits", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingKitPiece", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("KitId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PatternId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KitId");
+
+                    b.HasIndex("PatternId");
+
+                    b.HasIndex("KitId", "SortOrder");
+
+                    b.ToTable("CraftingKitPieces", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingKitSupply", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("KitId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SupplyType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KitId");
+
+                    b.HasIndex("KitId", "SortOrder");
+
+                    b.ToTable("CraftingKitSupplies", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingNotionInventoryItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BrandName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ColorName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedBrandName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedTypeName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("RegularPrice")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Size")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TypeName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "NormalizedBrandName", "NormalizedTypeName")
+                        .IsUnique();
+
+                    b.ToTable("CraftingNotionInventoryItems", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingNotionPurchase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsSalePrice")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("NotionInventoryItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PurchasedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NotionInventoryItemId");
+
+                    b.ToTable("CraftingNotionPurchases", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingPattern", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Difficulty")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Form")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(220)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SourceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ThemeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug");
+
+                    b.HasIndex("SourceId");
+
+                    b.HasIndex("ThemeId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "ThemeId", "Name");
+
+                    b.ToTable("CraftingPatterns", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingPatternPiece", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PatternId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatternId");
+
+                    b.HasIndex("PatternId", "SortOrder");
+
+                    b.ToTable("CraftingPatternPieces", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingPatternStep", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Instructions")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PatternPieceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("RangeEnd")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("RangeStart")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatternPieceId");
+
+                    b.HasIndex("PatternPieceId", "SortOrder");
+
+                    b.ToTable("CraftingPatternSteps", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProject", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ArchivedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Difficulty")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("KitId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("KitPieceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PatternId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Progress")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(220)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ThemeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsArchived");
+
+                    b.HasIndex("KitId");
+
+                    b.HasIndex("KitPieceId")
+                        .IsUnique();
+
+                    b.HasIndex("PatternId");
+
+                    b.HasIndex("Slug");
+
+                    b.HasIndex("ThemeId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "PatternId");
+
+                    b.HasIndex("UserId", "IsArchived", "Name");
+
+                    b.ToTable("CraftingProjects", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectInventoryLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("InventoryItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("InventoryItemType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("QuantityPlanned")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("ProjectId", "InventoryItemType", "InventoryItemId")
+                        .IsUnique();
+
+                    b.ToTable("CraftingProjectInventoryLinks", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectStepProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsComplete")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("PatternStepId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatternStepId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("ProjectId", "PatternStepId")
+                        .IsUnique();
+
+                    b.ToTable("CraftingProjectStepProgress", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectTimer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ElapsedSeconds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsRunning")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("PatternStepId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatternStepId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("ProjectId", "PatternStepId")
+                        .IsUnique();
+
+                    b.ToTable("CraftingProjectTimers", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingToolInventoryItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BrandName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedBrandName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedTypeName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("RegularPrice")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Size")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TypeName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "NormalizedBrandName", "NormalizedTypeName")
+                        .IsUnique();
+
+                    b.ToTable("CraftingToolInventoryItems", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingToolPurchase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsSalePrice")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PurchasedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ToolInventoryItemId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ToolInventoryItemId");
+
+                    b.ToTable("CraftingToolPurchases", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingYarnInventoryItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BrandName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ColorName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("CurrentWeight")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("EstimatedRemainingLength")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FiberContent")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FiberTag")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LengthUnit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MainColor")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedBrandName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedColorName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("RegularPrice")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalSkeins")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WeightName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "NormalizedBrandName", "NormalizedColorName")
+                        .IsUnique();
+
+                    b.ToTable("CraftingYarnInventoryItems", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingYarnLot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("CurrentWeight")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LotNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("RemainingLength")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Skeins")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("YarnInventoryItemId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("YarnInventoryItemId");
+
+                    b.HasIndex("YarnInventoryItemId", "LotNumber")
+                        .IsUnique();
+
+                    b.ToTable("CraftingYarnLots", (string)null);
                 });
 
             modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingInventoryReferenceItem", b =>
@@ -2083,6 +3100,211 @@ namespace TankerMade.Server.Migrations
                     b.HasOne("TankerMade.Core.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingInventoryPurchase", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingYarnInventoryItem", null)
+                        .WithMany()
+                        .HasForeignKey("YarnInventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingKit", b =>
+                {
+                    b.HasOne("TankerMade.Core.Entities.Theme", null)
+                        .WithMany()
+                        .HasForeignKey("ThemeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TankerMade.Core.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingKitPiece", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingKit", null)
+                        .WithMany()
+                        .HasForeignKey("KitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPattern", null)
+                        .WithMany()
+                        .HasForeignKey("PatternId")
+                        .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingKitSupply", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingKit", null)
+                        .WithMany()
+                        .HasForeignKey("KitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingNotionInventoryItem", b =>
+                {
+                    b.HasOne("TankerMade.Core.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingNotionPurchase", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingNotionInventoryItem", null)
+                        .WithMany()
+                        .HasForeignKey("NotionInventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingPattern", b =>
+                {
+                    b.HasOne("TankerMade.Core.Entities.Source", null)
+                        .WithMany()
+                        .HasForeignKey("SourceId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TankerMade.Core.Entities.Theme", null)
+                        .WithMany()
+                        .HasForeignKey("ThemeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TankerMade.Core.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingPatternPiece", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPattern", null)
+                        .WithMany()
+                        .HasForeignKey("PatternId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingPatternStep", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPatternPiece", null)
+                        .WithMany()
+                        .HasForeignKey("PatternPieceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProject", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingKit", null)
+                        .WithMany()
+                        .HasForeignKey("KitId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingKitPiece", null)
+                        .WithMany()
+                        .HasForeignKey("KitPieceId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPattern", null)
+                        .WithMany()
+                        .HasForeignKey("PatternId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TankerMade.Core.Entities.Theme", null)
+                        .WithMany()
+                        .HasForeignKey("ThemeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TankerMade.Core.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectInventoryLink", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingProject", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectStepProgress", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPatternStep", null)
+                        .WithMany()
+                        .HasForeignKey("PatternStepId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingProject", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectTimer", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPatternStep", null)
+                        .WithMany()
+                        .HasForeignKey("PatternStepId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingProject", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingToolInventoryItem", b =>
+                {
+                    b.HasOne("TankerMade.Core.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingToolPurchase", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingToolInventoryItem", null)
+                        .WithMany()
+                        .HasForeignKey("ToolInventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingYarnInventoryItem", b =>
+                {
+                    b.HasOne("TankerMade.Core.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingYarnLot", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingYarnInventoryItem", null)
+                        .WithMany()
+                        .HasForeignKey("YarnInventoryItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

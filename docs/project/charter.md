@@ -1,6 +1,6 @@
 # TankerMade — Project Charter
 Source: project-artifact.md (original project brief, preserved content)
-Last reviewed: 2026-05-26 — Phase D module-boundary direction clarified; vision/goals/principles retained.
+Last reviewed: 2026-09-24 — client-progress direction added. Earlier module-boundary principles retained.
 
 ---
 
@@ -23,10 +23,19 @@ Core must remain independent of any specific maker domain. If a module is absent
 
 ---
 
+## Two surfaces
+
+Fiber commissions are the only vertical in scope. Knitting is the live module. Crochet, embroidery, quilting, sewing, and 3D printing stay as templates.
+
+- **Workshop:** the local, signed-in maker app. Projects, patterns, inventory, timers, and photos. Private economics stay here.
+- **Client page:** a read-only link. Stage, photos, material lines safe to show, next step, and last updated. No account, no install, no hours, no hourly rate, no addresses, no measurements, no private notes.
+
+The public page is a published snapshot, not a live query of workshop tables. Details and the commission lifecycle are in `docs/project/client-progress.md`. The active build order is in `docs/project/direction-brief.md`.
+
 ## Core Goals (MVP)
 
 - **Module host:** discovery, activation, persisted module selection, and extension points.
-- **Reference module:** a first crafting module extracted from the earlier project/pattern foundation so future modules have a concrete implementation to follow.
+- **Live module:** Knitting is the working fiber module. The earlier Crafting reference module has been retired.
 - **Empty-state startup:** when no modules are active, prompt the user to choose modules before domain workflows appear.
 - **Identity:** Cookie/JWT-based auth, role-gated features (viewer, editor, admin).
 - **Admin:** JSON export/import, DB backup, migrations management.

@@ -25,6 +25,7 @@ public class KnittingProjectDto
     public bool TimerRunning { get; set; }
     public DateTime? TimerStartedAt { get; set; }
     public IReadOnlyList<KnittingProjectStepProgressDto> StepProgress { get; set; } = [];
+    public IReadOnlyList<KnittingProjectRowCheckDto> RowChecks { get; set; } = [];
     public IReadOnlyList<KnittingProjectTimerDto> Timers { get; set; } = [];
     public IReadOnlyList<KnittingProjectInventoryLinkDto> InventoryLinks { get; set; } = [];
     public Guid UserId { get; set; }
