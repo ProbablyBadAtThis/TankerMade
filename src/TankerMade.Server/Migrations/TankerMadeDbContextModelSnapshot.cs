@@ -239,6 +239,137 @@ namespace TankerMade.Server.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TankerMade.Core.Entities.CommissionPublication", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("HostedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastPublishedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ModuleKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "ModuleKey", "ProjectId")
+                        .IsUnique();
+
+                    b.ToTable("CoreCommissionPublications", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Core.Entities.CommissionRevision", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("DueDateChanged")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly?>("NewDueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("NewPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("PreviousDueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("PreviousPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("PriceChanged")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("PublicationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PublicationId", "OccurredAt");
+
+                    b.ToTable("CoreCommissionRevisions", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Core.Entities.CommissionWorkspace", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("DepositReceived")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly?>("DueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ModuleKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("QuotePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "ModuleKey", "ProjectId")
+                        .IsUnique();
+
+                    b.ToTable("CoreCommissionWorkspaces", (string)null);
+                });
+
             modelBuilder.Entity("TankerMade.Core.Entities.ModuleDefinition", b =>
                 {
                     b.Property<Guid>("Id")
@@ -496,6 +627,10 @@ namespace TankerMade.Server.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal?>("TargetHourlyRate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -543,40 +678,42 @@ namespace TankerMade.Server.Migrations
                     b.ToTable("UserModuleActivations");
                 });
 
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingInventoryPurchase", b =>
+            modelBuilder.Entity("TankerMade.Core.Entities.UserRecentWorkAccess", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("LastAccessedAtUtc")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("IsSalePrice")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal?>("Price")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("PurchasedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("SourceName")
+                    b.Property<string>("ModuleKey")
                         .IsRequired()
-                        .HasMaxLength(150)
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("YarnInventoryItemId")
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("WorkItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WorkItemType")
+                        .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("YarnInventoryItemId");
+                    b.HasIndex("UserId", "LastAccessedAtUtc");
 
-                    b.ToTable("CraftingInventoryPurchases", (string)null);
+                    b.HasIndex("UserId", "ModuleKey", "WorkItemType", "WorkItemId")
+                        .IsUnique();
+
+                    b.ToTable("CoreUserRecentWorkAccesses", (string)null);
                 });
 
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingInventoryReferenceItem", b =>
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingInventoryReferenceItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -612,12 +749,12 @@ namespace TankerMade.Server.Migrations
 
                     b.HasIndex("Category", "SortOrder");
 
-                    b.ToTable("CraftingInventoryReferenceItems", (string)null);
+                    b.ToTable("KnittingInventoryReferenceItems", (string)null);
 
                     b.HasData(
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-666666666601"),
+                            Id = new Guid("88888888-8888-8888-8888-888888888801"),
                             Category = "yarn-weight",
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Lace",
@@ -626,7 +763,7 @@ namespace TankerMade.Server.Migrations
                         },
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-666666666602"),
+                            Id = new Guid("88888888-8888-8888-8888-888888888802"),
                             Category = "yarn-weight",
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Fingering",
@@ -635,7 +772,7 @@ namespace TankerMade.Server.Migrations
                         },
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-666666666603"),
+                            Id = new Guid("88888888-8888-8888-8888-888888888803"),
                             Category = "yarn-weight",
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "DK",
@@ -644,7 +781,7 @@ namespace TankerMade.Server.Migrations
                         },
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-666666666604"),
+                            Id = new Guid("88888888-8888-8888-8888-888888888804"),
                             Category = "yarn-weight",
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Worsted",
@@ -653,7 +790,7 @@ namespace TankerMade.Server.Migrations
                         },
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-666666666605"),
+                            Id = new Guid("88888888-8888-8888-8888-888888888805"),
                             Category = "yarn-weight",
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Bulky",
@@ -662,7 +799,7 @@ namespace TankerMade.Server.Migrations
                         },
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-666666666606"),
+                            Id = new Guid("88888888-8888-8888-8888-888888888806"),
                             Category = "fiber-tag",
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Synthetic",
@@ -671,7 +808,7 @@ namespace TankerMade.Server.Migrations
                         },
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-666666666607"),
+                            Id = new Guid("88888888-8888-8888-8888-888888888807"),
                             Category = "fiber-tag",
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Natural",
@@ -680,7 +817,7 @@ namespace TankerMade.Server.Migrations
                         },
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-666666666608"),
+                            Id = new Guid("88888888-8888-8888-8888-888888888808"),
                             Category = "fiber-tag",
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Blended",
@@ -689,7 +826,7 @@ namespace TankerMade.Server.Migrations
                         },
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-666666666609"),
+                            Id = new Guid("88888888-8888-8888-8888-888888888809"),
                             Category = "tool-type",
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Hook",
@@ -698,7 +835,7 @@ namespace TankerMade.Server.Migrations
                         },
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-66666666660a"),
+                            Id = new Guid("88888888-8888-8888-8888-88888888880a"),
                             Category = "tool-type",
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Needle",
@@ -707,7 +844,7 @@ namespace TankerMade.Server.Migrations
                         },
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-66666666660b"),
+                            Id = new Guid("88888888-8888-8888-8888-88888888880b"),
                             Category = "tool-type",
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Gauge Ruler",
@@ -716,7 +853,7 @@ namespace TankerMade.Server.Migrations
                         },
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-66666666660c"),
+                            Id = new Guid("88888888-8888-8888-8888-88888888880c"),
                             Category = "tool-type",
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Stitch Holder",
@@ -725,7 +862,7 @@ namespace TankerMade.Server.Migrations
                         },
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-66666666660d"),
+                            Id = new Guid("88888888-8888-8888-8888-88888888880d"),
                             Category = "notion-type",
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Button",
@@ -734,7 +871,7 @@ namespace TankerMade.Server.Migrations
                         },
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-66666666660e"),
+                            Id = new Guid("88888888-8888-8888-8888-88888888880e"),
                             Category = "notion-type",
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Stitch Marker",
@@ -743,7 +880,7 @@ namespace TankerMade.Server.Migrations
                         },
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-66666666660f"),
+                            Id = new Guid("88888888-8888-8888-8888-88888888880f"),
                             Category = "notion-type",
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Tapestry Needle",
@@ -752,809 +889,13 @@ namespace TankerMade.Server.Migrations
                         },
                         new
                         {
-                            Id = new Guid("66666666-6666-6666-6666-666666666610"),
+                            Id = new Guid("88888888-8888-8888-8888-888888888810"),
                             Category = "notion-type",
                             CreatedAt = new DateTime(2025, 10, 18, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Zipper",
                             Slug = "zipper",
                             SortOrder = 4
                         });
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingKit", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("ArchivedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Difficulty")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsArchived")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Progress")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(220)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("ThemeId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IsArchived");
-
-                    b.HasIndex("Slug");
-
-                    b.HasIndex("ThemeId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId", "IsArchived", "Name");
-
-                    b.ToTable("CraftingKits", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingKitPiece", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("KitId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("PatternId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("KitId");
-
-                    b.HasIndex("PatternId");
-
-                    b.HasIndex("KitId", "SortOrder");
-
-                    b.ToTable("CraftingKitPieces", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingKitSupply", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("KitId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("Quantity")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("SupplyType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("KitId");
-
-                    b.HasIndex("KitId", "SortOrder");
-
-                    b.ToTable("CraftingKitSupplies", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingNotionInventoryItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("BrandName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ColorName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NormalizedBrandName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NormalizedTypeName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal?>("RegularPrice")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Size")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("TypeName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId", "NormalizedBrandName", "NormalizedTypeName")
-                        .IsUnique();
-
-                    b.ToTable("CraftingNotionInventoryItems", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingNotionPurchase", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsSalePrice")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("NotionInventoryItemId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("Price")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("PurchasedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("SourceName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NotionInventoryItemId");
-
-                    b.ToTable("CraftingNotionPurchases", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingPattern", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Difficulty")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Form")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(220)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("SourceId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("ThemeId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Slug");
-
-                    b.HasIndex("SourceId");
-
-                    b.HasIndex("ThemeId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId", "ThemeId", "Name");
-
-                    b.ToTable("CraftingPatterns", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingPatternPiece", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("PatternId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PatternId");
-
-                    b.HasIndex("PatternId", "SortOrder");
-
-                    b.ToTable("CraftingPatternPieces", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingPatternStep", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Instructions")
-                        .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Label")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("PatternPieceId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("RangeEnd")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("RangeStart")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PatternPieceId");
-
-                    b.HasIndex("PatternPieceId", "SortOrder");
-
-                    b.ToTable("CraftingPatternSteps", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProject", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("ArchivedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Difficulty")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsArchived")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid?>("KitId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("KitPieceId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("PatternId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Progress")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(220)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("ThemeId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IsArchived");
-
-                    b.HasIndex("KitId");
-
-                    b.HasIndex("KitPieceId")
-                        .IsUnique();
-
-                    b.HasIndex("PatternId");
-
-                    b.HasIndex("Slug");
-
-                    b.HasIndex("ThemeId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId", "PatternId");
-
-                    b.HasIndex("UserId", "IsArchived", "Name");
-
-                    b.ToTable("CraftingProjects", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectInventoryLink", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("InventoryItemId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("InventoryItemType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("QuantityPlanned")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProjectId");
-
-                    b.HasIndex("ProjectId", "InventoryItemType", "InventoryItemId")
-                        .IsUnique();
-
-                    b.ToTable("CraftingProjectInventoryLinks", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectStepProgress", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CompletedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsComplete")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("PatternStepId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PatternStepId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.HasIndex("ProjectId", "PatternStepId")
-                        .IsUnique();
-
-                    b.ToTable("CraftingProjectStepProgress", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectTimer", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("ElapsedSeconds")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsRunning")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("PatternStepId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("StartedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PatternStepId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.HasIndex("ProjectId", "PatternStepId")
-                        .IsUnique();
-
-                    b.ToTable("CraftingProjectTimers", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingToolInventoryItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("BrandName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NormalizedBrandName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NormalizedTypeName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal?>("RegularPrice")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Size")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("TypeName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId", "NormalizedBrandName", "NormalizedTypeName")
-                        .IsUnique();
-
-                    b.ToTable("CraftingToolInventoryItems", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingToolPurchase", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsSalePrice")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal?>("Price")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("PurchasedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("SourceName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("ToolInventoryItemId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ToolInventoryItemId");
-
-                    b.ToTable("CraftingToolPurchases", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingYarnInventoryItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("BrandName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ColorName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("CurrentWeight")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("EstimatedRemainingLength")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("FiberContent")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("FiberTag")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("LengthUnit")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("MainColor")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NormalizedBrandName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NormalizedColorName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("RegularPrice")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("TotalSkeins")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("WeightName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId", "NormalizedBrandName", "NormalizedColorName")
-                        .IsUnique();
-
-                    b.ToTable("CraftingYarnInventoryItems", (string)null);
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingYarnLot", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("CurrentWeight")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("LotNumber")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("RemainingLength")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("Skeins")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("YarnInventoryItemId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("YarnInventoryItemId");
-
-                    b.HasIndex("YarnInventoryItemId", "LotNumber")
-                        .IsUnique();
-
-                    b.ToTable("CraftingYarnLots", (string)null);
                 });
 
             modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingKit", b =>
@@ -1653,6 +994,9 @@ namespace TankerMade.Server.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("InventoryItemId")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("KitId")
                         .HasColumnType("TEXT");
 
@@ -1677,6 +1021,8 @@ namespace TankerMade.Server.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("InventoryItemId");
+
                     b.HasIndex("KitId");
 
                     b.HasIndex("KitId", "SortOrder");
@@ -1684,10 +1030,112 @@ namespace TankerMade.Server.Migrations
                     b.ToTable("KnittingKitSupplies", (string)null);
                 });
 
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingNotionInventoryItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BrandName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ColorName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedBrandName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedTypeName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("RegularPrice")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Size")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TypeName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "NormalizedBrandName", "NormalizedTypeName")
+                        .IsUnique();
+
+                    b.ToTable("KnittingNotionInventoryItems", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingNotionPurchase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsSalePrice")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("NotionInventoryItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PurchasedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NotionInventoryItemId");
+
+                    b.ToTable("KnittingNotionPurchases", (string)null);
+                });
+
             modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingPattern", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ColorId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1708,12 +1156,27 @@ namespace TankerMade.Server.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("RequiredNotions")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(220)
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("SourceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SuggestedNeedleSizes")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SuggestedYarnWeight")
+                        .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("ThemeId")
@@ -1731,6 +1194,8 @@ namespace TankerMade.Server.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ColorId");
 
                     b.HasIndex("Slug");
 
@@ -1808,6 +1273,9 @@ namespace TankerMade.Server.Migrations
                     b.Property<int>("SortOrder")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("StitchCount")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
 
@@ -1820,6 +1288,46 @@ namespace TankerMade.Server.Migrations
                     b.ToTable("KnittingPatternSteps", (string)null);
                 });
 
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingPatternSupply", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("InventoryItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PatternId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SupplyType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatternId");
+
+                    b.HasIndex("PatternId", "SortOrder");
+
+                    b.ToTable("KnittingPatternSupplies", (string)null);
+                });
+
             modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingProject", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1827,6 +1335,9 @@ namespace TankerMade.Server.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("ArchivedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ColorId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1859,6 +1370,9 @@ namespace TankerMade.Server.Migrations
                         .HasMaxLength(220)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid?>("ThemeId")
                         .HasColumnType("TEXT");
 
@@ -1869,6 +1383,8 @@ namespace TankerMade.Server.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ColorId");
 
                     b.HasIndex("IsArchived");
 
@@ -1885,6 +1401,152 @@ namespace TankerMade.Server.Migrations
                     b.HasIndex("UserId", "IsArchived", "Name");
 
                     b.ToTable("KnittingProjects", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingProjectInventoryLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("InventoryItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("InventoryItemType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("QuantityPlanned")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("ProjectId", "InventoryItemType", "InventoryItemId")
+                        .IsUnique();
+
+                    b.ToTable("KnittingProjectInventoryLinks", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingProjectRowCheck", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PatternStepId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatternStepId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("ProjectId", "PatternStepId", "RowNumber")
+                        .IsUnique();
+
+                    b.ToTable("KnittingProjectRowChecks", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingProjectStepProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsComplete")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("PatternStepId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatternStepId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("ProjectId", "PatternStepId")
+                        .IsUnique();
+
+                    b.ToTable("KnittingProjectStepProgress", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingProjectTimer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ElapsedSeconds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsRunning")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("PatternStepId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatternStepId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("ProjectId", "PatternStepId")
+                        .IsUnique();
+
+                    b.ToTable("KnittingProjectTimers", (string)null);
                 });
 
             modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingSettingItem", b =>
@@ -1989,6 +1651,254 @@ namespace TankerMade.Server.Migrations
                     b.HasIndex("UserId", "Category", "Name");
 
                     b.ToTable("KnittingSupplyItems", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingToolInventoryItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BrandName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedBrandName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedTypeName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("RegularPrice")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Size")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TypeName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "NormalizedBrandName", "NormalizedTypeName")
+                        .IsUnique();
+
+                    b.ToTable("KnittingToolInventoryItems", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingToolPurchase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsSalePrice")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PurchasedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ToolInventoryItemId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ToolInventoryItemId");
+
+                    b.ToTable("KnittingToolPurchases", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingYarnInventoryItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BrandName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ColorName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("CurrentWeight")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("EstimatedRemainingLength")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FiberContent")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FiberTag")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LengthUnit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MainColor")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedBrandName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedColorName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("RegularPrice")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalSkeins")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WeightName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "NormalizedBrandName", "NormalizedColorName")
+                        .IsUnique();
+
+                    b.ToTable("KnittingYarnInventoryItems", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingYarnLot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("CurrentWeight")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LotNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("RemainingLength")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Skeins")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("YarnInventoryItemId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("YarnInventoryItemId");
+
+                    b.HasIndex("YarnInventoryItemId", "LotNumber")
+                        .IsUnique();
+
+                    b.ToTable("KnittingYarnLots", (string)null);
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingYarnPurchase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsSalePrice")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PurchasedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("YarnInventoryItemId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("YarnInventoryItemId");
+
+                    b.ToTable("KnittingYarnPurchases", (string)null);
                 });
 
             modelBuilder.Entity("TankerMade.Modules.Printing3D.Entities.PrintingInventoryPurchase", b =>
@@ -2288,6 +2198,33 @@ namespace TankerMade.Server.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TankerMade.Core.Entities.CommissionPublication", b =>
+                {
+                    b.HasOne("TankerMade.Core.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Core.Entities.CommissionRevision", b =>
+                {
+                    b.HasOne("TankerMade.Core.Entities.CommissionPublication", null)
+                        .WithMany()
+                        .HasForeignKey("PublicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Core.Entities.CommissionWorkspace", b =>
+                {
+                    b.HasOne("TankerMade.Core.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("TankerMade.Core.Entities.UserModuleActivation", b =>
                 {
                     b.HasOne("TankerMade.Core.Entities.ModuleDefinition", null)
@@ -2303,207 +2240,11 @@ namespace TankerMade.Server.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingInventoryPurchase", b =>
-                {
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingYarnInventoryItem", null)
-                        .WithMany()
-                        .HasForeignKey("YarnInventoryItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingKit", b =>
-                {
-                    b.HasOne("TankerMade.Core.Entities.Theme", null)
-                        .WithMany()
-                        .HasForeignKey("ThemeId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("TankerMade.Core.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingKitPiece", b =>
-                {
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingKit", null)
-                        .WithMany()
-                        .HasForeignKey("KitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPattern", null)
-                        .WithMany()
-                        .HasForeignKey("PatternId")
-                        .OnDelete(DeleteBehavior.SetNull);
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingKitSupply", b =>
-                {
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingKit", null)
-                        .WithMany()
-                        .HasForeignKey("KitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingNotionInventoryItem", b =>
+            modelBuilder.Entity("TankerMade.Core.Entities.UserRecentWorkAccess", b =>
                 {
                     b.HasOne("TankerMade.Core.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingNotionPurchase", b =>
-                {
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingNotionInventoryItem", null)
-                        .WithMany()
-                        .HasForeignKey("NotionInventoryItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingPattern", b =>
-                {
-                    b.HasOne("TankerMade.Core.Entities.Source", null)
-                        .WithMany()
-                        .HasForeignKey("SourceId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("TankerMade.Core.Entities.Theme", null)
-                        .WithMany()
-                        .HasForeignKey("ThemeId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("TankerMade.Core.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingPatternPiece", b =>
-                {
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPattern", null)
-                        .WithMany()
-                        .HasForeignKey("PatternId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingPatternStep", b =>
-                {
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPatternPiece", null)
-                        .WithMany()
-                        .HasForeignKey("PatternPieceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProject", b =>
-                {
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingKit", null)
-                        .WithMany()
-                        .HasForeignKey("KitId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingKitPiece", null)
-                        .WithMany()
-                        .HasForeignKey("KitPieceId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPattern", null)
-                        .WithMany()
-                        .HasForeignKey("PatternId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("TankerMade.Core.Entities.Theme", null)
-                        .WithMany()
-                        .HasForeignKey("ThemeId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("TankerMade.Core.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectInventoryLink", b =>
-                {
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingProject", null)
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectStepProgress", b =>
-                {
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPatternStep", null)
-                        .WithMany()
-                        .HasForeignKey("PatternStepId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingProject", null)
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingProjectTimer", b =>
-                {
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingPatternStep", null)
-                        .WithMany()
-                        .HasForeignKey("PatternStepId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingProject", null)
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingToolInventoryItem", b =>
-                {
-                    b.HasOne("TankerMade.Core.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingToolPurchase", b =>
-                {
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingToolInventoryItem", null)
-                        .WithMany()
-                        .HasForeignKey("ToolInventoryItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingYarnInventoryItem", b =>
-                {
-                    b.HasOne("TankerMade.Core.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TankerMade.Modules.Crafting.Entities.CraftingYarnLot", b =>
-                {
-                    b.HasOne("TankerMade.Modules.Crafting.Entities.CraftingYarnInventoryItem", null)
-                        .WithMany()
-                        .HasForeignKey("YarnInventoryItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -2540,8 +2281,31 @@ namespace TankerMade.Server.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingNotionInventoryItem", b =>
+                {
+                    b.HasOne("TankerMade.Core.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingNotionPurchase", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Knitting.Entities.KnittingNotionInventoryItem", null)
+                        .WithMany()
+                        .HasForeignKey("NotionInventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingPattern", b =>
                 {
+                    b.HasOne("TankerMade.Core.Entities.Color", null)
+                        .WithMany()
+                        .HasForeignKey("ColorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("TankerMade.Core.Entities.Source", null)
                         .WithMany()
                         .HasForeignKey("SourceId")
@@ -2577,8 +2341,22 @@ namespace TankerMade.Server.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingPatternSupply", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Knitting.Entities.KnittingPattern", null)
+                        .WithMany()
+                        .HasForeignKey("PatternId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingProject", b =>
                 {
+                    b.HasOne("TankerMade.Core.Entities.Color", null)
+                        .WithMany()
+                        .HasForeignKey("ColorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("TankerMade.Modules.Knitting.Entities.KnittingPattern", null)
                         .WithMany()
                         .HasForeignKey("PatternId")
@@ -2592,6 +2370,60 @@ namespace TankerMade.Server.Migrations
                     b.HasOne("TankerMade.Core.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingProjectInventoryLink", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Knitting.Entities.KnittingProject", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingProjectRowCheck", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Knitting.Entities.KnittingPatternStep", null)
+                        .WithMany()
+                        .HasForeignKey("PatternStepId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TankerMade.Modules.Knitting.Entities.KnittingProject", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingProjectStepProgress", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Knitting.Entities.KnittingPatternStep", null)
+                        .WithMany()
+                        .HasForeignKey("PatternStepId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TankerMade.Modules.Knitting.Entities.KnittingProject", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingProjectTimer", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Knitting.Entities.KnittingPatternStep", null)
+                        .WithMany()
+                        .HasForeignKey("PatternStepId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TankerMade.Modules.Knitting.Entities.KnittingProject", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -2610,6 +2442,51 @@ namespace TankerMade.Server.Migrations
                     b.HasOne("TankerMade.Core.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingToolInventoryItem", b =>
+                {
+                    b.HasOne("TankerMade.Core.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingToolPurchase", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Knitting.Entities.KnittingToolInventoryItem", null)
+                        .WithMany()
+                        .HasForeignKey("ToolInventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingYarnInventoryItem", b =>
+                {
+                    b.HasOne("TankerMade.Core.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingYarnLot", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Knitting.Entities.KnittingYarnInventoryItem", null)
+                        .WithMany()
+                        .HasForeignKey("YarnInventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TankerMade.Modules.Knitting.Entities.KnittingYarnPurchase", b =>
+                {
+                    b.HasOne("TankerMade.Modules.Knitting.Entities.KnittingYarnInventoryItem", null)
+                        .WithMany()
+                        .HasForeignKey("YarnInventoryItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

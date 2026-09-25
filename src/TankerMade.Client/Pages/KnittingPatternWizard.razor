@@ -1,0 +1,18 @@
+@page "/modules/knitting/patterns/new"
+@inject KnittingWizardLauncher Wizards
+@inject NavigationManager Navigation
+
+<PageTitle>New Knitting Pattern</PageTitle>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        Navigation.NavigateTo(KnittingWizardLauncher.GetListRoute(KnittingWizardKind.Pattern), replace: true);
+        await Wizards.OpenPatternWizardAsync();
+    }
+}

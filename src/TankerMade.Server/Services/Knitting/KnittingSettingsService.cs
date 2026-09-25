@@ -50,6 +50,25 @@ public class KnittingSettingsService : IKnittingSettingsService
         return Map(existing);
     }
 
+    public async Task<bool> DeleteAsync(string key, Guid userId)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return false;
+        }
+
+        var existing = await _context.KnittingSettingItems
+            .SingleOrDefaultAsync(item => item.UserId == userId && item.Key == key.Trim());
+        if (existing == null)
+        {
+            return false;
+        }
+
+        _context.KnittingSettingItems.Remove(existing);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     private static KnittingSettingItemDto Map(KnittingSettingItem item)
     {
         return new KnittingSettingItemDto

@@ -10,10 +10,16 @@ public class ModulePatternDto
     public string Difficulty { get; set; } = string.Empty;
     public Guid? ThemeId { get; set; }
     public string ThemeName { get; set; } = string.Empty;
+    public Guid? ColorId { get; set; }
+    public string ColorName { get; set; } = string.Empty;
     public Guid? SourceId { get; set; }
     public string SourceName { get; set; } = string.Empty;
+    public string SuggestedYarnWeight { get; set; } = string.Empty;
+    public string SuggestedNeedleSizes { get; set; } = string.Empty;
+    public string RequiredNotions { get; set; } = string.Empty;
     public Guid UserId { get; set; }
     public string Username { get; set; } = string.Empty;
+    public IReadOnlyList<ModulePatternSupplyDto> Supplies { get; set; } = [];
     public IReadOnlyList<ModulePatternPieceDto> Pieces { get; set; } = [];
     public int PieceCount { get; set; }
     public int StepCount { get; set; }

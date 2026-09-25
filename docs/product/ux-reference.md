@@ -1,7 +1,52 @@
 # TankerMade — UX Wireframes Reference
 Source: YarnProject.pdf (original hand-sketched wireframe spec)
 Status: REFERENCE — initial module UI scaffolding and first-pass styling now exist in app; this file remains the source for deeper UX behavior and visual refinement targets.
-Last reviewed: 2026-05-30
+Last reviewed: 2026-06-15
+
+## Crafter decisions (#ui-discussion, 2026-06-11)
+
+Source: TankerMunk answers in Slack `#ui-discussion`; full capture in `Scratch/ui-discussion/2026-06-11-crafter-answers.md`.
+
+**Feel & theme:** Cozy notebook; calm with some color; **warm tones**; **dark mode default**, light mode optional; keep **6-level difficulty color coding**.
+
+**Home:** Hero = **most recently worked-on** project (progress/timer/check activity, not view-only opens). Optional smaller **recently viewed** list. **Single Inventory** entry on home (yarn/tools/notions chosen inside inventory, not three home buttons).
+
+**Project workspace:** Pattern steps may scroll; **timer + progress % stay pinned/visible**. **Checkbox per row** even for compact ranges like `5–7`. Timer **always visible**. End session = **quiet save** only (no summary modal).
+
+**Cards & layout:** **Large photo cards** for projects (Pinterest-style, not compact rows). Settings = **folding/accordion sections**. Avoid horizontal scroll at half-width.
+
+**Editing patterns:** **Inline** step edits on pattern detail (not modal-first).
+
+**Adding yarn:** **One form** on inventory page (not a multi-step wizard).
+
+**Reference add-new:** **Autocomplete while typing** for themes/brands/types to surface existing names and reduce duplicates.
+
+**Must-keep from deck:** Project photos, timer, per-row step checkboxes. Nothing willingly dropped.
+
+**Dealbreakers:** Lost progress, unreliable save, slow project page loads.
+
+**Revised vs pre-answer engineering backlog:** Deprioritize modal-first pattern/inventory edits and aggressive card compaction; prioritize sticky workspace chrome, per-row checkboxes, dark+warm theme, home “worked on” semantics, settings accordion, reference autocomplete.
+
+### Implementation status (2026-06-15)
+
+Branch `working/knitting-settings-ui-pass`: functional parity pushed (`5df49e0`); MudBlazor host shell + core dashboard recent-work platform pushed (`f8dbfd7`). Knitting module pages still largely Bootstrap — UI pass continues.
+
+| Crafter decision | Status |
+|------------------|--------|
+| Dark warm default + light toggle | ✅ `ThemeService` + MudBlazor; toggle in bottom-bar avatar menu |
+| App navigation | ✅ Bottom contextual nav (`AppBottomNav`); minimal top bar; `/home` core dashboard |
+| Core recent projects (cross-module) | ✅ Phase L recent-work ledger + `Home.razor` featured/sidebar (title, thumbnail, last active) |
+| Home: last worked-on hero + recently viewed | ✅ `KnittingRecentActivity` on knitting module home |
+| Single Inventory on home | ✅ `KnittingDashboard` |
+| Sticky timer + progress % in workspace | ✅ `KnittingProjectDetail` |
+| Per-row checkboxes for ranges | ✅ `KnittingRowProgress` (client localStorage) |
+| Large photo project cards | ✅ retained |
+| Settings accordion | ✅ `KnittingSettings` |
+| Reference autocomplete (add-new) | 🟡 settings + project wizard theme only |
+| Inline pattern edits | ✅ pattern detail |
+| One-form yarn add | ✅ inventory |
+
+**PDF vs app (intentional deltas):** PDF Home lists separate Patterns/Yarns/Tools/Notions nav; crafter chose **one Inventory** entry on the knitting module home. PDF does not specify shell layout; app uses **bottom contextual navigation** + minimal top bar (not a vertical sidebar or full horizontal module nav). Core `/home` dashboard shows cross-module recent projects. Track parity in `docs/project/knitting-ui-parity-checklist.md`.
 
 The PDF is attached to the Claude Project. Do not remove it — it is the primary UX specification.
 
@@ -10,8 +55,8 @@ The PDF is attached to the Claude Project. Do not remove it — it is the primar
 ## Screens Documented in the PDF
 
 ### Home Screen
-- Shows image + name of most recently opened project
-- Quick navigation: Patterns, Yarns, Tools, Notions, Kits, Settings
+- Shows image + name of most recently opened project *(crafter: prefer **last worked on** for hero; optional recently viewed list)*
+- Quick navigation: Patterns, Yarns, Tools, Notions, Kits, Settings *(crafter: **single Inventory** on home; stash types inside inventory)*
 - Open Most Recent Project button
 
 ### Project List

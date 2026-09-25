@@ -1,89 +1,223 @@
 @page "/modules/knitting"
+@using TankerMade.Contracts.DTOs.Dashboard
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
 
 <PageTitle>Knitting</PageTitle>
 
-<div class="module-shell module-shell-knitting">
-    <header class="module-hero module-hero-knitting">
-        <p class="module-kicker">Knitting Module</p>
-        <h1>Knitting Studio</h1>
-        <p>Plan projects, track stitch progress, manage your stash, and keep kits ready for your next cast-on.</p>
-    </header>
+<KnittingModuleGate Loading="loading" LoadingMessage="Loading recent activity...">
+    <div class="core-dashboard-page knitting-studio-page">
+        <header class="core-dashboard-header">
+            <div class="core-dashboard-header-bar">
+                <div class="core-dashboard-header-lead"></div>
 
-    @if (!AuthSession.IsSignedIn)
-    {
-        <section class="module-card">
-            <h2>Sign In Required</h2>
-            <p>Sign in to open and test this module.</p>
-            <a class="btn btn-primary" href="login">Sign in</a>
-        </section>
-    }
-    else if (!ModuleState.IsActive("knitting"))
-    {
-        <section class="module-card">
-            <h2>Module Not Active</h2>
-            <p>Activate Knitting from Home to continue.</p>
-            <a class="btn btn-outline-primary" href="/">Go to Home</a>
-        </section>
-    }
-    else
-    {
-        <section class="knitting-highlight-row">
-            <article class="module-card module-card-knitting-feature">
-                <h2>Active Project Focus</h2>
-                <p>Keep step checklists, timers, and piece completion visible while you work.</p>
-                <a class="btn btn-primary" href="/modules/knitting/projects">Open Projects</a>
-            </article>
-            <article class="module-card module-card-knitting-feature module-card-knitting-accent">
-                <h2>Stash and Supply Health</h2>
-                <p>Stay ahead on yarn lots, tools, and notion usage before starting new pieces.</p>
-                <a class="btn btn-outline-secondary" href="/modules/knitting/inventory">Open Inventory</a>
-            </article>
-        </section>
+                <MudStack Spacing="1" Class="core-dashboard-header-center">
+                    <MudText Typo="Typo.h4" Align="Align.Center">Knitting Studio</MudText>
+                    <MudText Typo="Typo.body1" Color="Color.Secondary" Align="Align.Center">
+                        Plan projects, track stitch progress, manage your stash, and keep kits ready for your next cast-on.
+                    </MudText>
+                </MudStack>
 
-        <section class="module-grid module-grid-knitting">
-            <article class="module-card module-card-knitting">
-                <h2>Projects</h2>
-                <p>Track progress, timers, and archive-ready status by piece.</p>
-                <span class="module-pill module-pill-knitting">Workspace</span>
-                <a class="btn btn-outline-secondary" href="/modules/knitting/projects">Open</a>
-            </article>
-            <article class="module-card module-card-knitting">
-                <h2>Patterns</h2>
-                <p>Organize pattern sets, piece order, and reusable instructions.</p>
-                <span class="module-pill module-pill-knitting">Library</span>
-                <a class="btn btn-outline-secondary" href="/modules/knitting/patterns">Open</a>
-            </article>
-            <article class="module-card module-card-knitting">
-                <h2>Inventory</h2>
-                <p>Manage yarn lots, tools, notions, and sourcing details.</p>
-                <span class="module-pill module-pill-knitting">Supplies</span>
-                <a class="btn btn-outline-secondary" href="/modules/knitting/inventory">Open</a>
-            </article>
-            <article class="module-card module-card-knitting">
-                <h2>Kits</h2>
-                <p>Prepare grouped builds and move pieces into projects when ready.</p>
-                <span class="module-pill module-pill-knitting">Planning</span>
-                <a class="btn btn-outline-secondary" href="/modules/knitting/kits">Open</a>
-            </article>
-            <article class="module-card module-card-knitting">
-                <h2>Settings</h2>
-                <p>Set defaults and references for your knitting workflow.</p>
-                <span class="module-pill module-pill-knitting">Preferences</span>
-                <a class="btn btn-outline-secondary" href="/modules/knitting/settings">Open</a>
-            </article>
-        </section>
-    }
-</div>
+                <div class="core-dashboard-header-trail"></div>
+            </div>
+        </header>
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+        }
+
+        <div class="knitting-studio-columns">
+            <div class="knitting-studio-col">
+                <MudPaper Class="pa-4 core-panel-mud core-dashboard-section" Elevation="1">
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Needs attention</MudText>
+
+                        @if (attentionItems.Count == 0)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Stash looks good for active projects.
+                            </MudText>
+                        }
+                        else
+                        {
+                            @foreach (var item in attentionItems)
+                            {
+                                <MudPaper Class="pa-2 core-dashboard-due-item" Elevation="0" Outlined="true">
+                                    <MudLink Href="@item.NavigationPath"
+                                             Underline="Underline.None"
+                                             Class="core-dashboard-recent-link">
+                                        <MudStack Spacing="0">
+                                            <MudText Typo="Typo.body2">@item.Title</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@item.Detail</MudText>
+                                        </MudStack>
+                                    </MudLink>
+                                </MudPaper>
+                            }
+                        }
+                    </MudStack>
+                </MudPaper>
+            </div>
+
+            @if (overview != null)
+            {
+                <aside class="core-dashboard-sidebar knitting-studio-calendar-sidebar">
+                    <MudPaper Class="pa-4 core-panel-mud core-dashboard-section core-dashboard-engagement-panel" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Activity</MudText>
+                            <MudText Typo="Typo.body2">@GetEngagementCopy()</MudText>
+                            <DashboardActivityCalendar ActiveLocalDates="overview.Activity.ActiveLocalDates" />
+                        </MudStack>
+                    </MudPaper>
+                </aside>
+            }
+
+            <MudStack Spacing="2" Class="knitting-studio-col knitting-studio-recent-col">
+                <MudPaper Class="pa-4 core-panel-mud core-dashboard-recent-panel core-dashboard-section" Elevation="1">
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Recent projects</MudText>
+
+                        @if (featuredRecentWork != null)
+                        {
+                            <div class="core-dashboard-recent-layout">
+                                <MudPaper Class="pa-3 core-dashboard-recent-featured"
+                                          Elevation="0"
+                                          Outlined="true">
+                                    <MudLink Href="@featuredRecentWork.NavigationPath"
+                                             Underline="Underline.None"
+                                             Class="core-dashboard-recent-link">
+                                        <div class="core-dashboard-recent-featured-inner">
+                                            <AssetThumbnailImage AssetId="featuredRecentWork.ThumbnailAssetId"
+                                                                 FallbackSrc="@GetThumbnailFallback(featuredRecentWork)"
+                                                                 AltText="@featuredRecentWork.Title"
+                                                                 SizeKey="medium"
+                                                                 CssClass="core-dashboard-recent-thumb core-dashboard-recent-thumb-featured"
+                                                                 ShowPlaceholder="false" />
+                                            <MudStack Spacing="1" Class="core-dashboard-recent-copy">
+                                                <MudText Typo="Typo.subtitle1">@featuredRecentWork.Title</MudText>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                    @FormatLastActive(featuredRecentWork.LastAccessedAtUtc)
+                                                </MudText>
+                                                <MudProgressLinear Value="@GetProgress(featuredRecentWork)"
+                                                                   Color="Color.Primary"
+                                                                   Rounded="true"
+                                                                   Class="knitting-studio-recent-progress" />
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                    @GetProgress(featuredRecentWork)% complete
+                                                </MudText>
+                                            </MudStack>
+                                        </div>
+                                    </MudLink>
+                                </MudPaper>
+
+                                @if (sidebarRecentWork.Count > 0)
+                                {
+                                    <MudStack Spacing="1" Class="core-dashboard-recent-sidebar">
+                                        @foreach (var item in sidebarRecentWork)
+                                        {
+                                            <MudPaper Class="pa-2 core-dashboard-recent-sidebar-item"
+                                                      Elevation="0"
+                                                      Outlined="true">
+                                                <MudLink Href="@item.NavigationPath"
+                                                         Underline="Underline.None"
+                                                         Class="core-dashboard-recent-link">
+                                                    <div class="core-dashboard-recent-sidebar-inner">
+                                                        <AssetThumbnailImage AssetId="item.ThumbnailAssetId"
+                                                                             FallbackSrc="@GetThumbnailFallback(item)"
+                                                                             AltText="@item.Title"
+                                                                             SizeKey="small"
+                                                                             CssClass="core-dashboard-recent-thumb core-dashboard-recent-thumb-sidebar"
+                                                                             ShowPlaceholder="false" />
+                                                        <MudStack Spacing="0" Class="core-dashboard-recent-copy">
+                                                            <MudText Typo="Typo.body2">@item.Title</MudText>
+                                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                                @FormatLastActive(item.LastAccessedAtUtc)
+                                                            </MudText>
+                                                            <MudProgressLinear Value="@GetProgress(item)"
+                                                                               Color="Color.Primary"
+                                                                               Rounded="true"
+                                                                               Size="Size.Small"
+                                                                               Class="knitting-studio-recent-progress knitting-studio-recent-progress-sidebar" />
+                                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                                @GetProgress(item)%
+                                                            </MudText>
+                                                        </MudStack>
+                                                    </div>
+                                                </MudLink>
+                                            </MudPaper>
+                                        }
+                                    </MudStack>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    No recent projects yet. Open a project to see it here.
+                                </MudText>
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           Href="/modules/knitting/projects">
+                                    Browse projects
+                                </MudButton>
+                            </MudStack>
+                        }
+                    </MudStack>
+                </MudPaper>
+            </MudStack>
+        </div>
+    </div>
+</KnittingModuleGate>
 
 @code {
+    private const string ModuleKey = "knitting";
+    private bool loading = true;
+    private string errorMessage = string.Empty;
+    private IReadOnlyList<DashboardAttentionItemDto> attentionItems = [];
+
     protected override async Task OnInitializedAsync()
     {
         await AuthSession.InitializeAsync();
         if (AuthSession.IsSignedIn)
         {
             await ModuleState.RefreshAsync();
+            await LoadDashboardAsync();
+        }
+
+        loading = false;
+    }
+
+    private async Task LoadDashboardAsync()
+    {
+        errorMessage = string.Empty;
+        featuredRecentWork = null;
+        sidebarRecentWork = [];
+        overview = null;
+        attentionItems = [];
+
+        if (!ModuleState.IsActive(ModuleKey))
+        {
+            return;
+        }
+
+        try
+        {
+            var recentWorkTask = ApiClient.GetRecentWorkAsync(limit: 5, moduleKey: ModuleKey);
+            var overviewTask = ApiClient.GetDashboardOverviewAsync(moduleKey: ModuleKey);
+            await Task.WhenAll(recentWorkTask, overviewTask);
+
+            var recentWork = await recentWorkTask;
+            overview = await overviewTask;
+            featuredRecentWork = recentWork.FirstOrDefault();
+            sidebarRecentWork = recentWork.Skip(1).ToList();
+            attentionItems = overview?.AttentionItems ?? [];
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
         }
     }
 }

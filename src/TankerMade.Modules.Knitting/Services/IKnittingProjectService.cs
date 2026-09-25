@@ -12,4 +12,12 @@ public interface IKnittingProjectService
     Task<KnittingProjectDto?> ArchiveAsync(Guid id, Guid userId);
     Task<KnittingProjectDto?> ReopenAsync(Guid id, Guid userId);
     Task<bool> DeleteAsync(Guid id, Guid userId);
+    Task<KnittingProjectDto?> SetStepProgressAsync(Guid projectId, Guid patternStepId, UpdateKnittingProjectStepProgressDto updateDto, Guid userId);
+    Task<KnittingProjectDto?> SetRowCheckAsync(Guid projectId, Guid patternStepId, int rowNumber, UpdateKnittingProjectRowCheckDto updateDto, Guid userId);
+    Task<KnittingProjectDto?> StartTimerAsync(Guid projectId, Guid patternStepId, UpdateKnittingProjectTimerDto updateDto, Guid userId);
+    Task<KnittingProjectDto?> PauseTimerAsync(Guid projectId, Guid patternStepId, UpdateKnittingProjectTimerDto updateDto, Guid userId);
+    Task<KnittingProjectDto?> SetTimerAsync(Guid projectId, Guid patternStepId, UpdateKnittingProjectTimerDto updateDto, Guid userId);
+    Task<KnittingProjectDto?> ResetTimerAsync(Guid projectId, Guid patternStepId, Guid userId);
+    Task<KnittingProjectDto?> AddInventoryLinkAsync(Guid projectId, CreateKnittingProjectInventoryLinkDto createDto, Guid userId);
+    Task<bool> RemoveInventoryLinkAsync(Guid projectId, Guid linkId, Guid userId);
 }

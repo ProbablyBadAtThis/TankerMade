@@ -122,12 +122,38 @@ builder.Services.AddScoped<IModuleProjectCapabilityResolver, ModuleProjectCapabi
 builder.Services.AddScoped<IModuleInventoryCapabilityResolver, ModuleInventoryCapabilityResolver>();
 builder.Services.AddScoped<IModuleKitCapabilityResolver, ModuleKitCapabilityResolver>();
 builder.Services.AddScoped<IModuleSettingsCapabilityResolver, ModuleSettingsCapabilityResolver>();
+builder.Services.AddScoped<IModuleRecentWorkSummaryResolver, ModuleRecentWorkSummaryResolver>();
+builder.Services.AddScoped<IModuleDashboardContributionResolver, ModuleDashboardContributionResolver>();
+builder.Services.AddScoped<IRecentWorkService, RecentWorkService>();
+builder.Services.AddScoped<IDashboardOverviewService, DashboardOverviewService>();
 builder.Services.AddScoped<IModulePatternCapabilityHandler, KnittingPatternCapabilityHandler>();
 builder.Services.AddScoped<IModuleProjectCapabilityHandler, KnittingProjectCapabilityHandler>();
 builder.Services.AddScoped<IModuleInventoryCapabilityHandler, KnittingInventoryCapabilityHandler>();
 builder.Services.AddScoped<IModuleInventoryCapabilityHandler, PrintingInventoryCapabilityHandler>();
 builder.Services.AddScoped<IModuleKitCapabilityHandler, KnittingKitCapabilityHandler>();
 builder.Services.AddScoped<IModuleSettingsCapabilityHandler, KnittingSettingsCapabilityHandler>();
+builder.Services.AddScoped<IModuleRecentWorkSummaryProvider, KnittingRecentWorkSummaryProvider>();
+builder.Services.AddScoped<IModuleClientStatusProvider, KnittingClientStatusProvider>();
+builder.Services.AddScoped<ICommissionPublicationService, CommissionPublicationService>();
+var clientProgressHost = builder.Configuration["ClientProgressHost:BaseUrl"];
+if (string.IsNullOrWhiteSpace(clientProgressHost))
+{
+    builder.Services.AddSingleton<ICommissionSnapshotDispatcher, UnconfiguredCommissionSnapshotDispatcher>();
+}
+else
+{
+    builder.Services.AddHttpClient<ICommissionSnapshotDispatcher, HttpCommissionSnapshotDispatcher>(client =>
+    {
+        client.BaseAddress = new Uri(clientProgressHost.TrimEnd('/') + "/");
+        client.Timeout = TimeSpan.FromSeconds(5);
+        var apiKey = builder.Configuration["ClientProgressHost:ApiKey"];
+        if (!string.IsNullOrWhiteSpace(apiKey))
+        {
+            client.DefaultRequestHeaders.TryAddWithoutValidation("X-Host-Key", apiKey);
+        }
+    });
+}
+builder.Services.AddScoped<IModuleDashboardContributionProvider, KnittingDashboardContributionProvider>();
 
 // Add controllers and OpenAPI
 builder.Services.AddControllers();
@@ -214,8 +240,9 @@ static void ValidateJwtSettings(JwtSettingsOptions settings)
         throw new InvalidOperationException($"Missing {JwtSettingsOptions.SectionName}:Audience.");
     }
 
-    if (settings.ExpirationMinutes <= 0)
+    if (settings.ExpirationDays <= 0 && settings.ExpirationMinutes <= 0)
     {
-        throw new InvalidOperationException($"{JwtSettingsOptions.SectionName}:ExpirationMinutes must be greater than 0.");
+        throw new InvalidOperationException(
+            $"{JwtSettingsOptions.SectionName} must set ExpirationDays or ExpirationMinutes to a value greater than 0.");
     }
 }

@@ -50,6 +50,66 @@ public class KnittingKitService : IKnittingKitService
         return await MapAsync(kit);
     }
 
+    public async Task<KnittingKitDto?> UpdateAsync(Guid kitId, CreateKnittingKitDto updateDto, Guid userId)
+    {
+        var kit = await _context.KnittingKits
+            .SingleOrDefaultAsync(existing => existing.Id == kitId && existing.UserId == userId);
+        if (kit == null)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(updateDto.Name))
+        {
+            kit.Name = updateDto.Name.Trim();
+        }
+
+        kit.Update(updateDto.Description, updateDto.Type);
+        await _context.SaveChangesAsync();
+
+        return await MapAsync(kit);
+    }
+
+    public async Task<bool> DeleteAsync(Guid kitId, Guid userId)
+    {
+        var kit = await _context.KnittingKits
+            .SingleOrDefaultAsync(existing => existing.Id == kitId && existing.UserId == userId);
+        if (kit == null)
+        {
+            return false;
+        }
+
+        _context.KnittingKits.Remove(kit);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<KnittingKitDto?> ArchiveAsync(Guid kitId, Guid userId)
+    {
+        var kit = await _context.KnittingKits.SingleOrDefaultAsync(existing => existing.Id == kitId && existing.UserId == userId);
+        if (kit == null)
+        {
+            return null;
+        }
+
+        kit.Archive();
+        await _context.SaveChangesAsync();
+        return await GetByIdAsync(kitId, userId);
+    }
+
+    public async Task<KnittingKitDto?> ReopenAsync(Guid kitId, Guid userId)
+    {
+        var kit = await _context.KnittingKits.SingleOrDefaultAsync(existing => existing.Id == kitId && existing.UserId == userId);
+        if (kit == null)
+        {
+            return null;
+        }
+
+        kit.Reopen();
+        await _context.SaveChangesAsync();
+        return await GetByIdAsync(kitId, userId);
+    }
+
     public async Task<KnittingKitPieceDto?> AddPieceAsync(Guid kitId, CreateKnittingKitPieceDto createDto, Guid userId)
     {
         var kit = await _context.KnittingKits.SingleOrDefaultAsync(existing => existing.Id == kitId && existing.UserId == userId);
@@ -72,6 +132,52 @@ public class KnittingKitService : IKnittingKitService
         return MapPiece(piece);
     }
 
+    public async Task<KnittingKitPieceDto?> UpdatePieceAsync(Guid kitId, Guid pieceId, CreateKnittingKitPieceDto updateDto, Guid userId)
+    {
+        var kitExists = await _context.KnittingKits.AnyAsync(kit => kit.Id == kitId && kit.UserId == userId);
+        if (!kitExists)
+        {
+            return null;
+        }
+
+        var piece = await _context.KnittingKitPieces
+            .SingleOrDefaultAsync(existing => existing.Id == pieceId && existing.KitId == kitId);
+        if (piece == null)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(updateDto.Name))
+        {
+            piece.Name = updateDto.Name.Trim();
+        }
+
+        piece.Update(updateDto.Notes);
+        await _context.SaveChangesAsync();
+
+        return MapPiece(piece);
+    }
+
+    public async Task<bool> DeletePieceAsync(Guid kitId, Guid pieceId, Guid userId)
+    {
+        var kitExists = await _context.KnittingKits.AnyAsync(kit => kit.Id == kitId && kit.UserId == userId);
+        if (!kitExists)
+        {
+            return false;
+        }
+
+        var piece = await _context.KnittingKitPieces
+            .SingleOrDefaultAsync(existing => existing.Id == pieceId && existing.KitId == kitId);
+        if (piece == null)
+        {
+            return false;
+        }
+
+        _context.KnittingKitPieces.Remove(piece);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<KnittingKitSupplyDto?> AddSupplyAsync(Guid kitId, CreateKnittingKitSupplyDto createDto, Guid userId)
     {
         var kit = await _context.KnittingKits.SingleOrDefaultAsync(existing => existing.Id == kitId && existing.UserId == userId);
@@ -86,12 +192,57 @@ public class KnittingKitService : IKnittingKitService
             .MaxAsync() ?? 0;
 
         var supply = new KnittingKitSupply(Guid.NewGuid(), kitId, createDto.SupplyType, createDto.Name, nextSort + 1);
-        supply.Update(createDto.Quantity);
+        supply.Update(createDto.SupplyType, createDto.Name, createDto.InventoryItemId, createDto.Quantity);
 
         _context.KnittingKitSupplies.Add(supply);
         await _context.SaveChangesAsync();
 
         return MapSupply(supply);
+    }
+
+    public async Task<KnittingKitSupplyDto?> UpdateSupplyAsync(Guid kitId, Guid supplyId, CreateKnittingKitSupplyDto updateDto, Guid userId)
+    {
+        var kitExists = await _context.KnittingKits.AnyAsync(kit => kit.Id == kitId && kit.UserId == userId);
+        if (!kitExists)
+        {
+            return null;
+        }
+
+        var supply = await _context.KnittingKitSupplies
+            .SingleOrDefaultAsync(existing => existing.Id == supplyId && existing.KitId == kitId);
+        if (supply == null)
+        {
+            return null;
+        }
+
+        supply.Update(
+            string.IsNullOrWhiteSpace(updateDto.SupplyType) ? supply.SupplyType : updateDto.SupplyType,
+            string.IsNullOrWhiteSpace(updateDto.Name) ? supply.Name : updateDto.Name,
+            updateDto.InventoryItemId ?? supply.InventoryItemId,
+            updateDto.Quantity);
+        await _context.SaveChangesAsync();
+
+        return MapSupply(supply);
+    }
+
+    public async Task<bool> DeleteSupplyAsync(Guid kitId, Guid supplyId, Guid userId)
+    {
+        var kitExists = await _context.KnittingKits.AnyAsync(kit => kit.Id == kitId && kit.UserId == userId);
+        if (!kitExists)
+        {
+            return false;
+        }
+
+        var supply = await _context.KnittingKitSupplies
+            .SingleOrDefaultAsync(existing => existing.Id == supplyId && existing.KitId == kitId);
+        if (supply == null)
+        {
+            return false;
+        }
+
+        _context.KnittingKitSupplies.Remove(supply);
+        await _context.SaveChangesAsync();
+        return true;
     }
 
     public async Task<KnittingProjectDto?> CreateProjectForPieceAsync(Guid kitId, Guid pieceId, Guid userId)
@@ -115,7 +266,7 @@ public class KnittingKitService : IKnittingKitService
         }
 
         var project = new KnittingProject(Guid.NewGuid(), piece.Name, userId);
-        project.Update(piece.Name, piece.Notes, null, null, 0, 0);
+        project.Update(piece.Name, piece.Notes, null, null, null, 0, 0);
 
         _context.KnittingProjects.Add(project);
         await _context.SaveChangesAsync();
@@ -175,6 +326,7 @@ public class KnittingKitService : IKnittingKitService
             Id = supply.Id,
             SupplyType = supply.SupplyType,
             Name = supply.Name,
+            InventoryItemId = supply.InventoryItemId,
             Quantity = supply.Quantity,
             SortOrder = supply.SortOrder,
             CreatedAt = supply.CreatedAt,

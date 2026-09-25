@@ -7,6 +7,7 @@ public class KnittingPatternStep
     public int? RangeStart { get; set; }
     public int? RangeEnd { get; set; }
     public string Label { get; set; } = string.Empty;
+    public int? StitchCount { get; set; }
     public string Instructions { get; set; } = string.Empty;
     public int SortOrder { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -22,6 +23,7 @@ public class KnittingPatternStep
         int? rangeStart,
         int? rangeEnd,
         string label,
+        int? stitchCount,
         string instructions,
         int sortOrder)
     {
@@ -31,10 +33,10 @@ public class KnittingPatternStep
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
 
-        Update(rangeStart, rangeEnd, label, instructions);
+        Update(rangeStart, rangeEnd, label, stitchCount, instructions);
     }
 
-    public void Update(int? rangeStart, int? rangeEnd, string label, string instructions)
+    public void Update(int? rangeStart, int? rangeEnd, string label, int? stitchCount, string instructions)
     {
         if (rangeStart.HasValue && rangeEnd.HasValue && rangeEnd.Value < rangeStart.Value)
         {
@@ -44,6 +46,7 @@ public class KnittingPatternStep
         RangeStart = rangeStart;
         RangeEnd = rangeEnd;
         Label = label?.Trim() ?? string.Empty;
+        StitchCount = stitchCount is < 0 ? null : stitchCount;
         Instructions = instructions?.Trim() ?? string.Empty;
         UpdatedAt = DateTime.UtcNow;
     }

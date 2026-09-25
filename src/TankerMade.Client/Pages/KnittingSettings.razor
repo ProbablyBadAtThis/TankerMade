@@ -1,104 +1,311 @@
 @page "/modules/knitting/settings"
+@using TankerMade.Contracts.DTOs.ModuleInventory
 @using TankerMade.Contracts.DTOs.ModuleSettings
+@using TankerMade.Contracts.DTOs.Reference
+@using System.Globalization
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
 
 <PageTitle>Knitting Settings</PageTitle>
 
-@if (!AuthSession.IsSignedIn)
-{
-    <h1>Knitting Settings</h1>
-    <p>Sign in to use this module section.</p>
-    <a class="btn btn-primary" href="/login">Sign in</a>
-}
-else if (!ModuleState.IsActive("knitting"))
-{
-    <h1>Knitting Settings</h1>
-    <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/">Go to Home</a>
-}
-else if (loading)
-{
-    <h1>Knitting Settings</h1>
-    <p>Loading...</p>
-}
-else
-{
-    <div class="page-heading">
-        <div>
-            <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
-            <h1>Settings</h1>
-            <p>Module-owned preferences via core extension-point APIs.</p>
-        </div>
-    </div>
+<KnittingModuleGate Loading="loading" LoadingMessage="Loading settings...">
+    <MudStack Spacing="3">
+        <KnittingPageHeader Title="Settings"
+                            Subtitle="Set module behavior defaults for projects, kits, workspace, and timers." />
 
-    @if (!string.IsNullOrWhiteSpace(errorMessage))
-    {
-        <div class="alert alert-danger">@errorMessage</div>
-    }
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+        }
+        @if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            <MudAlert Severity="Severity.Success">@successMessage</MudAlert>
+        }
 
-    <section class="project-panel">
-        <h2>Upsert Setting</h2>
-        <EditForm Model="form" OnValidSubmit="SaveSettingAsync" class="project-edit-form">
-            <DataAnnotationsValidator />
-            <div class="form-grid">
-                <label>
-                    <span>Category</span>
-                    <InputText class="form-control" @bind-Value="form.Category" />
-                </label>
-                <label>
-                    <span>Key</span>
-                    <InputText class="form-control" @bind-Value="form.Key" />
-                </label>
-                <label>
-                    <span>Value</span>
-                    <InputText class="form-control" @bind-Value="form.Value" />
-                </label>
-            </div>
-            <button class="btn btn-primary" disabled="@busy" type="submit">Save Setting</button>
-        </EditForm>
-    </section>
-
-    <div class="printing-search-row mb-3">
-        <input class="form-control" placeholder="Category filter" @bind="categoryFilter" @bind:event="oninput" />
-        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="LoadSettingsAsync">Filter</button>
-    </div>
-
-    @if (settings.Count == 0)
-    {
-        <div class="empty-state">
-            <h2>No Settings Yet</h2>
-            <p>Create settings to store knitting defaults and preferences.</p>
-        </div>
-    }
-    else
-    {
-        <div class="pattern-card-grid">
-            @foreach (var item in settings)
-            {
-                <article class="pattern-card">
-                    <h2>@item.Key</h2>
-                    <p>@item.Category</p>
-                    <div class="pattern-card-stats">
-                        <span>@item.Value</span>
+        <MudExpansionPanels MultiExpansion="true">
+            <MudExpansionPanel Text="Reference Data" Expanded="true">
+                <MudStack Spacing="2" Class="pt-2">
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Manage shared lists used across patterns, projects, and inventory. Type to see existing names before adding.
+                    </MudText>
+                    <div class="settings-grid">
+                        <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.subtitle1">Themes</MudText>
+                                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                    @foreach (var item in themes)
+                                    {
+                                        <MudChip T="string" Size="Size.Small">@item.Name</MudChip>
+                                    }
+                                </MudStack>
+                                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.End" Wrap="Wrap.Wrap">
+                                    <ReferenceAutocompleteInput Label="New theme"
+                                                                Placeholder="New theme"
+                                                                Options="themeNames"
+                                                                @bind-Value="newThemeName" />
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick='() => AddCoreReferenceAsync("themes", newThemeName, () => newThemeName = string.Empty, themes)'>Add</MudButton>
+                                </MudStack>
+                            </MudStack>
+                        </MudPaper>
+                        <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.subtitle1">Colors</MudText>
+                                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                    @foreach (var item in colors)
+                                    {
+                                        <MudChip T="string" Size="Size.Small">@item.Name</MudChip>
+                                    }
+                                </MudStack>
+                                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.End" Wrap="Wrap.Wrap">
+                                    <ReferenceAutocompleteInput Label="New color"
+                                                                Placeholder="New color"
+                                                                Options="colorNames"
+                                                                @bind-Value="newColorName" />
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick='() => AddCoreReferenceAsync("colors", newColorName, () => newColorName = string.Empty, colors)'>Add</MudButton>
+                                </MudStack>
+                            </MudStack>
+                        </MudPaper>
+                        <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.subtitle1">Sources</MudText>
+                                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                    @foreach (var item in sources)
+                                    {
+                                        <MudChip T="string" Size="Size.Small">@item.Name</MudChip>
+                                    }
+                                </MudStack>
+                                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.End" Wrap="Wrap.Wrap">
+                                    <ReferenceAutocompleteInput Label="New source"
+                                                                Placeholder="New source"
+                                                                Options="sourceNames"
+                                                                @bind-Value="newSourceName" />
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick='() => AddCoreReferenceAsync("sources", newSourceName, () => newSourceName = string.Empty, sources)'>Add</MudButton>
+                                </MudStack>
+                            </MudStack>
+                        </MudPaper>
+                        <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.subtitle1">Brands</MudText>
+                                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                    @foreach (var item in brands)
+                                    {
+                                        <MudChip T="string" Size="Size.Small">@item.Name</MudChip>
+                                    }
+                                </MudStack>
+                                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.End" Wrap="Wrap.Wrap">
+                                    <ReferenceAutocompleteInput Label="New brand"
+                                                                Placeholder="New brand"
+                                                                Options="brandNames"
+                                                                @bind-Value="newBrandName" />
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick='() => AddCoreReferenceAsync("brands", newBrandName, () => newBrandName = string.Empty, brands)'>Add</MudButton>
+                                </MudStack>
+                            </MudStack>
+                        </MudPaper>
+                        <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.subtitle1">Fiber Tags</MudText>
+                                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                    @foreach (var item in fiberTags)
+                                    {
+                                        <MudChip T="string" Size="Size.Small">@item.Name</MudChip>
+                                    }
+                                </MudStack>
+                                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.End" Wrap="Wrap.Wrap">
+                                    <ReferenceAutocompleteInput Label="New fiber tag"
+                                                                Placeholder="New fiber tag"
+                                                                Options="fiberTagNames"
+                                                                @bind-Value="newFiberTagName" />
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="AddFiberTagAsync">Add</MudButton>
+                                </MudStack>
+                            </MudStack>
+                        </MudPaper>
                     </div>
-                </article>
+                </MudStack>
+            </MudExpansionPanel>
+
+            @foreach (var category in CategoryOrder)
+            {
+                var definitions = knownSettingDefinitions.Where(definition => definition.Category == category).ToList();
+                if (definitions.Count == 0)
+                {
+                    continue;
+                }
+
+                <MudExpansionPanel Text="@CategoryLabel(category)" Expanded="true">
+                    <MudStack Spacing="2" Class="pt-2">
+                        <MudStack Row="true" Justify="Justify.FlexEnd">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="() => ResetCategoryDefaultsAsync(category)">Reset Category</MudButton>
+                        </MudStack>
+                        <div class="settings-grid">
+                            @foreach (var definition in definitions)
+                            {
+                                var key = definition.Key;
+                                var item = storedByKey.TryGetValue(key, out var existingItem) ? existingItem : null;
+                                <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                                    <MudStack Spacing="2">
+                                        <MudText Typo="Typo.subtitle1">@definition.Label</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">@definition.Description</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@definition.Key</MudText>
+
+                                        @if (definition.Kind == SettingKind.Boolean)
+                                        {
+                                            <MudCheckBox T="bool"
+                                                         Value="GetBoolSetting(definition)"
+                                                         ValueChanged="@(v => SetBoolSetting(definition, v))"
+                                                         Label="Enabled"
+                                                         Color="Color.Primary" />
+                                        }
+                                        else if (definition.Kind == SettingKind.Integer)
+                                        {
+                                            <MudNumericField T="int"
+                                                             Value="@GetIntSetting(definition)"
+                                                             ValueChanged="@(v => SetIntValue(definition, v))"
+                                                             Label="Value"
+                                                             Variant="Variant.Outlined" />
+                                        }
+                                        else if (definition.Kind == SettingKind.Option)
+                                        {
+                                            <MudSelect T="string"
+                                                       Value="GetStringValue(definition)"
+                                                       ValueChanged="@(v => SetStringValue(definition, v))"
+                                                       Label="Value"
+                                                       Variant="Variant.Outlined">
+                                                @foreach (var option in definition.Options)
+                                                {
+                                                    <MudSelectItem T="string" Value="@option.Value">@option.Label</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        }
+                                        else
+                                        {
+                                            <MudTextField T="string"
+                                                          Value="GetStringValue(definition)"
+                                                          ValueChanged="@(v => SetStringValue(definition, v))"
+                                                          Label="Value"
+                                                          Variant="Variant.Outlined" />
+                                        }
+
+                                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="() => SaveKnownSettingAsync(definition)">Save</MudButton>
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="() => ResetKnownSettingAsync(definition)">Reset</MudButton>
+                                            @if (item != null)
+                                            {
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="() => DeleteKnownSettingAsync(definition)">Delete Override</MudButton>
+                                            }
+                                        </MudStack>
+                                    </MudStack>
+                                </MudPaper>
+                            }
+                        </div>
+                    </MudStack>
+                </MudExpansionPanel>
             }
-        </div>
-    }
-}
+
+            <MudExpansionPanel Text="Advanced Settings">
+                <MudStack Spacing="2" Class="pt-2">
+                    <MudStack Row="true" Justify="Justify.FlexEnd">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="ClearCustomForm">Clear Form</MudButton>
+                    </MudStack>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Use this for custom module values not covered above.</MudText>
+                    <EditForm Model="customForm" OnValidSubmit="SaveCustomSettingAsync">
+                        <DataAnnotationsValidator />
+                        <MudStack Spacing="2">
+                            <div class="knitting-list-toolbar-mud">
+                                <MudTextField @bind-Value="customForm.Category" Label="Category" Variant="Variant.Outlined" Required="true" />
+                                <MudTextField @bind-Value="customForm.Key" Label="Key" Variant="Variant.Outlined" Required="true" />
+                                <MudTextField @bind-Value="customForm.Value" Label="Value" Variant="Variant.Outlined" />
+                            </div>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" Disabled="busy">Save Custom Setting</MudButton>
+                        </MudStack>
+                    </EditForm>
+
+                    @if (customSettings.Count == 0)
+                    {
+                        <MudPaper Class="pa-6 knitting-panel-mud" Elevation="1">
+                            <MudStack Spacing="1" AlignItems="AlignItems.Center">
+                                <MudText Typo="Typo.h6">No Custom Settings</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Custom keys outside predefined knitting controls will appear here.</MudText>
+                            </MudStack>
+                        </MudPaper>
+                    }
+                    else
+                    {
+                        <div class="knitting-card-grid-mud">
+                            @foreach (var item in customSettings)
+                            {
+                                <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                                    <MudStack Spacing="2">
+                                        <MudText Typo="Typo.h6">@item.Key</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">@item.Category</MudText>
+                                        <MudText Typo="Typo.body2">@item.Value</MudText>
+                                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="() => EditCustomSetting(item)">Edit</MudButton>
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="() => DeleteSettingAsync(item.Key)">Delete</MudButton>
+                                        </MudStack>
+                                    </MudStack>
+                                </MudPaper>
+                            }
+                        </div>
+                    }
+                </MudStack>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    </MudStack>
+</KnittingModuleGate>
 
 @code {
-    private readonly List<ModuleSettingItemDto> settings = [];
-    private SettingFormModel form = new();
-    private string categoryFilter = string.Empty;
+    private static readonly IReadOnlyList<KnownSettingDefinition> knownSettingDefinitions =
+    [
+        new("projects.showArchivedByDefault", "projects", "Show Archived Projects by Default", "Opens the projects list with archived items already included.", SettingKind.Boolean, "false"),
+        new("kits.showArchivedByDefault", "kits", "Show Archived Kits by Default", "Opens the kits list with archived items already included.", SettingKind.Boolean, "false"),
+        new("workspace.defaultProjectDifficulty", "workspace", "Default Project Difficulty", "Applies to new knitting projects before you pick a different value.", SettingKind.Option, "0",
+        options:
+        [
+            new SettingOption("0", "Unspecified"),
+            new SettingOption("1", "Beginner"),
+            new SettingOption("2", "Beginner+"),
+            new SettingOption("3", "Intermediate"),
+            new SettingOption("4", "Intermediate+"),
+            new SettingOption("5", "Advanced"),
+            new SettingOption("6", "Advanced+")
+        ]),
+        new("workspace.defaultSupplyPlannedQuantity", "workspace", "Default Planned Supply Quantity", "Pre-fills project supply links when you add a new linked supply.", SettingKind.Integer, "1", 1, 999999),
+        new("timers.defaultEditMinutes", "timers", "Timer Edit Starting Minutes", "Starting value in timer edit dialogs when no tracked time exists yet.", SettingKind.Integer, "0", 0, 1440),
+        new("timers.autoPauseOnComplete", "timers", "Auto Pause Timers on Step Complete", "When enabled, timers can be paused automatically after marking a step complete.", SettingKind.Boolean, "false")
+    ];
+
+    private const string ModuleKey = "knitting";
+    private static readonly string[] CategoryOrder = ["projects", "kits", "workspace", "timers"];
+    private readonly List<ModuleSettingItemDto> customSettings = [];
+    private readonly List<CoreReferenceItemDto> themes = [];
+    private readonly List<CoreReferenceItemDto> colors = [];
+    private readonly List<CoreReferenceItemDto> sources = [];
+    private readonly List<CoreReferenceItemDto> brands = [];
+    private readonly List<ModuleInventoryReferenceItemDto> fiberTags = [];
+    private string newThemeName = string.Empty;
+    private string newColorName = string.Empty;
+    private string newSourceName = string.Empty;
+    private string newBrandName = string.Empty;
+    private string newFiberTagName = string.Empty;
+    private readonly Dictionary<string, ModuleSettingItemDto> storedByKey = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> settingValues = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, int?> intValues = new(StringComparer.OrdinalIgnoreCase);
+    private SettingFormModel customForm = new();
     private bool loading = true;
     private bool busy;
     private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+
+    private IReadOnlyList<string> themeNames => themes.Select(item => item.Name).ToList();
+    private IReadOnlyList<string> colorNames => colors.Select(item => item.Name).ToList();
+    private IReadOnlyList<string> sourceNames => sources.Select(item => item.Name).ToList();
+    private IReadOnlyList<string> brandNames => brands.Select(item => item.Name).ToList();
+    private IReadOnlyList<string> fiberTagNames => fiberTags.Select(item => item.Name).ToList();
 
     protected override async Task OnInitializedAsync()
     {
+        EnsureKnownSettingState();
         await AuthSession.InitializeAsync();
         if (AuthSession.IsSignedIn)
         {
@@ -110,6 +317,7 @@ else
 
     private async Task LoadSettingsAsync()
     {
+        EnsureKnownSettingState();
         loading = true;
         errorMessage = string.Empty;
 
@@ -120,8 +328,29 @@ else
                 return;
             }
 
-            settings.Clear();
-            settings.AddRange(await ApiClient.GetModuleSettingsAsync("knitting", categoryFilter));
+            var allSettings = await ApiClient.GetModuleSettingsAsync("knitting");
+            storedByKey.Clear();
+            foreach (var setting in allSettings)
+            {
+                storedByKey[setting.Key] = setting;
+            }
+
+            customSettings.Clear();
+            customSettings.AddRange(allSettings.Where(setting =>
+                !knownSettingDefinitions.Any(definition => definition.Key.Equals(setting.Key, StringComparison.OrdinalIgnoreCase))
+                && !string.Equals(setting.Category, "terms", StringComparison.OrdinalIgnoreCase)));
+
+            await LoadReferenceDataAsync();
+
+            foreach (var definition in knownSettingDefinitions)
+            {
+                var value = storedByKey.TryGetValue(definition.Key, out var stored)
+                    ? stored.Value
+                    : definition.DefaultValue;
+
+                settingValues[definition.Key] = value;
+                intValues[definition.Key] = ParseIntValue(definition, value);
+            }
         }
         catch (Exception ex)
         {
@@ -133,22 +362,22 @@ else
         }
     }
 
-    private async Task SaveSettingAsync()
+    private async Task SaveKnownSettingAsync(KnownSettingDefinition definition)
     {
         busy = true;
         errorMessage = string.Empty;
+        successMessage = string.Empty;
 
         try
         {
             await ApiClient.UpsertModuleSettingAsync("knitting", new UpsertModuleSettingItemRequest
             {
-                Category = form.Category,
-                Key = form.Key,
-                Value = form.Value
+                Category = definition.Category,
+                Key = definition.Key,
+                Value = GetNormalizedValue(definition)
             });
-
-            form = new();
             await LoadSettingsAsync();
+            successMessage = $"Saved {definition.Label}.";
         }
         catch (Exception ex)
         {
@@ -160,10 +389,450 @@ else
         }
     }
 
+    private async Task ResetKnownSettingAsync(KnownSettingDefinition definition)
+    {
+        settingValues[definition.Key] = definition.DefaultValue;
+        intValues[definition.Key] = ParseIntValue(definition, definition.DefaultValue);
+        await SaveKnownSettingAsync(definition);
+    }
+
+    private async Task DeleteKnownSettingAsync(KnownSettingDefinition definition)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.DeleteModuleSettingAsync("knitting", definition.Key);
+            settingValues[definition.Key] = definition.DefaultValue;
+            intValues[definition.Key] = ParseIntValue(definition, definition.DefaultValue);
+            await LoadSettingsAsync();
+            successMessage = $"Reset {definition.Label} to default.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task ResetCategoryDefaultsAsync(string category)
+    {
+        foreach (var definition in knownSettingDefinitions.Where(definition => definition.Category == category))
+        {
+            settingValues[definition.Key] = definition.DefaultValue;
+            intValues[definition.Key] = ParseIntValue(definition, definition.DefaultValue);
+        }
+
+        await SaveCategoryAsync(category);
+    }
+
+    private async Task SaveCategoryAsync(string category)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            foreach (var definition in knownSettingDefinitions.Where(definition => definition.Category == category))
+            {
+                await ApiClient.UpsertModuleSettingAsync("knitting", new UpsertModuleSettingItemRequest
+                {
+                    Category = definition.Category,
+                    Key = definition.Key,
+                    Value = GetNormalizedValue(definition)
+                });
+            }
+
+            await LoadSettingsAsync();
+            successMessage = $"Saved {CategoryLabel(category)} settings.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task LoadReferenceDataAsync()
+    {
+        themes.Clear();
+        themes.AddRange(await ApiClient.GetCoreReferenceItemsAsync("themes"));
+        colors.Clear();
+        colors.AddRange(await ApiClient.GetCoreReferenceItemsAsync("colors"));
+        sources.Clear();
+        sources.AddRange(await ApiClient.GetCoreReferenceItemsAsync("sources"));
+        brands.Clear();
+        brands.AddRange(await ApiClient.GetCoreReferenceItemsAsync("brands"));
+        fiberTags.Clear();
+        fiberTags.AddRange(await ApiClient.GetModuleInventoryReferenceItemsAsync(ModuleKey, "fiber-tag"));
+    }
+
+    private async Task AddCoreReferenceAsync(
+        string category,
+        string name,
+        Action clearInput,
+        List<CoreReferenceItemDto> target)
+    {
+        var trimmed = name.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            var created = await ApiClient.CreateCoreReferenceItemAsync(category, new CreateCoreReferenceItemRequest { Name = trimmed });
+            if (!target.Any(item => item.Id == created.Id))
+            {
+                target.Add(created);
+                target.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
+            }
+
+            clearInput();
+            successMessage = $"Added {trimmed}.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task AddFiberTagAsync()
+    {
+        var trimmed = newFiberTagName.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            var created = await ApiClient.CreateModuleInventoryReferenceItemAsync(
+                ModuleKey,
+                "fiber-tag",
+                new CreateModuleInventoryReferenceItemDto { Name = trimmed });
+            if (!fiberTags.Any(item => string.Equals(item.Name, created.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                fiberTags.Add(created);
+                fiberTags.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
+            }
+
+            newFiberTagName = string.Empty;
+            successMessage = $"Added fiber tag {trimmed}.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task SaveCustomSettingAsync()
+    {
+        busy = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UpsertModuleSettingAsync("knitting", new UpsertModuleSettingItemRequest
+            {
+                Category = customForm.Category,
+                Key = customForm.Key,
+                Value = customForm.Value
+            });
+
+            customForm = new();
+            await LoadSettingsAsync();
+            successMessage = "Saved custom setting.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void EditCustomSetting(ModuleSettingItemDto setting)
+    {
+        customForm = new SettingFormModel
+        {
+            Category = setting.Category,
+            Key = setting.Key,
+            Value = setting.Value
+        };
+    }
+
+    private void ClearCustomForm()
+    {
+        customForm = new SettingFormModel();
+    }
+
+    private async Task DeleteSettingAsync(string key)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.DeleteModuleSettingAsync("knitting", key);
+            if (string.Equals(customForm.Key, key, StringComparison.OrdinalIgnoreCase))
+            {
+                customForm = new SettingFormModel();
+            }
+
+            await LoadSettingsAsync();
+            successMessage = "Deleted custom setting.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private static bool TryParseBool(string value, out bool parsed)
+        => bool.TryParse(value, out parsed);
+
+    private bool GetBoolSetting(KnownSettingDefinition definition)
+    {
+        if (!settingValues.TryGetValue(definition.Key, out var value))
+        {
+            value = definition.DefaultValue;
+        }
+
+        return TryParseBool(value, out var parsed) && parsed;
+    }
+
+    private void SetBoolSetting(KnownSettingDefinition definition, bool isEnabled)
+    {
+        settingValues[definition.Key] = isEnabled ? "true" : "false";
+    }
+
+    private static int? ParseIntValue(KnownSettingDefinition definition, string value)
+    {
+        if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
+        {
+            parsed = int.TryParse(definition.DefaultValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var fallback) ? fallback : 0;
+        }
+
+        if (definition.MinValue.HasValue && parsed < definition.MinValue.Value)
+        {
+            parsed = definition.MinValue.Value;
+        }
+
+        if (definition.MaxValue.HasValue && parsed > definition.MaxValue.Value)
+        {
+            parsed = definition.MaxValue.Value;
+        }
+
+        return parsed;
+    }
+
+    private string GetNormalizedValue(KnownSettingDefinition definition)
+    {
+        if (definition.Kind == SettingKind.Boolean)
+        {
+            return GetBoolSetting(definition) ? "true" : "false";
+        }
+
+        if (definition.Kind == SettingKind.Integer)
+        {
+            var current = intValues.TryGetValue(definition.Key, out var value)
+                ? value
+                : ParseIntValue(definition, definition.DefaultValue);
+            if (!current.HasValue)
+            {
+                current = ParseIntValue(definition, definition.DefaultValue);
+            }
+
+            var normalized = current ?? 0;
+            if (definition.MinValue.HasValue && normalized < definition.MinValue.Value)
+            {
+                normalized = definition.MinValue.Value;
+            }
+
+            if (definition.MaxValue.HasValue && normalized > definition.MaxValue.Value)
+            {
+                normalized = definition.MaxValue.Value;
+            }
+
+            intValues[definition.Key] = normalized;
+            settingValues[definition.Key] = normalized.ToString(CultureInfo.InvariantCulture);
+            return settingValues[definition.Key];
+        }
+
+        var selected = settingValues.TryGetValue(definition.Key, out var stringValue)
+            ? stringValue
+            : definition.DefaultValue;
+
+        if (definition.Kind == SettingKind.Option
+            && definition.Options.Count > 0
+            && !definition.Options.Any(option => option.Value == selected))
+        {
+            selected = definition.DefaultValue;
+        }
+
+        settingValues[definition.Key] = selected;
+        return selected.Trim();
+    }
+
+    private static string CategoryLabel(string category)
+    {
+        return category switch
+        {
+            "projects" => "Projects",
+            "kits" => "Kits",
+            "workspace" => "Workspace",
+            "timers" => "Timers",
+            _ => category
+        };
+    }
+
+    private int GetIntSetting(KnownSettingDefinition definition)
+    {
+        var value = intValues.TryGetValue(definition.Key, out var stored)
+            ? stored
+            : ParseIntValue(definition, definition.DefaultValue);
+        return value ?? 0;
+    }
+
+    private void SetIntValue(KnownSettingDefinition definition, int value)
+    {
+        var parsed = ParseIntValue(definition, value.ToString(CultureInfo.InvariantCulture));
+        intValues[definition.Key] = parsed;
+        settingValues[definition.Key] = (parsed ?? 0).ToString(CultureInfo.InvariantCulture);
+    }
+
+    private string GetStringValue(KnownSettingDefinition definition)
+    {
+        if (!settingValues.TryGetValue(definition.Key, out var value))
+        {
+            value = definition.DefaultValue;
+            settingValues[definition.Key] = value;
+        }
+
+        return value;
+    }
+
+    private void SetStringValue(KnownSettingDefinition definition, string? value)
+    {
+        settingValues[definition.Key] = value ?? definition.DefaultValue;
+    }
+
+    private void EnsureKnownSettingState()
+    {
+        foreach (var definition in knownSettingDefinitions)
+        {
+            if (!settingValues.ContainsKey(definition.Key))
+            {
+                settingValues[definition.Key] = definition.DefaultValue;
+            }
+
+            if (!intValues.ContainsKey(definition.Key))
+            {
+                intValues[definition.Key] = ParseIntValue(definition, definition.DefaultValue);
+            }
+        }
+    }
+
+    private enum SettingKind
+    {
+        Boolean,
+        Integer,
+        Option,
+        Text
+    }
+
+    private sealed class SettingOption
+    {
+        public SettingOption(string value, string label)
+        {
+            Value = value;
+            Label = label;
+        }
+
+        public string Value { get; }
+        public string Label { get; }
+    }
+
+    private sealed class KnownSettingDefinition
+    {
+        public KnownSettingDefinition(
+            string key,
+            string category,
+            string label,
+            string description,
+            SettingKind kind,
+            string defaultValue,
+            int? minValue = null,
+            int? maxValue = null,
+            IReadOnlyList<SettingOption>? options = null)
+        {
+            Key = key;
+            Category = category;
+            Label = label;
+            Description = description;
+            Kind = kind;
+            DefaultValue = defaultValue;
+            MinValue = minValue;
+            MaxValue = maxValue;
+            Options = options ?? [];
+        }
+
+        public string Key { get; }
+        public string Category { get; }
+        public string Label { get; }
+        public string Description { get; }
+        public SettingKind Kind { get; }
+        public string DefaultValue { get; }
+        public int? MinValue { get; }
+        public int? MaxValue { get; }
+        public IReadOnlyList<SettingOption> Options { get; }
+    }
+
     private class SettingFormModel
     {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Category is required")]
+        [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "Category cannot exceed 100 characters")]
         public string Category { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Key is required")]
+        [System.ComponentModel.DataAnnotations.StringLength(150, ErrorMessage = "Key cannot exceed 150 characters")]
         public string Key { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.StringLength(1000, ErrorMessage = "Value cannot exceed 1000 characters")]
         public string Value { get; set; } = string.Empty;
     }
 }

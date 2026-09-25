@@ -260,6 +260,36 @@ public class ModulePatternsController : ControllerBase
             : NotFound();
     }
 
+    [HttpPost("{patternId:guid}/supplies")]
+    public async Task<ActionResult<ModulePatternSupplyDto>> AddSupply(
+        string moduleKey,
+        Guid patternId,
+        CreateModulePatternSupplyRequest request)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed)
+        {
+            return gate.Result!;
+        }
+
+        var supply = await gate.Handler!.AddSupplyAsync(patternId, request, gate.UserId!.Value);
+        return supply == null ? NotFound() : CreatedAtAction(nameof(GetById), new { moduleKey, id = patternId }, supply);
+    }
+
+    [HttpDelete("{patternId:guid}/supplies/{supplyId:guid}")]
+    public async Task<ActionResult> DeleteSupply(string moduleKey, Guid patternId, Guid supplyId)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed)
+        {
+            return gate.Result!;
+        }
+
+        return await gate.Handler!.DeleteSupplyAsync(patternId, supplyId, gate.UserId!.Value)
+            ? NoContent()
+            : NotFound();
+    }
+
     private async Task<GateResult> ResolveGateAsync(string moduleKey)
     {
         var userId = User.GetUserId();

@@ -1,47 +1,52 @@
 @page "/modules/knitting/patterns/{PatternId:guid}"
+@using TankerMade.Contracts.DTOs.Assets
+@using TankerMade.Contracts.DTOs.ModuleInventory
 @using TankerMade.Contracts.DTOs.ModulePatterns
+@using TankerMade.Contracts.DTOs.Reference
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
 
 <PageTitle>Knitting Pattern</PageTitle>
 
-@if (!AuthSession.IsSignedIn)
-{
-    <h1>Knitting Pattern</h1>
-    <p>Sign in to use this module section.</p>
-    <a class="btn btn-primary" href="/login">Sign in</a>
-}
-else if (!ModuleState.IsActive("knitting"))
-{
-    <h1>Knitting Pattern</h1>
-    <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/">Go to Home</a>
-}
-else if (loading)
-{
-    <h1>Knitting Pattern</h1>
-    <p>Loading...</p>
-}
-else if (pattern is null)
-{
-    <h1>Pattern Not Found</h1>
-    <a class="btn btn-outline-secondary" href="/modules/knitting/patterns">Back to Patterns</a>
-}
-else
-{
-    <div class="pattern-detail">
-        @if (!string.IsNullOrWhiteSpace(errorMessage))
-        {
-            <div class="alert alert-danger">@errorMessage</div>
-        }
+<KnittingModuleGate Loading="loading" LoadingMessage="Loading pattern...">
+    @if (pattern is null)
+    {
+        <MudStack Spacing="3">
+            <KnittingPageHeader Title="Pattern Not Found"
+                                BackHref="/modules/knitting/patterns"
+                                BackLabel="Patterns" />
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/modules/knitting/patterns">
+                Back to Patterns
+            </MudButton>
+        </MudStack>
+    }
+    else
+    {
+        <MudStack Spacing="3" Class="pattern-detail">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+            }
 
-        <div class="pattern-header">
-            <div>
-                <a class="pattern-back-link" href="/modules/knitting/patterns">Patterns</a>
-                <h1>@pattern.Name</h1>
-                <p>@DisplayMetadata(pattern)</p>
-            </div>
+            <div class="pattern-header">
+                <div class="knitting-hero-card pattern-header-main">
+                    <AssetThumbnailImage AssetId="headerAssetId"
+                                         AltText="@pattern.Name"
+                                         CssClass="asset-thumbnail-image" />
+                    <div>
+                        <KnittingPageHeader Title="@pattern.Name"
+                                            Subtitle="@DisplayMetadata(pattern)"
+                                            BackHref="/modules/knitting/patterns"
+                                            BackLabel="Patterns" />
+                        <div class="pattern-card-stats mt-2">
+                            <KnittingDifficultyBadge DifficultyText="@(string.IsNullOrWhiteSpace(pattern.Difficulty) ? "Unspecified" : pattern.Difficulty)" />
+                            <span>@(string.IsNullOrWhiteSpace(pattern.ThemeName) ? "No theme" : pattern.ThemeName)</span>
+                            <span>@(string.IsNullOrWhiteSpace(pattern.ColorName) ? "No color" : pattern.ColorName)</span>
+                            <span>@(string.IsNullOrWhiteSpace(pattern.SourceName) ? "No source" : pattern.SourceName)</span>
+                        </div>
+                    </div>
+                </div>
             <div class="pattern-stats" aria-label="Pattern summary">
                 <div>
                     <strong>@pattern.PieceCount</strong>
@@ -54,20 +59,147 @@ else
             </div>
         </div>
 
+        <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.subtitle1">Supply Metadata</MudText>
+                <EditForm Model="metadataForm" OnValidSubmit="SaveMetadataAsync" class="project-edit-form">
+                    <MudStack Spacing="2">
+                        <div class="form-grid">
+                            <MudSelect T="string" @bind-Value="metadataForm.ThemeIdText" Label="Theme" Variant="Variant.Outlined">
+                                <MudSelectItem T="string" Value="@string.Empty">No theme</MudSelectItem>
+                                @foreach (var theme in themes)
+                                {
+                                    <MudSelectItem T="string" Value="@theme.Id.ToString()">@theme.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect T="string" @bind-Value="metadataForm.ColorIdText" Label="Main color" Variant="Variant.Outlined">
+                                <MudSelectItem T="string" Value="@string.Empty">No color</MudSelectItem>
+                                @foreach (var color in colors)
+                                {
+                                    <MudSelectItem T="string" Value="@color.Id.ToString()">@color.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect T="string" @bind-Value="metadataForm.SourceIdText" Label="Source" Variant="Variant.Outlined">
+                                <MudSelectItem T="string" Value="@string.Empty">No source</MudSelectItem>
+                                @foreach (var source in sources)
+                                {
+                                    <MudSelectItem T="string" Value="@source.Id.ToString()">@source.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudTextField @bind-Value="metadataForm.SuggestedYarnWeight" Label="Suggested yarn weight" Variant="Variant.Outlined" />
+                            <MudTextField @bind-Value="metadataForm.SuggestedNeedleSizes" Label="Suggested needle sizes" Variant="Variant.Outlined" />
+                            <MudTextField @bind-Value="metadataForm.RequiredNotions" Label="Required notions" Variant="Variant.Outlined" />
+                        </div>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" ButtonType="ButtonType.Submit">
+                            Save Metadata
+                        </MudButton>
+                    </MudStack>
+                </EditForm>
+            </MudStack>
+        </MudPaper>
+
+        <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.subtitle1">Pattern Supplies</MudText>
+                <div class="form-grid">
+                    <MudSelect T="string" @bind-Value="supplyForm.SupplyType" @bind-Value:after="OnSupplyTypeChanged" Label="Supply type" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@("yarn")">Yarn</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("tool")">Tool</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("notion")">Notion</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect T="Guid?" @bind-Value="selectedSupplyInventoryId" @bind-Value:after="OnSupplyInventoryChanged" Label="Inventory item (optional)" Variant="Variant.Outlined">
+                        <MudSelectItem T="Guid?" Value="@((Guid?)null)">Manual name</MudSelectItem>
+                        @foreach (var option in supplyInventoryOptions)
+                        {
+                            <MudSelectItem T="Guid?" Value="@option.Id">@option.Label</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudTextField @bind-Value="supplyForm.Name" Label="Name" Variant="Variant.Outlined" />
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="AddPatternSupplyAsync">
+                    Add Supply
+                </MudButton>
+
+                @if (pattern.Supplies.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">No supplies listed yet.</MudText>
+                }
+                else
+                {
+                    <ul class="project-supply-list mt-3">
+                        @foreach (var supply in pattern.Supplies.OrderBy(item => item.SortOrder))
+                        {
+                            <li>
+                                <div>
+                                    <strong>@supply.Name</strong>
+                                    <span class="text-muted">(@supply.SupplyType)</span>
+                                </div>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="@(() => DeletePatternSupplyAsync(supply.Id))">
+                                    Remove
+                                </MudButton>
+                            </li>
+                        }
+                    </ul>
+                }
+            </MudStack>
+        </MudPaper>
+
+        <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.subtitle1">Pattern Assets</MudText>
+                <InputFile OnChange="UploadPatternAssetAsync" disabled="@busy" />
+                @if (patternAssets.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">No assets attached yet.</MudText>
+                }
+                else
+                {
+                    <ul class="project-supply-list mt-2">
+                        @foreach (var asset in patternAssets)
+                        {
+                            <li>
+                                <div>
+                                    <strong>@asset.OriginalFileName</strong>
+                                    <span>@AssetMeta(asset)</span>
+                                </div>
+                                @if (asset.RecordId == pattern.Id)
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="@(() => UnassignPatternAssetAsync(asset.Id))">
+                                        Unlink
+                                    </MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="@(() => AssignPatternAssetAsync(asset.Id))">
+                                        Attach
+                                    </MudButton>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </MudStack>
+        </MudPaper>
+
         <div class="pattern-workspace">
             <aside class="piece-list" aria-label="Pieces">
+                @if (pattern.Pieces.Count > 0 && selectedPiece != null)
+                {
+                    <p class="muted-copy mb-2">Piece @SelectedPieceIndex of @pattern.Pieces.Count</p>
+                }
                 <EditForm Model="pieceForm" OnValidSubmit="AddPieceAsync" class="piece-create-form">
                     <DataAnnotationsValidator />
-                    <label>
-                        <span>New Piece</span>
-                        <InputText class="form-control" @bind-Value="pieceForm.Name" />
-                    </label>
-                    <button class="btn btn-primary" disabled="@busy" type="submit">Add Piece</button>
+                    <MudStack Spacing="2">
+                        <MudTextField @bind-Value="pieceForm.Name" Label="New Piece" Variant="Variant.Outlined" />
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" ButtonType="ButtonType.Submit">
+                            Add Piece
+                        </MudButton>
+                    </MudStack>
                 </EditForm>
 
                 @if (pattern.Pieces.Count == 0)
                 {
-                    <p class="muted-copy">No pieces yet.</p>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">No pieces yet.</MudText>
                 }
                 else
                 {
@@ -78,6 +210,10 @@ else
                                 <span>@piece.Name</span>
                                 <small>@piece.StepCount steps</small>
                             </button>
+                            <div class="piece-order-actions">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="@(busy || IsFirstPiece(piece.Id))" OnClick="@(() => MovePieceAsync(piece.Id, -1))">Up</MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="@(busy || IsLastPiece(piece.Id))" OnClick="@(() => MovePieceAsync(piece.Id, 1))">Down</MudButton>
+                            </div>
                         </div>
                     }
                 }
@@ -95,53 +231,43 @@ else
                             <h2>@selectedPiece.Name</h2>
                             <p>@selectedPiece.StepCount steps</p>
                         </div>
-                        <div class="auth-actions">
-                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="StartPieceRename">Rename</button>
-                            <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="DeletePieceAsync">Delete</button>
-                        </div>
+                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="busy" OnClick="StartPieceRename">Rename</MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="DeletePieceAsync">Delete</MudButton>
+                        </MudStack>
                     </div>
 
                     @if (editingPiece)
                     {
                         <EditForm Model="renamePieceForm" OnValidSubmit="RenamePieceAsync" class="piece-edit-form">
                             <DataAnnotationsValidator />
-                            <label>
-                                <span>Piece Name</span>
-                                <InputText class="form-control" @bind-Value="renamePieceForm.Name" />
-                            </label>
-                            <div class="auth-actions">
-                                <button class="btn btn-primary btn-sm" disabled="@busy" type="submit">Save</button>
-                                <button class="btn btn-outline-secondary btn-sm" disabled="@busy" type="button" @onclick="CancelPieceRename">Cancel</button>
-                            </div>
+                            <MudStack Spacing="2">
+                                <MudTextField @bind-Value="renamePieceForm.Name" Label="Piece Name" Variant="Variant.Outlined" />
+                                <MudStack Row="true" Spacing="1">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" ButtonType="ButtonType.Submit">Save</MudButton>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="busy" OnClick="CancelPieceRename">Cancel</MudButton>
+                                </MudStack>
+                            </MudStack>
                         </EditForm>
                     }
 
                     <EditForm Model="stepForm" OnValidSubmit="AddStepAsync" class="step-form">
                         <DataAnnotationsValidator />
-                        <div class="form-grid">
-                            <label>
-                                <span>Range Start</span>
-                                <InputNumber class="form-control" @bind-Value="stepForm.StartIndex" />
-                            </label>
-                            <label>
-                                <span>Range End</span>
-                                <InputNumber class="form-control" @bind-Value="stepForm.EndIndex" />
-                            </label>
-                            <label>
-                                <span>Label</span>
-                                <InputText class="form-control" @bind-Value="stepForm.Label" />
-                            </label>
-                        </div>
-                        <label>
-                            <span>Notes</span>
-                            <InputTextArea class="form-control" @bind-Value="stepForm.Notes" />
-                        </label>
-                        <button class="btn btn-primary" disabled="@busy" type="submit">Add Step</button>
+                        <MudStack Spacing="2">
+                            <div class="form-grid">
+                                <MudNumericField T="int?" @bind-Value="stepForm.StartIndex" Label="Range Start" Variant="Variant.Outlined" />
+                                <MudNumericField T="int?" @bind-Value="stepForm.EndIndex" Label="Range End" Variant="Variant.Outlined" />
+                                <MudTextField @bind-Value="stepForm.Label" Label="Label" Variant="Variant.Outlined" />
+                                <MudNumericField T="int?" @bind-Value="stepForm.StitchCount" Label="Stitch Count" Variant="Variant.Outlined" />
+                            </div>
+                            <MudTextField @bind-Value="stepForm.Notes" Label="Notes" Variant="Variant.Outlined" Lines="3" />
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" ButtonType="ButtonType.Submit">Add Step</MudButton>
+                        </MudStack>
                     </EditForm>
 
                     @if (selectedPiece.Steps.Count == 0)
                     {
-                        <p class="muted-copy">No steps yet.</p>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">No steps yet.</MudText>
                     }
                     else
                     {
@@ -153,10 +279,12 @@ else
                                     <div class="step-content">
                                         <div class="step-title-row">
                                             <h3>@step.Label</h3>
-                                            <div class="auth-actions">
-                                                <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => StartStepEdit(step)">Edit</button>
-                                                <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => DeleteStepAsync(step.Id)">Delete</button>
-                                            </div>
+                                            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="@(busy || IsFirstStep(step.Id))" OnClick="@(() => MoveStepAsync(step.Id, -1))">Up</MudButton>
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="@(busy || IsLastStep(step.Id))" OnClick="@(() => MoveStepAsync(step.Id, 1))">Down</MudButton>
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="busy" OnClick="@(() => StartStepEdit(step))">Edit</MudButton>
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="@(() => DeleteStepAsync(step.Id))">Delete</MudButton>
+                                            </MudStack>
                                         </div>
                                         <p>@step.Notes</p>
 
@@ -164,28 +292,19 @@ else
                                         {
                                             <EditForm Model="editStepForm" OnValidSubmit="SaveStepEditAsync" class="step-form">
                                                 <DataAnnotationsValidator />
-                                                <div class="form-grid">
-                                                    <label>
-                                                        <span>Range Start</span>
-                                                        <InputNumber class="form-control" @bind-Value="editStepForm.StartIndex" />
-                                                    </label>
-                                                    <label>
-                                                        <span>Range End</span>
-                                                        <InputNumber class="form-control" @bind-Value="editStepForm.EndIndex" />
-                                                    </label>
-                                                    <label>
-                                                        <span>Label</span>
-                                                        <InputText class="form-control" @bind-Value="editStepForm.Label" />
-                                                    </label>
-                                                </div>
-                                                <label>
-                                                    <span>Notes</span>
-                                                    <InputTextArea class="form-control" @bind-Value="editStepForm.Notes" />
-                                                </label>
-                                                <div class="auth-actions">
-                                                    <button class="btn btn-primary btn-sm" disabled="@busy" type="submit">Save</button>
-                                                    <button class="btn btn-outline-secondary btn-sm" disabled="@busy" type="button" @onclick="CancelStepEdit">Cancel</button>
-                                                </div>
+                                                <MudStack Spacing="2">
+                                                    <div class="form-grid">
+                                                        <MudNumericField T="int?" @bind-Value="editStepForm.StartIndex" Label="Range Start" Variant="Variant.Outlined" />
+                                                        <MudNumericField T="int?" @bind-Value="editStepForm.EndIndex" Label="Range End" Variant="Variant.Outlined" />
+                                                        <MudTextField @bind-Value="editStepForm.Label" Label="Label" Variant="Variant.Outlined" />
+                                                        <MudNumericField T="int?" @bind-Value="editStepForm.StitchCount" Label="Stitch Count" Variant="Variant.Outlined" />
+                                                    </div>
+                                                    <MudTextField @bind-Value="editStepForm.Notes" Label="Notes" Variant="Variant.Outlined" Lines="3" />
+                                                    <MudStack Row="true" Spacing="1">
+                                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" ButtonType="ButtonType.Submit">Save</MudButton>
+                                                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" Disabled="busy" OnClick="CancelStepEdit">Cancel</MudButton>
+                                                    </MudStack>
+                                                </MudStack>
                                             </EditForm>
                                         }
                                     </div>
@@ -196,14 +315,17 @@ else
                 }
             </section>
         </div>
-    </div>
-}
+        </MudStack>
+    }
+</KnittingModuleGate>
 
 @code {
     [Parameter] public Guid PatternId { get; set; }
 
     private const string ModuleKey = "knitting";
+    private const string PatternRecordType = "pattern";
     private ModulePatternDto? pattern;
+    private Guid? headerAssetId;
     private ModulePatternPieceDto? selectedPiece;
     private Guid? selectedPieceId;
     private bool loading = true;
@@ -216,6 +338,17 @@ else
     private PieceFormModel renamePieceForm = new();
     private StepFormModel stepForm = new();
     private StepFormModel editStepForm = new();
+    private MetadataFormModel metadataForm = new();
+    private readonly List<CoreReferenceItemDto> themes = [];
+    private readonly List<CoreReferenceItemDto> colors = [];
+    private readonly List<CoreReferenceItemDto> sources = [];
+    private int SelectedPieceIndex => pattern == null || selectedPiece == null
+        ? 0
+        : pattern.Pieces.ToList().FindIndex(piece => piece.Id == selectedPiece.Id) + 1;
+    private PatternSupplyFormModel supplyForm = new() { SupplyType = "yarn" };
+    private readonly List<InventoryOption> supplyInventoryOptions = [];
+    private Guid? selectedSupplyInventoryId;
+    private readonly List<AssetRecordDto> patternAssets = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -240,13 +373,30 @@ else
                 return;
             }
 
+            themes.Clear();
+            themes.AddRange(await ApiClient.GetCoreReferenceItemsAsync("themes"));
+            colors.Clear();
+            colors.AddRange(await ApiClient.GetCoreReferenceItemsAsync("colors"));
+            sources.Clear();
+            sources.AddRange(await ApiClient.GetCoreReferenceItemsAsync("sources"));
             pattern = await ApiClient.GetModulePatternAsync(ModuleKey, PatternId);
             if (pattern != null)
             {
+                metadataForm = new MetadataFormModel
+                {
+                    ThemeIdText = pattern.ThemeId?.ToString() ?? string.Empty,
+                    ColorIdText = pattern.ColorId?.ToString() ?? string.Empty,
+                    SourceIdText = pattern.SourceId?.ToString() ?? string.Empty,
+                    SuggestedYarnWeight = pattern.SuggestedYarnWeight,
+                    SuggestedNeedleSizes = pattern.SuggestedNeedleSizes,
+                    RequiredNotions = pattern.RequiredNotions
+                };
                 selectedPieceId ??= pattern.Pieces.FirstOrDefault()?.Id;
                 selectedPiece = pattern.Pieces.FirstOrDefault(piece => piece.Id == selectedPieceId)
                     ?? pattern.Pieces.FirstOrDefault();
                 selectedPieceId = selectedPiece?.Id;
+                await LoadSupplyInventoryOptionsAsync();
+                await LoadPatternAssetsAsync();
             }
         }
         catch (Exception ex)
@@ -392,6 +542,7 @@ else
                     StartIndex = stepForm.StartIndex,
                     EndIndex = stepForm.EndIndex,
                     Label = stepForm.Label,
+                    StitchCount = stepForm.StitchCount,
                     Notes = stepForm.Notes
                 });
 
@@ -416,6 +567,7 @@ else
             StartIndex = step.StartIndex,
             EndIndex = step.EndIndex,
             Label = step.Label,
+            StitchCount = step.StitchCount,
             Notes = step.Notes
         };
     }
@@ -442,6 +594,7 @@ else
                     StartIndex = editStepForm.StartIndex,
                     EndIndex = editStepForm.EndIndex,
                     Label = editStepForm.Label,
+                    StitchCount = editStepForm.StitchCount,
                     Notes = editStepForm.Notes
                 });
 
@@ -486,9 +639,335 @@ else
         }
     }
 
+    private bool IsFirstPiece(Guid pieceId)
+        => pattern?.Pieces.FirstOrDefault()?.Id == pieceId;
+
+    private bool IsLastPiece(Guid pieceId)
+        => pattern?.Pieces.LastOrDefault()?.Id == pieceId;
+
+    private bool IsFirstStep(Guid stepId)
+        => selectedPiece?.Steps.FirstOrDefault()?.Id == stepId;
+
+    private bool IsLastStep(Guid stepId)
+        => selectedPiece?.Steps.LastOrDefault()?.Id == stepId;
+
+    private async Task MovePieceAsync(Guid pieceId, int direction)
+    {
+        if (pattern == null)
+        {
+            return;
+        }
+
+        var orderedIds = pattern.Pieces.Select(piece => piece.Id).ToList();
+        var index = orderedIds.IndexOf(pieceId);
+        if (index < 0)
+        {
+            return;
+        }
+
+        var target = index + direction;
+        if (target < 0 || target >= orderedIds.Count)
+        {
+            return;
+        }
+
+        (orderedIds[index], orderedIds[target]) = (orderedIds[target], orderedIds[index]);
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.ReorderModulePatternPiecesAsync(ModuleKey, pattern.Id, orderedIds);
+            await LoadPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task MoveStepAsync(Guid stepId, int direction)
+    {
+        if (pattern == null || selectedPiece == null)
+        {
+            return;
+        }
+
+        var orderedIds = selectedPiece.Steps.Select(step => step.Id).ToList();
+        var index = orderedIds.IndexOf(stepId);
+        if (index < 0)
+        {
+            return;
+        }
+
+        var target = index + direction;
+        if (target < 0 || target >= orderedIds.Count)
+        {
+            return;
+        }
+
+        (orderedIds[index], orderedIds[target]) = (orderedIds[target], orderedIds[index]);
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.ReorderModulePatternStepsAsync(ModuleKey, pattern.Id, selectedPiece.Id, orderedIds);
+            await LoadPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task SaveMetadataAsync()
+    {
+        if (pattern == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UpdateModulePatternAsync(ModuleKey, pattern.Id, new UpdateModulePatternRequest
+            {
+                ThemeId = ParseOptionalGuid(metadataForm.ThemeIdText),
+                ColorId = ParseOptionalGuid(metadataForm.ColorIdText),
+                SourceId = ParseOptionalGuid(metadataForm.SourceIdText),
+                SuggestedYarnWeight = metadataForm.SuggestedYarnWeight,
+                SuggestedNeedleSizes = metadataForm.SuggestedNeedleSizes,
+                RequiredNotions = metadataForm.RequiredNotions
+            });
+            await LoadPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task AddPatternSupplyAsync()
+    {
+        if (pattern == null || string.IsNullOrWhiteSpace(supplyForm.Name))
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.AddModulePatternSupplyAsync(ModuleKey, pattern.Id, new CreateModulePatternSupplyRequest
+            {
+                SupplyType = supplyForm.SupplyType,
+                Name = supplyForm.Name.Trim(),
+                InventoryItemId = selectedSupplyInventoryId
+            });
+            var supplyType = supplyForm.SupplyType;
+            supplyForm = new PatternSupplyFormModel { SupplyType = supplyType };
+            selectedSupplyInventoryId = null;
+            await LoadPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task DeletePatternSupplyAsync(Guid supplyId)
+    {
+        if (pattern == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.DeleteModulePatternSupplyAsync(ModuleKey, pattern.Id, supplyId);
+            await LoadPatternAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task OnSupplyTypeChanged()
+    {
+        selectedSupplyInventoryId = null;
+        await LoadSupplyInventoryOptionsAsync();
+    }
+
+    private void OnSupplyInventoryChanged()
+    {
+        if (!selectedSupplyInventoryId.HasValue)
+        {
+            return;
+        }
+
+        var selected = supplyInventoryOptions.FirstOrDefault(option => option.Id == selectedSupplyInventoryId.Value);
+        if (selected != null)
+        {
+            supplyForm.Name = selected.Label;
+        }
+    }
+
+    private async Task LoadSupplyInventoryOptionsAsync()
+    {
+        supplyInventoryOptions.Clear();
+
+        switch (supplyForm.SupplyType)
+        {
+            case "tool":
+                foreach (var tool in await ApiClient.GetModuleToolsAsync(ModuleKey))
+                {
+                    supplyInventoryOptions.Add(new InventoryOption(tool.Id, $"{tool.BrandName} - {tool.TypeName}"));
+                }
+
+                break;
+            case "notion":
+                foreach (var notion in await ApiClient.GetModuleNotionsAsync(ModuleKey))
+                {
+                    supplyInventoryOptions.Add(new InventoryOption(notion.Id, $"{notion.BrandName} - {notion.TypeName}"));
+                }
+
+                break;
+            default:
+                foreach (var yarn in await ApiClient.GetModuleYarnsAsync(ModuleKey))
+                {
+                    supplyInventoryOptions.Add(new InventoryOption(yarn.Id, $"{yarn.BrandName} - {yarn.ColorName}"));
+                }
+
+                break;
+        }
+    }
+
+    private async Task LoadPatternAssetsAsync()
+    {
+        patternAssets.Clear();
+        headerAssetId = null;
+        if (pattern == null)
+        {
+            return;
+        }
+
+        patternAssets.AddRange(await ApiClient.GetAssetsForPickerAsync(
+            ModuleKey,
+            PatternRecordType,
+            pattern.Id,
+            includeUnassigned: true));
+        headerAssetId = patternAssets.FirstOrDefault()?.Id;
+    }
+
+    private async Task UploadPatternAssetAsync(InputFileChangeEventArgs args)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UploadAssetAsync(ModuleKey, args.File);
+            await LoadPatternAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task AssignPatternAssetAsync(Guid assetId)
+    {
+        if (pattern == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.AssignAssetAsync(assetId, new AssetAssignmentRequest
+            {
+                ModuleKey = ModuleKey,
+                RecordType = PatternRecordType,
+                RecordId = pattern.Id
+            });
+            await LoadPatternAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task UnassignPatternAssetAsync(Guid assetId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UnassignAssetAsync(assetId);
+            await LoadPatternAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private static string AssetMeta(AssetRecordDto asset)
+    {
+        var size = asset.FileSizeBytes > 0 ? $"{asset.FileSizeBytes / 1024} KB" : "unknown size";
+        return $"{asset.ContentType} - {size}";
+    }
+
     private static string DisplayMetadata(ModulePatternDto value)
     {
-        var parts = new[] { value.Type, value.Form, value.Difficulty }
+        var parts = new[] { value.Type, value.Form, value.Difficulty, value.SuggestedYarnWeight }
             .Where(part => !string.IsNullOrWhiteSpace(part));
 
         return string.Join(" - ", parts);
@@ -523,7 +1002,29 @@ else
     {
         public int? StartIndex { get; set; }
         public int? EndIndex { get; set; }
+        public int? StitchCount { get; set; }
         public string Label { get; set; } = string.Empty;
         public string Notes { get; set; } = string.Empty;
     }
+
+    private static Guid? ParseOptionalGuid(string? value)
+        => Guid.TryParse(value, out var parsed) ? parsed : null;
+
+    private class MetadataFormModel
+    {
+        public string ThemeIdText { get; set; } = string.Empty;
+        public string ColorIdText { get; set; } = string.Empty;
+        public string SourceIdText { get; set; } = string.Empty;
+        public string SuggestedYarnWeight { get; set; } = string.Empty;
+        public string SuggestedNeedleSizes { get; set; } = string.Empty;
+        public string RequiredNotions { get; set; } = string.Empty;
+    }
+
+    private class PatternSupplyFormModel
+    {
+        public string SupplyType { get; set; } = "yarn";
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private sealed record InventoryOption(Guid Id, string Label);
 }

@@ -25,7 +25,8 @@ Set these as environment variables in non-development environments:
 - `JwtSettings__SecretKey` (minimum 32 characters)
 - `JwtSettings__Issuer` (example: `TankerMade`)
 - `JwtSettings__Audience` (example: `TankerMadeClient`)
-- `JwtSettings__ExpirationMinutes` (example: `60`)
+- `JwtSettings__ExpirationDays` (recommended for local-first: `365`; omit to use minutes instead)
+- `JwtSettings__ExpirationMinutes` (optional fallback when `ExpirationDays` is not set; example: `60`)
 
 Recommended:
 
@@ -40,7 +41,7 @@ export ASPNETCORE_URLS="http://0.0.0.0:5236;https://0.0.0.0:7065"
 export JwtSettings__SecretKey="replace-with-32-plus-char-secret"
 export JwtSettings__Issuer="TankerMade"
 export JwtSettings__Audience="TankerMadeClient"
-export JwtSettings__ExpirationMinutes="60"
+export JwtSettings__ExpirationDays="365"
 ```
 
 ## Option A: Self-Hosted (Framework-Dependent)
@@ -100,7 +101,7 @@ Typical env vars (same as above):
 - `JwtSettings__SecretKey=...`
 - `JwtSettings__Issuer=...`
 - `JwtSettings__Audience=...`
-- `JwtSettings__ExpirationMinutes=...`
+- `JwtSettings__ExpirationDays=...` (or `JwtSettings__ExpirationMinutes=...` when days is not set)
 
 ## Reverse Proxy / HTTPS Notes
 

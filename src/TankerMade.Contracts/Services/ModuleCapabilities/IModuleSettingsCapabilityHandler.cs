@@ -8,4 +8,5 @@ public interface IModuleSettingsCapabilityHandler
 
     Task<IReadOnlyList<ModuleSettingItemDto>> GetAllAsync(Guid userId, string? category = null);
     Task<ModuleSettingItemDto> UpsertAsync(UpsertModuleSettingItemRequest request, Guid userId);
+    Task<bool> DeleteAsync(DeleteModuleSettingItemRequest request, Guid userId);
 }

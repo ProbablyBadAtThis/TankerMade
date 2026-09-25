@@ -1,130 +1,624 @@
 @page "/modules/knitting/inventory"
+@using System.Linq
+@using TankerMade.Contracts.DTOs.Assets
 @using TankerMade.Contracts.DTOs.ModuleInventory
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject TankerMade.Client.Services.KnittingCardAssetCache CardAssets
+@inject NavigationManager Navigation
 
 <PageTitle>Knitting Inventory</PageTitle>
 
-@if (!AuthSession.IsSignedIn)
-{
-    <h1>Knitting Inventory</h1>
-    <p>Sign in to use this module section.</p>
-    <a class="btn btn-primary" href="/login">Sign in</a>
-}
-else if (!ModuleState.IsActive("knitting"))
-{
-    <h1>Knitting Inventory</h1>
-    <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/">Go to Home</a>
-}
-else if (loading)
-{
-    <h1>Knitting Inventory</h1>
-    <p>Loading...</p>
-}
-else
-{
-    <div class="page-heading">
-        <div>
-            <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
-            <h1>Inventory</h1>
-            <p>Module-owned supply tracking via core extension-point APIs.</p>
-        </div>
-    </div>
+<KnittingModuleGate Loading="initialLoading" LoadingMessage="Loading inventory...">
+    <MudStack Spacing="3">
+        <KnittingPageHeader Title="Inventory"
+                            Subtitle="Yarn, tools, and notions with lots, purchases, and merge rules." />
 
-    @if (!string.IsNullOrWhiteSpace(errorMessage))
-    {
-        <div class="alert alert-danger">@errorMessage</div>
-    }
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+        }
 
-    <section class="project-panel">
-        <h2>Add Supply</h2>
-        <EditForm Model="form" OnValidSubmit="CreateSupplyAsync" class="project-edit-form">
-            <DataAnnotationsValidator />
-            <div class="form-grid">
-                <label>
-                    <span>Category</span>
-                    <InputText class="form-control" @bind-Value="form.Category" />
-                </label>
-                <label>
-                    <span>Name</span>
-                    <InputText class="form-control" @bind-Value="form.Name" />
-                </label>
-                <label>
-                    <span>Brand</span>
-                    <InputText class="form-control" @bind-Value="form.Brand" />
-                </label>
-                <label>
-                    <span>Color</span>
-                    <InputText class="form-control" @bind-Value="form.Color" />
-                </label>
-                <label>
-                    <span>Size</span>
-                    <InputText class="form-control" @bind-Value="form.Size" />
-                </label>
-                <label>
-                    <span>Quantity</span>
-                    <InputNumber class="form-control" @bind-Value="form.Quantity" />
-                </label>
-                <label>
-                    <span>Unit</span>
-                    <InputText class="form-control" @bind-Value="form.Unit" />
-                </label>
-            </div>
-            <label>
-                <span>Notes</span>
-                <InputTextArea class="form-control" @bind-Value="form.Notes" />
-            </label>
-            <button class="btn btn-primary" disabled="@busy" type="submit">Add Supply</button>
-        </EditForm>
-    </section>
+        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+            <MudButton Variant="@(activeTab == "yarn" ? Variant.Filled : Variant.Outlined)"
+                       Color="Color.Primary"
+                       OnClick='() => SetTab("yarn")'>
+                Yarn
+            </MudButton>
+            <MudButton Variant="@(activeTab == "tools" ? Variant.Filled : Variant.Outlined)"
+                       Color="Color.Primary"
+                       OnClick='() => SetTab("tools")'>
+                Tools
+            </MudButton>
+            <MudButton Variant="@(activeTab == "notions" ? Variant.Filled : Variant.Outlined)"
+                       Color="Color.Primary"
+                       OnClick='() => SetTab("notions")'>
+                Notions
+            </MudButton>
+        </MudStack>
 
-    <div class="printing-search-row mb-3">
-        <input class="form-control" placeholder="Search supplies" @bind="search" @bind:event="oninput" />
-        <input class="form-control" placeholder="Category filter" @bind="category" @bind:event="oninput" />
-        <button class="btn btn-outline-secondary" disabled="@busy" @onclick="LoadSuppliesAsync">Search</button>
-    </div>
+        <MudTextField @bind-Value="search"
+                      @bind-Value:after="ApplyInventorySearch"
+                      Label="Search"
+                      Variant="Variant.Outlined"
+                      Placeholder="Filter as you type"
+                      Immediate="true"
+                      Class="knitting-inventory-search" />
 
-    @if (supplies.Count == 0)
-    {
-        <div class="empty-state">
-            <h2>No Supplies Yet</h2>
-            <p>Add your first inventory item to start tracking stash and tools.</p>
-        </div>
-    }
-    else
-    {
-        <div class="pattern-card-grid">
-            @foreach (var item in supplies)
+        <div class="knitting-list-toolbar-mud">
+            <MudSelect T="string" @bind-Value="inventorySortBy" @bind-Value:after="ApplyInventorySearch" Label="Sort" Variant="Variant.Outlined">
+                @if (activeTab == "yarn")
+                {
+                    <MudSelectItem T="string" Value="@("brand")">Brand</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("color")">Color</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("weight")">Weight</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("skeins")">Skeins</MudSelectItem>
+                }
+                else if (activeTab == "tools")
+                {
+                    <MudSelectItem T="string" Value="@("brand")">Brand</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("type")">Type</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("size")">Size</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("quantity")">Quantity</MudSelectItem>
+                }
+                else
+                {
+                    <MudSelectItem T="string" Value="@("brand")">Brand</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("type")">Type</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("size")">Size</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("color")">Color</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="string" @bind-Value="filterBrand" @bind-Value:after="ApplyInventorySearch" Label="Brand" Variant="Variant.Outlined">
+                <MudSelectItem T="string" Value="@string.Empty">All brands</MudSelectItem>
+                @foreach (var brand in brandFilterOptions)
+                {
+                    <MudSelectItem T="string" Value="@brand">@brand</MudSelectItem>
+                }
+            </MudSelect>
+            @if (activeTab == "yarn")
             {
-                <article class="pattern-card">
-                    <h2>@item.Name</h2>
-                    <p>@item.Category</p>
-                    <div class="pattern-card-stats">
-                        <span>@(string.IsNullOrWhiteSpace(item.Brand) ? "No brand" : item.Brand)</span>
-                        <span>@(string.IsNullOrWhiteSpace(item.Color) ? "No color" : item.Color)</span>
-                        <span>@item.Quantity @item.Unit</span>
-                    </div>
-                    @if (!string.IsNullOrWhiteSpace(item.Notes))
+                <MudSelect T="string" @bind-Value="filterWeight" @bind-Value:after="ApplyInventorySearch" Label="Weight" Variant="Variant.Outlined">
+                    <MudSelectItem T="string" Value="@string.Empty">All weights</MudSelectItem>
+                    @foreach (var weight in weightFilterOptions)
                     {
-                        <p>@item.Notes</p>
+                        <MudSelectItem T="string" Value="@weight">@weight</MudSelectItem>
                     }
-                </article>
+                </MudSelect>
+            }
+            @if (activeTab == "tools" || activeTab == "notions")
+            {
+                <MudSelect T="string" @bind-Value="filterType" @bind-Value:after="ApplyInventorySearch" Label="Type" Variant="Variant.Outlined">
+                    <MudSelectItem T="string" Value="@string.Empty">All types</MudSelectItem>
+                    @foreach (var type in typeFilterOptions)
+                    {
+                        <MudSelectItem T="string" Value="@type">@type</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            @if (activeTab == "notions")
+            {
+                <MudSelect T="string" @bind-Value="filterSize" @bind-Value:after="ApplyInventorySearch" Label="Size" Variant="Variant.Outlined">
+                    <MudSelectItem T="string" Value="@string.Empty">All sizes</MudSelectItem>
+                    @foreach (var size in sizeFilterOptions)
+                    {
+                        <MudSelectItem T="string" Value="@size">@size</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudSelect T="string" @bind-Value="filterColor" @bind-Value:after="ApplyInventorySearch" Label="Color" Variant="Variant.Outlined">
+                    <MudSelectItem T="string" Value="@string.Empty">All colors</MudSelectItem>
+                    @foreach (var color in colorFilterOptions)
+                    {
+                        <MudSelectItem T="string" Value="@color">@color</MudSelectItem>
+                    }
+                </MudSelect>
             }
         </div>
-    }
-}
+
+        @if (activeTab == "yarn")
+        {
+            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                <MudButton Size="Size.Small"
+                           Variant="@(string.IsNullOrEmpty(fiberTag) ? Variant.Filled : Variant.Outlined)"
+                           Color="Color.Primary"
+                           Disabled="busy"
+                           OnClick='() => SetFiberFilterAsync(string.Empty)'>
+                    All
+                </MudButton>
+                <MudButton Size="Size.Small"
+                           Variant="@(fiberTag == "Synthetic" ? Variant.Filled : Variant.Outlined)"
+                           Color="Color.Primary"
+                           Disabled="busy"
+                           OnClick='() => SetFiberFilterAsync("Synthetic")'>
+                    Synthetic
+                </MudButton>
+                <MudButton Size="Size.Small"
+                           Variant="@(fiberTag == "Natural" ? Variant.Filled : Variant.Outlined)"
+                           Color="Color.Primary"
+                           Disabled="busy"
+                           OnClick='() => SetFiberFilterAsync("Natural")'>
+                    Natural
+                </MudButton>
+                <MudButton Size="Size.Small"
+                           Variant="@(fiberTag == "Blended" ? Variant.Filled : Variant.Outlined)"
+                           Color="Color.Primary"
+                           Disabled="busy"
+                           OnClick='() => SetFiberFilterAsync("Blended")'>
+                    Blended
+                </MudButton>
+            </MudStack>
+
+            <MudGrid Spacing="4" Class="knitting-inventory-layout">
+                <MudItem xs="12" lg="5" xl="4">
+                    <MudPaper Class="pa-4 knitting-panel-mud knitting-inventory-form-panel" Elevation="1">
+                        <h2>Add Yarn</h2>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-0">Merge adds to an existing brand + color match.</MudText>
+
+                        <div class="knitting-inventory-form-section">
+                            <h3>Basics</h3>
+                            <div class="knitting-inventory-field-grid">
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="yarnForm.BrandName" Label="Brand" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="yarnForm.ColorName" Label="Color name" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field knitting-inventory-field-full">
+                                    <MudTextField @bind-Value="yarnForm.MainColor" Label="Main color" Variant="Variant.Outlined" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="knitting-inventory-form-section">
+                            <h3>Yarn details</h3>
+                            <div class="knitting-inventory-field-grid">
+                                <div class="knitting-inventory-field">
+                                    <MudSelect T="string" @bind-Value="yarnForm.WeightName" Label="Weight" Variant="Variant.Outlined">
+                                        <MudSelectItem T="string" Value="@string.Empty">Select weight</MudSelectItem>
+                                        @foreach (var option in yarnWeightOptions)
+                                        {
+                                            <MudSelectItem T="string" Value="@option">@option</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudSelect T="string" @bind-Value="yarnForm.FiberTag" Label="Fiber tag" Variant="Variant.Outlined">
+                                        <MudSelectItem T="string" Value="@string.Empty">Select fiber tag</MudSelectItem>
+                                        @foreach (var option in fiberTagOptions)
+                                        {
+                                            <MudSelectItem T="string" Value="@option">@option</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </div>
+                                <div class="knitting-inventory-inline-add">
+                                    <MudText Typo="Typo.caption">New weight option</MudText>
+                                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                        <MudTextField @bind-Value="newYarnWeightName" Placeholder="Add new weight" Variant="Variant.Outlined" Class="flex-grow-1" />
+                                        <MudButton Variant="Variant.Outlined" Disabled="busy" OnClick="AddYarnWeightOptionAsync">Add</MudButton>
+                                    </MudStack>
+                                </div>
+                                <div class="knitting-inventory-inline-add">
+                                    <MudText Typo="Typo.caption">New fiber tag</MudText>
+                                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                        <MudTextField @bind-Value="newFiberTagName" Placeholder="Add new fiber tag" Variant="Variant.Outlined" Class="flex-grow-1" />
+                                        <MudButton Variant="Variant.Outlined" Disabled="busy" OnClick="AddFiberTagOptionAsync">Add</MudButton>
+                                    </MudStack>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="knitting-inventory-form-section">
+                            <h3>Purchase</h3>
+                            <div class="knitting-inventory-field-grid">
+                                <div class="knitting-inventory-field">
+                                    <MudNumericField T="decimal" @bind-Value="yarnForm.Skeins" Label="Skeins" Variant="Variant.Outlined" Min="0" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="yarnForm.LotNumber" Label="Lot number" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="yarnForm.SourceName" Label="Source" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudNumericField T="decimal?" @bind-Value="yarnForm.Price" Label="Price" Variant="Variant.Outlined" Min="0" />
+                                </div>
+                                <div class="knitting-inventory-field knitting-inventory-field-full">
+                                    <MudCheckBox @bind-Value="yarnForm.IsSalePrice" Label="Sale price" Color="Color.Primary" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="knitting-inventory-form-actions">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" OnClick="SaveYarnAsync">Add / Merge</MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/modules/knitting/inventory?tab=yarn">Finish</MudButton>
+                        </div>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" lg="7" xl="8">
+                    <MudPaper Class="@($"pa-4 knitting-inventory-list-panel inventory-list-panel{(listBusy ? " is-refreshing" : "")}")" Elevation="1">
+                        @if (listBusy)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="inventory-list-status">Updating list…</MudText>
+                        }
+                        <div class="knitting-card-grid-mud knitting-inventory-card-grid">
+                            @foreach (var yarn in pagedYarns)
+                            {
+                                var assetId = yarnAssetIds.GetValueOrDefault(yarn.Id);
+                                <MudPaper Class="@($"knitting-card-mud pattern-card-with-image{(selectedItemId == yarn.Id ? " printing-material-card-active" : "")}")" Elevation="1">
+                                    <AssetThumbnailImage AssetId="assetId" AltText="@($"{yarn.BrandName} {yarn.ColorName}")" />
+                                    <div class="pa-3 knitting-card-mud-body">
+                                        <MudLink Href="@($"/modules/knitting/inventory/yarn/{yarn.Id}")" Underline="Underline.None" Class="pattern-card-link">
+                                            <MudText Typo="Typo.h6">@yarn.BrandName</MudText>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">@yarn.ColorName</MudText>
+                                            <div class="pattern-card-stats">
+                                                <span>@yarn.TotalSkeins skeins</span>
+                                                <span>@yarn.WeightName</span>
+                                                <span>@yarn.FiberTag</span>
+                                            </div>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">@PurchaseSummary(yarn.Purchases)</MudText>
+                                        </MudLink>
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="@(() => SelectItemForAssetsAsync(yarn.Id, YarnRecordType))">
+                                            Manage Assets
+                                        </MudButton>
+                                    </div>
+                                </MudPaper>
+                            }
+                        </div>
+                        @if (yarns.Count > inventoryPageSize)
+                        {
+                            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mt-3">
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(inventoryPage <= 1 || busy)" OnClick="PreviousInventoryPage">Previous</MudButton>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Page @inventoryPage of @InventoryPageCount</MudText>
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(inventoryPage >= InventoryPageCount || busy)" OnClick="NextInventoryPage">Next</MudButton>
+                            </MudStack>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        }
+        else if (activeTab == "tools")
+        {
+            <MudGrid Spacing="4" Class="knitting-inventory-layout">
+                <MudItem xs="12" lg="5" xl="4">
+                    <MudPaper Class="pa-4 knitting-panel-mud knitting-inventory-form-panel" Elevation="1">
+                        <h2>Add Tool</h2>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-0">Merge adds to an existing brand + type match.</MudText>
+
+                        <div class="knitting-inventory-form-section">
+                            <h3>Basics</h3>
+                            <div class="knitting-inventory-field-grid">
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="toolForm.BrandName" Label="Brand" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="toolForm.Size" Label="Size" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field knitting-inventory-field-full">
+                                    <MudSelect T="string" @bind-Value="toolForm.TypeName" Label="Type" Variant="Variant.Outlined">
+                                        <MudSelectItem T="string" Value="@string.Empty">Select type</MudSelectItem>
+                                        @foreach (var option in toolTypeOptions)
+                                        {
+                                            <MudSelectItem T="string" Value="@option">@option</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </div>
+                                <div class="knitting-inventory-inline-add">
+                                    <MudText Typo="Typo.caption">New tool type</MudText>
+                                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                        <MudTextField @bind-Value="newToolTypeName" Placeholder="Add new tool type" Variant="Variant.Outlined" Class="flex-grow-1" />
+                                        <MudButton Variant="Variant.Outlined" Disabled="busy" OnClick="AddToolTypeOptionAsync">Add</MudButton>
+                                    </MudStack>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="knitting-inventory-form-section">
+                            <h3>Purchase</h3>
+                            <div class="knitting-inventory-field-grid">
+                                <div class="knitting-inventory-field">
+                                    <MudNumericField T="int" @bind-Value="toolForm.Quantity" Label="Quantity" Variant="Variant.Outlined" Min="0" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudNumericField T="decimal?" @bind-Value="toolForm.Price" Label="Price" Variant="Variant.Outlined" Min="0" />
+                                </div>
+                                <div class="knitting-inventory-field knitting-inventory-field-full">
+                                    <MudTextField @bind-Value="toolForm.SourceName" Label="Source" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field knitting-inventory-field-full">
+                                    <MudCheckBox @bind-Value="toolForm.IsSalePrice" Label="Sale price" Color="Color.Primary" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="knitting-inventory-form-actions">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" OnClick="SaveToolAsync">Add / Merge</MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/modules/knitting/inventory?tab=tools">Finish</MudButton>
+                        </div>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" lg="7" xl="8">
+                    <MudPaper Class="@($"pa-4 knitting-inventory-list-panel inventory-list-panel{(listBusy ? " is-refreshing" : "")}")" Elevation="1">
+                        @if (listBusy)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="inventory-list-status">Updating list…</MudText>
+                        }
+                        <div class="knitting-card-grid-mud knitting-inventory-card-grid">
+                            @foreach (var tool in pagedTools)
+                            {
+                                var assetId = toolAssetIds.GetValueOrDefault(tool.Id);
+                                <MudPaper Class="@($"knitting-card-mud pattern-card-with-image{(selectedItemId == tool.Id ? " printing-material-card-active" : "")}")" Elevation="1">
+                                    <AssetThumbnailImage AssetId="assetId" AltText="@($"{tool.BrandName} {tool.TypeName}")" />
+                                    <div class="pa-3 knitting-card-mud-body">
+                                        <MudLink Href="@($"/modules/knitting/inventory/tool/{tool.Id}")" Underline="Underline.None" Class="pattern-card-link">
+                                            <MudText Typo="Typo.h6">@tool.TypeName</MudText>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">@tool.BrandName</MudText>
+                                            <div class="pattern-card-stats">
+                                                <span>@tool.Quantity owned</span>
+                                                <span>@tool.Size</span>
+                                            </div>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">@PurchaseSummary(tool.Purchases)</MudText>
+                                        </MudLink>
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="@(() => SelectItemForAssetsAsync(tool.Id, ToolRecordType))">
+                                            Manage Assets
+                                        </MudButton>
+                                    </div>
+                                </MudPaper>
+                            }
+                        </div>
+                        @if (tools.Count > inventoryPageSize)
+                        {
+                            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mt-3">
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(inventoryPage <= 1 || busy)" OnClick="PreviousInventoryPage">Previous</MudButton>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Page @inventoryPage of @InventoryPageCount</MudText>
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(inventoryPage >= InventoryPageCount || busy)" OnClick="NextInventoryPage">Next</MudButton>
+                            </MudStack>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        }
+        else
+        {
+            <MudGrid Spacing="4" Class="knitting-inventory-layout">
+                <MudItem xs="12" lg="5" xl="4">
+                    <MudPaper Class="pa-4 knitting-panel-mud knitting-inventory-form-panel" Elevation="1">
+                        <h2>Add Notion</h2>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-0">Merge adds to an existing brand + type match.</MudText>
+
+                        <div class="knitting-inventory-form-section">
+                            <h3>Basics</h3>
+                            <div class="knitting-inventory-field-grid">
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="notionForm.BrandName" Label="Brand" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="notionForm.ColorName" Label="Color" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudTextField @bind-Value="notionForm.Size" Label="Size" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field knitting-inventory-field-full">
+                                    <MudSelect T="string" @bind-Value="notionForm.TypeName" Label="Type" Variant="Variant.Outlined">
+                                        <MudSelectItem T="string" Value="@string.Empty">Select type</MudSelectItem>
+                                        @foreach (var option in notionTypeOptions)
+                                        {
+                                            <MudSelectItem T="string" Value="@option">@option</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </div>
+                                <div class="knitting-inventory-inline-add">
+                                    <MudText Typo="Typo.caption">New notion type</MudText>
+                                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                        <MudTextField @bind-Value="newNotionTypeName" Placeholder="Add new notion type" Variant="Variant.Outlined" Class="flex-grow-1" />
+                                        <MudButton Variant="Variant.Outlined" Disabled="busy" OnClick="AddNotionTypeOptionAsync">Add</MudButton>
+                                    </MudStack>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="knitting-inventory-form-section">
+                            <h3>Purchase</h3>
+                            <div class="knitting-inventory-field-grid">
+                                <div class="knitting-inventory-field">
+                                    <MudNumericField T="int" @bind-Value="notionForm.Quantity" Label="Quantity" Variant="Variant.Outlined" Min="0" />
+                                </div>
+                                <div class="knitting-inventory-field">
+                                    <MudNumericField T="decimal?" @bind-Value="notionForm.Price" Label="Price" Variant="Variant.Outlined" Min="0" />
+                                </div>
+                                <div class="knitting-inventory-field knitting-inventory-field-full">
+                                    <MudTextField @bind-Value="notionForm.SourceName" Label="Source" Variant="Variant.Outlined" />
+                                </div>
+                                <div class="knitting-inventory-field knitting-inventory-field-full">
+                                    <MudCheckBox @bind-Value="notionForm.IsSalePrice" Label="Sale price" Color="Color.Primary" />
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (notionSplitPreview.Count > 0)
+                        {
+                            <div class="knitting-inventory-form-section">
+                                <h3>Split preview</h3>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Multiple size/color values will create separate listings.</MudText>
+                                <MudStack Spacing="1">
+                                    @foreach (var entry in notionSplitPreview)
+                                    {
+                                        <MudPaper Class="pa-2" Outlined="true">
+                                            <MudStack Spacing="0">
+                                                <MudText Typo="Typo.subtitle2">@entry.TypeName</MudText>
+                                                <MudText Typo="Typo.body2" Color="Color.Secondary">@entry.BrandName · Size: @entry.Size · Color: @entry.ColorName</MudText>
+                                            </MudStack>
+                                        </MudPaper>
+                                    }
+                                </MudStack>
+                                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mt-2">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" OnClick="ConfirmNotionSplitAsync">
+                                        Create @notionSplitPreview.Count listings
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="busy" OnClick="CancelNotionSplit">Cancel</MudButton>
+                                </MudStack>
+                            </div>
+                        }
+
+                        <div class="knitting-inventory-form-actions">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" OnClick="SaveNotionAsync">Add / Merge</MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/modules/knitting/inventory?tab=notions">Finish</MudButton>
+                        </div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2 mb-0">
+                            Tip: enter comma-separated sizes or colors (e.g. S, M, L) to split into separate listings.
+                        </MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" lg="7" xl="8">
+                    <MudPaper Class="@($"pa-4 knitting-inventory-list-panel inventory-list-panel{(listBusy ? " is-refreshing" : "")}")" Elevation="1">
+                        @if (listBusy)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="inventory-list-status">Updating list…</MudText>
+                        }
+                        <div class="knitting-card-grid-mud knitting-inventory-card-grid">
+                            @foreach (var notion in pagedNotions)
+                            {
+                                var assetId = notionAssetIds.GetValueOrDefault(notion.Id);
+                                <MudPaper Class="@($"knitting-card-mud pattern-card-with-image{(selectedItemId == notion.Id ? " printing-material-card-active" : "")}")" Elevation="1">
+                                    <AssetThumbnailImage AssetId="assetId" AltText="@($"{notion.BrandName} {notion.TypeName}")" />
+                                    <div class="pa-3 knitting-card-mud-body">
+                                        <MudLink Href="@($"/modules/knitting/inventory/notion/{notion.Id}")" Underline="Underline.None" Class="pattern-card-link">
+                                            <MudText Typo="Typo.h6">@notion.TypeName</MudText>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">@notion.BrandName</MudText>
+                                            <div class="pattern-card-stats">
+                                                <span>@notion.Quantity owned</span>
+                                                <span>@notion.Size</span>
+                                                <span>@notion.ColorName</span>
+                                            </div>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">@PurchaseSummary(notion.Purchases)</MudText>
+                                        </MudLink>
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="@(() => SelectItemForAssetsAsync(notion.Id, NotionRecordType))">
+                                            Manage Assets
+                                        </MudButton>
+                                    </div>
+                                </MudPaper>
+                            }
+                        </div>
+                        @if (notions.Count > inventoryPageSize)
+                        {
+                            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mt-3">
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(inventoryPage <= 1 || busy)" OnClick="PreviousInventoryPage">Previous</MudButton>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Page @inventoryPage of @InventoryPageCount</MudText>
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(inventoryPage >= InventoryPageCount || busy)" OnClick="NextInventoryPage">Next</MudButton>
+                            </MudStack>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        }
+
+        @if (selectedItemId.HasValue)
+        {
+            <MudPaper Class="pa-4 knitting-panel-mud printing-assets-panel mt-3" Elevation="1">
+                <MudText Typo="Typo.h6">Item Assets</MudText>
+                <InputFile OnChange="UploadItemAssetAsync" disabled="@busy" />
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Upload stores the file in Knitting assets. Attach to the selected item with one click.
+                </MudText>
+
+                @if (selectedItemAssets.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">No assets found for the selected item yet.</MudText>
+                }
+                else
+                {
+                    <MudStack Spacing="1">
+                        @foreach (var asset in selectedItemAssets)
+                        {
+                            <MudPaper Class="pa-2" Outlined="true">
+                                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                    <MudStack Spacing="0">
+                                        <MudText Typo="Typo.subtitle2">@asset.OriginalFileName</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@AssetMeta(asset)</MudText>
+                                    </MudStack>
+                                    @if (asset.RecordId == selectedItemId)
+                                    {
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                                   Disabled="busy"
+                                                   OnClick="@(() => UnassignItemAssetAsync(asset.Id))">
+                                            Unlink
+                                        </MudButton>
+                                    }
+                                    else
+                                    {
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                                   Disabled="busy"
+                                                   OnClick="@(() => AssignItemAssetAsync(asset.Id))">
+                                            Attach
+                                        </MudButton>
+                                    }
+                                </MudStack>
+                            </MudPaper>
+                        }
+                    </MudStack>
+                }
+            </MudPaper>
+        }
+    </MudStack>
+</KnittingModuleGate>
 
 @code {
     private const string ModuleKey = "knitting";
-    private readonly List<ModuleSupplyItemDto> supplies = [];
-    private SupplyFormModel form = new();
+    private const string YarnRecordType = "yarn";
+    private const string ToolRecordType = "tool";
+    private const string NotionRecordType = "notion";
+
+    private readonly Dictionary<Guid, Guid?> yarnAssetIds = [];
+    private readonly Dictionary<Guid, Guid?> toolAssetIds = [];
+    private readonly Dictionary<Guid, Guid?> notionAssetIds = [];
+    private readonly List<ModuleYarnInventoryItemDto> allYarns = [];
+    private readonly List<ModuleToolInventoryItemDto> allTools = [];
+    private readonly List<ModuleNotionInventoryItemDto> allNotions = [];
+    private readonly List<ModuleYarnInventoryItemDto> yarns = [];
+    private readonly List<ModuleToolInventoryItemDto> tools = [];
+    private readonly List<ModuleNotionInventoryItemDto> notions = [];
+    private readonly List<ModuleYarnInventoryItemDto> pagedYarns = [];
+    private readonly List<ModuleToolInventoryItemDto> pagedTools = [];
+    private readonly List<ModuleNotionInventoryItemDto> pagedNotions = [];
+    private readonly List<string> brandFilterOptions = [];
+    private readonly List<string> weightFilterOptions = [];
+    private readonly List<string> typeFilterOptions = [];
+    private readonly List<string> sizeFilterOptions = [];
+    private readonly List<string> colorFilterOptions = [];
+    private readonly List<CreateModuleNotionInventoryItemDto> notionSplitPreview = [];
+    private CreateModuleYarnInventoryItemDto yarnForm = new();
+    private CreateModuleToolInventoryItemDto toolForm = new();
+    private CreateModuleNotionInventoryItemDto notionForm = new();
+    private const int inventoryPageSize = 12;
+
+    private string activeTab = "yarn";
     private string search = string.Empty;
-    private string category = string.Empty;
-    private bool loading = true;
-    private bool busy;
+    private string fiberTag = string.Empty;
+    private string inventorySortBy = "brand";
+    private string filterBrand = string.Empty;
+    private string filterWeight = string.Empty;
+    private string filterType = string.Empty;
+    private string filterSize = string.Empty;
+    private string filterColor = string.Empty;
+    private int inventoryPage = 1;
     private string errorMessage = string.Empty;
+    private readonly List<string> yarnWeightOptions = [];
+    private readonly List<string> fiberTagOptions = [];
+    private readonly List<string> toolTypeOptions = [];
+    private readonly List<string> notionTypeOptions = [];
+    private string newYarnWeightName = string.Empty;
+    private string newFiberTagName = string.Empty;
+    private string newToolTypeName = string.Empty;
+    private string newNotionTypeName = string.Empty;
+    private Guid? selectedItemId;
+    private string selectedRecordType = YarnRecordType;
+    private readonly List<AssetRecordDto> selectedItemAssets = [];
+    private bool initialLoading = true;
+    private bool listBusy;
+    private bool busy;
+
+    [SupplyParameterFromQuery(Name = "tab")]
+    public string? TabQuery { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -132,14 +626,59 @@ else
         if (AuthSession.IsSignedIn)
         {
             await ModuleState.RefreshAsync();
+            await LoadReferenceOptionsAsync();
         }
 
-        await LoadSuppliesAsync();
+        if (IsValidTab(TabQuery))
+        {
+            activeTab = TabQuery!;
+        }
+
+        await LoadInventoryAsync(isInitialLoad: true);
     }
 
-    private async Task LoadSuppliesAsync()
+    private async Task SetTab(string tab)
     {
-        loading = true;
+        if (!IsValidTab(tab))
+        {
+            return;
+        }
+
+        activeTab = tab;
+        selectedItemId = null;
+        selectedItemAssets.Clear();
+        inventoryPage = 1;
+        inventorySortBy = "brand";
+        filterBrand = string.Empty;
+        filterWeight = string.Empty;
+        filterType = string.Empty;
+        filterSize = string.Empty;
+        filterColor = string.Empty;
+        if (tab != "yarn")
+        {
+            fiberTag = string.Empty;
+        }
+
+        Navigation.NavigateTo($"/modules/knitting/inventory?tab={tab}", replace: true);
+        await LoadInventoryAsync();
+    }
+
+    private static bool IsValidTab(string? tab)
+    {
+        return tab is "yarn" or "tools" or "notions";
+    }
+
+    private async Task LoadInventoryAsync(bool isInitialLoad = false)
+    {
+        if (isInitialLoad)
+        {
+            initialLoading = true;
+        }
+        else
+        {
+            listBusy = true;
+        }
+
         errorMessage = string.Empty;
 
         try
@@ -149,8 +688,24 @@ else
                 return;
             }
 
-            supplies.Clear();
-            supplies.AddRange(await ApiClient.GetModuleSuppliesAsync(ModuleKey, search, category));
+            if (activeTab == "yarn")
+            {
+                allYarns.Clear();
+                allYarns.AddRange(await ApiClient.GetModuleYarnsAsync(ModuleKey, fiberTag: fiberTag));
+            }
+            else if (activeTab == "tools")
+            {
+                allTools.Clear();
+                allTools.AddRange(await ApiClient.GetModuleToolsAsync(ModuleKey));
+            }
+            else
+            {
+                allNotions.Clear();
+                allNotions.AddRange(await ApiClient.GetModuleNotionsAsync(ModuleKey));
+            }
+
+            await LoadInventoryAssetsAsync();
+            ApplyInventorySearch();
         }
         catch (Exception ex)
         {
@@ -158,31 +713,385 @@ else
         }
         finally
         {
-            loading = false;
+            if (isInitialLoad)
+            {
+                initialLoading = false;
+            }
+            else
+            {
+                listBusy = false;
+            }
         }
     }
 
-    private async Task CreateSupplyAsync()
+    private async Task LoadInventoryAssetsAsync()
+    {
+        yarnAssetIds.Clear();
+        toolAssetIds.Clear();
+        notionAssetIds.Clear();
+
+        var yarnAssets = await CardAssets.GetAssetsAsync(ModuleKey, YarnRecordType);
+        foreach (var yarn in allYarns)
+        {
+            yarnAssetIds[yarn.Id] = yarnAssets.FirstOrDefault(asset => asset.RecordId == yarn.Id)?.Id;
+        }
+
+        var toolAssets = await CardAssets.GetAssetsAsync(ModuleKey, ToolRecordType);
+        foreach (var tool in allTools)
+        {
+            toolAssetIds[tool.Id] = toolAssets.FirstOrDefault(asset => asset.RecordId == tool.Id)?.Id;
+        }
+
+        var notionAssets = await CardAssets.GetAssetsAsync(ModuleKey, NotionRecordType);
+        foreach (var notion in allNotions)
+        {
+            notionAssetIds[notion.Id] = notionAssets.FirstOrDefault(asset => asset.RecordId == notion.Id)?.Id;
+        }
+    }
+
+    private int InventoryPageCount
+    {
+        get
+        {
+            var count = activeTab switch
+            {
+                "tools" => tools.Count,
+                "notions" => notions.Count,
+                _ => yarns.Count
+            };
+            return count == 0 ? 1 : (int)Math.Ceiling(count / (double)inventoryPageSize);
+        }
+    }
+
+    private void ApplyInventorySearch()
+    {
+        inventoryPage = 1;
+        yarns.Clear();
+        tools.Clear();
+        notions.Clear();
+        RebuildFilterOptions();
+
+        if (activeTab == "yarn")
+        {
+            yarns.AddRange(SortYarns(FilterYarns(allYarns)));
+            ApplyInventoryPaging();
+        }
+        else if (activeTab == "tools")
+        {
+            tools.AddRange(SortTools(FilterTools(allTools)));
+            ApplyInventoryPaging();
+        }
+        else
+        {
+            notions.AddRange(SortNotions(FilterNotions(allNotions)));
+            ApplyInventoryPaging();
+        }
+    }
+
+    private void ApplyInventoryPaging()
+    {
+        pagedYarns.Clear();
+        pagedTools.Clear();
+        pagedNotions.Clear();
+
+        var skip = (inventoryPage - 1) * inventoryPageSize;
+        if (activeTab == "yarn")
+        {
+            pagedYarns.AddRange(yarns.Skip(skip).Take(inventoryPageSize));
+        }
+        else if (activeTab == "tools")
+        {
+            pagedTools.AddRange(tools.Skip(skip).Take(inventoryPageSize));
+        }
+        else
+        {
+            pagedNotions.AddRange(notions.Skip(skip).Take(inventoryPageSize));
+        }
+    }
+
+    private void PreviousInventoryPage()
+    {
+        if (inventoryPage > 1)
+        {
+            inventoryPage--;
+            ApplyInventoryPaging();
+        }
+    }
+
+    private void NextInventoryPage()
+    {
+        if (inventoryPage < InventoryPageCount)
+        {
+            inventoryPage++;
+            ApplyInventoryPaging();
+        }
+    }
+
+    private void RebuildFilterOptions()
+    {
+        brandFilterOptions.Clear();
+        weightFilterOptions.Clear();
+        typeFilterOptions.Clear();
+        sizeFilterOptions.Clear();
+        colorFilterOptions.Clear();
+
+        if (activeTab == "yarn")
+        {
+            brandFilterOptions.AddRange(allYarns.Select(item => item.BrandName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(name => name));
+            weightFilterOptions.AddRange(allYarns.Select(item => item.WeightName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(name => name));
+        }
+        else if (activeTab == "tools")
+        {
+            brandFilterOptions.AddRange(allTools.Select(item => item.BrandName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(name => name));
+            typeFilterOptions.AddRange(allTools.Select(item => item.TypeName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(name => name));
+        }
+        else
+        {
+            brandFilterOptions.AddRange(allNotions.Select(item => item.BrandName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(name => name));
+            typeFilterOptions.AddRange(allNotions.Select(item => item.TypeName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(name => name));
+            sizeFilterOptions.AddRange(allNotions.Select(item => item.Size).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(name => name));
+            colorFilterOptions.AddRange(allNotions.Select(item => item.ColorName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(name => name));
+        }
+    }
+
+    private IEnumerable<ModuleYarnInventoryItemDto> FilterYarns(IEnumerable<ModuleYarnInventoryItemDto> source)
+    {
+        var query = source;
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(item =>
+                item.BrandName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.ColorName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.MainColor.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.WeightName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.FiberTag.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.FiberContent.Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filterBrand))
+        {
+            query = query.Where(item => string.Equals(item.BrandName, filterBrand, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filterWeight))
+        {
+            query = query.Where(item => string.Equals(item.WeightName, filterWeight, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return query;
+    }
+
+    private IEnumerable<ModuleYarnInventoryItemDto> SortYarns(IEnumerable<ModuleYarnInventoryItemDto> source)
+        => inventorySortBy switch
+        {
+            "color" => source.OrderBy(item => item.ColorName, StringComparer.OrdinalIgnoreCase),
+            "weight" => source.OrderBy(item => item.WeightName, StringComparer.OrdinalIgnoreCase),
+            "skeins" => source.OrderByDescending(item => item.TotalSkeins),
+            _ => source.OrderBy(item => item.BrandName, StringComparer.OrdinalIgnoreCase)
+        };
+
+    private IEnumerable<ModuleToolInventoryItemDto> FilterTools(IEnumerable<ModuleToolInventoryItemDto> source)
+    {
+        var query = source;
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(item =>
+                item.BrandName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.TypeName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.Size.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.Description.Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filterBrand))
+        {
+            query = query.Where(item => string.Equals(item.BrandName, filterBrand, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filterType))
+        {
+            query = query.Where(item => string.Equals(item.TypeName, filterType, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return query;
+    }
+
+    private IEnumerable<ModuleToolInventoryItemDto> SortTools(IEnumerable<ModuleToolInventoryItemDto> source)
+        => inventorySortBy switch
+        {
+            "type" => source.OrderBy(item => item.TypeName, StringComparer.OrdinalIgnoreCase),
+            "size" => source.OrderBy(item => item.Size, StringComparer.OrdinalIgnoreCase),
+            "quantity" => source.OrderByDescending(item => item.Quantity),
+            _ => source.OrderBy(item => item.BrandName, StringComparer.OrdinalIgnoreCase)
+        };
+
+    private IEnumerable<ModuleNotionInventoryItemDto> FilterNotions(IEnumerable<ModuleNotionInventoryItemDto> source)
+    {
+        var query = source;
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(item =>
+                item.BrandName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.TypeName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.Size.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.ColorName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.Description.Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filterBrand))
+        {
+            query = query.Where(item => string.Equals(item.BrandName, filterBrand, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filterType))
+        {
+            query = query.Where(item => string.Equals(item.TypeName, filterType, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filterSize))
+        {
+            query = query.Where(item => string.Equals(item.Size, filterSize, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filterColor))
+        {
+            query = query.Where(item => string.Equals(item.ColorName, filterColor, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return query;
+    }
+
+    private IEnumerable<ModuleNotionInventoryItemDto> SortNotions(IEnumerable<ModuleNotionInventoryItemDto> source)
+        => inventorySortBy switch
+        {
+            "type" => source.OrderBy(item => item.TypeName, StringComparer.OrdinalIgnoreCase),
+            "size" => source.OrderBy(item => item.Size, StringComparer.OrdinalIgnoreCase),
+            "color" => source.OrderBy(item => item.ColorName, StringComparer.OrdinalIgnoreCase),
+            _ => source.OrderBy(item => item.BrandName, StringComparer.OrdinalIgnoreCase)
+        };
+
+    private async Task SaveYarnAsync()
+    {
+        await RunSaveAsync(async () =>
+        {
+            await ApiClient.CreateModuleYarnAsync(ModuleKey, yarnForm);
+            yarnForm = new();
+        });
+    }
+
+    private async Task SaveToolAsync()
+    {
+        await RunSaveAsync(async () =>
+        {
+            await ApiClient.CreateModuleToolAsync(ModuleKey, toolForm);
+            toolForm = new();
+        });
+    }
+
+    private async Task SaveNotionAsync()
+    {
+        var splitEntries = BuildNotionSplitEntries(notionForm);
+        if (splitEntries.Count > 1)
+        {
+            notionSplitPreview.Clear();
+            notionSplitPreview.AddRange(splitEntries);
+            return;
+        }
+
+        await RunSaveAsync(async () =>
+        {
+            await ApiClient.CreateModuleNotionAsync(ModuleKey, splitEntries[0]);
+            notionForm = new();
+            CancelNotionSplit();
+        });
+    }
+
+    private async Task ConfirmNotionSplitAsync()
+    {
+        if (notionSplitPreview.Count == 0)
+        {
+            return;
+        }
+
+        await RunSaveAsync(async () =>
+        {
+            foreach (var entry in notionSplitPreview)
+            {
+                await ApiClient.CreateModuleNotionAsync(ModuleKey, entry);
+            }
+
+            notionForm = new();
+            CancelNotionSplit();
+        });
+    }
+
+    private void CancelNotionSplit() => notionSplitPreview.Clear();
+
+    private static List<CreateModuleNotionInventoryItemDto> BuildNotionSplitEntries(CreateModuleNotionInventoryItemDto form)
+    {
+        var sizes = ParseMultiValue(form.Size);
+        var colors = ParseMultiValue(form.ColorName);
+        if (sizes.Count <= 1 && colors.Count <= 1)
+        {
+            return [CloneNotionForm(form, form.Size, form.ColorName)];
+        }
+
+        var entries = new List<CreateModuleNotionInventoryItemDto>();
+        foreach (var size in sizes)
+        {
+            foreach (var color in colors)
+            {
+                entries.Add(CloneNotionForm(form, size, color));
+            }
+        }
+
+        return entries;
+    }
+
+    private static CreateModuleNotionInventoryItemDto CloneNotionForm(
+        CreateModuleNotionInventoryItemDto form,
+        string size,
+        string colorName)
+        => new()
+        {
+            BrandName = form.BrandName,
+            TypeName = form.TypeName,
+            Size = size,
+            ColorName = colorName,
+            Description = form.Description,
+            Quantity = form.Quantity,
+            Price = form.Price,
+            SourceName = form.SourceName,
+            IsSalePrice = form.IsSalePrice
+        };
+
+    private static List<string> ParseMultiValue(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return [string.Empty];
+        }
+
+        var values = raw
+            .Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return values.Count == 0 ? [string.Empty] : values;
+    }
+
+    private async Task RunSaveAsync(Func<Task> save)
     {
         busy = true;
         errorMessage = string.Empty;
 
         try
         {
-            await ApiClient.CreateModuleSupplyAsync(ModuleKey, new CreateModuleSupplyItemRequest
-            {
-                Category = form.Category,
-                Name = form.Name,
-                Brand = form.Brand,
-                Color = form.Color,
-                Size = form.Size,
-                Quantity = form.Quantity,
-                Unit = form.Unit,
-                Notes = form.Notes
-            });
-
-            form = new SupplyFormModel();
-            await LoadSuppliesAsync();
+            await save();
+            await LoadInventoryAsync();
         }
         catch (Exception ex)
         {
@@ -194,15 +1103,201 @@ else
         }
     }
 
-    private class SupplyFormModel
+    private async Task LoadReferenceOptionsAsync()
     {
-        public string Category { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string Brand { get; set; } = string.Empty;
-        public string Color { get; set; } = string.Empty;
-        public string Size { get; set; } = string.Empty;
-        public decimal Quantity { get; set; }
-        public string Unit { get; set; } = string.Empty;
-        public string Notes { get; set; } = string.Empty;
+        yarnWeightOptions.Clear();
+        fiberTagOptions.Clear();
+        toolTypeOptions.Clear();
+        notionTypeOptions.Clear();
+
+        yarnWeightOptions.AddRange((await ApiClient.GetModuleInventoryReferenceItemsAsync(ModuleKey, "yarn-weight")).Select(item => item.Name));
+        fiberTagOptions.AddRange((await ApiClient.GetModuleInventoryReferenceItemsAsync(ModuleKey, "fiber-tag")).Select(item => item.Name));
+        toolTypeOptions.AddRange((await ApiClient.GetModuleInventoryReferenceItemsAsync(ModuleKey, "tool-type")).Select(item => item.Name));
+        notionTypeOptions.AddRange((await ApiClient.GetModuleInventoryReferenceItemsAsync(ModuleKey, "notion-type")).Select(item => item.Name));
+    }
+
+    private async Task AddYarnWeightOptionAsync()
+    {
+        await AddReferenceOptionAsync("yarn-weight", newYarnWeightName, () => newYarnWeightName = string.Empty, yarnWeightOptions, value => yarnForm.WeightName = value);
+    }
+
+    private async Task AddFiberTagOptionAsync()
+    {
+        await AddReferenceOptionAsync("fiber-tag", newFiberTagName, () => newFiberTagName = string.Empty, fiberTagOptions, value => yarnForm.FiberTag = value);
+    }
+
+    private async Task AddToolTypeOptionAsync()
+    {
+        await AddReferenceOptionAsync("tool-type", newToolTypeName, () => newToolTypeName = string.Empty, toolTypeOptions, value => toolForm.TypeName = value);
+    }
+
+    private async Task AddNotionTypeOptionAsync()
+    {
+        await AddReferenceOptionAsync("notion-type", newNotionTypeName, () => newNotionTypeName = string.Empty, notionTypeOptions, value => notionForm.TypeName = value);
+    }
+
+    private async Task AddReferenceOptionAsync(
+        string category,
+        string rawName,
+        Action clearInput,
+        List<string> options,
+        Action<string> assignSelection)
+    {
+        var name = rawName.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var created = await ApiClient.CreateModuleInventoryReferenceItemAsync(ModuleKey, category, new CreateModuleInventoryReferenceItemDto { Name = name });
+            if (!options.Contains(created.Name))
+            {
+                options.Add(created.Name);
+                options.Sort(StringComparer.OrdinalIgnoreCase);
+            }
+
+            assignSelection(created.Name);
+            clearInput();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task SelectItemForAssetsAsync(Guid itemId, string recordType)
+    {
+        selectedItemId = itemId;
+        selectedRecordType = recordType;
+        await LoadSelectedItemAssetsAsync();
+    }
+
+    private async Task LoadSelectedItemAssetsAsync()
+    {
+        selectedItemAssets.Clear();
+        if (!selectedItemId.HasValue)
+        {
+            return;
+        }
+
+        selectedItemAssets.AddRange(await ApiClient.GetAssetsForPickerAsync(
+            ModuleKey,
+            selectedRecordType,
+            selectedItemId,
+            includeUnassigned: true));
+    }
+
+    private async Task UploadItemAssetAsync(InputFileChangeEventArgs args)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UploadAssetAsync(ModuleKey, args.File);
+            await LoadSelectedItemAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task AssignItemAssetAsync(Guid assetId)
+    {
+        if (!selectedItemId.HasValue)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.AssignAssetAsync(assetId, new AssetAssignmentRequest
+            {
+                ModuleKey = ModuleKey,
+                RecordType = selectedRecordType,
+                RecordId = selectedItemId.Value
+            });
+            await LoadSelectedItemAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task UnassignItemAssetAsync(Guid assetId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UnassignAssetAsync(assetId);
+            await LoadSelectedItemAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task SetFiberFilterAsync(string tag)
+    {
+        fiberTag = tag;
+        await LoadInventoryAsync();
+    }
+
+    private static string PurchaseSummary(IReadOnlyList<ModuleYarnPurchaseDto> purchases)
+        => PurchaseSummaryCore(purchases.Select(p => (p.SourceName, p.Price, p.IsSalePrice)));
+
+    private static string PurchaseSummary(IReadOnlyList<ModuleToolPurchaseDto> purchases)
+        => PurchaseSummaryCore(purchases.Select(p => (p.SourceName, p.Price, p.IsSalePrice)));
+
+    private static string PurchaseSummary(IReadOnlyList<ModuleNotionPurchaseDto> purchases)
+        => PurchaseSummaryCore(purchases.Select(p => (p.SourceName, p.Price, p.IsSalePrice)));
+
+    private static string PurchaseSummaryCore(IEnumerable<(string SourceName, decimal? Price, bool IsSalePrice)> purchases)
+    {
+        var list = purchases.ToList();
+        if (list.Count == 0)
+        {
+            return "No purchase history.";
+        }
+
+        var latest = list[0];
+        var price = latest.Price.HasValue ? $" {latest.Price:C}" : string.Empty;
+        var sale = latest.IsSalePrice ? " sale" : string.Empty;
+        return $"Latest: {latest.SourceName}{price}{sale}";
+    }
+
+    private static string AssetMeta(AssetRecordDto asset)
+    {
+        var size = asset.FileSizeBytes > 0 ? $"{asset.FileSizeBytes / 1024} KB" : "unknown size";
+        return $"{asset.ContentType} - {size}";
     }
 }

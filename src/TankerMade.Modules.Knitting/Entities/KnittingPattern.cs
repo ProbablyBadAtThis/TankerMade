@@ -9,7 +9,11 @@ public class KnittingPattern
     public string Form { get; set; } = string.Empty;
     public string Difficulty { get; set; } = string.Empty;
     public Guid? ThemeId { get; set; }
+    public Guid? ColorId { get; set; }
     public Guid? SourceId { get; set; }
+    public string SuggestedYarnWeight { get; set; } = string.Empty;
+    public string SuggestedNeedleSizes { get; set; } = string.Empty;
+    public string RequiredNotions { get; set; } = string.Empty;
     public Guid UserId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -28,14 +32,28 @@ public class KnittingPattern
         Slug = SlugGenerator.Generate(name);
     }
 
-    public void Update(string name, string type, string form, string difficulty, Guid? themeId, Guid? sourceId)
+    public void Update(
+        string name,
+        string type,
+        string form,
+        string difficulty,
+        Guid? themeId,
+        Guid? colorId,
+        Guid? sourceId,
+        string suggestedYarnWeight,
+        string suggestedNeedleSizes,
+        string requiredNotions)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
         Type = type ?? string.Empty;
         Form = form ?? string.Empty;
         Difficulty = difficulty ?? string.Empty;
         ThemeId = themeId;
+        ColorId = colorId;
         SourceId = sourceId;
+        SuggestedYarnWeight = suggestedYarnWeight?.Trim() ?? string.Empty;
+        SuggestedNeedleSizes = suggestedNeedleSizes?.Trim() ?? string.Empty;
+        RequiredNotions = requiredNotions?.Trim() ?? string.Empty;
         Slug = SlugGenerator.Generate(name);
         UpdatedAt = DateTime.UtcNow;
     }

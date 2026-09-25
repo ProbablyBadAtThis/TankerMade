@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using TankerMade.Core.Entities;
-using TankerMade.Modules.Crafting.Entities;
 using TankerMade.Modules.Knitting.Entities;
 using TankerMade.Modules.Printing3D.Entities;
 using TankerMade.Server.Modules;
@@ -20,35 +19,33 @@ public class TankerMadeDbContext : DbContext
     // Module host entities
     public DbSet<ModuleDefinition> ModuleDefinitions { get; set; }
     public DbSet<UserModuleActivation> UserModuleActivations { get; set; }
+    public DbSet<UserRecentWorkAccess> UserRecentWorkAccesses { get; set; }
     public DbSet<AssetRecord> AssetRecords { get; set; }
     public DbSet<AssetThumbnail> AssetThumbnails { get; set; }
+    public DbSet<CommissionPublication> CommissionPublications { get; set; }
+    public DbSet<CommissionRevision> CommissionRevisions { get; set; }
+    public DbSet<CommissionWorkspace> CommissionWorkspaces { get; set; }
 
-    // Reference crafting module entities
-    public DbSet<CraftingProject> CraftingProjects { get; set; }
-    public DbSet<CraftingProjectStepProgress> CraftingProjectStepProgress { get; set; }
-    public DbSet<CraftingProjectTimer> CraftingProjectTimers { get; set; }
-    public DbSet<CraftingPattern> CraftingPatterns { get; set; }
-    public DbSet<CraftingPatternPiece> CraftingPatternPieces { get; set; }
-    public DbSet<CraftingPatternStep> CraftingPatternSteps { get; set; }
-    public DbSet<CraftingKit> CraftingKits { get; set; }
-    public DbSet<CraftingKitPiece> CraftingKitPieces { get; set; }
-    public DbSet<CraftingKitSupply> CraftingKitSupplies { get; set; }
-    public DbSet<CraftingProjectInventoryLink> CraftingProjectInventoryLinks { get; set; }
-    public DbSet<CraftingYarnInventoryItem> CraftingYarnInventoryItems { get; set; }
-    public DbSet<CraftingYarnLot> CraftingYarnLots { get; set; }
-    public DbSet<CraftingInventoryPurchase> CraftingInventoryPurchases { get; set; }
-    public DbSet<CraftingToolInventoryItem> CraftingToolInventoryItems { get; set; }
-    public DbSet<CraftingToolPurchase> CraftingToolPurchases { get; set; }
-    public DbSet<CraftingNotionInventoryItem> CraftingNotionInventoryItems { get; set; }
-    public DbSet<CraftingNotionPurchase> CraftingNotionPurchases { get; set; }
-    public DbSet<CraftingInventoryReferenceItem> CraftingInventoryReferenceItems { get; set; }
 
     // Knitting module entities
     public DbSet<KnittingPattern> KnittingPatterns { get; set; }
     public DbSet<KnittingPatternPiece> KnittingPatternPieces { get; set; }
     public DbSet<KnittingPatternStep> KnittingPatternSteps { get; set; }
+    public DbSet<KnittingPatternSupply> KnittingPatternSupplies { get; set; }
     public DbSet<KnittingProject> KnittingProjects { get; set; }
+    public DbSet<KnittingProjectStepProgress> KnittingProjectStepProgress { get; set; }
+    public DbSet<KnittingProjectRowCheck> KnittingProjectRowChecks { get; set; }
+    public DbSet<KnittingProjectTimer> KnittingProjectTimers { get; set; }
+    public DbSet<KnittingProjectInventoryLink> KnittingProjectInventoryLinks { get; set; }
     public DbSet<KnittingSupplyItem> KnittingSupplyItems { get; set; }
+    public DbSet<KnittingYarnInventoryItem> KnittingYarnInventoryItems { get; set; }
+    public DbSet<KnittingYarnLot> KnittingYarnLots { get; set; }
+    public DbSet<KnittingYarnPurchase> KnittingYarnPurchases { get; set; }
+    public DbSet<KnittingToolInventoryItem> KnittingToolInventoryItems { get; set; }
+    public DbSet<KnittingToolPurchase> KnittingToolPurchases { get; set; }
+    public DbSet<KnittingNotionInventoryItem> KnittingNotionInventoryItems { get; set; }
+    public DbSet<KnittingNotionPurchase> KnittingNotionPurchases { get; set; }
+    public DbSet<KnittingInventoryReferenceItem> KnittingInventoryReferenceItems { get; set; }
     public DbSet<KnittingKit> KnittingKits { get; set; }
     public DbSet<KnittingKitPiece> KnittingKitPieces { get; set; }
     public DbSet<KnittingKitSupply> KnittingKitSupplies { get; set; }
@@ -72,31 +69,30 @@ public class TankerMadeDbContext : DbContext
 
         ConfigureUser(modelBuilder);
         ConfigureModules(modelBuilder);
+        ConfigureUserRecentWorkAccess(modelBuilder);
         ConfigureAssetRecord(modelBuilder);
         ConfigureAssetThumbnail(modelBuilder);
-        ConfigureCraftingProject(modelBuilder);
-        ConfigureCraftingProjectStepProgress(modelBuilder);
-        ConfigureCraftingProjectTimer(modelBuilder);
-        ConfigureCraftingPattern(modelBuilder);
-        ConfigureCraftingPatternPiece(modelBuilder);
-        ConfigureCraftingPatternStep(modelBuilder);
-        ConfigureCraftingKit(modelBuilder);
-        ConfigureCraftingKitPiece(modelBuilder);
-        ConfigureCraftingKitSupply(modelBuilder);
-        ConfigureCraftingProjectInventoryLink(modelBuilder);
-        ConfigureCraftingYarnInventoryItem(modelBuilder);
-        ConfigureCraftingYarnLot(modelBuilder);
-        ConfigureCraftingInventoryPurchase(modelBuilder);
-        ConfigureCraftingToolInventoryItem(modelBuilder);
-        ConfigureCraftingToolPurchase(modelBuilder);
-        ConfigureCraftingNotionInventoryItem(modelBuilder);
-        ConfigureCraftingNotionPurchase(modelBuilder);
-        ConfigureCraftingInventoryReferenceItem(modelBuilder);
+        ConfigureCommissionPublication(modelBuilder);
+        ConfigureCommissionRevision(modelBuilder);
+        ConfigureCommissionWorkspace(modelBuilder);
         ConfigureKnittingPattern(modelBuilder);
         ConfigureKnittingPatternPiece(modelBuilder);
         ConfigureKnittingPatternStep(modelBuilder);
+        ConfigureKnittingPatternSupply(modelBuilder);
         ConfigureKnittingProject(modelBuilder);
+        ConfigureKnittingProjectStepProgress(modelBuilder);
+        ConfigureKnittingProjectRowCheck(modelBuilder);
+        ConfigureKnittingProjectTimer(modelBuilder);
+        ConfigureKnittingProjectInventoryLink(modelBuilder);
         ConfigureKnittingSupplyItem(modelBuilder);
+        ConfigureKnittingYarnInventoryItem(modelBuilder);
+        ConfigureKnittingYarnLot(modelBuilder);
+        ConfigureKnittingYarnPurchase(modelBuilder);
+        ConfigureKnittingToolInventoryItem(modelBuilder);
+        ConfigureKnittingToolPurchase(modelBuilder);
+        ConfigureKnittingNotionInventoryItem(modelBuilder);
+        ConfigureKnittingNotionPurchase(modelBuilder);
+        ConfigureKnittingInventoryReferenceItem(modelBuilder);
         ConfigureKnittingKit(modelBuilder);
         ConfigureKnittingKitPiece(modelBuilder);
         ConfigureKnittingKitSupply(modelBuilder);
@@ -130,6 +126,9 @@ public class TankerMadeDbContext : DbContext
             entity.Property(e => e.Role)
                 .IsRequired()
                 .HasMaxLength(50);
+
+            entity.Property(e => e.TargetHourlyRate)
+                .HasPrecision(18, 2);
 
             entity.HasIndex(e => e.Username)
                 .IsUnique();
@@ -168,6 +167,29 @@ public class TankerMadeDbContext : DbContext
 
             entity.HasIndex(e => new { e.UserId, e.ModuleDefinitionId })
                 .IsUnique();
+        });
+    }
+
+    private void ConfigureUserRecentWorkAccess(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UserRecentWorkAccess>(entity =>
+        {
+            entity.ToTable("CoreUserRecentWorkAccesses");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.ModuleKey).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.WorkItemType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.LastAccessedAtUtc).IsRequired();
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.UserId, e.ModuleKey, e.WorkItemType, e.WorkItemId })
+                .IsUnique();
+
+            entity.HasIndex(e => new { e.UserId, e.LastAccessedAtUtc });
         });
     }
 
@@ -229,486 +251,6 @@ public class TankerMadeDbContext : DbContext
         });
     }
 
-    private void ConfigureCraftingProject(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingProject>(entity =>
-        {
-            entity.ToTable("CraftingProjects");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.Name)
-                .IsRequired()
-                .HasMaxLength(200);
-
-            entity.Property(e => e.Slug)
-                .IsRequired()
-                .HasMaxLength(220);
-
-            entity.Property(e => e.Description)
-                .HasMaxLength(1000);
-
-            entity.Property(e => e.Difficulty)
-                .IsRequired();
-
-            entity.Property(e => e.IsArchived)
-                .IsRequired();
-
-            // Relationships
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne<CraftingPattern>()
-                .WithMany()
-                .HasForeignKey(e => e.PatternId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasOne<CraftingKit>()
-                .WithMany()
-                .HasForeignKey(e => e.KitId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasOne<CraftingKitPiece>()
-                .WithMany()
-                .HasForeignKey(e => e.KitPieceId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasOne<Theme>()
-                .WithMany()
-                .HasForeignKey(e => e.ThemeId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasIndex(e => e.UserId);
-            entity.HasIndex(e => e.IsArchived);
-            entity.HasIndex(e => e.Slug);
-            entity.HasIndex(e => e.KitId);
-            entity.HasIndex(e => new { e.UserId, e.IsArchived, e.Name });
-            entity.HasIndex(e => new { e.UserId, e.PatternId });
-            entity.HasIndex(e => e.KitPieceId)
-                .IsUnique();
-        });
-    }
-
-    private void ConfigureCraftingProjectStepProgress(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingProjectStepProgress>(entity =>
-        {
-            entity.ToTable("CraftingProjectStepProgress");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.IsComplete)
-                .IsRequired();
-
-            entity.HasOne<CraftingProject>()
-                .WithMany()
-                .HasForeignKey(e => e.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne<CraftingPatternStep>()
-                .WithMany()
-                .HasForeignKey(e => e.PatternStepId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.ProjectId);
-            entity.HasIndex(e => e.PatternStepId);
-            entity.HasIndex(e => new { e.ProjectId, e.PatternStepId })
-                .IsUnique();
-        });
-    }
-
-    private void ConfigureCraftingProjectTimer(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingProjectTimer>(entity =>
-        {
-            entity.ToTable("CraftingProjectTimers");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.ElapsedSeconds)
-                .IsRequired();
-
-            entity.Property(e => e.IsRunning)
-                .IsRequired();
-
-            entity.HasOne<CraftingProject>()
-                .WithMany()
-                .HasForeignKey(e => e.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne<CraftingPatternStep>()
-                .WithMany()
-                .HasForeignKey(e => e.PatternStepId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.ProjectId);
-            entity.HasIndex(e => e.PatternStepId);
-            entity.HasIndex(e => new { e.ProjectId, e.PatternStepId })
-                .IsUnique();
-        });
-    }
-
-    private void ConfigureCraftingPattern(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingPattern>(entity =>
-        {
-            entity.ToTable("CraftingPatterns");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.Name)
-                .IsRequired()
-                .HasMaxLength(200);
-
-            entity.Property(e => e.Slug)
-                .IsRequired()
-                .HasMaxLength(220);
-
-            entity.Property(e => e.Type)
-                .HasMaxLength(50);
-
-            entity.Property(e => e.Form)
-                .HasMaxLength(50);
-
-            entity.Property(e => e.Difficulty)
-                .HasMaxLength(50);
-
-            // Relationships
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne<Theme>()
-                .WithMany()
-                .HasForeignKey(e => e.ThemeId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasOne<Source>()
-                .WithMany()
-                .HasForeignKey(e => e.SourceId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasIndex(e => e.UserId);
-            entity.HasIndex(e => e.Slug);
-            entity.HasIndex(e => e.ThemeId);
-            entity.HasIndex(e => e.SourceId);
-            entity.HasIndex(e => new { e.UserId, e.ThemeId, e.Name });
-        });
-    }
-
-    private void ConfigureCraftingPatternPiece(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingPatternPiece>(entity =>
-        {
-            entity.ToTable("CraftingPatternPieces");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.Name)
-                .IsRequired()
-                .HasMaxLength(200);
-
-            entity.HasOne<CraftingPattern>()
-                .WithMany()
-                .HasForeignKey(e => e.PatternId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.PatternId);
-            entity.HasIndex(e => new { e.PatternId, e.SortOrder });
-        });
-    }
-
-    private void ConfigureCraftingPatternStep(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingPatternStep>(entity =>
-        {
-            entity.ToTable("CraftingPatternSteps");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.Label)
-                .HasMaxLength(100);
-
-            entity.Property(e => e.Instructions)
-                .HasMaxLength(4000);
-
-            entity.HasOne<CraftingPatternPiece>()
-                .WithMany()
-                .HasForeignKey(e => e.PatternPieceId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.PatternPieceId);
-            entity.HasIndex(e => new { e.PatternPieceId, e.SortOrder });
-        });
-    }
-
-    private void ConfigureCraftingKit(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingKit>(entity =>
-        {
-            entity.ToTable("CraftingKits");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Slug).IsRequired().HasMaxLength(220);
-            entity.Property(e => e.Description).HasMaxLength(1000);
-            entity.Property(e => e.Type).HasMaxLength(50);
-            entity.Property(e => e.Difficulty).IsRequired();
-            entity.Property(e => e.IsArchived).IsRequired();
-
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne<Theme>()
-                .WithMany()
-                .HasForeignKey(e => e.ThemeId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasIndex(e => e.UserId);
-            entity.HasIndex(e => e.IsArchived);
-            entity.HasIndex(e => e.Slug);
-            entity.HasIndex(e => e.ThemeId);
-            entity.HasIndex(e => new { e.UserId, e.IsArchived, e.Name });
-        });
-    }
-
-    private void ConfigureCraftingKitPiece(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingKitPiece>(entity =>
-        {
-            entity.ToTable("CraftingKitPieces");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Notes).HasMaxLength(1000);
-
-            entity.HasOne<CraftingKit>()
-                .WithMany()
-                .HasForeignKey(e => e.KitId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne<CraftingPattern>()
-                .WithMany()
-                .HasForeignKey(e => e.PatternId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasIndex(e => e.KitId);
-            entity.HasIndex(e => e.PatternId);
-            entity.HasIndex(e => new { e.KitId, e.SortOrder });
-        });
-    }
-
-    private void ConfigureCraftingKitSupply(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingKitSupply>(entity =>
-        {
-            entity.ToTable("CraftingKitSupplies");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.SupplyType).IsRequired().HasMaxLength(50);
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Notes).HasMaxLength(1000);
-
-            entity.HasOne<CraftingKit>()
-                .WithMany()
-                .HasForeignKey(e => e.KitId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.KitId);
-            entity.HasIndex(e => new { e.KitId, e.SortOrder });
-        });
-    }
-
-    private void ConfigureCraftingProjectInventoryLink(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingProjectInventoryLink>(entity =>
-        {
-            entity.ToTable("CraftingProjectInventoryLinks");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.InventoryItemType).IsRequired().HasMaxLength(50);
-            entity.Property(e => e.Notes).HasMaxLength(1000);
-
-            entity.HasOne<CraftingProject>()
-                .WithMany()
-                .HasForeignKey(e => e.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.ProjectId);
-            entity.HasIndex(e => new { e.ProjectId, e.InventoryItemType, e.InventoryItemId })
-                .IsUnique();
-        });
-    }
-
-    private void ConfigureCraftingYarnInventoryItem(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingYarnInventoryItem>(entity =>
-        {
-            entity.ToTable("CraftingYarnInventoryItems");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.BrandName).IsRequired().HasMaxLength(150);
-            entity.Property(e => e.ColorName).IsRequired().HasMaxLength(150);
-            entity.Property(e => e.NormalizedBrandName).IsRequired().HasMaxLength(150);
-            entity.Property(e => e.NormalizedColorName).IsRequired().HasMaxLength(150);
-            entity.Property(e => e.MainColor).HasMaxLength(100);
-            entity.Property(e => e.WeightName).HasMaxLength(100);
-            entity.Property(e => e.FiberContent).HasMaxLength(300);
-            entity.Property(e => e.FiberTag).HasMaxLength(50);
-            entity.Property(e => e.LengthUnit).HasMaxLength(20);
-
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.UserId);
-            entity.HasIndex(e => new { e.UserId, e.NormalizedBrandName, e.NormalizedColorName })
-                .IsUnique();
-        });
-    }
-
-    private void ConfigureCraftingYarnLot(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingYarnLot>(entity =>
-        {
-            entity.ToTable("CraftingYarnLots");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.LotNumber).HasMaxLength(100);
-
-            entity.HasOne<CraftingYarnInventoryItem>()
-                .WithMany()
-                .HasForeignKey(e => e.YarnInventoryItemId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.YarnInventoryItemId);
-            entity.HasIndex(e => new { e.YarnInventoryItemId, e.LotNumber })
-                .IsUnique();
-        });
-    }
-
-    private void ConfigureCraftingInventoryPurchase(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingInventoryPurchase>(entity =>
-        {
-            entity.ToTable("CraftingInventoryPurchases");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.SourceName).HasMaxLength(150);
-
-            entity.HasOne<CraftingYarnInventoryItem>()
-                .WithMany()
-                .HasForeignKey(e => e.YarnInventoryItemId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.YarnInventoryItemId);
-        });
-    }
-
-    private void ConfigureCraftingToolInventoryItem(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingToolInventoryItem>(entity =>
-        {
-            entity.ToTable("CraftingToolInventoryItems");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.BrandName).IsRequired().HasMaxLength(150);
-            entity.Property(e => e.TypeName).IsRequired().HasMaxLength(150);
-            entity.Property(e => e.NormalizedBrandName).IsRequired().HasMaxLength(150);
-            entity.Property(e => e.NormalizedTypeName).IsRequired().HasMaxLength(150);
-            entity.Property(e => e.Size).HasMaxLength(100);
-            entity.Property(e => e.Description).HasMaxLength(1000);
-
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.UserId);
-            entity.HasIndex(e => new { e.UserId, e.NormalizedBrandName, e.NormalizedTypeName })
-                .IsUnique();
-        });
-    }
-
-    private void ConfigureCraftingToolPurchase(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingToolPurchase>(entity =>
-        {
-            entity.ToTable("CraftingToolPurchases");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.SourceName).HasMaxLength(150);
-
-            entity.HasOne<CraftingToolInventoryItem>()
-                .WithMany()
-                .HasForeignKey(e => e.ToolInventoryItemId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.ToolInventoryItemId);
-        });
-    }
-
-    private void ConfigureCraftingNotionInventoryItem(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingNotionInventoryItem>(entity =>
-        {
-            entity.ToTable("CraftingNotionInventoryItems");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.BrandName).IsRequired().HasMaxLength(150);
-            entity.Property(e => e.TypeName).IsRequired().HasMaxLength(150);
-            entity.Property(e => e.NormalizedBrandName).IsRequired().HasMaxLength(150);
-            entity.Property(e => e.NormalizedTypeName).IsRequired().HasMaxLength(150);
-            entity.Property(e => e.Size).HasMaxLength(100);
-            entity.Property(e => e.ColorName).HasMaxLength(100);
-            entity.Property(e => e.Description).HasMaxLength(1000);
-
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.UserId);
-            entity.HasIndex(e => new { e.UserId, e.NormalizedBrandName, e.NormalizedTypeName })
-                .IsUnique();
-        });
-    }
-
-    private void ConfigureCraftingNotionPurchase(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingNotionPurchase>(entity =>
-        {
-            entity.ToTable("CraftingNotionPurchases");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.SourceName).HasMaxLength(150);
-
-            entity.HasOne<CraftingNotionInventoryItem>()
-                .WithMany()
-                .HasForeignKey(e => e.NotionInventoryItemId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.NotionInventoryItemId);
-        });
-    }
-
-    private void ConfigureCraftingInventoryReferenceItem(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CraftingInventoryReferenceItem>(entity =>
-        {
-            entity.ToTable("CraftingInventoryReferenceItems");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(150);
-            entity.Property(e => e.Slug).IsRequired().HasMaxLength(170);
-
-            entity.HasIndex(e => e.Category);
-            entity.HasIndex(e => new { e.Category, e.SortOrder });
-            entity.HasIndex(e => new { e.Category, e.Slug })
-                .IsUnique();
-        });
-    }
 
     private void ConfigurePrintingMaterialInventoryItem(ModelBuilder modelBuilder)
     {
@@ -737,6 +279,228 @@ public class TankerMadeDbContext : DbContext
         });
     }
 
+    private void ConfigureKnittingYarnInventoryItem(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingYarnInventoryItem>(entity =>
+        {
+            entity.ToTable("KnittingYarnInventoryItems");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.BrandName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.ColorName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.NormalizedBrandName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.NormalizedColorName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.MainColor).HasMaxLength(100);
+            entity.Property(e => e.WeightName).HasMaxLength(100);
+            entity.Property(e => e.FiberContent).HasMaxLength(300);
+            entity.Property(e => e.FiberTag).HasMaxLength(50);
+            entity.Property(e => e.LengthUnit).HasMaxLength(20);
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.NormalizedBrandName, e.NormalizedColorName })
+                .IsUnique();
+        });
+    }
+
+    private void ConfigureKnittingYarnLot(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingYarnLot>(entity =>
+        {
+            entity.ToTable("KnittingYarnLots");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.LotNumber).HasMaxLength(100);
+
+            entity.HasOne<KnittingYarnInventoryItem>()
+                .WithMany()
+                .HasForeignKey(e => e.YarnInventoryItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.YarnInventoryItemId);
+            entity.HasIndex(e => new { e.YarnInventoryItemId, e.LotNumber })
+                .IsUnique();
+        });
+    }
+
+    private void ConfigureKnittingYarnPurchase(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingYarnPurchase>(entity =>
+        {
+            entity.ToTable("KnittingYarnPurchases");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.SourceName).HasMaxLength(150);
+
+            entity.HasOne<KnittingYarnInventoryItem>()
+                .WithMany()
+                .HasForeignKey(e => e.YarnInventoryItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.YarnInventoryItemId);
+        });
+    }
+
+    private void ConfigureKnittingToolInventoryItem(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingToolInventoryItem>(entity =>
+        {
+            entity.ToTable("KnittingToolInventoryItems");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.BrandName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.TypeName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.NormalizedBrandName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.NormalizedTypeName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.Size).HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.NormalizedBrandName, e.NormalizedTypeName })
+                .IsUnique();
+        });
+    }
+
+    private void ConfigureKnittingToolPurchase(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingToolPurchase>(entity =>
+        {
+            entity.ToTable("KnittingToolPurchases");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.SourceName).HasMaxLength(150);
+
+            entity.HasOne<KnittingToolInventoryItem>()
+                .WithMany()
+                .HasForeignKey(e => e.ToolInventoryItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ToolInventoryItemId);
+        });
+    }
+
+    private void ConfigureKnittingNotionInventoryItem(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingNotionInventoryItem>(entity =>
+        {
+            entity.ToTable("KnittingNotionInventoryItems");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.BrandName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.TypeName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.NormalizedBrandName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.NormalizedTypeName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.Size).HasMaxLength(100);
+            entity.Property(e => e.ColorName).HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.NormalizedBrandName, e.NormalizedTypeName })
+                .IsUnique();
+        });
+    }
+
+    private void ConfigureKnittingNotionPurchase(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingNotionPurchase>(entity =>
+        {
+            entity.ToTable("KnittingNotionPurchases");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.SourceName).HasMaxLength(150);
+
+            entity.HasOne<KnittingNotionInventoryItem>()
+                .WithMany()
+                .HasForeignKey(e => e.NotionInventoryItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.NotionInventoryItemId);
+        });
+    }
+
+    private void ConfigureKnittingInventoryReferenceItem(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingInventoryReferenceItem>(entity =>
+        {
+            entity.ToTable("KnittingInventoryReferenceItems");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.Slug).IsRequired().HasMaxLength(170);
+
+            entity.HasIndex(e => e.Category);
+            entity.HasIndex(e => new { e.Category, e.SortOrder });
+            entity.HasIndex(e => new { e.Category, e.Slug })
+                .IsUnique();
+        });
+    }
+
+    private void ConfigureCommissionPublication(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CommissionPublication>(entity =>
+        {
+            entity.ToTable("CoreCommissionPublications");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ModuleKey).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.TokenHash).IsRequired().HasMaxLength(128);
+            entity.Property(e => e.SnapshotJson).IsRequired();
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.UserId, e.ModuleKey, e.ProjectId }).IsUnique();
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+        });
+    }
+
+    private void ConfigureCommissionRevision(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CommissionRevision>(entity =>
+        {
+            entity.ToTable("CoreCommissionRevisions");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Summary).HasMaxLength(500);
+            entity.Property(e => e.PreviousPrice).HasPrecision(18, 2);
+            entity.Property(e => e.NewPrice).HasPrecision(18, 2);
+            entity.HasOne<CommissionPublication>()
+                .WithMany()
+                .HasForeignKey(e => e.PublicationId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.PublicationId, e.OccurredAt });
+        });
+    }
+
+    private void ConfigureCommissionWorkspace(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CommissionWorkspace>(entity =>
+        {
+            entity.ToTable("CoreCommissionWorkspaces");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ModuleKey).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.QuotePrice).HasPrecision(18, 2);
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.UserId, e.ModuleKey, e.ProjectId }).IsUnique();
+        });
+    }
+
     private void ConfigureKnittingPattern(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<KnittingPattern>(entity =>
@@ -761,6 +525,15 @@ public class TankerMadeDbContext : DbContext
             entity.Property(e => e.Difficulty)
                 .HasMaxLength(100);
 
+            entity.Property(e => e.SuggestedYarnWeight)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.SuggestedNeedleSizes)
+                .HasMaxLength(200);
+
+            entity.Property(e => e.RequiredNotions)
+                .HasMaxLength(1000);
+
             entity.HasOne<User>()
                 .WithMany()
                 .HasForeignKey(e => e.UserId)
@@ -774,6 +547,11 @@ public class TankerMadeDbContext : DbContext
             entity.HasOne<Source>()
                 .WithMany()
                 .HasForeignKey(e => e.SourceId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne<Color>()
+                .WithMany()
+                .HasForeignKey(e => e.ColorId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasIndex(e => e.UserId);
@@ -832,6 +610,26 @@ public class TankerMadeDbContext : DbContext
         });
     }
 
+    private void ConfigureKnittingPatternSupply(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingPatternSupply>(entity =>
+        {
+            entity.ToTable("KnittingPatternSupplies");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.SupplyType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+
+            entity.HasOne<KnittingPattern>()
+                .WithMany()
+                .HasForeignKey(e => e.PatternId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.PatternId);
+            entity.HasIndex(e => new { e.PatternId, e.SortOrder });
+        });
+    }
+
     private void ConfigureKnittingProject(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<KnittingProject>(entity =>
@@ -860,11 +658,113 @@ public class TankerMadeDbContext : DbContext
                 .HasForeignKey(e => e.ThemeId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            entity.HasOne<Color>()
+                .WithMany()
+                .HasForeignKey(e => e.ColorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.IsArchived);
             entity.HasIndex(e => e.Slug);
             entity.HasIndex(e => new { e.UserId, e.IsArchived, e.Name });
             entity.HasIndex(e => new { e.UserId, e.PatternId });
+        });
+    }
+
+    private void ConfigureKnittingProjectStepProgress(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingProjectStepProgress>(entity =>
+        {
+            entity.ToTable("KnittingProjectStepProgress");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.IsComplete).IsRequired();
+
+            entity.HasOne<KnittingProject>()
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<KnittingPatternStep>()
+                .WithMany()
+                .HasForeignKey(e => e.PatternStepId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.PatternStepId);
+            entity.HasIndex(e => new { e.ProjectId, e.PatternStepId }).IsUnique();
+        });
+    }
+
+    private void ConfigureKnittingProjectRowCheck(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingProjectRowCheck>(entity =>
+        {
+            entity.ToTable("KnittingProjectRowChecks");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.RowNumber).IsRequired();
+
+            entity.HasOne<KnittingProject>()
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<KnittingPatternStep>()
+                .WithMany()
+                .HasForeignKey(e => e.PatternStepId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.PatternStepId);
+            entity.HasIndex(e => new { e.ProjectId, e.PatternStepId, e.RowNumber }).IsUnique();
+        });
+    }
+
+    private void ConfigureKnittingProjectTimer(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingProjectTimer>(entity =>
+        {
+            entity.ToTable("KnittingProjectTimers");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.ElapsedSeconds).IsRequired();
+            entity.Property(e => e.IsRunning).IsRequired();
+
+            entity.HasOne<KnittingProject>()
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<KnittingPatternStep>()
+                .WithMany()
+                .HasForeignKey(e => e.PatternStepId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.PatternStepId);
+            entity.HasIndex(e => new { e.ProjectId, e.PatternStepId }).IsUnique();
+        });
+    }
+
+    private void ConfigureKnittingProjectInventoryLink(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KnittingProjectInventoryLink>(entity =>
+        {
+            entity.ToTable("KnittingProjectInventoryLinks");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.InventoryItemType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+
+            entity.HasOne<KnittingProject>()
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => new { e.ProjectId, e.InventoryItemType, e.InventoryItemId })
+                .IsUnique();
         });
     }
 
@@ -956,6 +856,7 @@ public class TankerMadeDbContext : DbContext
 
             entity.HasIndex(e => e.KitId);
             entity.HasIndex(e => new { e.KitId, e.SortOrder });
+            entity.HasIndex(e => e.InventoryItemId);
         });
     }
 
@@ -1096,23 +997,24 @@ public class TankerMadeDbContext : DbContext
 
         modelBuilder.Entity<ModuleDefinition>().HasData(bundledModules);
 
-        modelBuilder.Entity<CraftingInventoryReferenceItem>().HasData(
-            new { Id = Guid.Parse("66666666-6666-6666-6666-666666666601"), Category = "yarn-weight", Name = "Lace", Slug = "lace", SortOrder = 1, CreatedAt = now },
-            new { Id = Guid.Parse("66666666-6666-6666-6666-666666666602"), Category = "yarn-weight", Name = "Fingering", Slug = "fingering", SortOrder = 2, CreatedAt = now },
-            new { Id = Guid.Parse("66666666-6666-6666-6666-666666666603"), Category = "yarn-weight", Name = "DK", Slug = "dk", SortOrder = 3, CreatedAt = now },
-            new { Id = Guid.Parse("66666666-6666-6666-6666-666666666604"), Category = "yarn-weight", Name = "Worsted", Slug = "worsted", SortOrder = 4, CreatedAt = now },
-            new { Id = Guid.Parse("66666666-6666-6666-6666-666666666605"), Category = "yarn-weight", Name = "Bulky", Slug = "bulky", SortOrder = 5, CreatedAt = now },
-            new { Id = Guid.Parse("66666666-6666-6666-6666-666666666606"), Category = "fiber-tag", Name = "Synthetic", Slug = "synthetic", SortOrder = 1, CreatedAt = now },
-            new { Id = Guid.Parse("66666666-6666-6666-6666-666666666607"), Category = "fiber-tag", Name = "Natural", Slug = "natural", SortOrder = 2, CreatedAt = now },
-            new { Id = Guid.Parse("66666666-6666-6666-6666-666666666608"), Category = "fiber-tag", Name = "Blended", Slug = "blended", SortOrder = 3, CreatedAt = now },
-            new { Id = Guid.Parse("66666666-6666-6666-6666-666666666609"), Category = "tool-type", Name = "Hook", Slug = "hook", SortOrder = 1, CreatedAt = now },
-            new { Id = Guid.Parse("66666666-6666-6666-6666-66666666660a"), Category = "tool-type", Name = "Needle", Slug = "needle", SortOrder = 2, CreatedAt = now },
-            new { Id = Guid.Parse("66666666-6666-6666-6666-66666666660b"), Category = "tool-type", Name = "Gauge Ruler", Slug = "gauge-ruler", SortOrder = 3, CreatedAt = now },
-            new { Id = Guid.Parse("66666666-6666-6666-6666-66666666660c"), Category = "tool-type", Name = "Stitch Holder", Slug = "stitch-holder", SortOrder = 4, CreatedAt = now },
-            new { Id = Guid.Parse("66666666-6666-6666-6666-66666666660d"), Category = "notion-type", Name = "Button", Slug = "button", SortOrder = 1, CreatedAt = now },
-            new { Id = Guid.Parse("66666666-6666-6666-6666-66666666660e"), Category = "notion-type", Name = "Stitch Marker", Slug = "stitch-marker", SortOrder = 2, CreatedAt = now },
-            new { Id = Guid.Parse("66666666-6666-6666-6666-66666666660f"), Category = "notion-type", Name = "Tapestry Needle", Slug = "tapestry-needle", SortOrder = 3, CreatedAt = now },
-            new { Id = Guid.Parse("66666666-6666-6666-6666-666666666610"), Category = "notion-type", Name = "Zipper", Slug = "zipper", SortOrder = 4, CreatedAt = now }
+
+        modelBuilder.Entity<KnittingInventoryReferenceItem>().HasData(
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888801"), Category = "yarn-weight", Name = "Lace", Slug = "lace", SortOrder = 1, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888802"), Category = "yarn-weight", Name = "Fingering", Slug = "fingering", SortOrder = 2, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888803"), Category = "yarn-weight", Name = "DK", Slug = "dk", SortOrder = 3, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888804"), Category = "yarn-weight", Name = "Worsted", Slug = "worsted", SortOrder = 4, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888805"), Category = "yarn-weight", Name = "Bulky", Slug = "bulky", SortOrder = 5, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888806"), Category = "fiber-tag", Name = "Synthetic", Slug = "synthetic", SortOrder = 1, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888807"), Category = "fiber-tag", Name = "Natural", Slug = "natural", SortOrder = 2, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888808"), Category = "fiber-tag", Name = "Blended", Slug = "blended", SortOrder = 3, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888809"), Category = "tool-type", Name = "Hook", Slug = "hook", SortOrder = 1, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-88888888880a"), Category = "tool-type", Name = "Needle", Slug = "needle", SortOrder = 2, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-88888888880b"), Category = "tool-type", Name = "Gauge Ruler", Slug = "gauge-ruler", SortOrder = 3, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-88888888880c"), Category = "tool-type", Name = "Stitch Holder", Slug = "stitch-holder", SortOrder = 4, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-88888888880d"), Category = "notion-type", Name = "Button", Slug = "button", SortOrder = 1, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-88888888880e"), Category = "notion-type", Name = "Stitch Marker", Slug = "stitch-marker", SortOrder = 2, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-88888888880f"), Category = "notion-type", Name = "Tapestry Needle", Slug = "tapestry-needle", SortOrder = 3, CreatedAt = now },
+            new { Id = Guid.Parse("88888888-8888-8888-8888-888888888810"), Category = "notion-type", Name = "Zipper", Slug = "zipper", SortOrder = 4, CreatedAt = now }
         );
 
         modelBuilder.Entity<PrintingInventoryReferenceItem>().HasData(

@@ -79,6 +79,64 @@ public class PrintingInventoryService : IPrintingInventoryService
         return material == null ? null : await MapMaterialAsync(material.Id);
     }
 
+    public async Task<PrintingMaterialInventoryItemDto?> UpdateMaterialAsync(Guid id, CreatePrintingMaterialInventoryItemDto request, Guid userId)
+    {
+        var material = await _context.PrintingMaterialInventoryItems
+            .SingleOrDefaultAsync(m => m.Id == id && m.UserId == userId);
+        if (material == null)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.MaterialType))
+        {
+            material.MaterialType = request.MaterialType.Trim();
+            material.NormalizedMaterialType = PrintingMaterialInventoryItem.Normalize(request.MaterialType);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.BrandName))
+        {
+            material.BrandName = request.BrandName.Trim();
+            material.NormalizedBrandName = PrintingMaterialInventoryItem.Normalize(request.BrandName);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.ColorName))
+        {
+            material.ColorName = request.ColorName.Trim();
+            material.NormalizedColorName = PrintingMaterialInventoryItem.Normalize(request.ColorName);
+        }
+
+        material.TotalSpoolWeightGrams = request.SpoolWeightGrams > 0
+            ? request.SpoolWeightGrams
+            : material.TotalSpoolWeightGrams;
+        material.RemainingWeightGrams = request.RemainingWeightGrams ?? material.RemainingWeightGrams;
+        material.Diameter = string.IsNullOrWhiteSpace(request.Diameter) ? material.Diameter : request.Diameter.Trim();
+        material.StorageLocation = string.IsNullOrWhiteSpace(request.StorageLocation) ? material.StorageLocation : request.StorageLocation.Trim();
+
+        if (request.Price.HasValue && !request.IsSalePrice)
+        {
+            material.RegularPrice = request.Price;
+        }
+
+        material.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        return await MapMaterialAsync(material.Id);
+    }
+
+    public async Task<bool> DeleteMaterialAsync(Guid id, Guid userId)
+    {
+        var material = await _context.PrintingMaterialInventoryItems
+            .SingleOrDefaultAsync(m => m.Id == id && m.UserId == userId);
+        if (material == null)
+        {
+            return false;
+        }
+
+        _context.PrintingMaterialInventoryItems.Remove(material);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<IReadOnlyList<PrintingMaterialInventoryItemDto>> GetMaterialsAsync(
         Guid userId,
         PrintingMaterialInventoryFilterDto? filter = null)

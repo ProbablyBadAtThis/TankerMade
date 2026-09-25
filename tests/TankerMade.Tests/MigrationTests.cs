@@ -78,31 +78,32 @@ public class MigrationTests
 
             Assert.Contains("ModuleDefinitions", tables);
             Assert.Contains("UserModuleActivations", tables);
-            Assert.Contains("CraftingProjects", tables);
-            Assert.Contains("CraftingPatterns", tables);
-            Assert.Contains("CraftingPatternPieces", tables);
-            Assert.Contains("CraftingPatternSteps", tables);
-            Assert.Contains("CraftingProjectStepProgress", tables);
-            Assert.Contains("CraftingYarnInventoryItems", tables);
-            Assert.Contains("CraftingYarnLots", tables);
-            Assert.Contains("CraftingInventoryPurchases", tables);
+            Assert.Contains("KnittingProjects", tables);
+            Assert.Contains("KnittingPatterns", tables);
+            Assert.Contains("KnittingPatternPieces", tables);
+            Assert.Contains("KnittingPatternSteps", tables);
+            Assert.Contains("KnittingProjectStepProgress", tables);
+            Assert.Contains("KnittingProjectRowChecks", tables);
+            Assert.Contains("CoreCommissionPublications", tables);
+            Assert.Contains("CoreCommissionRevisions", tables);
+            Assert.Contains("CoreCommissionWorkspaces", tables);
+            Assert.Contains("KnittingYarnInventoryItems", tables);
+            Assert.Contains("KnittingKits", tables);
             Assert.Contains("PrintingMaterialInventoryItems", tables);
             Assert.Contains("PrintingSpools", tables);
             Assert.Contains("PrintingInventoryPurchases", tables);
-            Assert.Contains("CraftingToolInventoryItems", tables);
-            Assert.Contains("CraftingToolPurchases", tables);
-            Assert.Contains("CraftingNotionInventoryItems", tables);
-            Assert.Contains("CraftingNotionPurchases", tables);
-            Assert.Contains("CraftingInventoryReferenceItems", tables);
             Assert.Contains("PrintingInventoryReferenceItems", tables);
-            Assert.Contains("CraftingProjectInventoryLinks", tables);
-            Assert.Contains("CraftingKits", tables);
-            Assert.Contains("CraftingKitPieces", tables);
-            Assert.Contains("CraftingKitSupplies", tables);
+            Assert.DoesNotContain("CraftingProjects", tables);
+            Assert.DoesNotContain("CraftingPatterns", tables);
+            Assert.DoesNotContain("CraftingKits", tables);
         }
         finally
         {
-            File.Delete(databasePath);
+            SqliteConnection.ClearAllPools();
+            if (File.Exists(databasePath))
+            {
+                File.Delete(databasePath);
+            }
         }
     }
 }

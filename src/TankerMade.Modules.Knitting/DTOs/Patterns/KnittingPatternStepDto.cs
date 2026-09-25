@@ -8,6 +8,7 @@ public class KnittingPatternStepDto
     public int? RangeEnd { get; set; }
     public string DisplayRange { get; set; } = string.Empty;
     public string Label { get; set; } = string.Empty;
+    public int? StitchCount { get; set; }
     public string Instructions { get; set; } = string.Empty;
     public int SortOrder { get; set; }
     public DateTime CreatedAt { get; set; }

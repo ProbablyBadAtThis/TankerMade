@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "tankermade-client-progress",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-25",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "197d67af8e3281f2ddd87995920f4ea2",
+  "observability": {
+    "enabled": true
+  },
+  "kv_namespaces": [
+    {
+      "binding": "SNAPSHOTS",
+      "id": "9c30c30dd1a645e7ad0b44f6a1a8491a"
+    }
+  ]
+}

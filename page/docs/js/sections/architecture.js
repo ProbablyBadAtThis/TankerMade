@@ -38,7 +38,7 @@ function loadArchitectureVisualizer() {
                 <div id="visualization-container" class="architecture-canvas">
                     <div>
                         <h3>Entity Relationship Map</h3>
-                        <p>Knitting is the live module. Crafting is retired. Persisted model: users, modules, activations, knitting projects, patterns, pieces, steps, row checks, timers, inventory, a thin 3D-printing inventory proof, assets, and shared reference data. Phase J will add a public commission snapshot beside those workshop tables.</p>
+                        <p>Knitting is the live module. Crafting is retired. Persisted model: users, modules, activations, knitting projects, patterns, pieces, steps, row checks, timers, inventory, a thin 3D-printing inventory proof, assets, and shared reference data. A public commission snapshot sits beside those workshop tables.</p>
                         <div class="architecture-mini-map" aria-label="Current entity overview">
                             <span>User</span>
                             <span>Module</span>
@@ -85,7 +85,7 @@ function showEntityDiagram() {
         container.innerHTML = `
             <div>
                 <h3>Entity Relationship Map</h3>
-                <p>Knitting is the live module. Crafting tables are gone. The model holds knitting projects, patterns, pieces, steps, row checks, timers, inventory links, assets, and shared reference data. A public snapshot is Phase J work, not a live query of these tables.</p>
+                <p>Knitting is the live module. Crafting tables are gone. The model holds knitting projects, patterns, pieces, steps, row checks, timers, inventory links, assets, and shared reference data. The public snapshot is stored JSON, not a live query of these tables.</p>
                 <div class="architecture-mini-map" aria-label="Current entity overview">
                     <span>User</span>
                     <span>Module</span>
@@ -110,7 +110,7 @@ function showDataFlow() {
         container.innerHTML = `
             <div>
                 <h3>Current Flow</h3>
-                <p>Blazor WASM client talks to the ASP.NET Core API, which uses application services and EF Core against SQLite. GitHub OAuth is only for this Pages tracker. Phase J adds an anonymous read of a published snapshot. That read does not query workshop tables.</p>
+                <p>Blazor WASM client talks to the ASP.NET Core API, which uses application services and EF Core against SQLite. GitHub OAuth is only for this Pages tracker. An anonymous read serves the published snapshot. That read does not query workshop tables.</p>
                 <div class="architecture-flow-list">
                     <span>Client</span>
                     <span>API</span>

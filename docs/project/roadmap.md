@@ -1,17 +1,136 @@
 # TankerMade — Roadmap
-Source: Distilled from original artifact.md phases A-I, updated to reflect current stack and progress.
-Last reviewed: 2026-06-01
+Source: Phases A–J are complete. Phase K is the active tracker.
+Last reviewed: 2026-09-25
+Direction: `docs/project/direction-brief.md`. Product rules: `docs/project/client-progress.md`.
 
 ---
 
-## Current Phase: I — Security, Ops & Cleanup
+## Current phase: K — Hosted client page
+
+The local link from Phase J stays. This phase copies that same public snapshot to a host the client can open. The home server stays private. Knitting is still the only module that changes.
+
+| | |
+|---|---|
+| Now | Phase K complete |
+| Done | Steps 1–5 |
+| Next | None queued. The Cloudflare host was opened from another computer on 2026-09-25, and revoke cut that link. A client-facing domain waits until a name is purchased. |
+
+- [x] When `ClientProgressHost:BaseUrl` is set, publish and revision PUT the existing snapshot JSON. A successful send sets `HostedAt`.
+- [x] With no host, or a failed send, the local snapshot remains and `HostedAt` stays empty
+- [x] Revoke tells the host to drop the public page
+- [x] Hosted page renders that snapshot and does not query the workshop database
+- [x] Hosted photos are published bytes, not a request back to the home server
+- [x] Stop for a check: publish reaches the host, revoke cuts the hosted link, the page still hides hours, rate, notes, and measurements. `dotnet build TankerMade.sln` passed.
+
+## Phase J — Client progress — complete
+
+Fiber commissions only. Knitting is the only module that changes. Finish each step before the next.
+
+| | |
+|---|---|
+| Now | Phase J complete |
+| Done | Steps 1–5 |
+| Next | Hosted read-only page of the same snapshot. The home server stays private. |
+
+**Done when:** a signed-in maker publishes a knitting commission and hands someone a local link. The link shows stage, materials safe to show, photos, next step, last updated, and revisions. Revoking the link cuts it off. The maker, only while signed in, sees whether the price beats their rate. No other craft module was changed.
+
+### Already in place
+
+Use these. Do not rebuild them for this phase.
+
+- Knitting project workspace: pieces, steps, server row checks, per-step timers, inventory links, photos via core assets.
+- Capability handlers under `src/TankerMade.Contracts/Services/ModuleCapabilities/`. Copy `IModuleRecentWorkSummaryProvider`: Core stores an opaque ref, the module fills in the words.
+- Signed-in asset API. The client page does not reuse it.
+
+### Step 1 — Record the direction
+
+- [x] `docs/project/client-progress.md` states the two surfaces, lifecycle, and private-versus-public rule
+- [x] Charter and handoff point at the brief; MudBlazor checklist is reference only
+- [x] `.gitignore` keeps scratch patterns and the local workshop photo off the remote
+
+### Step 2 — Projection backend
+
+Core owns the commission record and the public snapshot. Knitting owns the sentence the client reads. The snapshot is the last publish, not a live query of workshop tables.
+
+**Contracts**
+
+- [x] Core stage enum: Quote, Accepted, Materials, In progress, Revision, Ready, Delivered
+- [x] Public snapshot DTO: stage, plain-language summary, safe material lines, photo asset ids, next step, last updated, visible revision history
+- [x] Workshop-only DTOs: quote price, deposit received, target rate, material dollars, elapsed time, implied net, beats-rate
+- [x] `IModuleClientStatusProvider` beside the other capability interfaces. Input is the project plus what the maker chose to publish. Output is the public fields. Knitting translates jargon (“Blocking the body” → “Assembling the pieces.”)
+
+**Storage** (Core tables, opaque project id, no FK into knitting)
+
+- [x] Publication: owner, module key, project id, token hash, revoked-at, last published at
+- [x] Snapshot: one JSON blob of the public DTO, replace on each publish
+- [x] Revision rows: when, what changed, whether price moved, whether the due date moved
+- [x] Migration. Historical crafting migrations stay
+
+**API** (local server only)
+
+- [x] Signed-in: publish, add revision, revoke, preview (same payload the link returns)
+- [x] Anonymous: read by token. Read-only. No client account
+- [x] Anonymous photo route: token + asset id, and only if that id is in the current snapshot
+- [x] Inactive knitting module cannot publish
+- [x] Revoked or unknown token does not resolve (same response either way)
+- [x] Token is unguessable. Store the hash, not the raw token
+
+**Tests**
+
+- [x] Public DTO has no hours, rate, implied net, private notes, or measurements
+- [x] A revision records a price change or a due-date change
+- [x] Inactive knitting module cannot publish
+- [x] Revoked token does not resolve
+- [x] Photo id absent from the snapshot does not resolve on the anonymous route
+
+### Step 3 — Maker preview and private economics
+
+One knitting project screen. Workshop theme stays. The preview is a separate studio layout with no workshop nav.
+
+- [x] Core maker rate on the user, not in knitting settings
+- [x] On the project: quote price, expected window, deposit marked received (no payment processing)
+- [x] Actions: publish current stage, add a revision, copy preview link, revoke
+- [x] Preview opens the anonymous payload in the studio layout, signed-in maker included
+- [x] Private panel on the workshop screen only: linked material cost, timer total, implied net, whether price beats the rate
+- [x] Knitting supplies the public sentence from the active piece and step. The maker can edit that sentence before publish
+
+### Step 4 — Local outbox, no uploader
+
+- [x] Publish with no hosted target still writes the local snapshot
+- [x] Last updated is the publish time, so a closed laptop does not look stalled
+- [x] Snapshot shape is something a later uploader can send unchanged
+- [x] No cloud client, retry loop, or hosted dashboard in this step
+
+### Step 5 — Stop for a real check
+
+Do not start the next product slice in the same pass.
+
+- [x] Maker, signed in: open a knitting project, publish, copy the link, revoke, confirm the link dies
+- [x] Client, signed out: open the link and confirm hours, rate, notes, and measurements are absent; a revision is visible
+- [x] User runs `dotnet build TankerMade.sln`
+
+### Decide before Step 2 code
+
+| Topic | Call |
+|---|---|
+| Quote price and due date | Public. Revisions exist to show when they moved |
+| Inventory material dollars, hours, rate, implied net | Private. Workshop APIs only. Never on the snapshot |
+| Material lines on the link | Names the maker publishes. Dollar cost stays in the private panel unless a later decision says the quote’s material estimate is public |
+| Where the rate lives | Core user setting. A rate is not fiber-specific |
+| Client photos | Token-scoped asset ids. Not `AssetsController` |
+
+### Not in Phase J
+
+Hosted page, client accounts, payments, email or SMS, Ravelry import, gamification, module store, licensing, and any work in crochet, embroidery, quilting, sewing, or 3D printing. MudBlazor parity on those modules stays stopped.
+
+---
+
+## Phases A–I — complete
+
+Host, module platform, assets, search, and security ops. Knitting replaced the retired Crafting reference module. Detail below is the record, not the active plan.
 
 Phase A is behavior-complete as of the May 22, 2026 smoke test. Phase B is complete after expanding the reference Crafting module with pattern pieces, steps, readiness validation, and project workspace screens. Phase C is complete after adding module-owned project workspace behavior: step progress, per-step timers, completion rules, piece selection, archive flow, and non-destructive editing. Phase D is complete after proving module-owned inventory, reference data, project/inventory links, kit/grouping behavior, and kit-to-project backend flows.
 Phase E is complete after wiring neutral Core reference categories through module extension points, enforcing module-owned category boundaries, and supporting module-provided add/new option flows in inventory surfaces.
-
-Phase D should make modules architecturally real, not distribution-real. The goal is to prove that domain modules own their inventory, kit, filtering, reference data, and project-linking behavior while Core remains an independent host. Packaging, external module directories, installable artifacts, module-store concepts, and licensing remain later concerns for Phase F or beyond.
-
-Phase I cleanup now includes neutralizing module API surfaces so module-specific legacy controllers are replaced by Core-neutral module capability endpoints. Current direction remains: Core provides neutral templates/contracts, modules provide behavior through registration/handlers.
 
 ## Phase A — Hardening, Module Host & Reference Module
 
@@ -54,7 +173,7 @@ Phase I cleanup now includes neutralizing module API surfaces so module-specific
 
 ## Phase B — Crafting Module V2
 
-Phase B continues to treat `TankerMade.Modules.Crafting` as a reference/template module for development and platform proving. It should demonstrate module patterns that future golive niche modules can copy, but it should not become the production catch-all for knitting, crochet, sewing, or other specific crafts. Niche-specific rules belong in future dedicated modules unless represented here as neutral sample behavior.
+Phase B treated `TankerMade.Modules.Crafting` as a reference module. That module is retired. Knitting is the live fiber implementation to copy. Niche-specific rules belong in dedicated modules.
 
 - [x] Full CRUD + reorder for module-owned pattern pieces and steps
 - [x] Pattern detail page in module UI

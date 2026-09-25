@@ -18,4 +18,6 @@ public interface IKnittingPatternService
     Task<KnittingPatternStepDto?> UpdateStepAsync(Guid patternId, Guid pieceId, UpdateKnittingPatternStepDto updateDto, Guid userId);
     Task<bool> DeleteStepAsync(Guid patternId, Guid pieceId, Guid stepId, Guid userId);
     Task<bool> ReorderStepsAsync(Guid patternId, Guid pieceId, ReorderKnittingPatternItemsDto reorderDto, Guid userId);
+    Task<KnittingPatternSupplyDto?> AddSupplyAsync(Guid patternId, CreateKnittingPatternSupplyDto createDto, Guid userId);
+    Task<bool> DeleteSupplyAsync(Guid patternId, Guid supplyId, Guid userId);
 }

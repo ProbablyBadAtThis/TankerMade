@@ -1,0 +1,237 @@
+@page "/modules/knitting/inventory/yarn/{YarnId:guid}/lots/{LotId:guid}"
+@using TankerMade.Contracts.DTOs.ModuleInventory
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Knitting Yarn Lot</PageTitle>
+
+<KnittingModuleGate Loading="loading" LoadingMessage="Loading lot...">
+    @if (yarn is null || lot is null)
+    {
+        <MudStack Spacing="3">
+            <KnittingPageHeader Title="Lot Not Found"
+                                BackHref="@($"/modules/knitting/inventory/yarn/{YarnId}")"
+                                BackLabel="Back to Yarn" />
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="@($"/modules/knitting/inventory/yarn/{YarnId}")">
+                Back to Yarn
+            </MudButton>
+        </MudStack>
+    }
+    else
+    {
+        <MudStack Spacing="3" Class="pattern-detail">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+            }
+
+            <div class="pattern-header">
+                <KnittingPageHeader Title="@($"Lot {DisplayValue(lot.LotNumber)}")"
+                                    Subtitle="@($"{yarn.WeightName} · {yarn.FiberTag}")"
+                                    BackHref="@($"/modules/knitting/inventory/yarn/{YarnId}")"
+                                    BackLabel="@($"{yarn.BrandName} — {yarn.ColorName}")" />
+                <div class="pattern-stats" aria-label="Lot summary">
+                    <div>
+                        <strong>@lot.Skeins</strong>
+                        <span>Skeins</span>
+                    </div>
+                    <div>
+                        <strong>@DisplayLength(lot.RemainingLength, yarn.LengthUnit)</strong>
+                        <span>Remaining</span>
+                    </div>
+                    <div>
+                        <strong>@DisplayWeight(lot.CurrentWeight)</strong>
+                        <span>Weight (g)</span>
+                    </div>
+                </div>
+            </div>
+
+            <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.subtitle1">Lot Details</MudText>
+                    <div class="inventory-detail-grid">
+                        <div>
+                            <strong>Lot number</strong>
+                            <div>@DisplayValue(lot.LotNumber)</div>
+                        </div>
+                        <div>
+                            <strong>Skeins in lot</strong>
+                            <div>@lot.Skeins</div>
+                        </div>
+                        <div>
+                            <strong>Created</strong>
+                            <div>@DisplayDate(lot.CreatedAt)</div>
+                        </div>
+                        <div>
+                            <strong>Last updated</strong>
+                            <div>@DisplayDate(lot.UpdatedAt)</div>
+                        </div>
+                    </div>
+                </MudStack>
+            </MudPaper>
+
+            <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.subtitle1">Update Remaining</MudText>
+                    <EditForm Model="lotEditForm" OnValidSubmit="SaveLotRemainingAsync" class="project-edit-form">
+                        <MudStack Spacing="2">
+                            <div class="form-grid">
+                                <MudNumericField T="decimal?" @bind-Value="lotEditForm.RemainingLength" Label="Remaining length" Variant="Variant.Outlined" />
+                                <MudNumericField T="decimal?" @bind-Value="lotEditForm.CurrentWeight" Label="Weight (g)" Variant="Variant.Outlined" />
+                            </div>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="busy" ButtonType="ButtonType.Submit">
+                                Save Lot
+                            </MudButton>
+                        </MudStack>
+                    </EditForm>
+                </MudStack>
+            </MudPaper>
+
+            <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.subtitle1">Purchase History</MudText>
+                    @if (yarn.Purchases.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">No purchases recorded for this yarn yet.</MudText>
+                    }
+                    else
+                    {
+                        <ul class="project-supply-list">
+                            @foreach (var purchase in yarn.Purchases)
+                            {
+                                <li>
+                                    <div>
+                                        <strong>@purchase.SourceName</strong>
+                                        <span>@DisplayPurchasePrice(purchase.Price, purchase.IsSalePrice)</span>
+                                        <span>@DisplayDate(purchase.PurchasedAt ?? purchase.CreatedAt)</span>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </MudStack>
+            </MudPaper>
+        </MudStack>
+    }
+</KnittingModuleGate>
+
+@code {
+    private const string ModuleKey = "knitting";
+
+    [Parameter] public Guid YarnId { get; set; }
+    [Parameter] public Guid LotId { get; set; }
+
+    private ModuleYarnInventoryItemDto? yarn;
+    private ModuleYarnLotDto? lot;
+    private LotEditFormModel lotEditForm = new();
+    private string errorMessage = string.Empty;
+    private bool loading = true;
+    private bool busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive(ModuleKey))
+            {
+                return;
+            }
+
+            yarn = await ApiClient.GetModuleYarnByIdAsync(ModuleKey, YarnId);
+            lot = yarn?.Lots.FirstOrDefault(entry => entry.Id == LotId);
+            if (lot != null)
+            {
+                lotEditForm = new LotEditFormModel
+                {
+                    RemainingLength = lot.RemainingLength,
+                    CurrentWeight = lot.CurrentWeight
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task SaveLotRemainingAsync()
+    {
+        if (lot == null)
+        {
+            return;
+        }
+
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            yarn = await ApiClient.UpdateModuleYarnLotRemainingAsync(ModuleKey, YarnId, lot.Id, new UpdateModuleYarnLotRemainingRequest
+            {
+                RemainingLength = lotEditForm.RemainingLength,
+                CurrentWeight = lotEditForm.CurrentWeight
+            });
+            lot = yarn?.Lots.FirstOrDefault(entry => entry.Id == LotId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private sealed class LotEditFormModel
+    {
+        public decimal? RemainingLength { get; set; }
+        public decimal? CurrentWeight { get; set; }
+    }
+
+    private static string DisplayValue(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "—" : value;
+
+    private static string DisplayLength(decimal? length, string unit)
+    {
+        if (!length.HasValue)
+        {
+            return "—";
+        }
+
+        var suffix = string.IsNullOrWhiteSpace(unit) ? string.Empty : $" {unit}";
+        return $"{length.Value:N1}{suffix}";
+    }
+
+    private static string DisplayWeight(decimal? weight)
+        => weight.HasValue ? $"{weight.Value:N2}" : "—";
+
+    private static string DisplayPurchasePrice(decimal? price, bool isSalePrice)
+    {
+        var formatted = price.HasValue ? price.Value.ToString("C") : "No price";
+        return isSalePrice ? $"{formatted} (sale)" : formatted;
+    }
+
+    private static string DisplayDate(DateTime value)
+        => value.ToLocalTime().ToString("d");
+}

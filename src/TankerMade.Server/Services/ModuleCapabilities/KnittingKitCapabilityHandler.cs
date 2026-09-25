@@ -36,17 +36,80 @@ public class KnittingKitCapabilityHandler : IModuleKitCapabilityHandler
             Type = request.Type
         }, userId));
 
+    public async Task<ModuleKitDto?> UpdateAsync(Guid kitId, UpdateModuleKitRequest request, Guid userId)
+    {
+        var kit = await _service.UpdateAsync(kitId, new CreateKnittingKitDto
+        {
+            Name = request.Name,
+            Description = request.Description,
+            Type = request.Type
+        }, userId);
+
+        return kit == null ? null : Map(kit);
+    }
+
+    public Task<bool> DeleteAsync(Guid kitId, Guid userId)
+        => _service.DeleteAsync(kitId, userId);
+
+    public async Task<ModuleKitDto?> ArchiveAsync(Guid kitId, Guid userId)
+    {
+        var kit = await _service.ArchiveAsync(kitId, userId);
+        return kit == null ? null : Map(kit);
+    }
+
+    public async Task<ModuleKitDto?> ReopenAsync(Guid kitId, Guid userId)
+    {
+        var kit = await _service.ReopenAsync(kitId, userId);
+        return kit == null ? null : Map(kit);
+    }
+
     public async Task<ModuleKitPieceDto?> AddPieceAsync(Guid kitId, CreateModuleKitPieceRequest request, Guid userId)
     {
         var piece = await _service.AddPieceAsync(kitId, new CreateKnittingKitPieceDto { Name = request.Name, Notes = request.Notes }, userId);
         return piece == null ? null : MapPiece(piece);
     }
 
+    public async Task<ModuleKitPieceDto?> UpdatePieceAsync(Guid kitId, Guid pieceId, UpdateModuleKitPieceRequest request, Guid userId)
+    {
+        var piece = await _service.UpdatePieceAsync(kitId, pieceId, new CreateKnittingKitPieceDto
+        {
+            Name = request.Name,
+            Notes = request.Notes
+        }, userId);
+
+        return piece == null ? null : MapPiece(piece);
+    }
+
+    public Task<bool> DeletePieceAsync(Guid kitId, Guid pieceId, Guid userId)
+        => _service.DeletePieceAsync(kitId, pieceId, userId);
+
     public async Task<ModuleKitSupplyDto?> AddSupplyAsync(Guid kitId, CreateModuleKitSupplyRequest request, Guid userId)
     {
-        var supply = await _service.AddSupplyAsync(kitId, new CreateKnittingKitSupplyDto { SupplyType = request.SupplyType, Name = request.Name, Quantity = request.Quantity }, userId);
+        var supply = await _service.AddSupplyAsync(kitId, new CreateKnittingKitSupplyDto
+        {
+            SupplyType = request.SupplyType,
+            Name = request.Name,
+            InventoryItemId = request.InventoryItemId,
+            Quantity = request.Quantity
+        }, userId);
         return supply == null ? null : MapSupply(supply);
     }
+
+    public async Task<ModuleKitSupplyDto?> UpdateSupplyAsync(Guid kitId, Guid supplyId, UpdateModuleKitSupplyRequest request, Guid userId)
+    {
+        var supply = await _service.UpdateSupplyAsync(kitId, supplyId, new CreateKnittingKitSupplyDto
+        {
+            SupplyType = request.SupplyType,
+            Name = request.Name,
+            InventoryItemId = request.InventoryItemId,
+            Quantity = request.Quantity
+        }, userId);
+
+        return supply == null ? null : MapSupply(supply);
+    }
+
+    public Task<bool> DeleteSupplyAsync(Guid kitId, Guid supplyId, Guid userId)
+        => _service.DeleteSupplyAsync(kitId, supplyId, userId);
 
     public async Task<ModuleProjectDto?> CreateProjectForPieceAsync(Guid kitId, Guid pieceId, Guid userId)
     {
@@ -93,6 +156,7 @@ public class KnittingKitCapabilityHandler : IModuleKitCapabilityHandler
             Id = supply.Id,
             SupplyType = supply.SupplyType,
             Name = supply.Name,
+            InventoryItemId = supply.InventoryItemId,
             Quantity = supply.Quantity,
             SortOrder = supply.SortOrder,
             CreatedAt = supply.CreatedAt,

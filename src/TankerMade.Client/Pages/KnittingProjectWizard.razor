@@ -1,0 +1,18 @@
+@page "/modules/knitting/projects/new"
+@inject KnittingWizardLauncher Wizards
+@inject NavigationManager Navigation
+
+<PageTitle>New Knitting Project</PageTitle>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        Navigation.NavigateTo(KnittingWizardLauncher.GetListRoute(KnittingWizardKind.Project), replace: true);
+        await Wizards.OpenProjectWizardAsync();
+    }
+}

@@ -11,11 +11,13 @@
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+    <PackageReference Include="Microsoft.OpenApi" Version="2.7.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.13" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -28,7 +30,6 @@
     <ProjectReference Include="..\TankerMade.Application\TankerMade.Application.csproj" />
     <ProjectReference Include="..\TankerMade.Contracts\TankerMade.Contracts.csproj" />
     <ProjectReference Include="..\TankerMade.Core\TankerMade.Core.csproj" />
-    <ProjectReference Include="..\TankerMade.Modules.Crafting\TankerMade.Modules.Crafting.csproj" />
     <ProjectReference Include="..\TankerMade.Modules.Crochet\TankerMade.Modules.Crochet.csproj" />
     <ProjectReference Include="..\TankerMade.Modules.Embroidery\TankerMade.Modules.Embroidery.csproj" />
     <ProjectReference Include="..\TankerMade.Modules.Knitting\TankerMade.Modules.Knitting.csproj" />

@@ -28,6 +28,9 @@ public class KnittingSettingsCapabilityHandler : IModuleSettingsCapabilityHandle
             Category = request.Category
         }, userId));
 
+    public Task<bool> DeleteAsync(DeleteModuleSettingItemRequest request, Guid userId)
+        => _service.DeleteAsync(request.Key, userId);
+
     private static ModuleSettingItemDto Map(KnittingSettingItemDto source)
     {
         return new ModuleSettingItemDto

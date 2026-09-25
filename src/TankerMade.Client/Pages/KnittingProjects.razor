@@ -1,124 +1,175 @@
 @page "/modules/knitting/projects"
 @using TankerMade.Contracts.DTOs.ModuleProjects
+@using TankerMade.Contracts.DTOs.Reference
 @inject TankerMade.Client.Services.ClientModuleState ModuleState
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject TankerMade.Client.Services.KnittingCardAssetCache CardAssets
+@inject TankerMade.Client.Services.KnittingRecentActivity RecentActivity
 
 <PageTitle>Knitting Projects</PageTitle>
 
-@if (!AuthSession.IsSignedIn)
-{
-    <h1>Knitting Projects</h1>
-    <p>Sign in to use this module section.</p>
-    <a class="btn btn-primary" href="/login">Sign in</a>
-}
-else if (!ModuleState.IsActive("knitting"))
-{
-    <h1>Knitting Projects</h1>
-    <p>Activate Knitting from Home to continue.</p>
-    <a class="btn btn-outline-primary" href="/">Go to Home</a>
-}
-else if (loading)
-{
-    <h1>Knitting Projects</h1>
-    <p>Loading...</p>
-}
-else
-{
-    <div class="page-heading">
-        <div>
-            <a class="pattern-back-link" href="/modules/knitting">Knitting</a>
-            <h1>Projects</h1>
-            <p>Module-owned knitting projects via core extension-point APIs.</p>
+<KnittingModuleGate Loading="loading" LoadingMessage="Loading projects...">
+    <MudStack Spacing="3" Class="knitting-projects-page-mud">
+        <div class="knitting-projects-page-sticky">
+            <MudStack Spacing="3">
+                <KnittingPageHeader Title="Projects"
+                                    Subtitle="Module-owned knitting projects via core extension-point APIs."
+                                    ShowBackLink="false"
+                                    Centered="true" />
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+                }
+
+                <div class="knitting-list-toolbar-mud">
+            <MudTextField @bind-Value="search"
+                          @bind-Value:after="ApplyFiltersAsync"
+                          Label="Search"
+                          Variant="Variant.Outlined"
+                          Placeholder="Filter as you type"
+                          Immediate="true" />
+            <MudSelect T="string" @bind-Value="sortBy" @bind-Value:after="ApplyFiltersAsync" Label="Sort" Variant="Variant.Outlined">
+                <MudSelectItem T="string" Value="@("lastworked")">Last worked on</MudSelectItem>
+                <MudSelectItem T="string" Value="@("recent")">Recently updated</MudSelectItem>
+                <MudSelectItem T="string" Value="@("lastopened")">Last opened</MudSelectItem>
+                <MudSelectItem T="string" Value="@("name")">Name</MudSelectItem>
+                <MudSelectItem T="string" Value="@("progress")">Progress</MudSelectItem>
+                <MudSelectItem T="string" Value="@("difficulty")">Difficulty</MudSelectItem>
+            </MudSelect>
+            <MudSelect T="string" @bind-Value="filterThemeId" @bind-Value:after="ApplyFiltersAsync" Label="Theme" Variant="Variant.Outlined">
+                <MudSelectItem T="string" Value="@string.Empty">All themes</MudSelectItem>
+                @foreach (var theme in themes)
+                {
+                    <MudSelectItem T="string" Value="@theme.Id.ToString()">@theme.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="string" @bind-Value="filterColorId" @bind-Value:after="ApplyFiltersAsync" Label="Color" Variant="Variant.Outlined">
+                <MudSelectItem T="string" Value="@string.Empty">All colors</MudSelectItem>
+                @foreach (var color in colors)
+                {
+                    <MudSelectItem T="string" Value="@color.Id.ToString()">@color.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="string" @bind-Value="filterDifficulty" @bind-Value:after="ApplyFiltersAsync" Label="Difficulty" Variant="Variant.Outlined">
+                <MudSelectItem T="string" Value="@string.Empty">All</MudSelectItem>
+                <MudSelectItem T="string" Value="@("1")">Beginner</MudSelectItem>
+                <MudSelectItem T="string" Value="@("2")">Beginner+</MudSelectItem>
+                <MudSelectItem T="string" Value="@("3")">Intermediate</MudSelectItem>
+                <MudSelectItem T="string" Value="@("4")">Intermediate+</MudSelectItem>
+                <MudSelectItem T="string" Value="@("5")">Advanced</MudSelectItem>
+                <MudSelectItem T="string" Value="@("6")">Advanced+</MudSelectItem>
+            </MudSelect>
+            <MudSelect T="string" @bind-Value="filterCompletion" @bind-Value:after="ApplyFiltersAsync" Label="Completion" Variant="Variant.Outlined">
+                <MudSelectItem T="string" Value="@string.Empty">All</MudSelectItem>
+                <MudSelectItem T="string" Value="@("active")">In progress</MudSelectItem>
+                <MudSelectItem T="string" Value="@("complete")">100% complete</MudSelectItem>
+            </MudSelect>
+            <MudCheckBox T="bool" Value="showArchived" ValueChanged="@(async (bool v) => await OnShowArchivedChanged(v))" Label="Show archived" Color="Color.Primary" Disabled="listLoading" />
+                </div>
+            </MudStack>
         </div>
-    </div>
 
-    @if (!string.IsNullOrWhiteSpace(errorMessage))
-    {
-        <div class="alert alert-danger">@errorMessage</div>
-    }
-
-    <section class="project-panel">
-        <h2>New Project</h2>
-        <EditForm Model="form" OnValidSubmit="CreateProjectAsync" class="project-edit-form">
-            <DataAnnotationsValidator />
-            <div class="form-grid">
-                <label>
-                    <span>Name</span>
-                    <InputText class="form-control" @bind-Value="form.Name" />
-                </label>
-                <label>
-                    <span>Description</span>
-                    <InputText class="form-control" @bind-Value="form.Description" />
-                </label>
-                <label>
-                    <span>Difficulty (0-6)</span>
-                    <InputNumber class="form-control" @bind-Value="form.Difficulty" />
-                </label>
-                <label>
-                    <span>Progress (0-100)</span>
-                    <InputNumber class="form-control" @bind-Value="form.Progress" />
-                </label>
+        <div class="knitting-projects-list-shell">
+            <div class="knitting-projects-list-content scrollbar-hidden @(listLoading ? "is-refreshing" : null)">
+                @if (!HasVisibleProjects && !listLoading)
+                {
+                    <MudPaper Class="pa-6 knitting-panel-mud" Elevation="1">
+                        <MudStack Spacing="1" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.h6">No Projects Yet</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Create your first knitting project to start tracking work.</MudText>
+                        </MudStack>
+                    </MudPaper>
+                }
+                else
+                {
+                    <div class="knitting-card-grid-mud">
+                @foreach (var project in pagedProjects)
+                {
+                    var assetId = projectAssetIds.GetValueOrDefault(project.Id);
+                    <MudPaper Class="knitting-card-mud" Elevation="1">
+                        <AssetThumbnailImage AssetId="assetId" AltText="@project.Name" SizeKey="medium" />
+                        <div class="pa-3 knitting-card-mud-body">
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.h6">@project.Name</MudText>
+                                @if (!string.IsNullOrWhiteSpace(project.Description))
+                                {
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">@project.Description</MudText>
+                                }
+                            </MudStack>
+                            @if (project.IsArchived)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Default">Archived</MudChip>
+                            }
+                            <div class="knitting-card-stats-mud">
+                                <KnittingDifficultyBadge Difficulty="project.Difficulty" />
+                                <span>@project.Progress%</span>
+                                <span>@(project.TotalStitchCount > 0 ? $"{project.CompletedStitchCount}/{project.TotalStitchCount} stitches" : $"{project.CompletedStepCount}/{project.TotalStepCount} steps")</span>
+                                <span>@(string.IsNullOrWhiteSpace(project.ThemeName) ? "No theme" : project.ThemeName)</span>
+                                <span>@(string.IsNullOrWhiteSpace(project.ColorName) ? "No color" : project.ColorName)</span>
+                                <span>@(string.IsNullOrWhiteSpace(project.PatternName) ? "No pattern" : project.PatternName)</span>
+                            </div>
+                            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="knitting-card-mud-actions">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Href="@($"/modules/knitting/projects/{project.Id}")">Open</MudButton>
+                                @if (project.IsArchived)
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="busy" OnClick="@(() => ReopenProjectAsync(project.Id))">Reopen</MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="@(() => ArchiveProjectAsync(project.Id))">Archive</MudButton>
+                                }
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="busy" OnClick="@(() => DeleteProjectAsync(project.Id))">Delete</MudButton>
+                            </MudStack>
+                        </div>
+                    </MudPaper>
+                }
             </div>
-            <button class="btn btn-primary" disabled="@busy" type="submit">Create Project</button>
-        </EditForm>
-    </section>
-
-    <label class="archive-toggle">
-        <input type="checkbox" @bind="showArchived" @bind:after="LoadProjectsAsync" />
-        Show archived
-    </label>
-
-    @if (projects.Count == 0)
-    {
-        <div class="empty-state">
-            <h2>No Projects Yet</h2>
-            <p>Create your first knitting project to start tracking work.</p>
-        </div>
-    }
-    else
-    {
-        <div class="project-card-grid">
-            @foreach (var project in projects)
+            @if (filteredProjects.Count > projectPageSize)
             {
-                <article class="project-card">
-                    <div>
-                        <h2>@project.Name</h2>
-                        <p>@project.Description</p>
-                        @if (project.IsArchived)
-                        {
-                            <span class="archive-badge">Archived</span>
-                        }
-                    </div>
-                    <div class="pattern-card-stats">
-                        <span>Difficulty @project.Difficulty</span>
-                        <span>@project.Progress%</span>
-                        <span>@(string.IsNullOrWhiteSpace(project.PatternName) ? "No pattern" : project.PatternName)</span>
-                    </div>
-                    <div class="auth-actions">
-                        @if (project.IsArchived)
-                        {
-                            <button class="btn btn-outline-secondary btn-sm" disabled="@busy" @onclick="() => ReopenProjectAsync(project.Id)">Reopen</button>
-                        }
-                        else
-                        {
-                            <button class="btn btn-outline-danger btn-sm" disabled="@busy" @onclick="() => ArchiveProjectAsync(project.Id)">Archive</button>
-                        }
-                    </div>
-                </article>
+                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="knitting-projects-list-pagination">
+                    <MudButton Variant="Variant.Outlined" Disabled="@(projectPage <= 1 || busy || listLoading)" OnClick="PreviousProjectPage">Previous</MudButton>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Page @projectPage of @ProjectPageCount</MudText>
+                    <MudButton Variant="Variant.Outlined" Disabled="@(projectPage >= ProjectPageCount || busy || listLoading)" OnClick="NextProjectPage">Next</MudButton>
+                </MudStack>
             }
+                }
+            </div>
         </div>
-    }
-}
+    </MudStack>
+</KnittingModuleGate>
 
 @code {
     private const string ModuleKey = "knitting";
+    private const int projectPageSize = 12;
+    private const string ProjectsShowArchivedByDefaultKey = "projects.showArchivedByDefault";
     private readonly List<ModuleProjectDto> projects = [];
-    private ProjectFormModel form = new();
+    private readonly List<ModuleProjectDto> filteredProjects = [];
+    private readonly List<ModuleProjectDto> pagedProjects = [];
+    private readonly Dictionary<Guid, Guid?> projectAssetIds = [];
+    private readonly List<CoreReferenceItemDto> themes = [];
+    private readonly List<CoreReferenceItemDto> colors = [];
+    private string search = string.Empty;
+    private string sortBy = "lastworked";
+    private string filterThemeId = string.Empty;
+    private string filterColorId = string.Empty;
+    private string filterDifficulty = string.Empty;
+    private string filterCompletion = string.Empty;
+    private int projectPage = 1;
+    private Guid? lastOpenedProjectId;
+    private DateTime? lastOpenedAt;
+    private Guid? lastWorkedProjectId;
+    private DateTime? lastWorkedAt;
     private bool showArchived;
     private bool loading = true;
+    private bool listLoading;
+    private bool settingsInitialized;
     private bool busy;
     private string errorMessage = string.Empty;
+
+    [SupplyParameterFromQuery(Name = "archived")]
+    public bool? ArchivedQuery { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -128,12 +179,34 @@ else
             await ModuleState.RefreshAsync();
         }
 
+        if (ArchivedQuery == true)
+        {
+            showArchived = true;
+        }
+
+        await LoadProjectsAsync(initialLoad: true);
+    }
+
+    private bool HasVisibleProjects => filteredProjects.Count > 0;
+
+    private async Task OnShowArchivedChanged(bool value)
+    {
+        showArchived = value;
         await LoadProjectsAsync();
     }
 
-    private async Task LoadProjectsAsync()
+    private async Task LoadProjectsAsync(bool initialLoad = false)
     {
-        loading = true;
+        if (initialLoad)
+        {
+            loading = true;
+        }
+        else
+        {
+            listLoading = true;
+            await InvokeAsync(StateHasChanged);
+        }
+
         errorMessage = string.Empty;
 
         try
@@ -143,8 +216,26 @@ else
                 return;
             }
 
-            projects.Clear();
-            projects.AddRange(await ApiClient.GetModuleProjectsAsync(ModuleKey, showArchived));
+            if (initialLoad)
+            {
+                if (!settingsInitialized)
+                {
+                    var settings = await ApiClient.GetModuleSettingsAsync(ModuleKey);
+                    showArchived = GetBoolSetting(settings, ProjectsShowArchivedByDefaultKey, showArchived);
+                    settingsInitialized = true;
+                }
+
+                themes.Clear();
+                themes.AddRange(await ApiClient.GetCoreReferenceItemsAsync("themes"));
+                colors.Clear();
+                colors.AddRange(await ApiClient.GetCoreReferenceItemsAsync("colors"));
+                lastOpenedProjectId = await RecentActivity.GetRecentProjectIdAsync();
+                lastOpenedAt = await RecentActivity.GetRecentProjectOpenedAtAsync();
+                lastWorkedProjectId = await RecentActivity.GetWorkedOnProjectIdAsync();
+                lastWorkedAt = await RecentActivity.GetWorkedOnAtAsync();
+            }
+
+            await RefreshProjectListAsync();
         }
         catch (Exception ex)
         {
@@ -152,36 +243,135 @@ else
         }
         finally
         {
-            loading = false;
+            if (initialLoad)
+            {
+                loading = false;
+            }
+            else
+            {
+                listLoading = false;
+            }
         }
     }
 
-    private async Task CreateProjectAsync()
+    private async Task RefreshProjectListAsync()
     {
-        busy = true;
-        errorMessage = string.Empty;
+        var source = await ApiClient.GetModuleProjectsAsync(ModuleKey, showArchived);
+        if (!showArchived)
+        {
+            source = source.Where(project => !project.IsArchived).ToList();
+        }
 
-        try
+        var assets = await CardAssets.GetAssetsAsync(ModuleKey, "project");
+        var nextAssetIds = new Dictionary<Guid, Guid?>();
+        foreach (var project in source)
         {
-            await ApiClient.CreateModuleProjectAsync(ModuleKey, new CreateModuleProjectRequest
-            {
-                Name = form.Name,
-                Description = form.Description,
-                Difficulty = form.Difficulty,
-                Progress = form.Progress
-            });
+            nextAssetIds[project.Id] = assets.FirstOrDefault(asset => asset.RecordId == project.Id)?.Id;
+        }
 
-            form = new ProjectFormModel();
-            await LoadProjectsAsync();
-        }
-        catch (Exception ex)
+        projects.Clear();
+        projects.AddRange(source);
+        projectAssetIds.Clear();
+        foreach (var (projectId, assetId) in nextAssetIds)
         {
-            errorMessage = ex.Message;
+            projectAssetIds[projectId] = assetId;
         }
-        finally
+
+        ApplyFilters();
+    }
+
+    private Task ApplyFiltersAsync()
+    {
+        ApplyFilters();
+        return Task.CompletedTask;
+    }
+
+    private int ProjectPageCount => filteredProjects.Count == 0
+        ? 1
+        : (int)Math.Ceiling(filteredProjects.Count / (double)projectPageSize);
+
+    private void ApplyPaging()
+    {
+        pagedProjects.Clear();
+        var skip = (projectPage - 1) * projectPageSize;
+        pagedProjects.AddRange(filteredProjects.Skip(skip).Take(projectPageSize));
+    }
+
+    private void PreviousProjectPage()
+    {
+        if (projectPage > 1)
         {
-            busy = false;
+            projectPage--;
+            ApplyPaging();
         }
+    }
+
+    private void NextProjectPage()
+    {
+        if (projectPage < ProjectPageCount)
+        {
+            projectPage++;
+            ApplyPaging();
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        projectPage = 1;
+        filteredProjects.Clear();
+        IEnumerable<ModuleProjectDto> query = projects;
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(project =>
+                project.Name.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || project.Description.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || project.PatternName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || project.ThemeName.Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (Guid.TryParse(filterThemeId, out var themeId))
+        {
+            query = query.Where(project => project.ThemeId == themeId);
+        }
+
+        if (Guid.TryParse(filterColorId, out var colorId))
+        {
+            query = query.Where(project => project.ColorId == colorId);
+        }
+
+        if (int.TryParse(filterDifficulty, out var difficulty) && difficulty > 0)
+        {
+            query = query.Where(project => project.Difficulty == difficulty);
+        }
+
+        query = filterCompletion switch
+        {
+            "active" => query.Where(project => project.Progress < 100),
+            "complete" => query.Where(project => project.Progress >= 100),
+            _ => query
+        };
+
+        query = sortBy switch
+        {
+            "name" => query.OrderBy(project => project.Name),
+            "progress" => query.OrderByDescending(project => project.Progress),
+            "difficulty" => query.OrderByDescending(project => project.Difficulty),
+            "lastopened" => query
+                .OrderByDescending(project => lastOpenedProjectId.HasValue && project.Id == lastOpenedProjectId.Value)
+                .ThenByDescending(project => lastOpenedProjectId.HasValue && project.Id == lastOpenedProjectId.Value
+                    ? lastOpenedAt ?? project.UpdatedAt
+                    : project.UpdatedAt),
+            "lastworked" => query
+                .OrderByDescending(project => lastWorkedProjectId.HasValue && project.Id == lastWorkedProjectId.Value)
+                .ThenByDescending(project => lastWorkedProjectId.HasValue && project.Id == lastWorkedProjectId.Value
+                    ? lastWorkedAt ?? project.UpdatedAt
+                    : project.UpdatedAt),
+            _ => query.OrderByDescending(project => project.UpdatedAt)
+        };
+
+        filteredProjects.AddRange(query);
+        ApplyPaging();
     }
 
     private async Task ArchiveProjectAsync(Guid id)
@@ -224,11 +414,29 @@ else
         }
     }
 
-    private class ProjectFormModel
+    private async Task DeleteProjectAsync(Guid id)
     {
-        public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public int Difficulty { get; set; }
-        public int? Progress { get; set; }
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.DeleteModuleProjectAsync(ModuleKey, id);
+            await LoadProjectsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private static bool GetBoolSetting(IReadOnlyList<TankerMade.Contracts.DTOs.ModuleSettings.ModuleSettingItemDto> settings, string key, bool fallback)
+    {
+        var value = settings.FirstOrDefault(setting => setting.Key.Equals(key, StringComparison.OrdinalIgnoreCase))?.Value;
+        return bool.TryParse(value, out var parsed) ? parsed : fallback;
     }
 }

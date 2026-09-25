@@ -1,0 +1,293 @@
+@using TankerMade.Contracts.DTOs.ClientProgress
+@using TankerMade.Core.Enums
+@inject TankerMadeApiClient ApiClient
+@inject NavigationManager Navigation
+
+<MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+    <MudStack Spacing="2">
+        <MudText Typo="Typo.subtitle1">Client progress</MudText>
+        <MudText Typo="Typo.body2">The link shows stage, price, materials, and the sentence below. Hours and your rate stay on this screen.</MudText>
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <MudAlert Severity="@messageSeverity">@message</MudAlert>
+        }
+        @if (loading)
+        {
+            <MudProgressLinear Indeterminate="true" />
+        }
+        else if (workshop is not null)
+        {
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="4">
+                    <MudNumericField T="decimal?" @bind-Value="rate" Label="Target hourly rate" Variant="Variant.Outlined" Min="0" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudNumericField T="decimal?" @bind-Value="quotePrice" Label="Quote price" Variant="Variant.Outlined" Min="0" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudDatePicker @bind-Date="dueDate" Label="Expected window" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudCheckBox T="bool" @bind-Value="depositReceived" Label="Deposit marked received" Color="Color.Primary" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudSelect T="CommissionStage" @bind-Value="stage" Label="Stage" Variant="Variant.Outlined">
+                        @foreach (var option in Enum.GetValues<CommissionStage>())
+                        {
+                            <MudSelectItem T="CommissionStage" Value="option">@StageLabel(option)</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="summary" Label="What the client reads" Variant="Variant.Outlined" Lines="2" />
+                </MudItem>
+            </MudGrid>
+
+            <MudStack Row="true" Spacing="3" Wrap="Wrap.Wrap">
+                <div>
+                    <MudText Typo="Typo.caption">Materials</MudText>
+                    <MudText>@workshop.MaterialCost.ToString("C")</MudText>
+                </div>
+                <div>
+                    <MudText Typo="Typo.caption">Time</MudText>
+                    <MudText>@FormatHours(workshop.ElapsedSeconds)</MudText>
+                </div>
+                <div>
+                    <MudText Typo="Typo.caption">Implied net</MudText>
+                    <MudText>@(workshop.ImpliedNet?.ToString("C") ?? "Set a quote")</MudText>
+                </div>
+                <div>
+                    <MudText Typo="Typo.caption">Beats your rate</MudText>
+                    <MudText>@BeatsLabel(workshop)</MudText>
+                </div>
+            </MudStack>
+
+            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="busy" OnClick="PublishAsync">Publish</MudButton>
+                <MudButton Variant="Variant.Outlined" Disabled="busy" OnClick="SaveTermsAsync">Save quote</MudButton>
+                <MudButton Variant="Variant.Outlined" Disabled="busy" OnClick="SaveRateAsync">Save rate</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Error" Disabled="busy || !workshop.HasActiveLink" OnClick="RevokeAsync">Revoke link</MudButton>
+            </MudStack>
+
+            @if (!string.IsNullOrWhiteSpace(issuedToken))
+            {
+                <MudTextField Value="@PreviewUrl" Label="Preview link" Variant="Variant.Outlined" ReadOnly="true" />
+                <MudButton Variant="Variant.Text" Href="@PreviewUrl" Target="_blank">Open preview</MudButton>
+                @if (!string.IsNullOrWhiteSpace(hostedUrl))
+                {
+                    <MudTextField Value="@hostedUrl" Label="Hosted link" Variant="Variant.Outlined" ReadOnly="true" />
+                    <MudButton Variant="Variant.Text" Href="@hostedUrl" Target="_blank">Open hosted page</MudButton>
+                }
+            }
+            else if (workshop.HasActiveLink)
+            {
+                <MudButton Variant="Variant.Text" Disabled="busy" OnClick="ReissueAsync">Issue a new copyable link</MudButton>
+            }
+
+            <MudDivider />
+            <MudText Typo="Typo.subtitle2">Revision</MudText>
+            <MudTextField @bind-Value="revisionSummary" Label="What changed" Variant="Variant.Outlined" />
+            <MudStack Row="true" Spacing="2">
+                <MudNumericField T="decimal?" @bind-Value="revisionPrice" Label="New price" Variant="Variant.Outlined" />
+                <MudDatePicker @bind-Date="revisionDue" Label="New window" Variant="Variant.Outlined" />
+            </MudStack>
+            <MudButton Variant="Variant.Outlined" Disabled="busy || !workshop.HasActiveLink" OnClick="AddRevisionAsync">Add revision</MudButton>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+
+    private CommissionWorkshopDto? workshop;
+    private bool loading = true;
+    private bool busy;
+    private string? message;
+    private Severity messageSeverity = Severity.Info;
+    private decimal? rate;
+    private decimal? quotePrice;
+    private DateTime? dueDate;
+    private bool depositReceived;
+    private CommissionStage stage = CommissionStage.InProgress;
+    private string summary = string.Empty;
+    private string? issuedToken;
+    private string? hostedUrl;
+    private string revisionSummary = string.Empty;
+    private decimal? revisionPrice;
+    private DateTime? revisionDue;
+
+    private string PreviewUrl => issuedToken is null
+        ? string.Empty
+        : Navigation.ToAbsoluteUri($"client-progress/{issuedToken}").ToString();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        workshop = await ApiClient.GetCommissionWorkshopAsync("knitting", ProjectId);
+        if (workshop is not null)
+        {
+            rate = workshop.TargetHourlyRate;
+            quotePrice = workshop.QuotePrice;
+            dueDate = workshop.DueDate?.ToDateTime(TimeOnly.MinValue);
+            depositReceived = workshop.DepositReceived;
+            if (string.IsNullOrWhiteSpace(summary))
+            {
+                summary = workshop.SuggestedSummary;
+            }
+        }
+
+        loading = false;
+    }
+
+    private async Task SaveRateAsync()
+    {
+        await RunAsync(async () =>
+        {
+            await ApiClient.SaveMakerRateAsync(rate);
+            message = "Rate saved.";
+            messageSeverity = Severity.Success;
+            await LoadAsync();
+        });
+    }
+
+    private async Task SaveTermsAsync()
+    {
+        await RunAsync(async () =>
+        {
+            await ApiClient.SaveCommissionTermsAsync("knitting", ProjectId, Terms());
+            message = "Quote saved.";
+            messageSeverity = Severity.Success;
+            await LoadAsync();
+        });
+    }
+
+    private async Task PublishAsync()
+    {
+        await RunAsync(async () =>
+        {
+            await ApiClient.SaveMakerRateAsync(rate);
+            var result = await ApiClient.PublishClientProgressAsync("knitting", ProjectId, new PublishClientProgressRequest
+            {
+                Stage = stage,
+                PublicSummary = summary,
+                MaterialNames = workshop?.SuggestedMaterialNames ?? [],
+                QuotePrice = quotePrice,
+                DueDate = ToDateOnly(dueDate),
+                DepositReceived = depositReceived
+            });
+            issuedToken = result.IssuedToken ?? issuedToken;
+            hostedUrl = result.HostedUrl ?? hostedUrl;
+            message = issuedToken is null
+                ? "Published. The existing link still works."
+                : "Published. Copy the preview link before you leave this page.";
+            messageSeverity = Severity.Success;
+            await LoadAsync();
+        });
+    }
+
+    private async Task AddRevisionAsync()
+    {
+        await RunAsync(async () =>
+        {
+            await ApiClient.AddClientProgressRevisionAsync("knitting", ProjectId, new AddClientProgressRevisionRequest
+            {
+                Summary = revisionSummary,
+                NewPrice = revisionPrice,
+                NewDueDate = ToDateOnly(revisionDue)
+            });
+            if (revisionPrice.HasValue)
+            {
+                quotePrice = revisionPrice;
+            }
+            if (revisionDue.HasValue)
+            {
+                dueDate = revisionDue;
+            }
+            revisionSummary = string.Empty;
+            revisionPrice = null;
+            revisionDue = null;
+            message = "Revision recorded.";
+            messageSeverity = Severity.Success;
+            await LoadAsync();
+        });
+    }
+
+    private async Task RevokeAsync()
+    {
+        await RunAsync(async () =>
+        {
+            await ApiClient.RevokeClientProgressAsync("knitting", ProjectId);
+            issuedToken = null;
+            hostedUrl = null;
+            message = "Link revoked.";
+            messageSeverity = Severity.Success;
+            await LoadAsync();
+        });
+    }
+
+    private async Task ReissueAsync()
+    {
+        await RunAsync(async () =>
+        {
+            var result = await ApiClient.ReissueClientProgressLinkAsync("knitting", ProjectId);
+            issuedToken = result.IssuedToken;
+            hostedUrl = result.HostedUrl;
+            message = "New link issued. The previous link no longer works.";
+            messageSeverity = Severity.Success;
+        });
+    }
+
+    private UpdateCommissionTermsRequest Terms() => new()
+    {
+        QuotePrice = quotePrice,
+        DueDate = ToDateOnly(dueDate),
+        DepositReceived = depositReceived
+    };
+
+    private async Task RunAsync(Func<Task> action)
+    {
+        busy = true;
+        message = null;
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageSeverity = Severity.Error;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private static DateOnly? ToDateOnly(DateTime? value)
+        => value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+
+    private static string FormatHours(long seconds)
+    {
+        var hours = seconds / 3600d;
+        return hours <= 0 ? "0 h" : $"{hours:0.#} h";
+    }
+
+    private static string BeatsLabel(CommissionWorkshopDto workshop)
+        => workshop.BeatsRate switch
+        {
+            true => "Yes",
+            false => "No",
+            _ => "Need time and a rate"
+        };
+
+    private static string StageLabel(CommissionStage value) => value switch
+    {
+        CommissionStage.InProgress => "In progress",
+        _ => value.ToString()
+    };
+}

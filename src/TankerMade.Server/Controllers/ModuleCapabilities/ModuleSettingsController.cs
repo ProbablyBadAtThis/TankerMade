@@ -37,6 +37,16 @@ public class ModuleSettingsController : ControllerBase
         return Ok(await gate.Handler!.UpsertAsync(request, gate.UserId!.Value));
     }
 
+    [HttpDelete]
+    public async Task<ActionResult> Delete(string moduleKey, DeleteModuleSettingItemRequest request)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed) return gate.Result!;
+        return await gate.Handler!.DeleteAsync(request, gate.UserId!.Value)
+            ? NoContent()
+            : NotFound();
+    }
+
     private async Task<GateResult> ResolveGateAsync(string moduleKey)
     {
         var userId = User.GetUserId();

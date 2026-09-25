@@ -20,8 +20,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{1BD85C08-3
 		docs\index.html = docs\index.html
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "architecture", "architecture", "{7F980C82-C88F-4A15-8827-038AED328BE2}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dev-tracker", "dev-tracker", "{58498133-468D-46E5-A1FC-95A6E8CB3E48}"
 	ProjectSection(SolutionItems) = preProject
 		docs\dev-tracker\index.html = docs\dev-tracker\index.html
@@ -56,8 +54,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "architecture", "architectur
 		docs\architecture-visualizer\index.html = docs\architecture-visualizer\index.html
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assets", "assets", "{6577820F-88D5-49B8-BA0D-80987B1FB0E9}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "js", "js", "{DCEE797B-F497-4417-B657-AA15FA383F79}"
 	ProjectSection(SolutionItems) = preProject
 		docs\architecture-visualizer\js\architecture-data.js = docs\architecture-visualizer\js\architecture-data.js
@@ -72,8 +68,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "styles", "styles", "{540FD5
 		docs\architecture-visualizer\styles\diagram.css = docs\architecture-visualizer\styles\diagram.css
 		docs\architecture-visualizer\styles\main.css = docs\architecture-visualizer\styles\main.css
 	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.Modules.Crafting", "src\TankerMade.Modules.Crafting\TankerMade.Modules.Crafting.csproj", "{0C08AE6B-76D5-4CD8-8BD8-D2A1ACC0233F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject
@@ -90,6 +84,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.Modules.Quilting", "src\TankerMade.Modules.Quilting\TankerMade.Modules.Quilting.csproj", "{3F89CBE8-1CA6-4726-B4CB-F8D0C54AC396}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.Modules.Sewing", "src\TankerMade.Modules.Sewing\TankerMade.Modules.Sewing.csproj", "{9733A029-AE4A-487F-BC4A-2E23EBFA3E4E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.ClientProgressHost", "src\TankerMade.ClientProgressHost\TankerMade.ClientProgressHost.csproj", "{1C551A7A-56B5-412B-AFE9-739176418FDE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -161,18 +157,6 @@ Global
 		{183857B6-A795-482A-8B97-DB22D42F204A}.Release|x64.Build.0 = Release|Any CPU
 		{183857B6-A795-482A-8B97-DB22D42F204A}.Release|x86.ActiveCfg = Release|Any CPU
 		{183857B6-A795-482A-8B97-DB22D42F204A}.Release|x86.Build.0 = Release|Any CPU
-		{0C08AE6B-76D5-4CD8-8BD8-D2A1ACC0233F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0C08AE6B-76D5-4CD8-8BD8-D2A1ACC0233F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0C08AE6B-76D5-4CD8-8BD8-D2A1ACC0233F}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{0C08AE6B-76D5-4CD8-8BD8-D2A1ACC0233F}.Debug|x64.Build.0 = Debug|Any CPU
-		{0C08AE6B-76D5-4CD8-8BD8-D2A1ACC0233F}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{0C08AE6B-76D5-4CD8-8BD8-D2A1ACC0233F}.Debug|x86.Build.0 = Debug|Any CPU
-		{0C08AE6B-76D5-4CD8-8BD8-D2A1ACC0233F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0C08AE6B-76D5-4CD8-8BD8-D2A1ACC0233F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0C08AE6B-76D5-4CD8-8BD8-D2A1ACC0233F}.Release|x64.ActiveCfg = Release|Any CPU
-		{0C08AE6B-76D5-4CD8-8BD8-D2A1ACC0233F}.Release|x64.Build.0 = Release|Any CPU
-		{0C08AE6B-76D5-4CD8-8BD8-D2A1ACC0233F}.Release|x86.ActiveCfg = Release|Any CPU
-		{0C08AE6B-76D5-4CD8-8BD8-D2A1ACC0233F}.Release|x86.Build.0 = Release|Any CPU
 		{047416CE-3A2A-4A82-BED4-62DF3C433C7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{047416CE-3A2A-4A82-BED4-62DF3C433C7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{047416CE-3A2A-4A82-BED4-62DF3C433C7B}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -257,6 +241,18 @@ Global
 		{9733A029-AE4A-487F-BC4A-2E23EBFA3E4E}.Release|x64.Build.0 = Release|Any CPU
 		{9733A029-AE4A-487F-BC4A-2E23EBFA3E4E}.Release|x86.ActiveCfg = Release|Any CPU
 		{9733A029-AE4A-487F-BC4A-2E23EBFA3E4E}.Release|x86.Build.0 = Release|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Debug|x64.Build.0 = Debug|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Debug|x86.Build.0 = Debug|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Release|x64.ActiveCfg = Release|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Release|x64.Build.0 = Release|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Release|x86.ActiveCfg = Release|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -270,10 +266,8 @@ Global
 		{58498133-468D-46E5-A1FC-95A6E8CB3E48} = {1BD85C08-364B-4EC1-9986-48A19385FABA}
 		{AAAB81D3-E50E-46BD-9C8C-6F081C87DE64} = {1BD85C08-364B-4EC1-9986-48A19385FABA}
 		{D72C3720-AFBF-4F58-9111-E15B81AA7B89} = {1BD85C08-364B-4EC1-9986-48A19385FABA}
-		{6577820F-88D5-49B8-BA0D-80987B1FB0E9} = {D72C3720-AFBF-4F58-9111-E15B81AA7B89}
 		{DCEE797B-F497-4417-B657-AA15FA383F79} = {D72C3720-AFBF-4F58-9111-E15B81AA7B89}
 		{540FD58D-F533-4A65-8A20-9A5A8C528683} = {D72C3720-AFBF-4F58-9111-E15B81AA7B89}
-		{0C08AE6B-76D5-4CD8-8BD8-D2A1ACC0233F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{047416CE-3A2A-4A82-BED4-62DF3C433C7B} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{4BB562EC-D24D-48A3-B6B9-684255E7EE1D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{966B4543-F262-49F8-87BA-7FC141C4149E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
@@ -281,6 +275,7 @@ Global
 		{6030B70F-8C69-4EB1-B4D6-0A6DD38DE42D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{3F89CBE8-1CA6-4726-B4CB-F8D0C54AC396} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{9733A029-AE4A-487F-BC4A-2E23EBFA3E4E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{1C551A7A-56B5-412B-AFE9-739176418FDE} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {45CEBD1F-9930-46B2-BE25-3CDE6BA2DAC8}

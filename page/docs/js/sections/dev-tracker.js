@@ -7,16 +7,16 @@ class DevTrackerSection {
     constructor() {
         this.sectionId = 'dev-tracker';
         this.data = {
-            totalTasks: 102,
-            completedTasks: 70,
-            totalPhases: 10,
-            completedPhases: 9,
+            totalTasks: 108,
+            completedTasks: 108,
+            totalPhases: 11,
+            completedPhases: 11,
             currentPhase: {
-                number: "J",
-                title: "Client progress",
-                description: "Knitting commission link. Public snapshot, private economics, local preview. Step 2 (projection backend) is next.",
-                completed: 3,
-                total: 35,
+                number: "K",
+                title: "Hosted client page",
+                description: "Copy the public snapshot to a host. The home server stays private. Checked and built.",
+                completed: 6,
+                total: 6,
                 color: "#fbbf24"
             },
             phases: [
@@ -104,10 +104,19 @@ class DevTrackerSection {
                 {
                     number: "J",
                     title: "Client progress",
-                    description: "Fiber commissions only. Publish a knitting snapshot to an unguessable local link. Step 1 is done; Step 2 is the projection backend.",
-                    completed: 3,
+                    description: "Local knitting commission link. Publish, preview, revision, and revoke are verified.",
+                    completed: 35,
                     total: 35,
                     color: "#fbbf24",
+                    status: "completed"
+                },
+                {
+                    number: "K",
+                    title: "Hosted client page",
+                    description: "Copy the public snapshot to a host. The home server stays private.",
+                    completed: 6,
+                    total: 6,
+                    color: "#34d399",
                     status: "active"
                 }
             ]
@@ -406,48 +415,61 @@ const ROADMAP_PHASE_TASKS = {
         { title: 'Record the two surfaces, lifecycle, and private-versus-public rule', status: 'done', area: 'Step 1' },
         { title: 'Point charter and handoff at the direction brief', status: 'done', area: 'Step 1' },
         { title: 'Keep scratch patterns and the local workshop photo off the remote', status: 'done', area: 'Step 1' },
-        { title: 'Core stage enum: Quote, Accepted, Materials, In progress, Revision, Ready, Delivered', status: 'open', area: 'Step 2 · Contracts' },
-        { title: 'Public snapshot DTO: stage, plain summary, safe material lines, photo ids, next step, last updated, revisions', status: 'open', area: 'Step 2 · Contracts' },
-        { title: 'Workshop-only DTOs: quote, deposit, rate, material dollars, time, implied net, beats-rate', status: 'open', area: 'Step 2 · Contracts' },
-        { title: 'IModuleClientStatusProvider; knitting translates jargon into the public sentence', status: 'open', area: 'Step 2 · Contracts' },
-        { title: 'Publication row: owner, module key, project id, token hash, revoked-at, last published at', status: 'open', area: 'Step 2 · Storage' },
-        { title: 'Snapshot: one JSON blob of the public DTO, replaced on each publish', status: 'open', area: 'Step 2 · Storage' },
-        { title: 'Revision rows: what changed, and whether price or due date moved', status: 'open', area: 'Step 2 · Storage' },
-        { title: 'Migration. Historical crafting migrations stay', status: 'open', area: 'Step 2 · Storage' },
-        { title: 'Signed-in API: publish, add revision, revoke, preview', status: 'open', area: 'Step 2 · API' },
-        { title: 'Anonymous read by token. Read-only. No client account', status: 'open', area: 'Step 2 · API' },
-        { title: 'Anonymous photo route only for asset ids in the current snapshot', status: 'open', area: 'Step 2 · API' },
-        { title: 'Inactive knitting module cannot publish', status: 'open', area: 'Step 2 · API' },
-        { title: 'Revoked or unknown token does not resolve', status: 'open', area: 'Step 2 · API' },
-        { title: 'Store the token hash, not the raw token', status: 'open', area: 'Step 2 · API' },
-        { title: 'Test: public DTO has no hours, rate, implied net, notes, or measurements', status: 'open', area: 'Step 2 · Tests' },
-        { title: 'Test: a revision records a price change or a due-date change', status: 'open', area: 'Step 2 · Tests' },
-        { title: 'Test: inactive knitting module cannot publish', status: 'open', area: 'Step 2 · Tests' },
-        { title: 'Test: revoked token does not resolve', status: 'open', area: 'Step 2 · Tests' },
-        { title: 'Test: unpublished photo id does not resolve', status: 'open', area: 'Step 2 · Tests' },
-        { title: 'Core maker rate on the user, not in knitting settings', status: 'open', area: 'Step 3' },
-        { title: 'Project fields: quote price, expected window, deposit marked received', status: 'open', area: 'Step 3' },
-        { title: 'Actions: publish, add revision, copy preview link, revoke', status: 'open', area: 'Step 3' },
-        { title: 'Studio preview of the anonymous payload, separate from the workshop theme', status: 'open', area: 'Step 3' },
-        { title: 'Private panel: material cost, timer total, implied net, beats-rate', status: 'open', area: 'Step 3' },
-        { title: 'Knitting public sentence from the active piece and step, editable before publish', status: 'open', area: 'Step 3' },
-        { title: 'Publish with no hosted target still writes the local snapshot', status: 'open', area: 'Step 4' },
-        { title: 'Last updated is the publish time', status: 'open', area: 'Step 4' },
-        { title: 'Snapshot shape can be sent later without reshaping workshop tables', status: 'open', area: 'Step 4' },
-        { title: 'No cloud client, retry loop, or hosted dashboard', status: 'open', area: 'Step 4' },
-        { title: 'Browser: maker publishes, copies the link, revokes, and the link dies', status: 'open', area: 'Step 5' },
-        { title: 'Browser: signed-out link hides hours, rate, notes, and measurements; a revision is visible', status: 'open', area: 'Step 5' },
-        { title: 'User runs dotnet build TankerMade.sln', status: 'open', area: 'Step 5' }
+        { title: 'Core stage enum: Quote, Accepted, Materials, In progress, Revision, Ready, Delivered', status: 'done', area: 'Step 2 · Contracts' },
+        { title: 'Public snapshot DTO: stage, plain summary, safe material lines, photo ids, next step, last updated, revisions', status: 'done', area: 'Step 2 · Contracts' },
+        { title: 'Workshop-only DTOs: quote, deposit, rate, material dollars, time, implied net, beats-rate', status: 'done', area: 'Step 2 · Contracts' },
+        { title: 'IModuleClientStatusProvider; knitting translates jargon into the public sentence', status: 'done', area: 'Step 2 · Contracts' },
+        { title: 'Publication row: owner, module key, project id, token hash, revoked-at, last published at', status: 'done', area: 'Step 2 · Storage' },
+        { title: 'Snapshot: one JSON blob of the public DTO, replaced on each publish', status: 'done', area: 'Step 2 · Storage' },
+        { title: 'Revision rows: what changed, and whether price or due date moved', status: 'done', area: 'Step 2 · Storage' },
+        { title: 'Migration. Historical crafting migrations stay', status: 'done', area: 'Step 2 · Storage' },
+        { title: 'Signed-in API: publish, add revision, revoke, preview', status: 'done', area: 'Step 2 · API' },
+        { title: 'Anonymous read by token. Read-only. No client account', status: 'done', area: 'Step 2 · API' },
+        { title: 'Anonymous photo route only for asset ids in the current snapshot', status: 'done', area: 'Step 2 · API' },
+        { title: 'Inactive knitting module cannot publish', status: 'done', area: 'Step 2 · API' },
+        { title: 'Revoked or unknown token does not resolve', status: 'done', area: 'Step 2 · API' },
+        { title: 'Store the token hash, not the raw token', status: 'done', area: 'Step 2 · API' },
+        { title: 'Test: public DTO has no hours, rate, implied net, notes, or measurements', status: 'done', area: 'Step 2 · Tests' },
+        { title: 'Test: a revision records a price change or a due-date change', status: 'done', area: 'Step 2 · Tests' },
+        { title: 'Test: inactive knitting module cannot publish', status: 'done', area: 'Step 2 · Tests' },
+        { title: 'Test: revoked token does not resolve', status: 'done', area: 'Step 2 · Tests' },
+        { title: 'Test: unpublished photo id does not resolve', status: 'done', area: 'Step 2 · Tests' },
+        { title: 'Core maker rate on the user, not in knitting settings', status: 'done', area: 'Step 3' },
+        { title: 'Project fields: quote price, expected window, deposit marked received', status: 'done', area: 'Step 3' },
+        { title: 'Actions: publish, add revision, copy preview link, revoke', status: 'done', area: 'Step 3' },
+        { title: 'Studio preview of the anonymous payload, separate from the workshop theme', status: 'done', area: 'Step 3' },
+        { title: 'Private panel: material cost, timer total, implied net, beats-rate', status: 'done', area: 'Step 3' },
+        { title: 'Knitting public sentence from the active piece and step, editable before publish', status: 'done', area: 'Step 3' },
+        { title: 'Publish with no hosted target still writes the local snapshot', status: 'done', area: 'Step 4' },
+        { title: 'Last updated is the publish time', status: 'done', area: 'Step 4' },
+        { title: 'Snapshot shape can be sent later without reshaping workshop tables', status: 'done', area: 'Step 4' },
+        { title: 'No cloud client, retry loop, or hosted dashboard', status: 'done', area: 'Step 4' },
+        { title: 'Browser: maker publishes, copies the link, revokes, and the link dies', status: 'done', area: 'Step 5' },
+        { title: 'Browser: signed-out link hides hours, rate, notes, and measurements; a revision is visible', status: 'done', area: 'Step 5' },
+        { title: 'User runs dotnet build TankerMade.sln', status: 'done', area: 'Step 5' }
+    ],
+    K: [
+        { title: 'Configured host receives the existing snapshot JSON and sets HostedAt', status: 'done', area: 'Step 1' },
+        { title: 'No host, or a failed send, keeps the local snapshot and leaves HostedAt empty', status: 'done', area: 'Step 1' },
+        { title: 'Revoke tells the host to drop the public page', status: 'done', area: 'Step 2' },
+        { title: 'Hosted page renders the snapshot and does not query the workshop database', status: 'done', area: 'Step 3' },
+        { title: 'Hosted photos are published bytes, not a request back to the home server', status: 'done', area: 'Step 4' },
+        { title: 'Check: hosted link dies on revoke and still hides hours, rate, notes, and measurements', status: 'done', area: 'Step 5' }
     ]
 };
 
 const ROADMAP_PHASE_NOTES = {
     J: [
-        { label: 'Now', value: 'Step 2 — projection backend' },
+        { label: 'Now', value: 'Phase J complete.' },
         { label: 'Public', value: 'Quote price and due date. Material lines are names.' },
         { label: 'Private', value: 'Inventory dollars, hours, rate, implied net. Never on the snapshot.' },
         { label: 'Photos', value: 'Token-scoped asset ids. Not the signed-in asset API.' },
-        { label: 'Out', value: 'Hosted page, payments, client accounts, other craft modules.' }
+        { label: 'Out', value: 'Payments, client accounts, other craft modules.' }
+    ],
+    K: [
+        { label: 'Now', value: 'Phase K complete. The off-machine host check passed on 2026-09-25. Nothing is queued.' },
+        { label: 'Host', value: 'ClientProgressHost:BaseUrl. Empty means local only.' },
+        { label: 'Private', value: 'The home server is not exposed. The host receives the public JSON only.' }
     ]
 };
 

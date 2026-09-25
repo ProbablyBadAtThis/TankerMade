@@ -8,4 +8,6 @@ public interface IModuleInventoryCapabilityHandler
 
     Task<IReadOnlyList<ModuleSupplyItemDto>> GetSuppliesAsync(Guid userId, string? search = null, string? category = null);
     Task<ModuleSupplyItemDto> CreateSupplyAsync(CreateModuleSupplyItemRequest request, Guid userId);
+    Task<ModuleSupplyItemDto?> UpdateSupplyAsync(Guid supplyId, UpdateModuleSupplyItemRequest request, Guid userId);
+    Task<bool> DeleteSupplyAsync(Guid supplyId, Guid userId);
 }

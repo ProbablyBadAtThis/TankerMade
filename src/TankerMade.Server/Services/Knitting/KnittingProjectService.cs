@@ -27,10 +27,13 @@ public class KnittingProjectService : IKnittingProjectService
             createDto.Description,
             createDto.PatternId,
             createDto.ThemeId,
+            createDto.ColorId,
             createDto.Difficulty,
             createDto.Progress ?? 0);
+        project.StartedAt = createDto.StartedAt ?? DateTime.UtcNow;
 
         _context.KnittingProjects.Add(project);
+        project.SetProgress(await CalculateStepCompletionPercentAsync(project));
         await _context.SaveChangesAsync();
 
         return await MapAsync(project);
@@ -98,14 +101,27 @@ public class KnittingProjectService : IKnittingProjectService
 
         var patternId = updateDto.ClearPatternId ? null : updateDto.PatternId ?? project.PatternId;
         await EnsurePatternBelongsToUserAsync(patternId, userId);
+        if (patternId != project.PatternId && await HasWorkspaceStateAsync(project.Id))
+        {
+            throw new InvalidOperationException("This project already has progress or timer history. Keep the linked pattern or create a new project.");
+        }
 
         project.Update(
             UseIncomingValue(updateDto.Name, project.Name),
-            updateDto.Description ?? project.Description,
+            updateDto.Description == null
+                ? project.Description
+                : updateDto.Description.Trim(),
             patternId,
             updateDto.ThemeId ?? project.ThemeId,
+            updateDto.ColorId ?? project.ColorId,
             updateDto.Difficulty ?? project.Difficulty,
             updateDto.Progress ?? project.Progress);
+        if (updateDto.StartedAt.HasValue)
+        {
+            project.StartedAt = updateDto.StartedAt;
+        }
+
+        project.SetProgress(await CalculateStepCompletionPercentAsync(project));
 
         await _context.SaveChangesAsync();
         return await MapAsync(project);
@@ -150,6 +166,231 @@ public class KnittingProjectService : IKnittingProjectService
         return true;
     }
 
+    public async Task<KnittingProjectDto?> SetStepProgressAsync(
+        Guid projectId,
+        Guid patternStepId,
+        UpdateKnittingProjectStepProgressDto updateDto,
+        Guid userId)
+    {
+        var project = await _context.KnittingProjects.SingleOrDefaultAsync(p => p.Id == projectId && p.UserId == userId);
+        if (project == null)
+        {
+            return null;
+        }
+
+        await EnsureStepBelongsToLinkedPatternAsync(project, patternStepId);
+
+        var existing = await _context.KnittingProjectStepProgress
+            .SingleOrDefaultAsync(progress => progress.ProjectId == projectId && progress.PatternStepId == patternStepId);
+
+        if (updateDto.IsComplete)
+        {
+            if (existing == null)
+            {
+                _context.KnittingProjectStepProgress.Add(new KnittingProjectStepProgress(Guid.NewGuid(), projectId, patternStepId));
+            }
+            else if (!existing.IsComplete)
+            {
+                existing.Complete();
+            }
+        }
+        else if (existing != null)
+        {
+            _context.KnittingProjectStepProgress.Remove(existing);
+        }
+
+        await SyncRowChecksForStepAsync(projectId, patternStepId, updateDto.IsComplete);
+        project.SetProgress(await CalculateStepCompletionPercentAsync(project));
+        await _context.SaveChangesAsync();
+        return await MapAsync(project);
+    }
+
+    public async Task<KnittingProjectDto?> SetRowCheckAsync(
+        Guid projectId,
+        Guid patternStepId,
+        int rowNumber,
+        UpdateKnittingProjectRowCheckDto updateDto,
+        Guid userId)
+    {
+        var project = await _context.KnittingProjects.SingleOrDefaultAsync(p => p.Id == projectId && p.UserId == userId);
+        if (project == null)
+        {
+            return null;
+        }
+
+        await EnsureStepBelongsToLinkedPatternAsync(project, patternStepId);
+        var allowedRows = await GetStepRowNumbersAsync(patternStepId);
+        if (!allowedRows.Contains(rowNumber))
+        {
+            throw new InvalidOperationException("The selected row is not part of this step.");
+        }
+
+        var existing = await _context.KnittingProjectRowChecks
+            .SingleOrDefaultAsync(check => check.ProjectId == projectId
+                && check.PatternStepId == patternStepId
+                && check.RowNumber == rowNumber);
+
+        if (updateDto.IsChecked)
+        {
+            if (existing == null)
+            {
+                _context.KnittingProjectRowChecks.Add(new KnittingProjectRowCheck(Guid.NewGuid(), projectId, patternStepId, rowNumber));
+            }
+        }
+        else if (existing != null)
+        {
+            _context.KnittingProjectRowChecks.Remove(existing);
+        }
+
+        await _context.SaveChangesAsync();
+        return await MapAsync(project);
+    }
+
+    public async Task<KnittingProjectDto?> StartTimerAsync(Guid projectId, Guid patternStepId, UpdateKnittingProjectTimerDto updateDto, Guid userId)
+    {
+        var project = await _context.KnittingProjects.SingleOrDefaultAsync(p => p.Id == projectId && p.UserId == userId);
+        if (project == null)
+        {
+            return null;
+        }
+
+        await EnsureStepBelongsToLinkedPatternAsync(project, patternStepId);
+
+        var now = DateTime.UtcNow;
+        var timers = await _context.KnittingProjectTimers
+            .Where(timer => timer.ProjectId == projectId)
+            .ToListAsync();
+
+        foreach (var runningTimer in timers.Where(timer => timer.IsRunning))
+        {
+            runningTimer.Pause(now);
+        }
+
+        var timer = timers.SingleOrDefault(existing => existing.PatternStepId == patternStepId);
+        if (timer == null)
+        {
+            timer = new KnittingProjectTimer(Guid.NewGuid(), projectId, patternStepId);
+            _context.KnittingProjectTimers.Add(timer);
+        }
+
+        timer.Start(now);
+        await _context.SaveChangesAsync();
+        return await MapAsync(project);
+    }
+
+    public async Task<KnittingProjectDto?> PauseTimerAsync(Guid projectId, Guid patternStepId, UpdateKnittingProjectTimerDto updateDto, Guid userId)
+    {
+        var project = await _context.KnittingProjects.SingleOrDefaultAsync(p => p.Id == projectId && p.UserId == userId);
+        if (project == null)
+        {
+            return null;
+        }
+
+        await EnsureStepBelongsToLinkedPatternAsync(project, patternStepId);
+
+        var timer = await _context.KnittingProjectTimers
+            .SingleOrDefaultAsync(existing => existing.ProjectId == projectId && existing.PatternStepId == patternStepId);
+
+        if (timer != null)
+        {
+            timer.Pause(DateTime.UtcNow);
+            await _context.SaveChangesAsync();
+        }
+
+        return await MapAsync(project);
+    }
+
+    public async Task<KnittingProjectDto?> SetTimerAsync(Guid projectId, Guid patternStepId, UpdateKnittingProjectTimerDto updateDto, Guid userId)
+    {
+        var project = await _context.KnittingProjects.SingleOrDefaultAsync(p => p.Id == projectId && p.UserId == userId);
+        if (project == null)
+        {
+            return null;
+        }
+
+        if (updateDto.ElapsedSeconds.HasValue && updateDto.ElapsedSeconds.Value < 0)
+        {
+            throw new ArgumentException("Elapsed time cannot be negative.", nameof(updateDto));
+        }
+
+        await EnsureStepBelongsToLinkedPatternAsync(project, patternStepId);
+        var timer = await GetOrCreateTimerAsync(projectId, patternStepId);
+        timer.SetElapsedSeconds(updateDto.ElapsedSeconds ?? 0, DateTime.UtcNow);
+        await _context.SaveChangesAsync();
+        return await MapAsync(project);
+    }
+
+    public async Task<KnittingProjectDto?> ResetTimerAsync(Guid projectId, Guid patternStepId, Guid userId)
+    {
+        var project = await _context.KnittingProjects.SingleOrDefaultAsync(p => p.Id == projectId && p.UserId == userId);
+        if (project == null)
+        {
+            return null;
+        }
+
+        await EnsureStepBelongsToLinkedPatternAsync(project, patternStepId);
+        var timer = await GetOrCreateTimerAsync(projectId, patternStepId);
+        timer.Reset(DateTime.UtcNow);
+        await _context.SaveChangesAsync();
+        return await MapAsync(project);
+    }
+
+    public async Task<KnittingProjectDto?> AddInventoryLinkAsync(Guid projectId, CreateKnittingProjectInventoryLinkDto createDto, Guid userId)
+    {
+        var project = await _context.KnittingProjects.SingleOrDefaultAsync(p => p.Id == projectId && p.UserId == userId);
+        if (project == null)
+        {
+            return null;
+        }
+
+        var itemType = NormalizeInventoryItemType(createDto.InventoryItemType);
+        await EnsureInventoryItemBelongsToUserAsync(itemType, createDto.InventoryItemId, userId);
+
+        var existing = await _context.KnittingProjectInventoryLinks
+            .SingleOrDefaultAsync(link => link.ProjectId == projectId
+                && link.InventoryItemType == itemType
+                && link.InventoryItemId == createDto.InventoryItemId);
+
+        if (existing == null)
+        {
+            _context.KnittingProjectInventoryLinks.Add(new KnittingProjectInventoryLink(
+                Guid.NewGuid(),
+                projectId,
+                itemType,
+                createDto.InventoryItemId,
+                createDto.QuantityPlanned,
+                createDto.Notes));
+        }
+        else
+        {
+            existing.Update(createDto.QuantityPlanned, createDto.Notes);
+        }
+
+        await _context.SaveChangesAsync();
+        return await MapAsync(project);
+    }
+
+    public async Task<bool> RemoveInventoryLinkAsync(Guid projectId, Guid linkId, Guid userId)
+    {
+        var projectExists = await _context.KnittingProjects.AnyAsync(p => p.Id == projectId && p.UserId == userId);
+        if (!projectExists)
+        {
+            return false;
+        }
+
+        var link = await _context.KnittingProjectInventoryLinks
+            .SingleOrDefaultAsync(existing => existing.Id == linkId && existing.ProjectId == projectId);
+
+        if (link == null)
+        {
+            return false;
+        }
+
+        _context.KnittingProjectInventoryLinks.Remove(link);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     private async Task<KnittingProjectDto> MapAsync(KnittingProject project)
     {
         var userName = await _context.Users
@@ -171,6 +412,58 @@ public class KnittingProjectService : IKnittingProjectService
                 .Select(theme => theme.Name)
                 .SingleOrDefaultAsync() ?? string.Empty;
 
+        var colorName = project.ColorId == null
+            ? string.Empty
+            : await _context.Colors
+                .Where(color => color.Id == project.ColorId)
+                .Select(color => color.Name)
+                .SingleOrDefaultAsync() ?? string.Empty;
+
+        var patternStepIds = await GetLinkedPatternStepIdsAsync(project);
+        var stepProgress = new List<KnittingProjectStepProgressDto>();
+        if (patternStepIds.Count > 0)
+        {
+            var stepIdSet = patternStepIds.ToHashSet();
+            var completed = await _context.KnittingProjectStepProgress
+                .Where(progress => progress.ProjectId == project.Id && progress.IsComplete)
+                .OrderBy(progress => progress.CompletedAt)
+                .ToListAsync();
+
+            stepProgress = completed
+                .Where(progress => stepIdSet.Contains(progress.PatternStepId))
+                .Select(progress => new KnittingProjectStepProgressDto
+                {
+                    ProjectId = progress.ProjectId,
+                    PatternStepId = progress.PatternStepId,
+                    IsComplete = progress.IsComplete,
+                    CompletedAt = progress.CompletedAt
+                })
+                .ToList();
+        }
+
+        var now = DateTime.UtcNow;
+        var timers = await _context.KnittingProjectTimers
+            .Where(timer => timer.ProjectId == project.Id)
+            .OrderBy(timer => timer.CreatedAt)
+            .ToListAsync();
+
+        var timerDtos = timers
+            .Select(timer => new KnittingProjectTimerDto
+            {
+                Id = timer.Id,
+                ProjectId = timer.ProjectId,
+                PatternStepId = timer.PatternStepId,
+                ElapsedSeconds = timer.ElapsedSeconds,
+                IsRunning = timer.IsRunning,
+                StartedAt = timer.StartedAt,
+                CreatedAt = timer.CreatedAt,
+                UpdatedAt = timer.UpdatedAt
+            })
+            .ToList();
+
+        var inventoryLinks = await MapInventoryLinksAsync(project.Id);
+        var stitchProgress = await CalculateStitchProgressAsync(patternStepIds, stepProgress);
+
         return new KnittingProjectDto
         {
             Id = project.Id,
@@ -181,10 +474,26 @@ public class KnittingProjectService : IKnittingProjectService
             PatternName = patternName,
             ThemeId = project.ThemeId,
             ThemeName = themeName,
+            ColorId = project.ColorId,
+            ColorName = colorName,
             Difficulty = project.Difficulty,
-            Progress = project.Progress,
+            Progress = patternStepIds.Count == 0
+                ? project.Progress
+                : stitchProgress.ProgressPercent,
             IsArchived = project.IsArchived,
             ArchivedAt = project.ArchivedAt,
+            StartedAt = project.StartedAt,
+            CompletedStepCount = stepProgress.Count,
+            TotalStepCount = patternStepIds.Count,
+            CompletedStitchCount = stitchProgress.CompletedStitches,
+            TotalStitchCount = stitchProgress.TotalStitches,
+            TotalTrackedSeconds = timers.Sum(timer => timer.GetElapsedSeconds(now)),
+            TimerRunning = timerDtos.Any(timer => timer.IsRunning),
+            TimerStartedAt = timerDtos.FirstOrDefault(timer => timer.IsRunning)?.StartedAt,
+            StepProgress = stepProgress,
+            RowChecks = await MapRowChecksAsync(project.Id, patternStepIds),
+            Timers = timerDtos,
+            InventoryLinks = inventoryLinks,
             UserId = project.UserId,
             Username = userName,
             CreatedAt = project.CreatedAt,
@@ -203,6 +512,168 @@ public class KnittingProjectService : IKnittingProjectService
         return result;
     }
 
+    private async Task<KnittingProjectTimer> GetOrCreateTimerAsync(Guid projectId, Guid patternStepId)
+    {
+        var timer = await _context.KnittingProjectTimers
+            .SingleOrDefaultAsync(existing => existing.ProjectId == projectId && existing.PatternStepId == patternStepId);
+
+        if (timer != null)
+        {
+            return timer;
+        }
+
+        timer = new KnittingProjectTimer(Guid.NewGuid(), projectId, patternStepId);
+        _context.KnittingProjectTimers.Add(timer);
+        return timer;
+    }
+
+    private async Task<IReadOnlyList<KnittingProjectInventoryLinkDto>> MapInventoryLinksAsync(Guid projectId)
+    {
+        var links = await _context.KnittingProjectInventoryLinks
+            .Where(link => link.ProjectId == projectId)
+            .OrderBy(link => link.CreatedAt)
+            .ToListAsync();
+
+        var results = new List<KnittingProjectInventoryLinkDto>(links.Count);
+        foreach (var link in links)
+        {
+            results.Add(new KnittingProjectInventoryLinkDto
+            {
+                Id = link.Id,
+                ProjectId = link.ProjectId,
+                InventoryItemType = link.InventoryItemType,
+                InventoryItemId = link.InventoryItemId,
+                InventoryItemName = await GetInventoryItemNameAsync(link.InventoryItemType, link.InventoryItemId),
+                QuantityPlanned = link.QuantityPlanned,
+                Notes = link.Notes,
+                CreatedAt = link.CreatedAt,
+                UpdatedAt = link.UpdatedAt
+            });
+        }
+
+        return results;
+    }
+
+    private const string YarnInventoryType = "yarn";
+    private const string ToolInventoryType = "tool";
+    private const string NotionInventoryType = "notion";
+
+    private async Task<string> GetInventoryItemNameAsync(string itemType, Guid itemId)
+    {
+        return itemType switch
+        {
+            YarnInventoryType => await _context.KnittingYarnInventoryItems
+                .Where(item => item.Id == itemId)
+                .Select(item => item.BrandName + " - " + item.ColorName)
+                .SingleOrDefaultAsync() ?? string.Empty,
+            ToolInventoryType => await _context.KnittingToolInventoryItems
+                .Where(item => item.Id == itemId)
+                .Select(item => item.BrandName + " - " + item.TypeName)
+                .SingleOrDefaultAsync() ?? string.Empty,
+            NotionInventoryType => await _context.KnittingNotionInventoryItems
+                .Where(item => item.Id == itemId)
+                .Select(item => item.BrandName + " - " + item.TypeName)
+                .SingleOrDefaultAsync() ?? string.Empty,
+            _ => string.Empty
+        };
+    }
+
+    private async Task EnsureInventoryItemBelongsToUserAsync(string itemType, Guid itemId, Guid userId)
+    {
+        var exists = itemType switch
+        {
+            YarnInventoryType => await _context.KnittingYarnInventoryItems
+                .AnyAsync(item => item.Id == itemId && item.UserId == userId),
+            ToolInventoryType => await _context.KnittingToolInventoryItems
+                .AnyAsync(item => item.Id == itemId && item.UserId == userId),
+            NotionInventoryType => await _context.KnittingNotionInventoryItems
+                .AnyAsync(item => item.Id == itemId && item.UserId == userId),
+            _ => false
+        };
+
+        if (!exists)
+        {
+            throw new InvalidOperationException("The selected inventory item is not available for this project.");
+        }
+    }
+
+    private static string NormalizeInventoryItemType(string itemType)
+    {
+        var normalized = itemType.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            YarnInventoryType => YarnInventoryType,
+            ToolInventoryType => ToolInventoryType,
+            NotionInventoryType => NotionInventoryType,
+            _ => throw new ArgumentException("Inventory item type must be yarn, tool, or notion.", nameof(itemType))
+        };
+    }
+
+    private async Task<int> CalculateStepCompletionPercentAsync(KnittingProject project)
+    {
+        var patternStepIds = await GetLinkedPatternStepIdsAsync(project);
+        if (patternStepIds.Count == 0)
+        {
+            return project.Progress;
+        }
+
+        var completedCount = await _context.KnittingProjectStepProgress
+            .Where(progress => progress.ProjectId == project.Id && progress.IsComplete)
+            .CountAsync(progress => patternStepIds.Contains(progress.PatternStepId));
+
+        return CalculateCompletionPercent(completedCount, patternStepIds.Count);
+    }
+
+    private async Task<(int CompletedStitches, int TotalStitches, int ProgressPercent)> CalculateStitchProgressAsync(
+        IReadOnlyList<Guid> patternStepIds,
+        IReadOnlyList<KnittingProjectStepProgressDto> stepProgress)
+    {
+        if (patternStepIds.Count == 0)
+        {
+            return (0, 0, 0);
+        }
+
+        var completedStepIds = stepProgress
+            .Where(progress => progress.IsComplete)
+            .Select(progress => progress.PatternStepId)
+            .ToHashSet();
+
+        var steps = await _context.KnittingPatternSteps
+            .AsNoTracking()
+            .Where(step => patternStepIds.Contains(step.Id))
+            .Select(step => new { step.Id, step.StitchCount })
+            .ToListAsync();
+
+        var totalStitches = steps.Sum(step => step.StitchCount ?? 0);
+        var completedStitches = steps
+            .Where(step => completedStepIds.Contains(step.Id))
+            .Sum(step => step.StitchCount ?? 0);
+
+        var progressPercent = totalStitches > 0
+            ? CalculateCompletionPercent(completedStitches, totalStitches)
+            : CalculateCompletionPercent(completedStepIds.Count, patternStepIds.Count);
+
+        return (completedStitches, totalStitches, progressPercent);
+    }
+
+    private static int CalculateCompletionPercent(int completedCount, int totalCount)
+    {
+        if (totalCount <= 0)
+        {
+            return 0;
+        }
+
+        var clampedCompleted = Math.Min(totalCount, Math.Max(0, completedCount));
+        return (int)Math.Round(clampedCompleted * 100.0 / totalCount, MidpointRounding.AwayFromZero);
+    }
+
+    private async Task<bool> HasWorkspaceStateAsync(Guid projectId)
+    {
+        return await _context.KnittingProjectStepProgress.AnyAsync(progress => progress.ProjectId == projectId)
+            || await _context.KnittingProjectTimers.AnyAsync(timer => timer.ProjectId == projectId)
+            || await _context.KnittingProjectInventoryLinks.AnyAsync(link => link.ProjectId == projectId);
+    }
+
     private async Task EnsurePatternBelongsToUserAsync(Guid? patternId, Guid userId)
     {
         if (patternId == null)
@@ -215,6 +686,126 @@ public class KnittingProjectService : IKnittingProjectService
         {
             throw new InvalidOperationException("The selected pattern is not available for this project.");
         }
+    }
+
+    private async Task SyncRowChecksForStepAsync(Guid projectId, Guid patternStepId, bool isComplete)
+    {
+        var existing = await _context.KnittingProjectRowChecks
+            .Where(check => check.ProjectId == projectId && check.PatternStepId == patternStepId)
+            .ToListAsync();
+
+        if (!isComplete)
+        {
+            _context.KnittingProjectRowChecks.RemoveRange(existing);
+            return;
+        }
+
+        var rows = await GetStepRowNumbersAsync(patternStepId);
+        var present = existing.Select(check => check.RowNumber).ToHashSet();
+        foreach (var row in rows)
+        {
+            if (!present.Contains(row))
+            {
+                _context.KnittingProjectRowChecks.Add(new KnittingProjectRowCheck(Guid.NewGuid(), projectId, patternStepId, row));
+            }
+        }
+
+        foreach (var extra in existing.Where(check => !rows.Contains(check.RowNumber)))
+        {
+            _context.KnittingProjectRowChecks.Remove(extra);
+        }
+    }
+
+    private async Task<IReadOnlyList<KnittingProjectRowCheckDto>> MapRowChecksAsync(Guid projectId, IReadOnlyList<Guid> patternStepIds)
+    {
+        if (patternStepIds.Count == 0)
+        {
+            return [];
+        }
+
+        var stepIdSet = patternStepIds.ToHashSet();
+        var checks = await _context.KnittingProjectRowChecks
+            .Where(check => check.ProjectId == projectId)
+            .OrderBy(check => check.RowNumber)
+            .ToListAsync();
+
+        return checks
+            .Where(check => stepIdSet.Contains(check.PatternStepId))
+            .Select(check => new KnittingProjectRowCheckDto
+            {
+                ProjectId = check.ProjectId,
+                PatternStepId = check.PatternStepId,
+                RowNumber = check.RowNumber
+            })
+            .ToList();
+    }
+
+    private async Task<IReadOnlyList<int>> GetStepRowNumbersAsync(Guid patternStepId)
+    {
+        var step = await _context.KnittingPatternSteps.SingleAsync(existing => existing.Id == patternStepId);
+        return ExpandRowNumbers(step.RangeStart, step.RangeEnd);
+    }
+
+    private static IReadOnlyList<int> ExpandRowNumbers(int? start, int? end)
+    {
+        if (start == null && end == null)
+        {
+            return [-1];
+        }
+
+        var rangeStart = start ?? end!.Value;
+        var rangeEnd = end ?? start!.Value;
+        if (rangeStart > rangeEnd)
+        {
+            (rangeStart, rangeEnd) = (rangeEnd, rangeStart);
+        }
+
+        var rows = new List<int>(rangeEnd - rangeStart + 1);
+        for (var value = rangeStart; value <= rangeEnd; value++)
+        {
+            rows.Add(value);
+        }
+
+        return rows;
+    }
+
+    private async Task EnsureStepBelongsToLinkedPatternAsync(KnittingProject project, Guid patternStepId)
+    {
+        if (project.PatternId == null)
+        {
+            throw new InvalidOperationException("Link a pattern before tracking step progress.");
+        }
+
+        var belongsToPattern = await _context.KnittingPatternSteps
+            .Join(
+                _context.KnittingPatternPieces,
+                step => step.PatternPieceId,
+                piece => piece.Id,
+                (step, piece) => new { step.Id, piece.PatternId })
+            .AnyAsync(step => step.Id == patternStepId && step.PatternId == project.PatternId);
+
+        if (!belongsToPattern)
+        {
+            throw new InvalidOperationException("The selected step is not available for this project.");
+        }
+    }
+
+    private async Task<IReadOnlyList<Guid>> GetLinkedPatternStepIdsAsync(KnittingProject project)
+    {
+        if (project.PatternId == null)
+        {
+            return [];
+        }
+
+        return await _context.KnittingPatternSteps
+            .Join(
+                _context.KnittingPatternPieces,
+                step => step.PatternPieceId,
+                piece => piece.Id,
+                (step, piece) => new { step.Id, piece.PatternId })
+            .Where(step => step.PatternId == project.PatternId)
+            .Select(step => step.Id)
+            .ToListAsync();
     }
 
     private static string UseIncomingValue(string? incomingValue, string currentValue)

@@ -1,0 +1,406 @@
+@page "/modules/knitting/inventory/notion/{NotionId:guid}"
+@using System.Linq
+@using TankerMade.Contracts.DTOs.Assets
+@using TankerMade.Contracts.DTOs.ModuleInventory
+@using TankerMade.Contracts.DTOs.ModuleProjects
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject TankerMade.Client.Services.KnittingCardAssetCache CardAssets
+@inject NavigationManager Navigation
+
+<PageTitle>Knitting Notion</PageTitle>
+
+<KnittingModuleGate Loading="loading" LoadingMessage="Loading notion...">
+    @if (notion is null)
+    {
+        <MudStack Spacing="3">
+            <KnittingPageHeader Title="Notion Not Found"
+                                BackHref="/modules/knitting/inventory"
+                                BackLabel="Inventory" />
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/modules/knitting/inventory">
+                Back to Inventory
+            </MudButton>
+        </MudStack>
+    }
+    else
+    {
+        <MudStack Spacing="3" Class="pattern-detail">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+            }
+
+            <div class="pattern-header">
+                <KnittingPageHeader Title="@notion.TypeName"
+                                    Subtitle="@notion.BrandName"
+                                    BackHref="/modules/knitting/inventory"
+                                    BackLabel="Inventory" />
+                <div class="pattern-stats" aria-label="Notion summary">
+                    <div>
+                        <strong>@notion.Quantity</strong>
+                        <span>Owned</span>
+                    </div>
+                    <div>
+                        <strong>@DisplayValue(notion.Size)</strong>
+                        <span>Size</span>
+                    </div>
+                    <div>
+                        <strong>@DisplayValue(notion.ColorName)</strong>
+                        <span>Color</span>
+                    </div>
+                </div>
+            </div>
+
+            <MudGrid Spacing="3">
+                <MudItem xs="12" lg="4">
+                    <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle1">Image &amp; Assets</MudText>
+                            <AssetThumbnailImage AssetId="primaryAssetId"
+                                                 SizeKey="medium"
+                                                 AltText="@($"{notion.BrandName} {notion.TypeName}")"
+                                                 CssClass="asset-thumbnail-image mb-3" />
+                            <InputFile OnChange="UploadAssetAsync" disabled="@busy" />
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Upload and attach images for this notion.</MudText>
+
+                            @if (itemAssets.Count == 0)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No assets attached yet.</MudText>
+                            }
+                            else
+                            {
+                                <ul class="project-supply-list mt-2">
+                                    @foreach (var asset in itemAssets)
+                                    {
+                                        <li>
+                                            <div>
+                                                <strong>@asset.OriginalFileName</strong>
+                                                <span>@AssetMeta(asset)</span>
+                                            </div>
+                                            @if (asset.RecordId == notion.Id)
+                                            {
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                                           Disabled="busy"
+                                                           OnClick="@(() => UnassignAssetAsync(asset.Id))">
+                                                    Unlink
+                                                </MudButton>
+                                            }
+                                            else
+                                            {
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                                           Disabled="busy"
+                                                           OnClick="@(() => AssignAssetAsync(asset.Id))">
+                                                    Attach
+                                                </MudButton>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" lg="8">
+                    <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle1">Details</MudText>
+                            <div class="inventory-detail-grid">
+                                <div>
+                                    <strong>Brand</strong>
+                                    <div>@notion.BrandName</div>
+                                </div>
+                                <div>
+                                    <strong>Type</strong>
+                                    <div>@notion.TypeName</div>
+                                </div>
+                                <div>
+                                    <strong>Size</strong>
+                                    <div>@DisplayValue(notion.Size)</div>
+                                </div>
+                                <div>
+                                    <strong>Color</strong>
+                                    <div>@DisplayValue(notion.ColorName)</div>
+                                </div>
+                                <div>
+                                    <strong>Quantity</strong>
+                                    <div>@notion.Quantity</div>
+                                </div>
+                                <div>
+                                    <strong>Regular price</strong>
+                                    <div>@DisplayPrice(notion.RegularPrice)</div>
+                                </div>
+                                <div>
+                                    <strong>Description</strong>
+                                    <div>@DisplayValue(notion.Description)</div>
+                                </div>
+                            </div>
+                        </MudStack>
+                    </MudPaper>
+
+                    <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle1">Purchase History</MudText>
+                            @if (notion.Purchases.Count == 0)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No purchases recorded yet.</MudText>
+                            }
+                            else
+                            {
+                                <ul class="project-supply-list">
+                                    @foreach (var purchase in notion.Purchases)
+                                    {
+                                        <li>
+                                            <div>
+                                                <strong>@purchase.SourceName</strong>
+                                                <span>@DisplayPurchasePrice(purchase.Price, purchase.IsSalePrice)</span>
+                                                <span>@DisplayDate(purchase.PurchasedAt ?? purchase.CreatedAt)</span>
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </MudStack>
+                    </MudPaper>
+
+                    <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle1">Projects</MudText>
+                            <div class="form-grid">
+                                <MudSelect T="string" Label="Projects Active" Variant="Variant.Outlined"
+                                           Value="@string.Empty"
+                                           ValueChanged="@((string v) => OpenProject(v))">
+                                    <MudSelectItem T="string" Value="@string.Empty">Select active project...</MudSelectItem>
+                                    @foreach (var project in activeLinkedProjects)
+                                    {
+                                        <MudSelectItem T="string" Value="@project.Id.ToString()">@project.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                                <MudSelect T="string" Label="Project History" Variant="Variant.Outlined"
+                                           Value="@string.Empty"
+                                           ValueChanged="@((string v) => OpenProject(v))">
+                                    <MudSelectItem T="string" Value="@string.Empty">Select archived project...</MudSelectItem>
+                                    @foreach (var project in archivedLinkedProjects)
+                                    {
+                                        <MudSelectItem T="string" Value="@project.Id.ToString()">@project.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </div>
+                            @if (activeLinkedProjects.Count == 0 && archivedLinkedProjects.Count == 0)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No projects link to this notion yet.</MudText>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudStack>
+    }
+</KnittingModuleGate>
+
+@code {
+    private const string ModuleKey = "knitting";
+    private const string RecordType = "notion";
+
+    [Parameter] public Guid NotionId { get; set; }
+
+    private ModuleNotionInventoryItemDto? notion;
+    private Guid? primaryAssetId;
+    private readonly List<AssetRecordDto> itemAssets = [];
+    private readonly List<ModuleProjectDto> activeLinkedProjects = [];
+    private readonly List<ModuleProjectDto> archivedLinkedProjects = [];
+    private string errorMessage = string.Empty;
+    private bool loading = true;
+    private bool busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+        activeLinkedProjects.Clear();
+        archivedLinkedProjects.Clear();
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive(ModuleKey))
+            {
+                return;
+            }
+
+            notion = await ApiClient.GetModuleNotionByIdAsync(ModuleKey, NotionId);
+            if (notion == null)
+            {
+                return;
+            }
+
+            primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, notion.Id);
+            await LoadAssetsAsync();
+            await LoadLinkedProjectsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task LoadLinkedProjectsAsync()
+    {
+        var projects = await ApiClient.GetModuleProjectsAsync(ModuleKey, includeArchived: true);
+        foreach (var project in projects.Where(project => ProjectLinksItem(project, NotionId)))
+        {
+            if (project.IsArchived)
+            {
+                archivedLinkedProjects.Add(project);
+            }
+            else
+            {
+                activeLinkedProjects.Add(project);
+            }
+        }
+
+        activeLinkedProjects.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
+        archivedLinkedProjects.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task LoadAssetsAsync()
+    {
+        itemAssets.Clear();
+        if (notion == null)
+        {
+            return;
+        }
+
+        itemAssets.AddRange(await ApiClient.GetAssetsForPickerAsync(
+            ModuleKey,
+            RecordType,
+            notion.Id,
+            includeUnassigned: true));
+    }
+
+    private async Task UploadAssetAsync(InputFileChangeEventArgs args)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UploadAssetAsync(ModuleKey, args.File);
+            CardAssets.Invalidate(ModuleKey, RecordType);
+            primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, NotionId);
+            await LoadAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task AssignAssetAsync(Guid assetId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.AssignAssetAsync(assetId, new AssetAssignmentRequest
+            {
+                ModuleKey = ModuleKey,
+                RecordType = RecordType,
+                RecordId = NotionId
+            });
+            CardAssets.Invalidate(ModuleKey, RecordType);
+            primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, NotionId);
+            await LoadAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task UnassignAssetAsync(Guid assetId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UnassignAssetAsync(assetId);
+            CardAssets.Invalidate(ModuleKey, RecordType);
+            primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, NotionId);
+            await LoadAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private static bool ProjectLinksItem(ModuleProjectDto project, Guid itemId)
+        => project.InventoryLinks.Any(link =>
+            string.Equals(link.InventoryItemType, RecordType, StringComparison.OrdinalIgnoreCase)
+            && link.InventoryItemId == itemId);
+
+    private void OpenActiveProject(ChangeEventArgs args)
+        => OpenProject(args.Value?.ToString());
+
+    private void OpenArchivedProject(ChangeEventArgs args)
+        => OpenProject(args.Value?.ToString());
+
+    private void OpenProject(string? rawId)
+    {
+        if (Guid.TryParse(rawId, out var projectId))
+        {
+            Navigation.NavigateTo($"/modules/knitting/projects/{projectId}");
+        }
+    }
+
+    private static string DisplayValue(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "—" : value;
+
+    private static string DisplayPrice(decimal? price)
+        => price.HasValue ? price.Value.ToString("C") : "—";
+
+    private static string DisplayPurchasePrice(decimal? price, bool isSalePrice)
+    {
+        var formatted = price.HasValue ? price.Value.ToString("C") : "No price";
+        return isSalePrice ? $"{formatted} (sale)" : formatted;
+    }
+
+    private static string DisplayDate(DateTime value)
+        => value.ToLocalTime().ToString("d");
+
+    private static string AssetMeta(AssetRecordDto asset)
+    {
+        var size = asset.FileSizeBytes > 0 ? $"{asset.FileSizeBytes / 1024} KB" : "unknown size";
+        return $"{asset.ContentType} - {size}";
+    }
+}

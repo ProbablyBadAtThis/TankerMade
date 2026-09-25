@@ -1,0 +1,17 @@
+<span class="@CssClass">@Label</span>
+
+@code {
+    [Parameter]
+    public int Difficulty { get; set; }
+
+    [Parameter]
+    public string? DifficultyText { get; set; }
+
+    private string Label => !string.IsNullOrWhiteSpace(DifficultyText)
+        ? DifficultyText
+        : KnittingUi.DifficultyLabel(Difficulty);
+
+    private string CssClass => !string.IsNullOrWhiteSpace(DifficultyText)
+        ? KnittingUi.DifficultyCssClass(DifficultyText)
+        : KnittingUi.DifficultyCssClass(Difficulty);
+}

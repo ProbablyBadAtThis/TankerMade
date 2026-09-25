@@ -1,0 +1,438 @@
+@page "/modules/knitting/inventory/tool/{ToolId:guid}"
+@using System.Linq
+@using TankerMade.Contracts.DTOs.Assets
+@using TankerMade.Contracts.DTOs.ModuleInventory
+@using TankerMade.Contracts.DTOs.ModuleProjects
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject TankerMade.Client.Services.TankerMadeApiClient ApiClient
+@inject TankerMade.Client.Services.KnittingCardAssetCache CardAssets
+@inject NavigationManager Navigation
+
+<PageTitle>Knitting Tool</PageTitle>
+
+<KnittingModuleGate Loading="loading" LoadingMessage="Loading tool...">
+    @if (tool is null)
+    {
+        <MudStack Spacing="3">
+            <KnittingPageHeader Title="Tool Not Found"
+                                BackHref="/modules/knitting/inventory"
+                                BackLabel="Inventory" />
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/modules/knitting/inventory">
+                Back to Inventory
+            </MudButton>
+        </MudStack>
+    }
+    else
+    {
+        <MudStack Spacing="3" Class="pattern-detail">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+            }
+
+            <div class="pattern-header">
+                <KnittingPageHeader Title="@tool.TypeName"
+                                    Subtitle="@tool.BrandName"
+                                    BackHref="/modules/knitting/inventory"
+                                    BackLabel="Inventory" />
+                <div class="pattern-stats" aria-label="Tool summary">
+                    <div>
+                        <strong>@tool.Quantity</strong>
+                        <span>Owned</span>
+                    </div>
+                    <div>
+                        <strong>@DisplayValue(tool.Size)</strong>
+                        <span>Size</span>
+                    </div>
+                </div>
+            </div>
+
+            <MudGrid Spacing="3">
+                <MudItem xs="12" lg="4">
+                    <MudPaper Class="pa-4 knitting-panel-mud" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle1">Image &amp; Assets</MudText>
+                            <AssetThumbnailImage AssetId="primaryAssetId"
+                                                 SizeKey="medium"
+                                                 AltText="@($"{tool.BrandName} {tool.TypeName}")"
+                                                 CssClass="asset-thumbnail-image mb-3" />
+                            <InputFile OnChange="UploadAssetAsync" disabled="@busy" />
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Upload and attach images for this tool.</MudText>
+
+                            @if (itemAssets.Count == 0)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No assets attached yet.</MudText>
+                            }
+                            else
+                            {
+                                <ul class="project-supply-list mt-2">
+                                    @foreach (var asset in itemAssets)
+                                    {
+                                        <li>
+                                            <div>
+                                                <strong>@asset.OriginalFileName</strong>
+                                                <span>@AssetMeta(asset)</span>
+                                            </div>
+                                            @if (asset.RecordId == tool.Id)
+                                            {
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                                           Disabled="busy"
+                                                           OnClick="@(() => UnassignAssetAsync(asset.Id))">
+                                                    Unlink
+                                                </MudButton>
+                                            }
+                                            else
+                                            {
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                                           Disabled="busy"
+                                                           OnClick="@(() => AssignAssetAsync(asset.Id))">
+                                                    Attach
+                                                </MudButton>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" lg="8">
+                    @if (sizeVariants.Count > 0)
+                    {
+                        <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.subtitle1">Sizes Available</MudText>
+                                <ul class="project-supply-list">
+                                    @foreach (var variant in sizeVariants)
+                                    {
+                                        <li>
+                                            <div>
+                                                <strong>@DisplayValue(variant.Size)</strong>
+                                                <span>@variant.Quantity owned</span>
+                                            </div>
+                                            @if (variant.Id != tool.Id)
+                                            {
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                                           Href="@($"/modules/knitting/inventory/tool/{variant.Id}")">
+                                                    Open
+                                                </MudButton>
+                                            }
+                                            else
+                                            {
+                                                <MudText Typo="Typo.body2" Color="Color.Secondary">Current</MudText>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            </MudStack>
+                        </MudPaper>
+                    }
+
+                    <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle1">Details</MudText>
+                            <div class="inventory-detail-grid">
+                                <div>
+                                    <strong>Brand</strong>
+                                    <div>@tool.BrandName</div>
+                                </div>
+                                <div>
+                                    <strong>Type</strong>
+                                    <div>@tool.TypeName</div>
+                                </div>
+                                <div>
+                                    <strong>Size</strong>
+                                    <div>@DisplayValue(tool.Size)</div>
+                                </div>
+                                <div>
+                                    <strong>Quantity</strong>
+                                    <div>@tool.Quantity</div>
+                                </div>
+                                <div>
+                                    <strong>Regular price</strong>
+                                    <div>@DisplayPrice(tool.RegularPrice)</div>
+                                </div>
+                                <div>
+                                    <strong>Description</strong>
+                                    <div>@DisplayValue(tool.Description)</div>
+                                </div>
+                            </div>
+                        </MudStack>
+                    </MudPaper>
+
+                    <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle1">Purchase History</MudText>
+                            @if (tool.Purchases.Count == 0)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No purchases recorded yet.</MudText>
+                            }
+                            else
+                            {
+                                <ul class="project-supply-list">
+                                    @foreach (var purchase in tool.Purchases)
+                                    {
+                                        <li>
+                                            <div>
+                                                <strong>@purchase.SourceName</strong>
+                                                <span>@DisplayPurchasePrice(purchase.Price, purchase.IsSalePrice)</span>
+                                                <span>@DisplayDate(purchase.PurchasedAt ?? purchase.CreatedAt)</span>
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </MudStack>
+                    </MudPaper>
+
+                    <MudPaper Class="pa-4 knitting-panel-mud mb-3" Elevation="1">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle1">Projects</MudText>
+                            <div class="form-grid">
+                                <MudSelect T="string" Label="Projects Active" Variant="Variant.Outlined"
+                                           Value="@string.Empty"
+                                           ValueChanged="@((string v) => OpenProject(v))">
+                                    <MudSelectItem T="string" Value="@string.Empty">Select active project...</MudSelectItem>
+                                    @foreach (var project in activeLinkedProjects)
+                                    {
+                                        <MudSelectItem T="string" Value="@project.Id.ToString()">@project.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                                <MudSelect T="string" Label="Project History" Variant="Variant.Outlined"
+                                           Value="@string.Empty"
+                                           ValueChanged="@((string v) => OpenProject(v))">
+                                    <MudSelectItem T="string" Value="@string.Empty">Select archived project...</MudSelectItem>
+                                    @foreach (var project in archivedLinkedProjects)
+                                    {
+                                        <MudSelectItem T="string" Value="@project.Id.ToString()">@project.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </div>
+                            @if (activeLinkedProjects.Count == 0 && archivedLinkedProjects.Count == 0)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No projects link to this tool yet.</MudText>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudStack>
+    }
+</KnittingModuleGate>
+
+@code {
+    private const string ModuleKey = "knitting";
+    private const string RecordType = "tool";
+
+    [Parameter] public Guid ToolId { get; set; }
+
+    private ModuleToolInventoryItemDto? tool;
+    private readonly List<ModuleToolInventoryItemDto> sizeVariants = [];
+    private Guid? primaryAssetId;
+    private readonly List<AssetRecordDto> itemAssets = [];
+    private readonly List<ModuleProjectDto> activeLinkedProjects = [];
+    private readonly List<ModuleProjectDto> archivedLinkedProjects = [];
+    private string errorMessage = string.Empty;
+    private bool loading = true;
+    private bool busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+        if (AuthSession.IsSignedIn)
+        {
+            await ModuleState.RefreshAsync();
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        errorMessage = string.Empty;
+        activeLinkedProjects.Clear();
+        archivedLinkedProjects.Clear();
+
+        try
+        {
+            if (!AuthSession.IsSignedIn || !ModuleState.IsActive(ModuleKey))
+            {
+                return;
+            }
+
+            tool = await ApiClient.GetModuleToolByIdAsync(ModuleKey, ToolId);
+            if (tool == null)
+            {
+                return;
+            }
+
+            sizeVariants.Clear();
+            var allTools = await ApiClient.GetModuleToolsAsync(ModuleKey);
+            sizeVariants.AddRange(allTools
+                .Where(entry =>
+                    string.Equals(entry.BrandName, tool.BrandName, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(entry.TypeName, tool.TypeName, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(entry => entry.Size, StringComparer.OrdinalIgnoreCase));
+
+            primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, tool.Id);
+            await LoadAssetsAsync();
+            await LoadLinkedProjectsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task LoadLinkedProjectsAsync()
+    {
+        var projects = await ApiClient.GetModuleProjectsAsync(ModuleKey, includeArchived: true);
+        foreach (var project in projects.Where(project => ProjectLinksItem(project, ToolId)))
+        {
+            if (project.IsArchived)
+            {
+                archivedLinkedProjects.Add(project);
+            }
+            else
+            {
+                activeLinkedProjects.Add(project);
+            }
+        }
+
+        activeLinkedProjects.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
+        archivedLinkedProjects.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task LoadAssetsAsync()
+    {
+        itemAssets.Clear();
+        if (tool == null)
+        {
+            return;
+        }
+
+        itemAssets.AddRange(await ApiClient.GetAssetsForPickerAsync(
+            ModuleKey,
+            RecordType,
+            tool.Id,
+            includeUnassigned: true));
+    }
+
+    private async Task UploadAssetAsync(InputFileChangeEventArgs args)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UploadAssetAsync(ModuleKey, args.File);
+            CardAssets.Invalidate(ModuleKey, RecordType);
+            primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, ToolId);
+            await LoadAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task AssignAssetAsync(Guid assetId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.AssignAssetAsync(assetId, new AssetAssignmentRequest
+            {
+                ModuleKey = ModuleKey,
+                RecordType = RecordType,
+                RecordId = ToolId
+            });
+            CardAssets.Invalidate(ModuleKey, RecordType);
+            primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, ToolId);
+            await LoadAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task UnassignAssetAsync(Guid assetId)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await ApiClient.UnassignAssetAsync(assetId);
+            CardAssets.Invalidate(ModuleKey, RecordType);
+            primaryAssetId = await CardAssets.GetPrimaryAssetIdAsync(ModuleKey, RecordType, ToolId);
+            await LoadAssetsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private static bool ProjectLinksItem(ModuleProjectDto project, Guid itemId)
+        => project.InventoryLinks.Any(link =>
+            string.Equals(link.InventoryItemType, RecordType, StringComparison.OrdinalIgnoreCase)
+            && link.InventoryItemId == itemId);
+
+    private void OpenActiveProject(ChangeEventArgs args)
+        => OpenProject(args.Value?.ToString());
+
+    private void OpenArchivedProject(ChangeEventArgs args)
+        => OpenProject(args.Value?.ToString());
+
+    private void OpenProject(string? rawId)
+    {
+        if (Guid.TryParse(rawId, out var projectId))
+        {
+            Navigation.NavigateTo($"/modules/knitting/projects/{projectId}");
+        }
+    }
+
+    private static string DisplayValue(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "—" : value;
+
+    private static string DisplayPrice(decimal? price)
+        => price.HasValue ? price.Value.ToString("C") : "—";
+
+    private static string DisplayPurchasePrice(decimal? price, bool isSalePrice)
+    {
+        var formatted = price.HasValue ? price.Value.ToString("C") : "No price";
+        return isSalePrice ? $"{formatted} (sale)" : formatted;
+    }
+
+    private static string DisplayDate(DateTime value)
+        => value.ToLocalTime().ToString("d");
+
+    private static string AssetMeta(AssetRecordDto asset)
+    {
+        var size = asset.FileSizeBytes > 0 ? $"{asset.FileSizeBytes / 1024} KB" : "unknown size";
+        return $"{asset.ContentType} - {size}";
+    }
+}

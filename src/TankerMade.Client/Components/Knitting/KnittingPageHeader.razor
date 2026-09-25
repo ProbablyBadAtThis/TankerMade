@@ -1,0 +1,41 @@
+<MudStack Spacing="1" Class="@GetHeaderClass()">
+    @if (ShowBackLink)
+    {
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Primary"
+                   Size="Size.Small"
+                   Href="@BackHref"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Class="knitting-back-link-mud">
+            @BackLabel
+        </MudButton>
+    }
+    <MudText Typo="Typo.h4" Align="@(Centered ? Align.Center : Align.Left)">@Title</MudText>
+    @if (!string.IsNullOrWhiteSpace(Subtitle))
+    {
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Align="@(Centered ? Align.Center : Align.Left)">@Subtitle</MudText>
+    }
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public bool ShowBackLink { get; set; } = true;
+
+    [Parameter]
+    public bool Centered { get; set; }
+
+    [Parameter]
+    public string BackHref { get; set; } = "/modules/knitting";
+
+    [Parameter]
+    public string BackLabel { get; set; } = "Knitting";
+
+    private string GetHeaderClass()
+        => Centered ? "knitting-page-header-mud is-centered" : "knitting-page-header-mud";
+}

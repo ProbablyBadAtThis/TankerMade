@@ -1,40 +1,89 @@
+@page "/"
 @page "/login"
+@layout EmptyLayout
 @inject TankerMade.Client.Services.AuthSession AuthSession
 @inject NavigationManager Navigation
 
 <PageTitle>Sign in</PageTitle>
 
-<h1>Sign in</h1>
+<MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="auth-page-mud">
+    <MudPaper Elevation="8" Class="auth-card-mud overflow-hidden">
+        <MudStack AlignItems="AlignItems.Center" Spacing="1" Class="pa-6 auth-banner-mud">
+            <MudText Typo="Typo.overline" Color="Color.Primary">Welcome</MudText>
+            <MudText Typo="Typo.h4">TankerMade</MudText>
+            <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary">Your local-first maker workbench</MudText>
+        </MudStack>
 
-<EditForm Model="request" OnValidSubmit="SubmitAsync" class="auth-form">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+        <EditForm Model="request" OnValidSubmit="SubmitAsync" class="pa-6 pt-0">
+            <DataAnnotationsValidator />
+            <MudStack Spacing="3">
+                <ValidationSummary />
 
-    @if (!string.IsNullOrWhiteSpace(errorMessage))
-    {
-        <div class="alert alert-danger">@errorMessage</div>
-    }
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true">@errorMessage</MudAlert>
+                }
 
-    <label>
-        <span>Username</span>
-        <InputText class="form-control" @bind-Value="request.Username" />
-    </label>
+                <MudStack Spacing="1">
+                    <MudTextField @bind-Value="request.Username"
+                                  Label="Username"
+                                  Variant="Variant.Outlined"
+                                  FullWidth="true"
+                                  Required="true"
+                                  RequiredError="Username is required"
+                                  UserAttributes="@UsernameAutocomplete" />
+                    <MudLink Href="#" Typo="Typo.caption" Class="auth-field-help-mud" @onclick:preventDefault="true">
+                        Forgot username?
+                    </MudLink>
+                </MudStack>
 
-    <label>
-        <span>Password</span>
-        <InputText class="form-control" type="password" @bind-Value="request.Password" />
-    </label>
+                <MudStack Spacing="1">
+                    <MudTextField @bind-Value="request.Password"
+                                  Label="Password"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Password"
+                                  FullWidth="true"
+                                  Required="true"
+                                  RequiredError="Password is required"
+                                  UserAttributes="@PasswordAutocomplete" />
+                    <MudLink Href="#" Typo="Typo.caption" Class="auth-field-help-mud" @onclick:preventDefault="true">
+                        Forgot password?
+                    </MudLink>
+                </MudStack>
 
-    <div class="auth-actions">
-        <button class="btn btn-primary" disabled="@busy" type="submit">Sign in</button>
-        <a class="btn btn-outline-secondary" href="register">Create account</a>
-    </div>
-</EditForm>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           FullWidth="true"
+                           ButtonType="ButtonType.Submit"
+                           Disabled="busy">
+                    Sign in
+                </MudButton>
+
+                <MudText Typo="Typo.body2" Align="Align.Center">
+                    Don't have an account?
+                    <MudLink Href="register">Register</MudLink>
+                </MudText>
+            </MudStack>
+        </EditForm>
+    </MudPaper>
+</MudStack>
 
 @code {
     private readonly TankerMade.Contracts.DTOs.Auth.LoginRequest request = new();
+    private static readonly Dictionary<string, object> UsernameAutocomplete = new() { ["autocomplete"] = "username" };
+    private static readonly Dictionary<string, object> PasswordAutocomplete = new() { ["autocomplete"] = "current-password" };
     private bool busy;
     private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthSession.InitializeAsync();
+
+        if (AuthSession.IsSignedIn)
+        {
+            Navigation.NavigateTo("/home");
+        }
+    }
 
     private async Task SubmitAsync()
     {
@@ -50,6 +99,6 @@
             return;
         }
 
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo("/home");
     }
 }

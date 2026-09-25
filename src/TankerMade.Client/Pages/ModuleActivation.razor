@@ -1,0 +1,145 @@
+@page "/home/modules"
+@inject TankerMade.Client.Services.ClientModuleState ModuleState
+@inject TankerMade.Client.Services.AuthSession AuthSession
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<PageTitle>Modules</PageTitle>
+
+<div class="core-dashboard-page core-modules-page">
+    <div class="core-modules-shell">
+        <MudStack Spacing="1" Class="core-modules-header" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.h4" Align="Align.Center">Module activation</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Align="Align.Center">
+                Choose which craft modules are active in your workbench.
+            </MudText>
+        </MudStack>
+
+        @if (!initialized)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="core-modules-loading" />
+        }
+        else
+        {
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Class="core-modules-alert">@errorMessage</MudAlert>
+            }
+
+            <div class="core-modules-list">
+                @foreach (var module in ModuleState.AvailableModules)
+                {
+                    var isActive = ModuleState.IsActive(module.ModuleKey);
+
+                    <MudPaper Class="pa-4 core-panel-mud core-module-row" Elevation="1">
+                        <MudStack Row="true"
+                                  Justify="Justify.SpaceBetween"
+                                  AlignItems="AlignItems.Center"
+                                  Wrap="Wrap.Wrap"
+                                  Spacing="2">
+                            <MudStack Spacing="0" Class="core-module-row-copy">
+                                <MudText Typo="Typo.subtitle1">@module.Name</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">@module.Description</MudText>
+                            </MudStack>
+                            @if (isActive)
+                            {
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Primary"
+                                           Disabled="busy"
+                                           OnClick="@(() => Deactivate(module.ModuleKey))">
+                                    Deactivate
+                                </MudButton>
+                            }
+                            else
+                            {
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           Disabled="busy"
+                                           OnClick="@(() => Activate(module.ModuleKey))">
+                                    Activate
+                                </MudButton>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private bool initialized;
+    private bool busy;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthSession.Changed += HandleAuthChanged;
+        ModuleState.Changed += StateHasChanged;
+        await AuthSession.InitializeAsync();
+
+        if (!AuthSession.IsSignedIn)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        await LoadModulesAsync();
+        initialized = true;
+    }
+
+    private async Task Activate(string moduleKey)
+    {
+        await RunModuleActionAsync(() => ModuleState.ActivateAsync(moduleKey));
+    }
+
+    private async Task Deactivate(string moduleKey)
+    {
+        await RunModuleActionAsync(() => ModuleState.DeactivateAsync(moduleKey));
+    }
+
+    private async Task RunModuleActionAsync(Func<Task> action)
+    {
+        busy = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task LoadModulesAsync()
+    {
+        try
+        {
+            await ModuleState.RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private void HandleAuthChanged()
+    {
+        if (!AuthSession.IsSignedIn)
+        {
+            ModuleState.Reset();
+        }
+    }
+
+    public void Dispose()
+    {
+        AuthSession.Changed -= HandleAuthChanged;
+        ModuleState.Changed -= StateHasChanged;
+    }
+}

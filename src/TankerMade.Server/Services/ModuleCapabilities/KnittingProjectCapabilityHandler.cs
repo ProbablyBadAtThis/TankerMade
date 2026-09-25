@@ -36,8 +36,10 @@ public class KnittingProjectCapabilityHandler : IModuleProjectCapabilityHandler
             Description = request.Description,
             PatternId = request.PatternId,
             ThemeId = request.ThemeId,
+            ColorId = request.ColorId,
             Difficulty = request.Difficulty,
-            Progress = request.Progress
+            Progress = request.Progress,
+            StartedAt = request.StartedAt
         }, userId));
 
     public async Task<ModuleProjectDto?> UpdateAsync(UpdateModuleProjectRequest request, Guid userId)
@@ -50,8 +52,10 @@ public class KnittingProjectCapabilityHandler : IModuleProjectCapabilityHandler
             PatternId = request.PatternId,
             ClearPatternId = request.ClearPatternId,
             ThemeId = request.ThemeId,
+            ColorId = request.ColorId,
             Difficulty = request.Difficulty,
-            Progress = request.Progress
+            Progress = request.Progress,
+            StartedAt = request.StartedAt
         }, userId);
 
         return updated == null ? null : Map(updated);
@@ -71,6 +75,78 @@ public class KnittingProjectCapabilityHandler : IModuleProjectCapabilityHandler
 
     public Task<bool> DeleteAsync(Guid id, Guid userId) => _service.DeleteAsync(id, userId);
 
+    public async Task<ModuleProjectDto?> SetStepProgressAsync(Guid projectId, Guid patternStepId, UpdateModuleProjectStepProgressRequest request, Guid userId)
+    {
+        var project = await _service.SetStepProgressAsync(projectId, patternStepId, new UpdateKnittingProjectStepProgressDto
+        {
+            IsComplete = request.IsComplete
+        }, userId);
+
+        return project == null ? null : Map(project);
+    }
+
+    public async Task<ModuleProjectDto?> SetRowCheckAsync(Guid projectId, Guid patternStepId, int rowNumber, UpdateModuleProjectRowCheckRequest request, Guid userId)
+    {
+        var project = await _service.SetRowCheckAsync(projectId, patternStepId, rowNumber, new UpdateKnittingProjectRowCheckDto
+        {
+            IsChecked = request.IsChecked
+        }, userId);
+
+        return project == null ? null : Map(project);
+    }
+
+    public async Task<ModuleProjectDto?> StartTimerAsync(Guid projectId, Guid patternStepId, UpdateModuleProjectTimerRequest request, Guid userId)
+    {
+        var project = await _service.StartTimerAsync(projectId, patternStepId, new UpdateKnittingProjectTimerDto
+        {
+            ElapsedSeconds = request.ElapsedSeconds
+        }, userId);
+
+        return project == null ? null : Map(project);
+    }
+
+    public async Task<ModuleProjectDto?> PauseTimerAsync(Guid projectId, Guid patternStepId, UpdateModuleProjectTimerRequest request, Guid userId)
+    {
+        var project = await _service.PauseTimerAsync(projectId, patternStepId, new UpdateKnittingProjectTimerDto
+        {
+            ElapsedSeconds = request.ElapsedSeconds
+        }, userId);
+
+        return project == null ? null : Map(project);
+    }
+
+    public async Task<ModuleProjectDto?> SetTimerAsync(Guid projectId, Guid patternStepId, UpdateModuleProjectTimerRequest request, Guid userId)
+    {
+        var project = await _service.SetTimerAsync(projectId, patternStepId, new UpdateKnittingProjectTimerDto
+        {
+            ElapsedSeconds = request.ElapsedSeconds
+        }, userId);
+
+        return project == null ? null : Map(project);
+    }
+
+    public async Task<ModuleProjectDto?> ResetTimerAsync(Guid projectId, Guid patternStepId, Guid userId)
+    {
+        var project = await _service.ResetTimerAsync(projectId, patternStepId, userId);
+        return project == null ? null : Map(project);
+    }
+
+    public async Task<ModuleProjectDto?> AddInventoryLinkAsync(Guid projectId, CreateModuleProjectInventoryLinkRequest request, Guid userId)
+    {
+        var project = await _service.AddInventoryLinkAsync(projectId, new CreateKnittingProjectInventoryLinkDto
+        {
+            InventoryItemType = request.InventoryItemType,
+            InventoryItemId = request.InventoryItemId,
+            QuantityPlanned = request.QuantityPlanned,
+            Notes = request.Notes
+        }, userId);
+
+        return project == null ? null : Map(project);
+    }
+
+    public Task<bool> RemoveInventoryLinkAsync(Guid projectId, Guid linkId, Guid userId)
+        => _service.RemoveInventoryLinkAsync(projectId, linkId, userId);
+
     private static ModuleProjectDto Map(KnittingProjectDto source)
     {
         return new ModuleProjectDto
@@ -83,10 +159,56 @@ public class KnittingProjectCapabilityHandler : IModuleProjectCapabilityHandler
             PatternName = source.PatternName,
             ThemeId = source.ThemeId,
             ThemeName = source.ThemeName,
+            ColorId = source.ColorId,
+            ColorName = source.ColorName,
             Difficulty = source.Difficulty,
             Progress = source.Progress,
             IsArchived = source.IsArchived,
             ArchivedAt = source.ArchivedAt,
+            StartedAt = source.StartedAt,
+            CompletedStepCount = source.CompletedStepCount,
+            TotalStepCount = source.TotalStepCount,
+            CompletedStitchCount = source.CompletedStitchCount,
+            TotalStitchCount = source.TotalStitchCount,
+            TotalTrackedSeconds = source.TotalTrackedSeconds,
+            TimerRunning = source.TimerRunning,
+            TimerStartedAt = source.TimerStartedAt,
+            StepProgress = source.StepProgress.Select(progress => new ModuleProjectStepProgressDto
+            {
+                ProjectId = progress.ProjectId,
+                PatternStepId = progress.PatternStepId,
+                IsComplete = progress.IsComplete,
+                CompletedAt = progress.CompletedAt
+            }).ToList(),
+            RowChecks = source.RowChecks.Select(check => new ModuleProjectRowCheckDto
+            {
+                ProjectId = check.ProjectId,
+                PatternStepId = check.PatternStepId,
+                RowNumber = check.RowNumber
+            }).ToList(),
+            Timers = source.Timers.Select(timer => new ModuleProjectTimerDto
+            {
+                Id = timer.Id,
+                ProjectId = timer.ProjectId,
+                PatternStepId = timer.PatternStepId,
+                ElapsedSeconds = timer.ElapsedSeconds,
+                IsRunning = timer.IsRunning,
+                StartedAt = timer.StartedAt,
+                CreatedAt = timer.CreatedAt,
+                UpdatedAt = timer.UpdatedAt
+            }).ToList(),
+            InventoryLinks = source.InventoryLinks.Select(link => new ModuleProjectInventoryLinkDto
+            {
+                Id = link.Id,
+                ProjectId = link.ProjectId,
+                InventoryItemType = link.InventoryItemType,
+                InventoryItemId = link.InventoryItemId,
+                InventoryItemName = link.InventoryItemName,
+                QuantityPlanned = link.QuantityPlanned,
+                Notes = link.Notes,
+                CreatedAt = link.CreatedAt,
+                UpdatedAt = link.UpdatedAt
+            }).ToList(),
             UserId = source.UserId,
             Username = source.Username,
             CreatedAt = source.CreatedAt,

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TankerMade.Contracts.DTOs.Dashboard;
 using TankerMade.Contracts.DTOs.ModuleProjects;
 using TankerMade.Contracts.Services;
 using TankerMade.Server.Controllers;
@@ -15,11 +16,16 @@ public class ModuleProjectsController : ControllerBase
     private const int DefaultPageSize = 50;
     private readonly IModuleService _moduleService;
     private readonly IModuleProjectCapabilityResolver _resolver;
+    private readonly IRecentWorkService _recentWorkService;
 
-    public ModuleProjectsController(IModuleService moduleService, IModuleProjectCapabilityResolver resolver)
+    public ModuleProjectsController(
+        IModuleService moduleService,
+        IModuleProjectCapabilityResolver resolver,
+        IRecentWorkService recentWorkService)
     {
         _moduleService = moduleService;
         _resolver = resolver;
+        _recentWorkService = recentWorkService;
     }
 
     [HttpGet]
@@ -61,7 +67,21 @@ public class ModuleProjectsController : ControllerBase
         }
 
         var project = await gate.Handler!.GetByIdAsync(id, gate.UserId!.Value);
-        return project == null ? NotFound() : Ok(project);
+        if (project == null)
+        {
+            return NotFound();
+        }
+
+        await _recentWorkService.RecordAccessAsync(
+            gate.UserId!.Value,
+            new RecordRecentWorkRequest
+            {
+                ModuleKey = moduleKey,
+                WorkItemType = RecentWorkTypes.Project,
+                WorkItemId = id,
+            });
+
+        return Ok(project);
     }
 
     [HttpPost]
@@ -127,6 +147,187 @@ public class ModuleProjectsController : ControllerBase
         }
 
         return await gate.Handler!.DeleteAsync(id, gate.UserId!.Value)
+            ? NoContent()
+            : NotFound();
+    }
+
+    [HttpPut("{id:guid}/steps/{stepId:guid}/progress")]
+    public async Task<ActionResult<ModuleProjectDto>> SetStepProgress(
+        string moduleKey,
+        Guid id,
+        Guid stepId,
+        UpdateModuleProjectStepProgressRequest request)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed)
+        {
+            return gate.Result!;
+        }
+
+        try
+        {
+            var project = await gate.Handler!.SetStepProgressAsync(id, stepId, request, gate.UserId!.Value);
+            return project == null ? NotFound() : Ok(project);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPut("{id:guid}/steps/{stepId:guid}/rows")]
+    public async Task<ActionResult<ModuleProjectDto>> SetRowCheck(
+        string moduleKey,
+        Guid id,
+        Guid stepId,
+        UpdateModuleProjectRowCheckRequest request)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed)
+        {
+            return gate.Result!;
+        }
+
+        try
+        {
+            var project = await gate.Handler!.SetRowCheckAsync(id, stepId, request.RowNumber, request, gate.UserId!.Value);
+            return project == null ? NotFound() : Ok(project);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPut("{id:guid}/steps/{stepId:guid}/timer/start")]
+    public async Task<ActionResult<ModuleProjectDto>> StartTimer(
+        string moduleKey,
+        Guid id,
+        Guid stepId,
+        UpdateModuleProjectTimerRequest request)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed)
+        {
+            return gate.Result!;
+        }
+
+        try
+        {
+            var project = await gate.Handler!.StartTimerAsync(id, stepId, request, gate.UserId!.Value);
+            return project == null ? NotFound() : Ok(project);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPut("{id:guid}/steps/{stepId:guid}/timer/pause")]
+    public async Task<ActionResult<ModuleProjectDto>> PauseTimer(
+        string moduleKey,
+        Guid id,
+        Guid stepId,
+        UpdateModuleProjectTimerRequest request)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed)
+        {
+            return gate.Result!;
+        }
+
+        try
+        {
+            var project = await gate.Handler!.PauseTimerAsync(id, stepId, request, gate.UserId!.Value);
+            return project == null ? NotFound() : Ok(project);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPut("{id:guid}/steps/{stepId:guid}/timer")]
+    public async Task<ActionResult<ModuleProjectDto>> SetTimer(
+        string moduleKey,
+        Guid id,
+        Guid stepId,
+        UpdateModuleProjectTimerRequest request)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed)
+        {
+            return gate.Result!;
+        }
+
+        try
+        {
+            var project = await gate.Handler!.SetTimerAsync(id, stepId, request, gate.UserId!.Value);
+            return project == null ? NotFound() : Ok(project);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpDelete("{id:guid}/steps/{stepId:guid}/timer")]
+    public async Task<ActionResult<ModuleProjectDto>> ResetTimer(string moduleKey, Guid id, Guid stepId)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed)
+        {
+            return gate.Result!;
+        }
+
+        try
+        {
+            var project = await gate.Handler!.ResetTimerAsync(id, stepId, gate.UserId!.Value);
+            return project == null ? NotFound() : Ok(project);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost("{id:guid}/inventory-links")]
+    public async Task<ActionResult<ModuleProjectDto>> AddInventoryLink(
+        string moduleKey,
+        Guid id,
+        CreateModuleProjectInventoryLinkRequest request)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed)
+        {
+            return gate.Result!;
+        }
+
+        try
+        {
+            var project = await gate.Handler!.AddInventoryLinkAsync(id, request, gate.UserId!.Value);
+            return project == null ? NotFound() : Ok(project);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpDelete("{id:guid}/inventory-links/{linkId:guid}")]
+    public async Task<ActionResult> RemoveInventoryLink(string moduleKey, Guid id, Guid linkId)
+    {
+        var gate = await ResolveGateAsync(moduleKey);
+        if (!gate.IsAllowed)
+        {
+            return gate.Result!;
+        }
+
+        return await gate.Handler!.RemoveInventoryLinkAsync(id, linkId, gate.UserId!.Value)
             ? NoContent()
             : NotFound();
     }

@@ -1,0 +1,18 @@
+@page "/modules/knitting/kits/new"
+@inject KnittingWizardLauncher Wizards
+@inject NavigationManager Navigation
+
+<PageTitle>New Knitting Kit</PageTitle>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        Navigation.NavigateTo(KnittingWizardLauncher.GetListRoute(KnittingWizardKind.Kit), replace: true);
+        await Wizards.OpenKitWizardAsync();
+    }
+}

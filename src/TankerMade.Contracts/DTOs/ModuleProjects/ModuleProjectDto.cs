@@ -10,10 +10,24 @@ public class ModuleProjectDto
     public string PatternName { get; set; } = string.Empty;
     public Guid? ThemeId { get; set; }
     public string ThemeName { get; set; } = string.Empty;
+    public Guid? ColorId { get; set; }
+    public string ColorName { get; set; } = string.Empty;
     public int Difficulty { get; set; }
     public int Progress { get; set; }
     public bool IsArchived { get; set; }
     public DateTime? ArchivedAt { get; set; }
+    public DateTime? StartedAt { get; set; }
+    public int CompletedStepCount { get; set; }
+    public int TotalStepCount { get; set; }
+    public int CompletedStitchCount { get; set; }
+    public int TotalStitchCount { get; set; }
+    public long TotalTrackedSeconds { get; set; }
+    public bool TimerRunning { get; set; }
+    public DateTime? TimerStartedAt { get; set; }
+    public IReadOnlyList<ModuleProjectStepProgressDto> StepProgress { get; set; } = [];
+    public IReadOnlyList<ModuleProjectRowCheckDto> RowChecks { get; set; } = [];
+    public IReadOnlyList<ModuleProjectTimerDto> Timers { get; set; } = [];
+    public IReadOnlyList<ModuleProjectInventoryLinkDto> InventoryLinks { get; set; } = [];
     public Guid UserId { get; set; }
     public string Username { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
