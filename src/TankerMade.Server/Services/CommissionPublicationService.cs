@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using TankerMade.Contracts.DTOs.ClientProgress;
 using TankerMade.Contracts.Services;
 using TankerMade.Contracts.Services.ModuleCapabilities;
@@ -18,17 +19,23 @@ public class CommissionPublicationService : ICommissionPublicationService
     private readonly IModuleService _moduleService;
     private readonly IReadOnlyDictionary<string, IModuleClientStatusProvider> _providers;
     private readonly IAssetStorageService _assetStorage;
+    private readonly ICommissionSnapshotDispatcher _dispatcher;
+    private readonly IConfiguration? _configuration;
 
     public CommissionPublicationService(
         TankerMadeDbContext context,
         IModuleService moduleService,
         IEnumerable<IModuleClientStatusProvider> providers,
-        IAssetStorageService assetStorage)
+        IAssetStorageService assetStorage,
+        ICommissionSnapshotDispatcher? dispatcher = null,
+        IConfiguration? configuration = null)
     {
         _context = context;
         _moduleService = moduleService;
         _providers = providers.ToDictionary(provider => provider.ModuleKey, StringComparer.OrdinalIgnoreCase);
         _assetStorage = assetStorage;
+        _dispatcher = dispatcher ?? new UnconfiguredCommissionSnapshotDispatcher();
+        _configuration = configuration;
     }
 
     public async Task<CommissionCommandResult> PublishAsync(
@@ -113,7 +120,8 @@ public class CommissionPublicationService : ICommissionPublicationService
         }
 
         await _context.SaveChangesAsync(cancellationToken);
-        return Ok(snapshot, issuedToken);
+        var hosted = await TryMarkHostedAsync(publication, issuedToken, json, publishedAt, cancellationToken);
+        return Ok(snapshot, issuedToken, hosted ? HostedPage(issuedToken) : null);
     }
 
     public async Task<CommissionCommandResult> AddRevisionAsync(
@@ -189,9 +197,11 @@ public class CommissionPublicationService : ICommissionPublicationService
         }
 
         snapshot.Stage = Core.Enums.CommissionStage.Revision;
-        publication.ReplaceSnapshot(JsonSerializer.Serialize(snapshot, SnapshotJson), occurredAt);
+        var revisionJson = JsonSerializer.Serialize(snapshot, SnapshotJson);
+        publication.ReplaceSnapshot(revisionJson, occurredAt);
         _context.CommissionRevisions.Add(ToRevisionEntity(publication.Id, input, occurredAt));
         await _context.SaveChangesAsync(cancellationToken);
+        await TryMarkHostedAsync(publication, null, revisionJson, occurredAt, cancellationToken);
         return Ok(snapshot, null);
     }
 
@@ -215,6 +225,14 @@ public class CommissionPublicationService : ICommissionPublicationService
 
         publication.Revoke(DateTime.UtcNow);
         await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dispatcher.TryRevokeAsync(publication.Id, cancellationToken);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+        }
+
         return new CommissionCommandResult { Status = CommissionCommandStatus.Ok };
     }
 
@@ -333,10 +351,12 @@ public class CommissionPublicationService : ICommissionPublicationService
         var token = CreateToken();
         publication.ReplaceToken(HashToken(token));
         await _context.SaveChangesAsync(cancellationToken);
+        var hosted = await TryMarkHostedAsync(publication, token, publication.SnapshotJson, publication.LastPublishedAt, cancellationToken);
         return new CommissionCommandResult
         {
             Status = CommissionCommandStatus.Ok,
             IssuedToken = token,
+            HostedUrl = hosted ? HostedPage(token) : null,
             Snapshot = JsonSerializer.Deserialize<ClientProgressSnapshotDto>(publication.SnapshotJson, SnapshotJson)
         };
     }
@@ -465,6 +485,89 @@ public class CommissionPublicationService : ICommissionPublicationService
             .SingleOrDefaultAsync(item => item.UserId == userId && item.ModuleKey == key && item.ProjectId == projectId, cancellationToken);
     }
 
+    private async Task<IReadOnlyList<CommissionSnapshotPhoto>?> TryLoadPublishedPhotosAsync(
+        Guid userId,
+        string snapshotJson,
+        CancellationToken cancellationToken)
+    {
+        var snapshot = JsonSerializer.Deserialize<ClientProgressSnapshotDto>(snapshotJson, SnapshotJson);
+        if (snapshot == null)
+        {
+            return null;
+        }
+
+        var photos = new List<CommissionSnapshotPhoto>();
+        foreach (var assetId in snapshot.PhotoAssetIds.Distinct())
+        {
+            var asset = await _context.AssetRecords
+                .AsNoTracking()
+                .SingleOrDefaultAsync(item => item.Id == assetId && item.UserId == userId && !item.IsDeleted, cancellationToken);
+            if (asset == null)
+            {
+                return null;
+            }
+
+            var stream = await _assetStorage.OpenReadAsync(asset.StoragePath, cancellationToken);
+            if (stream == null)
+            {
+                return null;
+            }
+
+            await using (stream)
+            {
+                using var buffer = new MemoryStream();
+                await stream.CopyToAsync(buffer, cancellationToken);
+                photos.Add(new CommissionSnapshotPhoto(assetId, asset.ContentType, buffer.ToArray()));
+            }
+        }
+
+        return photos;
+    }
+
+    private string? HostedPage(string? token)
+    {
+        var baseUrl = _configuration?["ClientProgressHost:BaseUrl"];
+        if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(token))
+        {
+            return null;
+        }
+
+        return baseUrl.TrimEnd('/') + "/client-progress/" + token;
+    }
+
+    private async Task<bool> TryMarkHostedAsync(
+        CommissionPublication publication,
+        string? issuedToken,
+        string snapshotJson,
+        DateTime publishedAt,
+        CancellationToken cancellationToken)
+    {
+        var photos = await TryLoadPublishedPhotosAsync(publication.UserId, snapshotJson, cancellationToken);
+        if (photos == null)
+        {
+            return false;
+        }
+
+        bool delivered;
+        try
+        {
+            delivered = await _dispatcher.TryDeliverAsync(publication.Id, issuedToken, snapshotJson, photos, cancellationToken);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            delivered = false;
+        }
+
+        if (!delivered)
+        {
+            return false;
+        }
+
+        publication.MarkHosted(publishedAt);
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     private async Task<CommissionCommandResult?> GateAsync(Guid userId, string moduleKey, CancellationToken cancellationToken)
     {
         if (!await _moduleService.IsActiveAsync(moduleKey, userId))
@@ -581,13 +684,14 @@ public class CommissionPublicationService : ICommissionPublicationService
         return (priceChanged, dueDateChanged);
     }
 
-    private static CommissionCommandResult Ok(ClientProgressSnapshotDto snapshot, string? issuedToken)
+    private static CommissionCommandResult Ok(ClientProgressSnapshotDto snapshot, string? issuedToken, string? hostedUrl = null)
     {
         return new CommissionCommandResult
         {
             Status = CommissionCommandStatus.Ok,
             Snapshot = snapshot,
-            IssuedToken = issuedToken
+            IssuedToken = issuedToken,
+            HostedUrl = hostedUrl
         };
     }
 

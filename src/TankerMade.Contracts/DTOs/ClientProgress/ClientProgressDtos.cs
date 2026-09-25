@@ -98,6 +98,7 @@ public class CommissionCommandResult
     public CommissionCommandStatus Status { get; set; }
     public ClientProgressSnapshotDto? Snapshot { get; set; }
     public string? IssuedToken { get; set; }
+    public string? HostedUrl { get; set; }
 }
 
 public class PublishedClientPhoto

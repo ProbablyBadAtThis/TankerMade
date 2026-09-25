@@ -111,7 +111,7 @@ http://localhost:5236/scalar/v1
 
 ## Current Roadmap Focus
 
-Use `docs/project/roadmap.md` as the source of truth. Current work is Phase J (client progress) in that file. Phases A–I are complete:
+Use `docs/project/roadmap.md` as the source of truth. Phases A–K are complete. The Cloudflare host was opened from another computer, and revoke cut that link. Nothing is queued. A client-facing domain waits until a name is purchased. The workshop stays on this machine.
 
 - Knitting is the live fiber module. The earlier Crafting reference module has been retired.
 - Phase C module-owned project workspace behavior is complete: step progress, per-step timers, completion rules, piece selection, archive flow, and non-destructive editing.

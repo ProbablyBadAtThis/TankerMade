@@ -85,6 +85,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.Modules.Quilting
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.Modules.Sewing", "src\TankerMade.Modules.Sewing\TankerMade.Modules.Sewing.csproj", "{9733A029-AE4A-487F-BC4A-2E23EBFA3E4E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankerMade.ClientProgressHost", "src\TankerMade.ClientProgressHost\TankerMade.ClientProgressHost.csproj", "{1C551A7A-56B5-412B-AFE9-739176418FDE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -239,6 +241,18 @@ Global
 		{9733A029-AE4A-487F-BC4A-2E23EBFA3E4E}.Release|x64.Build.0 = Release|Any CPU
 		{9733A029-AE4A-487F-BC4A-2E23EBFA3E4E}.Release|x86.ActiveCfg = Release|Any CPU
 		{9733A029-AE4A-487F-BC4A-2E23EBFA3E4E}.Release|x86.Build.0 = Release|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Debug|x64.Build.0 = Debug|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Debug|x86.Build.0 = Debug|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Release|x64.ActiveCfg = Release|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Release|x64.Build.0 = Release|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Release|x86.ActiveCfg = Release|Any CPU
+		{1C551A7A-56B5-412B-AFE9-739176418FDE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -261,6 +275,7 @@ Global
 		{6030B70F-8C69-4EB1-B4D6-0A6DD38DE42D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{3F89CBE8-1CA6-4726-B4CB-F8D0C54AC396} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{9733A029-AE4A-487F-BC4A-2E23EBFA3E4E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{1C551A7A-56B5-412B-AFE9-739176418FDE} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {45CEBD1F-9930-46B2-BE25-3CDE6BA2DAC8}

@@ -1,6 +1,6 @@
 # TankerMade Handoff
 
-Last updated: 2026-09-24
+Last updated: 2026-09-25
 
 ## Pickup summary (new conversation)
 
@@ -15,13 +15,13 @@ Last updated: 2026-09-24
 | `docs/project/knitting-ui-parity-checklist.md` | Reference only. Not the active plan |
 | `docs/product/ux-reference.md` | Crafter decisions + wireframe reference |
 
-**Do next:** Phase J is complete. Next slice: a hosted read-only page of the same public snapshot. Do not expose the home server.
+**Do next:** Nothing is queued. The Cloudflare host was opened from another computer on 2026-09-25, and revoke cut that link. A client-facing domain waits until a name is purchased. The workshop stays private.
 
 ---
 
 ## Current State
 
-- Current roadmap phase: Phase J — Client progress. Tracker: `docs/project/roadmap.md`. Phases A–I are complete. Crafting reference module retired (`PhaseN_RetireCraftingModule`).
+- Current roadmap phase: Phase K — Hosted client page. Tracker: `docs/project/roadmap.md`. Phases A–J are complete. Crafting reference module retired (`PhaseN_RetireCraftingModule`).
 - Knitting is the live fiber module. Per-row checks are stored on the server. Module pages use MudBlazor; inventory detail layouts use `MudGrid`.
 - Crafter direction captured: `docs/product/ux-reference.md` § Crafter decisions; `Scratch/ui-discussion/2026-06-11-crafter-answers.md`.
 - PPT parity rough score: see `docs/project/knitting-ui-parity-checklist.md` (knitting pages unchanged functionally; shell scoring updated).
@@ -73,13 +73,13 @@ The MudBlazor checklist in `docs/project/knitting-ui-parity-checklist.md` stays 
 
 ## Next Work
 
-The checklist is Phase J in `docs/project/roadmap.md`. Finish each step before the next.
+The checklist is Phase K in `docs/project/roadmap.md`. Finish each step before the next.
 
-1. **Done.** Direction recorded.
-2. **Done.** Projection backend: contracts, knitting client-status provider, snapshot storage, revision rows, token, publish / revoke / anonymous read.
-3. **Done.** Maker preview and private economics on one knitting project.
-4. **Done.** Local outbox. No cloud uploader.
-5. **Done.** Browser check and `dotnet build TankerMade.sln` passed.
+1. **Done.** A configured host receives the existing snapshot JSON. No host, or a failed send, leaves the local snapshot in place.
+2. **Done.** Revoke tells the host to drop the public page.
+3. **Done.** The hosted page renders that snapshot and does not query the workshop database.
+4. **Done.** Hosted photos are the published bytes.
+5. **Done.** Hosted-page check passed, and `dotnet build TankerMade.sln` passed.
 
 ---
 
@@ -113,4 +113,4 @@ The checklist is Phase J in `docs/project/roadmap.md`. Finish each step before t
 
 ## Verification Needed Next
 
-Phase J is complete. The next slice is a hosted read-only page of the same snapshot. The home server stays private.
+Phase K is complete. The hosted page was checked from another computer on 2026-09-25, and revoke cut that link. Nothing is queued. A client-facing domain waits until a name is purchased. The workshop stays on this machine.

@@ -1,11 +1,28 @@
 # TankerMade — Roadmap
-Source: Phases A–I are the completed host. Phase J is the active tracker.
-Last reviewed: 2026-09-24
+Source: Phases A–J are complete. Phase K is the active tracker.
+Last reviewed: 2026-09-25
 Direction: `docs/project/direction-brief.md`. Product rules: `docs/project/client-progress.md`.
 
 ---
 
-## Current phase: J — Client progress
+## Current phase: K — Hosted client page
+
+The local link from Phase J stays. This phase copies that same public snapshot to a host the client can open. The home server stays private. Knitting is still the only module that changes.
+
+| | |
+|---|---|
+| Now | Phase K complete |
+| Done | Steps 1–5 |
+| Next | None queued. The Cloudflare host was opened from another computer on 2026-09-25, and revoke cut that link. A client-facing domain waits until a name is purchased. |
+
+- [x] When `ClientProgressHost:BaseUrl` is set, publish and revision PUT the existing snapshot JSON. A successful send sets `HostedAt`.
+- [x] With no host, or a failed send, the local snapshot remains and `HostedAt` stays empty
+- [x] Revoke tells the host to drop the public page
+- [x] Hosted page renders that snapshot and does not query the workshop database
+- [x] Hosted photos are published bytes, not a request back to the home server
+- [x] Stop for a check: publish reaches the host, revoke cuts the hosted link, the page still hides hours, rate, notes, and measurements. `dotnet build TankerMade.sln` passed.
+
+## Phase J — Client progress — complete
 
 Fiber commissions only. Knitting is the only module that changes. Finish each step before the next.
 

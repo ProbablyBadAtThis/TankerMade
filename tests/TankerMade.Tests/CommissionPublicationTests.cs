@@ -249,6 +249,88 @@ public class CommissionPublicationTests
         photo?.Content.Dispose();
     }
 
+    [Fact]
+    public async Task Publish_marks_hosted_only_after_the_snapshot_is_delivered()
+    {
+        var dispatcher = new RecordingDispatcher(delivered: true);
+        await using var harness = await Harness.CreateAsync(dispatcher);
+
+        var result = await harness.Service.PublishAsync(harness.UserId, KnittingModule.ModuleKey, harness.ProjectId, new PublishClientProgressRequest
+        {
+            Stage = CommissionStage.Quote,
+            QuotePrice = 40m
+        });
+
+        var stored = harness.Context.CommissionPublications.Single();
+        Assert.Equal(CommissionCommandStatus.Ok, result.Status);
+        Assert.Equal(stored.LastPublishedAt, stored.HostedAt);
+        Assert.Equal(stored.Id, dispatcher.PublicationId);
+        Assert.Equal(result.IssuedToken, dispatcher.IssuedToken);
+        Assert.Contains("\"price\":40", dispatcher.SnapshotJson, StringComparison.Ordinal);
+        Assert.DoesNotContain("targetHourlyRate", dispatcher.SnapshotJson, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Publish_keeps_the_local_snapshot_when_delivery_fails()
+    {
+        await using var harness = await Harness.CreateAsync(new RecordingDispatcher(delivered: false));
+
+        var result = await harness.Service.PublishAsync(harness.UserId, KnittingModule.ModuleKey, harness.ProjectId, new PublishClientProgressRequest
+        {
+            Stage = CommissionStage.Quote
+        });
+
+        Assert.Equal(CommissionCommandStatus.Ok, result.Status);
+        Assert.Null(harness.Context.CommissionPublications.Single().HostedAt);
+    }
+
+    [Fact]
+    public async Task Http_dispatcher_puts_the_snapshot_and_reports_failure()
+    {
+        var handler = new StubHandler(System.Net.HttpStatusCode.NoContent);
+        var client = new HttpClient(handler) { BaseAddress = new Uri("https://progress.example/") };
+        var dispatcher = new HttpCommissionSnapshotDispatcher(client);
+        var publicationId = Guid.NewGuid();
+
+        var photoId = Guid.NewGuid();
+        var delivered = await dispatcher.TryDeliverAsync(
+            publicationId,
+            "raw-token",
+            $$"""{"stage":"Quote","photoAssetIds":["{{photoId}}"]}""",
+            [new CommissionSnapshotPhoto(photoId, "image/jpeg", [1, 2, 3])]);
+
+        Assert.True(delivered);
+        Assert.Equal(HttpMethod.Put, handler.Requests[0].Method);
+        Assert.Equal($"https://progress.example/snapshots/{publicationId}", handler.Requests[0].Uri!.ToString());
+        Assert.Equal("raw-token", handler.Requests[0].Token);
+        Assert.Contains("Quote", handler.Requests[0].Body);
+        Assert.Equal($"https://progress.example/snapshots/{publicationId}/photos/{photoId:D}", handler.Requests[1].Uri!.ToString());
+        Assert.Equal("image/jpeg", handler.Requests[1].ContentType);
+
+        handler.StatusCode = System.Net.HttpStatusCode.ServiceUnavailable;
+        Assert.False(await dispatcher.TryDeliverAsync(publicationId, null, """{"stage":"Quote"}""", []));
+        handler.StatusCode = System.Net.HttpStatusCode.NoContent;
+        Assert.True(await dispatcher.TryRevokeAsync(publicationId));
+        Assert.Equal(HttpMethod.Delete, handler.Requests[^1].Method);
+    }
+
+    [Fact]
+    public async Task Revoke_tells_the_host_and_still_cuts_the_local_link()
+    {
+        var dispatcher = new RecordingDispatcher(delivered: true);
+        await using var harness = await Harness.CreateAsync(dispatcher);
+        var published = await harness.Service.PublishAsync(harness.UserId, KnittingModule.ModuleKey, harness.ProjectId, new PublishClientProgressRequest
+        {
+            Stage = CommissionStage.Quote
+        });
+
+        var revoked = await harness.Service.RevokeAsync(harness.UserId, KnittingModule.ModuleKey, harness.ProjectId);
+
+        Assert.Equal(CommissionCommandStatus.Ok, revoked.Status);
+        Assert.Equal(harness.Context.CommissionPublications.Single().Id, dispatcher.RevokedPublicationId);
+        Assert.Null(await harness.Service.GetByTokenAsync(published.IssuedToken));
+    }
+
     private static string Sha256Hex(string token)
     {
         var bytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token));
@@ -272,7 +354,7 @@ public class CommissionPublicationTests
             ProjectId = projectId;
         }
 
-        public static async Task<Harness> CreateAsync()
+        public static async Task<Harness> CreateAsync(ICommissionSnapshotDispatcher? dispatcher = null)
         {
             var factory = new DbContextTestFactory();
             var context = factory.CreateContext();
@@ -302,7 +384,8 @@ public class CommissionPublicationTests
                 context,
                 moduleService,
                 [new KnittingClientStatusProvider(context)],
-                new MemoryAssetStorage());
+                new MemoryAssetStorage(),
+                dispatcher);
 
             return new Harness(factory, context, service, user.Id, project.Id);
         }
@@ -313,6 +396,64 @@ public class CommissionPublicationTests
             _factory.Dispose();
         }
     }
+
+    private sealed class RecordingDispatcher : ICommissionSnapshotDispatcher
+    {
+        private readonly bool _delivered;
+
+        public RecordingDispatcher(bool delivered)
+        {
+            _delivered = delivered;
+        }
+
+        public Guid PublicationId { get; private set; }
+        public Guid? RevokedPublicationId { get; private set; }
+        public string? IssuedToken { get; private set; }
+        public string SnapshotJson { get; private set; } = string.Empty;
+
+        public Task<bool> TryDeliverAsync(
+            Guid publicationId,
+            string? issuedToken,
+            string snapshotJson,
+            IReadOnlyList<CommissionSnapshotPhoto> photos,
+            CancellationToken cancellationToken = default)
+        {
+            PublicationId = publicationId;
+            IssuedToken = issuedToken;
+            SnapshotJson = snapshotJson;
+            return Task.FromResult(_delivered);
+        }
+
+        public Task<bool> TryRevokeAsync(Guid publicationId, CancellationToken cancellationToken = default)
+        {
+            RevokedPublicationId = publicationId;
+            return Task.FromResult(true);
+        }
+    }
+
+    private sealed class StubHandler : HttpMessageHandler
+    {
+        public StubHandler(System.Net.HttpStatusCode statusCode)
+        {
+            StatusCode = statusCode;
+        }
+
+        public System.Net.HttpStatusCode StatusCode { get; set; }
+        public List<CapturedRequest> Requests { get; } = [];
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Requests.Add(new CapturedRequest(
+                request.Method,
+                request.RequestUri,
+                request.Headers.TryGetValues("X-Client-Token", out var values) ? values.Single() : null,
+                request.Content?.Headers.ContentType?.MediaType,
+                request.Content == null ? string.Empty : await request.Content.ReadAsStringAsync(cancellationToken)));
+            return new HttpResponseMessage(StatusCode);
+        }
+    }
+
+    private sealed record CapturedRequest(HttpMethod Method, Uri? Uri, string? Token, string? ContentType, string Body);
 
     private sealed class MemoryAssetStorage : IAssetStorageService
     {

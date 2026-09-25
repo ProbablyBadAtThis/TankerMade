@@ -135,6 +135,24 @@ builder.Services.AddScoped<IModuleSettingsCapabilityHandler, KnittingSettingsCap
 builder.Services.AddScoped<IModuleRecentWorkSummaryProvider, KnittingRecentWorkSummaryProvider>();
 builder.Services.AddScoped<IModuleClientStatusProvider, KnittingClientStatusProvider>();
 builder.Services.AddScoped<ICommissionPublicationService, CommissionPublicationService>();
+var clientProgressHost = builder.Configuration["ClientProgressHost:BaseUrl"];
+if (string.IsNullOrWhiteSpace(clientProgressHost))
+{
+    builder.Services.AddSingleton<ICommissionSnapshotDispatcher, UnconfiguredCommissionSnapshotDispatcher>();
+}
+else
+{
+    builder.Services.AddHttpClient<ICommissionSnapshotDispatcher, HttpCommissionSnapshotDispatcher>(client =>
+    {
+        client.BaseAddress = new Uri(clientProgressHost.TrimEnd('/') + "/");
+        client.Timeout = TimeSpan.FromSeconds(5);
+        var apiKey = builder.Configuration["ClientProgressHost:ApiKey"];
+        if (!string.IsNullOrWhiteSpace(apiKey))
+        {
+            client.DefaultRequestHeaders.TryAddWithoutValidation("X-Host-Key", apiKey);
+        }
+    });
+}
 builder.Services.AddScoped<IModuleDashboardContributionProvider, KnittingDashboardContributionProvider>();
 
 // Add controllers and OpenAPI

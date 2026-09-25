@@ -7,16 +7,16 @@ class DevTrackerSection {
     constructor() {
         this.sectionId = 'dev-tracker';
         this.data = {
-            totalTasks: 102,
-            completedTasks: 102,
-            totalPhases: 10,
-            completedPhases: 10,
+            totalTasks: 108,
+            completedTasks: 108,
+            totalPhases: 11,
+            completedPhases: 11,
             currentPhase: {
-                number: "J",
-                title: "Client progress",
-                description: "Knitting commission link. Local publish, preview, revision, and revoke are verified.",
-                completed: 35,
-                total: 35,
+                number: "K",
+                title: "Hosted client page",
+                description: "Copy the public snapshot to a host. The home server stays private. Checked and built.",
+                completed: 6,
+                total: 6,
                 color: "#fbbf24"
             },
             phases: [
@@ -104,10 +104,19 @@ class DevTrackerSection {
                 {
                     number: "J",
                     title: "Client progress",
-                    description: "Fiber commissions only. Publish a knitting snapshot to an unguessable local link. Steps 1 and 2 are done. Step 3 is the maker preview.",
-                    completed: 32,
+                    description: "Local knitting commission link. Publish, preview, revision, and revoke are verified.",
+                    completed: 35,
                     total: 35,
                     color: "#fbbf24",
+                    status: "completed"
+                },
+                {
+                    number: "K",
+                    title: "Hosted client page",
+                    description: "Copy the public snapshot to a host. The home server stays private.",
+                    completed: 6,
+                    total: 6,
+                    color: "#34d399",
                     status: "active"
                 }
             ]
@@ -438,16 +447,29 @@ const ROADMAP_PHASE_TASKS = {
         { title: 'Browser: maker publishes, copies the link, revokes, and the link dies', status: 'done', area: 'Step 5' },
         { title: 'Browser: signed-out link hides hours, rate, notes, and measurements; a revision is visible', status: 'done', area: 'Step 5' },
         { title: 'User runs dotnet build TankerMade.sln', status: 'done', area: 'Step 5' }
+    ],
+    K: [
+        { title: 'Configured host receives the existing snapshot JSON and sets HostedAt', status: 'done', area: 'Step 1' },
+        { title: 'No host, or a failed send, keeps the local snapshot and leaves HostedAt empty', status: 'done', area: 'Step 1' },
+        { title: 'Revoke tells the host to drop the public page', status: 'done', area: 'Step 2' },
+        { title: 'Hosted page renders the snapshot and does not query the workshop database', status: 'done', area: 'Step 3' },
+        { title: 'Hosted photos are published bytes, not a request back to the home server', status: 'done', area: 'Step 4' },
+        { title: 'Check: hosted link dies on revoke and still hides hours, rate, notes, and measurements', status: 'done', area: 'Step 5' }
     ]
 };
 
 const ROADMAP_PHASE_NOTES = {
     J: [
-        { label: 'Now', value: 'Phase J complete. Next is a hosted read-only page of the same snapshot.' },
+        { label: 'Now', value: 'Phase J complete.' },
         { label: 'Public', value: 'Quote price and due date. Material lines are names.' },
         { label: 'Private', value: 'Inventory dollars, hours, rate, implied net. Never on the snapshot.' },
         { label: 'Photos', value: 'Token-scoped asset ids. Not the signed-in asset API.' },
-        { label: 'Out', value: 'Hosted page, payments, client accounts, other craft modules.' }
+        { label: 'Out', value: 'Payments, client accounts, other craft modules.' }
+    ],
+    K: [
+        { label: 'Now', value: 'Phase K complete. The off-machine host check passed on 2026-09-25. Nothing is queued.' },
+        { label: 'Host', value: 'ClientProgressHost:BaseUrl. Empty means local only.' },
+        { label: 'Private', value: 'The home server is not exposed. The host receives the public JSON only.' }
     ]
 };
 

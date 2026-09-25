@@ -73,6 +73,11 @@
             {
                 <MudTextField Value="@PreviewUrl" Label="Preview link" Variant="Variant.Outlined" ReadOnly="true" />
                 <MudButton Variant="Variant.Text" Href="@PreviewUrl" Target="_blank">Open preview</MudButton>
+                @if (!string.IsNullOrWhiteSpace(hostedUrl))
+                {
+                    <MudTextField Value="@hostedUrl" Label="Hosted link" Variant="Variant.Outlined" ReadOnly="true" />
+                    <MudButton Variant="Variant.Text" Href="@hostedUrl" Target="_blank">Open hosted page</MudButton>
+                }
             }
             else if (workshop.HasActiveLink)
             {
@@ -106,6 +111,7 @@
     private CommissionStage stage = CommissionStage.InProgress;
     private string summary = string.Empty;
     private string? issuedToken;
+    private string? hostedUrl;
     private string revisionSummary = string.Empty;
     private decimal? revisionPrice;
     private DateTime? revisionDue;
@@ -175,6 +181,7 @@
                 DepositReceived = depositReceived
             });
             issuedToken = result.IssuedToken ?? issuedToken;
+            hostedUrl = result.HostedUrl ?? hostedUrl;
             message = issuedToken is null
                 ? "Published. The existing link still works."
                 : "Published. Copy the preview link before you leave this page.";
@@ -216,6 +223,7 @@
         {
             await ApiClient.RevokeClientProgressAsync("knitting", ProjectId);
             issuedToken = null;
+            hostedUrl = null;
             message = "Link revoked.";
             messageSeverity = Severity.Success;
             await LoadAsync();
@@ -228,6 +236,7 @@
         {
             var result = await ApiClient.ReissueClientProgressLinkAsync("knitting", ProjectId);
             issuedToken = result.IssuedToken;
+            hostedUrl = result.HostedUrl;
             message = "New link issued. The previous link no longer works.";
             messageSeverity = Severity.Success;
         });

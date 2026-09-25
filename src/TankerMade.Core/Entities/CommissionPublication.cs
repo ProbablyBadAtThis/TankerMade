@@ -61,6 +61,11 @@ public class CommissionPublication
         RevokedAt = revokedAt;
     }
 
+    public void MarkHosted(DateTime hostedAt)
+    {
+        HostedAt = hostedAt;
+    }
+
     private static string Required(string value, string parameterName, int maxLength)
     {
         if (string.IsNullOrWhiteSpace(value))
